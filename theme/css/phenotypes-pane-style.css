@@ -1,0 +1,600 @@
+/*
+ * CUSTOM AUTOCOMPLETE SEARCH - acs.
+ */
+#acs-txt-search {
+  border: 1px solid #CCCCCC;
+  padding: 10px 20px 10px 10px;
+  margin: 0 12px 0 0;
+  width: 200px;
+}
+
+#acs-btn-search {
+  background: url(../img/icon-lens.png) no-repeat center;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #EAEAEA;
+  height: 35px;
+  padding-left: 20px;
+  padding-right: 20px;
+  margin: 0 !important;
+ }
+
+  .acs-search-active {
+    background: #FFFFFF url(../img/throbber-active.gif) right no-repeat;
+  }
+
+  .acs-search-inactive {
+    background: #FFFFFF url(../img/throbber-inactive.png) right no-repeat;
+  }
+
+#acs-container-search-result {
+  background: #FFFFFF;
+  border: 1px solid #CCCCCC;
+  list-style-type: none !important;
+  min-width: 230px;
+  margin: -1px 0 0 0 !important;
+  margin: 0;
+  position: absolute;
+  padding: 0;
+  z-index: 9;
+}
+
+#acs-container-search-result li {
+  cursor: pointer;
+  font-family: sans-serif;
+  font-size: 0.9em;
+  margin: 0;
+  padding: 5px;
+}
+
+  #acs-container-search-result li:hover {
+    background: #0072B9;
+    color: #FFFFFF;
+  }
+
+
+/*
+ * TITLE BAR - FULL.
+ */
+#container-title-bar {
+  background-color: #314355;
+  cursor: pointer;
+  height: 100px;
+
+  -webkit-transition: opacity 0.5s ease-out;
+  -moz-transition: opacity 0.5s ease-out;
+  -o-transition: opacity 0.5s ease-out;
+  transition: opacity 0.5s ease-out;
+}
+
+  #container-title-bar:hover {
+    opacity: 0.9;
+
+    -webkit-transition: opacity 0.9s ease-out;
+    -moz-transition: opacity 0.9s ease-out;
+    -o-transition: opacity 0.9s ease-out;
+    transition: opacity 0.9s ease-out;
+  }
+
+  .marker {
+    background-image: url(../img/topic-mark.gif);
+    background-repeat: no-repeat;
+    background-position: center top;
+  }
+
+#container-title-bar h2 {
+  color: #FFFFFF;
+  font-family: georgia serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 2.5em !important;
+  letter-spacing: 2px;
+  margin: 0 !important;
+  padding: 30px 0 0 0;
+  text-align: center;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+}
+
+/*
+ * TITLE BAR - MINIFIED.
+ */
+.topic-title {
+  display: block;
+  float: left;
+  margin: 0 0 0 30px;
+  text-align: left;
+}
+
+.topic-title h2 {
+  text-align: left !important;
+}
+
+.topic-data {
+  float: right;
+  margin: 0 30px 0 0;
+}
+
+.topic-data ul {
+  list-style-type: none;
+  margin-top: 20px !important;
+}
+
+.topic-data ul li {
+  border-left: 1px dotted #999999;
+  display: inline;
+  color: #FFFFFF;
+  float: left;
+  font-weight: 300;
+  font-size: 0.8em;
+  font-family: sans-serif;
+  letter-spacing: 1px;
+  margin: 0 20px;
+  padding: 0 0 0 10px;
+}
+
+.topic-data ul li::before {
+  border-style: solid;
+  border-width: 5px 8px 5px 0;
+  border-color: transparent  #999999 transparent transparent;
+  content: ' ';
+  height: 0;
+  margin-left: -18px;
+  position: absolute;
+  width: 0;
+}
+
+.topic-data ul li em {
+  display: block;
+  font-family: Georgia sans-serif;
+  font-size: 3em !important;
+  margin: 0;
+  padding: 0;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+}
+
+
+
+
+   #container-infographics {
+      background: url(../img/bg-bottom-summary.jpg) repeat-x bottom;
+      position: relative;
+      width: 100% !important;
+    }
+
+      .bg {
+        bottom: 0;
+        background-image: url(../img/bg-leaf.png);
+        background-repeat: no-repeat;
+        background-position: center 80%;
+        pointer-events: none;
+        position: absolute;
+        height: 300px;
+        width: 100%;
+      }
+
+    div.container-data-category {
+      border-width: 1px;
+      border-bottom: none;
+      cursor: pointer;
+      height: 130px;
+      position: absolute;
+      text-align: center;
+      width: 215px;
+
+      -webkit-transition: font-size 0.1s ease-out;
+      -moz-transition: font-size 0.1s ease-out;
+      -o-transition: font-size 0.1s ease-out;
+      transition: font-size 0.1s ease-out;
+
+      z-index: 10;
+    }
+
+      div.container-data-category:hover {
+        font-size: 1.1em;
+
+        -webkit-transition: font-size 0.2s ease-out;
+        -moz-transition: font-size 0.2s ease-out;
+        -o-transition: font-size 0.2s ease-out;
+        transition: font-size 0.2s ease-out;
+      }
+
+    div.container-round-icon {
+      background-color: #FFFFFF;
+      height: 38px;
+      left: 30%;
+      margin: 0 auto;
+      position: absolute;
+      text-align: center;
+      width: 85px;
+      z-index: 9999;
+    }
+
+    div.data-icon {
+      border-radius: 50%;
+      behavior: url(PIE.htc); /* remove if you don't care about IE8 */
+      background-color: #EAEAEA;
+      border: 1px solid #C0C0C0;
+      color: #000000;
+      font-family: sans-serif;
+      font-size: 2em;
+      font-weight: 300;
+      height: 70px;
+      line-height: 21px;
+      margin: 0 auto;
+      text-align: center;
+      width: 70px;
+
+      /* http://angrytools.com/gradient/ - gradient generator */
+      background: -moz-radial-gradient(center, ellipse cover, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 22%, rgba(208,208,208,1) 100%); /* ff3.6+ */
+      background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, rgba(255,255,255,1)), color-stop(22%, rgba(255,255,255,1)), color-stop(100%, rgba(208,208,208,1))); /* safari4+,chrome */
+      background: -webkit-radial-gradient(center, ellipse cover, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 22%, rgba(208,208,208,1) 100%); /* safari5.1+,chrome10+ */
+      background: -o-radial-gradient(center, ellipse cover, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 22%, rgba(208,208,208,1) 100%); /* opera 11.10+ */
+      background: -ms-radial-gradient(center, ellipse cover, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 22%, rgba(208,208,208,1) 100%); /* ie10+ */
+      background:radial-gradient(ellipse at center, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 22%, rgba(208,208,208,1) 100%); /* w3c */
+      filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#D0D0D0',GradientType=1 ); /* ie6-9 */
+    }
+
+    .data-icon img {
+      border: none;
+      margin: 10px 0 0 0;
+    }
+
+    div.container-data-text {
+      border-top: 1px solid #C0C0C0;
+      height: 90px;
+      position: relative;
+      margin-top: 35px;
+
+      background: #EAEAEA; /* For browsers that do not support gradients */
+      background: -webkit-linear-gradient( #FFFFFF, #EAEAEA); /* For Safari 5.1 to 6.0 */
+      background: -o-linear-gradient(#FFFFFF, #EAEAEA); /* For Opera 11.1 to 12.0 */
+      background: -moz-linear-gradient(#FFFFFF, #EAEAEA); /* For Firefox 3.6 to 15 */
+      background: linear-gradient(#FFFFFF, #EAEAEA); /* Standard syntax */
+    }
+
+      .container-data-text::after {
+        bottom: 15px;
+        background: transparent;
+        content: '';
+        height: 10px;
+        left: auto;
+        position: absolute;
+        right: 8px;
+        width: 70%;
+
+        -webkit-transform: skew(10deg) rotate(10deg);
+        -moz-transform: skew(10deg) rotate(10deg);
+        -ms-transform: skew(10deg) rotate(10deg);
+        -o-transform: skew(10deg) rotate(10deg);
+        transform: skew(10deg) rotate(10deg);
+
+        -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.7);
+        -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.7);
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.7);
+
+        z-index: -1;
+      }
+
+   div.container-data-text em {
+     color: #000000;
+     display: inline-block;
+     font-size: 1.4em;
+     font-family: Georgia;
+     font-style: italic;
+     margin: 45px 0 0 0;
+     text-shadow: 0 2px 0 rgba(255, 255, 255, 0.7);
+   }
+
+
+   /*
+   // TOPIC TITLE.
+   ////////////////////////////////////////////////////////////////////*/
+
+
+    /*
+    // TRAITS.
+    ////////////////////////////////////////////////////////////////////*/
+    #container-ap-contents {
+      border: 1px solid #C0C0C0;
+      margin: 35px 0 0 0;
+      position: relative;
+      width: 100%;
+    }
+
+    .window-title-icon {
+      margin: 0 auto;
+      position: relative;
+      display: block;
+      width: 100%;
+      height: 100px;
+      text-align: center;
+      position: absolute;
+      top: -30px;
+    }
+
+    .window-title-icon div {
+      background: #FFFFFF url(../img/icon-chart.gif) no-repeat center;
+      border-radius: 50%;
+      behavior: url(PIE.htc); /* remove if you don't care about IE8 */
+      border: 1px solid #C0C0C0;
+      height: 60px;
+      width: 60px;
+      margin: 0 auto;
+
+      -webkit-box-shadow: 5px 15px 5px rgba(0, 0, 0, 0.3);
+      -moz-box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3);
+      box-shadow: inset 5px 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+      .window-title-icon .info {
+        background: #FFFFFF url(../img/icon-info.gif) no-repeat center;
+      }
+
+    .container-window-title {
+      background: url(../img/bg-top-title.jpg) repeat-x top;
+      height: 45px;
+      padding: 45px 0 20px 0;
+      text-align: center;
+    }
+
+    .container-window-title h2 {
+      color: black;
+      font-weight: 300;
+      font-size: 1.2em;
+      margin: 0;
+    }
+
+    .container-window-title em {
+      color: #999999;
+      font-size: 0.9em;
+      font-weight: 200;
+    }
+
+    .container-window {
+      border-top: 1px solid #C0C0C0;
+      margin: 0 30px;
+    }
+
+    .container-window-data-contents {
+      margin: 20px 0 20px 0;
+    }
+
+    .container-form-element-searchbox {
+      margin: 0 auto;
+      width: 300px;
+      font-family: sans-serif;
+      font-size: 0.9em;
+    }
+
+    .wrapper-ap-contents {
+      display: block;
+      margin: 0 auto;
+      position: relative;
+      text-align: center;
+    }
+
+    #trait-list {
+      display: inline-block;
+      list-style-type: none;
+      padding: 0;
+      margin: 40px 0 0 0;
+    }
+
+    #trait-list li {
+      border: 1px solid #FFFFFF;
+      cursor: pointer;
+      display: inline-block;
+      margin: 10px 1% 0 1%;
+      padding: 5px;
+      height: 130px;
+      text-align: center;
+      width: 150px;
+
+      font-size: 0.9em;
+
+      -webkit-transition: background-color 1s ease-out;
+      -moz-transition: background-color 1s ease-out;
+      -o-transition: background-color 1s ease-out;
+      transition: background-color 1s ease-out;
+    }
+
+       #trait-list li:hover {
+         background-color: rgba(245, 245, 245, 1);
+
+         -webkit-transition: background-color 0.9s ease-out;
+         -moz-transition: background-color 0.9s ease-out;
+         -o-transition: background-color 0.9s ease-out;
+         transition: background-color 0.9s ease-out;
+
+         border: 1px solid #EAEAEA;
+       }
+
+    #trait-list li em {
+      display: block;
+      height: 70px;
+      margin: 0 auto;
+      overflow: hidden;
+      width: 90%;
+    }
+
+    #trait-list li em span {
+      color: #666666;
+      display: block;
+      font-weight: 300;
+    }
+
+    .icon-trait-leaf {
+      background-image: url(../img/icon-leaf.gif);
+      background-repeat: no-repeat;
+      background-position: center 90%;
+      border-radius: 50%;
+      behavior: url(PIE.htc); /* remove if you don't care about IE8 */
+      border: 1px solid #999999;
+      height: 50px;
+      margin: 0 auto 10px auto;
+      width: 50px;
+
+      -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+      -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+      box-shadow: inset 0 5px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .icon-trait-leaf:hover {
+      -webkit-box-shadow: 0 5px 10px rgba(86, 166, 83, 1);
+      -moz-box-shadow: 0 5px 10px rgba(86, 166, 83, 1);
+      box-shadow: inset 0 5px 10px rgba(86, 166, 83, 1);
+    }
+
+    /*
+    ///////////////////////////////////////////////////////////////////////
+    */
+
+    .text-axes-label {
+      font-size: 1.2em;
+    }
+
+    .bp-axis path,
+    .bp-axis line {
+      fill: none;
+      stroke: #000000;
+      shape-rendering: crispEdges;
+    }
+
+    .bp-axis text {
+      font: 10px serif;
+      font-weight: 300;
+    }
+
+    #bp-y-axis-label {
+      font: 1em serif;
+      font-weight: 300;
+    }
+
+    .bp-tspan {
+      font-size: 1.4em;
+    }
+
+    rect {
+      shape-rendering: crispEdges;
+      stroke-width: 1;
+    }
+
+
+    div.tool-tip {
+      background: lightgreen;
+      border: 1px solid #000000;
+      border-radius: 2px;
+      font: 12px sans-serif;
+      padding: 10px;
+      position: absolute;
+      pointer-events: none;
+      text-align: center;
+      opacity: 0;
+      top: -30px;
+    }
+
+
+    .is-zero {
+      font: 10px sans-serif;
+      font-weight: 300;
+      shape-rendering: crispEdges;
+    }
+
+    /*
+    /////////////////////////////////////////////////////////////////////////////
+    */
+    .ap-contents {
+      padding: 20px;
+    }
+
+    .ap-contents-left {
+      float: left;
+      margin: 0 40px 0 0;
+    }
+
+    .ap-contents-right {
+      float: left;
+      width: 80%;
+    }
+
+    .ap-contents-clear {
+      clear: both;
+    }
+
+    /*
+    /////////////////////////////////////////////////////////////////////////////////
+    */
+    a:hover, a:focus {
+      color: #13b72d;
+    }
+    a:hover, a:active, a:focus {
+        text-decoration: underline;
+    }
+    a:link, a:visited {
+        text-decoration: none;
+    }
+    a {
+        color: #118324;
+    }
+
+
+    /*
+    /////////////////////////////////////////////////////////////////////////////////
+    */
+
+    .advanced-search {
+      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#cccccc+0,ffffff+99 */
+      background: #cccccc; /* Old browsers */
+      background: -moz-linear-gradient(top, #cccccc 0%, #ffffff 99%); /* FF3.6-15 */
+      background: -webkit-linear-gradient(top, #cccccc 0%,#ffffff 99%); /* Chrome10-25,Safari5.1-6 */
+      background: linear-gradient(to bottom, #cccccc 0%,#ffffff 99%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+      filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cccccc', endColorstr='#ffffff',GradientType=0 ); /* IE6-9 */
+    }
+
+    .advanced-search::before {
+      content: '';
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 0 15px 15px 15px;
+      border-color: transparent transparent #CCCCCC transparent;
+      position: absolute;
+      left: 52.5%;
+      margin: -14px 0 0 0;
+    }
+
+    th {
+      background-color: #314355;
+      border: 1px solid #d0d0d0;
+      color: #FFF;
+      font-weight: bold;
+      padding: 4px 9px;
+      border: 1px solid #fff;
+      text-align: left;
+    }
+
+    table {
+      border-collapse: collapse;
+      border: 0;
+      border-spacing: 0;
+      font-size: 0.857em;
+      margin: 25px 0 5px 0;
+      width: 100%;
+    }
+
+    table td {
+      padding: 7px;
+    }
+
+    caption {
+      font-size: 1.3em;
+      text-align: left;
+      margin: 0 0 10px 0;
+    }
+
+    .ap-contents em {
+      font-size: 0.85em;
+    }
+
+
+

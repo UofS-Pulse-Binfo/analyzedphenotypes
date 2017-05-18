@@ -1,0 +1,389 @@
+<?php
+
+/**
+ * @file
+ * The main functionality of this module.
+ */
+
+
+/**
+ * Implements hook_menu().
+ *
+ * Creates a JSON obeject of traits or germplasm and populate autocomplete search options
+ * with values that match a given search key. Custom JavaScript and CSS in lib folder are provided
+ * to manage style and behaviour of autocomplete search functionality.
+ */
+function analyzedphenotypes_menu() {
+  $items = array();
+
+  $items['analyzedphenotypes/search/%/%/%'] = array(
+    'page callback' => 'analyzedphenotypes_autocomplete_search_create_json',
+    // Wildcard 2 - inidcates if request is to create Trait list or Germplasm list.
+    // Wildcard 3 - indicates the type of key provided if it is an id or a keyword text.
+    // Wildcard 4 - Search keyword.
+    'page arguments' => array(2, 3, 4),
+    // TODO: implement a hook_permission to this page.
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+
+/**
+ * Function callback: create autocomplete search options given a keyword.
+ *
+ * @param $key
+ *   A string containing the search keyword entered in the search field.
+ * @param $type
+ *   A string value indicating the type of data being requested.
+ *
+ * @return
+ *   A JSON object.
+ */
+function analyzedphenotypes_autocomplete_search_create_json($type = '', $key_type = '', $key = '') {
+  $type = strip_tags(trim($type));
+
+  if ($type == 'trait' && $key_type == 'searchtext') {
+    $key = strip_tags(trim($key));
+
+    $sql = "SELECT cvterm_id, name FROM {cvterm} WHERE cv_id = 1004 AND LOWER(name) LIKE LOWER(:key) LIMIT 10";
+    $args = array(':key' => $key . '%');
+    $m = chado_query($sql, $args);
+
+    $arr_options = array();
+    if ($m->rowCount()) {
+      foreach($m as $n) {
+        $arr_options[$n->cvterm_id] = trim($n->name);
+      }
+    }
+  }
+  elseif ($type == 'trait' && $key_type == 'germ_id') {
+    $key = strip_tags(trim($key));
+
+    $sql = "SELECT cvterm_id, name FROM {cvterm} WHERE cv_id = 1004 LIMIT 10";
+    $args = array(':key' => $key . '%');
+    $m = chado_query($sql, $args);
+
+    $arr_options = array();
+    if ($m->rowCount()) {
+      foreach($m as $n) {
+        $arr_options[$n->cvterm_id] = trim($n->name);
+      }
+    }
+  }
+
+
+  drupal_json_output($arr_options);
+}
+
+
+
+
+/**
+ * Implements hook_node_info().
+ */
+function analyzedphenotypes_node_info() {
+  $ap_content_type = array(
+    'analyzedphenotypes_traits' => array(
+      'name' => t('Analyzed Phenotypes - Traits'),
+      'base' => 'analyzedphenotypes',
+      'description' => t('Manage Analyzed Phenotypes Traits'),
+      'has_title' => TRUE,
+      'has_body' => FALSE,
+    )
+  );
+
+  return $ap_content_type;
+}
+
+
+/**
+ * Implements hook_views_api()
+ *
+ * This hook tells Drupal that there is views support for this module which then
+ * automatically includes the tripal_db.views.inc where all the views
+ * integration code is found.
+ *
+ * @ingroup tripal_example
+ */
+function analyzedphenotypes_views_api() {
+  return array(
+    'api' => 3.0,
+  );
+}
+
+
+/**
+ * Implements hook_form().
+ */
+function analyzedphenotypes_form($node, $form_state) {
+
+}
+
+
+
+/**
+ * Implements hook_theme().
+ */
+function analyzedphenotypes_theme($existing, $type, $theme, $path) {
+  $core_path = drupal_get_path('module', 'tripal_core');
+
+  $items = array(
+    'analyzedphenotypes_stock_phenotypes' => array(
+      'template' => 'analyzedphenotypes_stock_phenotypes',
+      'render element' => 'node',
+      'path' => $path . '/theme',
+    ),
+
+    'node__analyzedphenotypes_traits' => array(
+      'template' => 'node--chado-generic',
+      'render element' => 'node',
+      'base hook' => 'node',
+      'path' => $core_path . '/theme/templates',
+    ),
+    'analyzedphenotypes_traits_overview' => array(
+      'template' => 'analyzedphenotypes_traits_overview',
+      'render element' => 'node',
+      'path' => $path . '/theme',
+    ),
+    'analyzedphenotypes_traits' => array(
+      'template' => 'analyzedphenotypes_traits',
+      'render element' => 'node',
+      'path' => $path . '/theme',
+    ),
+  );
+
+  return $items;
+}
+
+
+/**
+ * Implements hook_node_view().
+ */
+function analyzedphenotypes_node_view($node, $view_mode, $langcode) {
+  if ($node->type == 'chado_stock') {
+    $node->content['analyzedphenotypes_stock_phenotypes'] = array(
+      '#theme' => 'analyzedphenotypes_stock_phenotypes',
+      '#node' => $node,
+      '#tripal_toc_id' => 'ap-phenotypes',
+      '#tripal_toc_title' => 'Phenotypes',
+      '#weight' => 10,
+    );
+
+    // Tripal Core will add a phenotypes. unset it.
+    // Might be in conflict with the generated Phenotypes TOC by this module.
+    if (isset($node->content['tripal_stock_nd_phenotypes'])) {
+      // Tripal core Phenotypes Pane.
+      unset($node->content['tripal_stock_nd_phenotypes']);
+    }
+  }
+  elseif ($node->type == 'analyzedphenotypes_traits') {
+    // This line will tell the module to create panes
+    // Please see hook_theme implementation.
+    $node->content['#tripal_generic_node_template'] = TRUE;
+
+    $node->content['analyzedphenotypes_traits_overview'] = array(
+      '#theme' => 'analyzedphenotypes_traits_overview',
+      '#tripal_toc_id'    => 'overview',
+      '#tripal_toc_title' => 'Overview',
+      '#weight' => 0,
+    );
+
+    $node->content['analyzedphenotypes_traits_methodology'] = array(
+      '#theme' => 'analyzedphenotypes_traits',
+      '#tripal_toc_id'    => 'methodology',
+      '#tripal_toc_title' => 'Methodology',
+      '#weight' => 1,
+    );
+
+    $node->content['analyzedphenotypes_traits_data_summary'] = array(
+      '#theme' => 'analyzedphenotypes_traits',
+      '#tripal_toc_id'    => 'data_summary',
+      '#tripal_toc_title' => 'Data Summary Chart',
+      '#weight' => 2,
+    );
+
+    $node->content['analyzedphenotypes_traits_experiments'] = array(
+      '#theme' => 'analyzedphenotypes_traits',
+      '#tripal_toc_id'    => 'experiments',
+      '#tripal_toc_title' => 'Experiments',
+      '#weight' => 3,
+    );
+
+    $node->content['analyzedphenotypes_traits_observed_values'] = array(
+      '#theme' => 'analyzedphenotypes_traits',
+      '#tripal_toc_id'    => 'observed_values',
+      '#tripal_toc_title' => 'Observed Values',
+      '#weight' => 4,
+    );
+
+    // No comment!
+    unset($node->content['comments']);
+  }
+}
+
+
+/**
+ * Implements hook_init().
+ */
+function analyzedphenotypes_init() {
+  if (!drupal_is_front_page()) {
+    // Definitely not in homepage.
+    $node = menu_get_object();
+
+    if (isset($node->type) && ($node->type == 'chado_stock' || $node->type == 'analyzedphenotypes_traits')) {
+      // When node is organism/stock.
+      libraries_load('d3v3');
+      $path_to_ap = drupal_get_path('module', 'analyzedphenotypes');
+
+      // Custom autocomplete search functionality
+      drupal_add_css($path_to_ap . '/theme/css/phenotypes-pane-style.css');
+      drupal_add_js($path_to_ap  . '/theme/js/phenotypes-pane-script.js', array('scope' => 'footer'));
+
+    }
+  }
+}
+
+
+/**
+ * Implements hook_preprocess().
+ */
+function analyzedphenotypes_preprocess(&$variables, $hook) {
+  if ($hook == 'analyzedphenotypes_stock_phenotypes') {
+    $node = menu_get_object();
+
+    $variables['path_to_img'] = base_path() . drupal_get_path('module', 'analyzedphenotypes') .  '/theme/img/';
+    $variables['stock_title'] = $node->title;
+
+    // Phenotypes pane in Germplasm page.
+    // Data categories.
+    $variables['data_categories'] = array(
+      //'values' => 123,
+      //'germplasm' => 111,
+      'locations' => 213,
+      'traits' => 235,
+      'years' => 45,
+      'experiments' => 2,
+    );
+
+    // Trait list.
+    $variables['data_phenotypes'] = array(
+      '100 Seed Mass (g)',
+      'Total # of Seeds (count)',
+      'Total Seed Mass (g)',
+      'Straw Biomass (g)',
+      'Subset Traits: # Seeds (count)',
+      'Subset Traits: # Pods (count)',
+      'Subset Traits: # Peduncles (count)',
+      'Lodging (Scale: 1-5) upright - lodged',
+      'Diseases Present (y/n/?)',
+      'Days till Harvest (days)',
+      'R7 Traits: Canopy Height (2nd; cm)',
+      'R7 Traits: Canopy Height (1st; cm)',
+      'R7 Traits: Lowest Pod Height (2nd; cm)',
+      'R7 Traits: Lowest Pod Height (1st; cm)',
+      'Days till 10% of Plants have 1/2 Pods Mature (R7; days)',
+      'Days till 10% of Plants have fully Swollen Pods (R5; days)',
+      'Days till 10% of Plants have Pods (R3; days)',
+      '# Nodes on Primary Stem at R1 (2nd; count)',
+      '# Nodes on Primary Stem at R1 (1st; count)',
+      'Days till 10% of Plants have One Open Flower (R1; days)',
+      'Days till 10% of Plants have Elongated Tendrils (days)',
+      '# of Emerged Plants (count)',
+      'Days to Emergence (days)',
+      '# of Seeds Planted (count)',
+      'Planting Date (date)',
+    );
+  }
+
+  // Crop type.
+  $variables['data_crop'] = 'Lorem ipsum';
+}
+
+
+/**
+ * Implements hook_preprocess_HOOK().
+ */
+function analyzedphenotypes_preprocess_analyzedphenotypes_traits_overview(&$variables) {
+  $node = menu_get_object();
+
+  $variables['path_to_img'] = base_path() . drupal_get_path('module', 'analyzedphenotypes') .  '/theme/img/';
+  $variables['stock_title'] = $node->title;
+
+  $variables['data_categories'] = array(
+    'values' => 123,
+    'germplasm' => 111,
+    'locations' => 213,
+    //'traits' => 235,
+    'years' => 45,
+    'experiments' => 2,
+  );
+}
+
+
+/**
+ * Implements hook_libraries_info().
+ */
+function analyzedphenotypes_libraries_info() {
+  // D3
+  $lib_d3 = libraries_get_path('d3');
+
+  // The visualization in this module uses d3 v3.
+  $libraries['d3v3'] = array(
+    'name' => 'D3 Data-Driven Documents',
+    'vendor url' => 'https://d3js.org/',
+    'version' => '3.5.14',
+    'download url' => 'https://github.com/d3/d3/releases/download/v3.5.14/d3.zip',
+    'library path' => $lib_d3,
+    'files' => array(
+      'js' => array('d3.js')
+    ),
+  );
+
+  return $libraries;
+}
+
+
+
+// HELPER FUNCTIONS:
+
+
+/** Function: shortens a number.
+ *
+ * @param $value
+ *   An integer containing the number to shorted.
+ *
+ * @return string
+ *   Shortened human-readable number.
+ */
+function analyzedphenotypes_shorten_value($value) {
+  if ($value < 1000) {
+    // Hundred and less.
+    $value = $value;
+  }
+  else if ($value < 1000000) {
+    // Thousand.
+    $value = round($value / 1000, 0) . 'K';
+  }
+  else if ($value < 1000000000) {
+    // Million.
+    $value = round($value / 1000000, 0) . 'M';
+  }
+  else {
+    // Billion.
+    $value = round($value / 1000000000, 0) . 'B';
+  }
+
+  return $value;
+}
+
+
+/**
+ * Function: Add a custom autocomplete search.
+ */
+function analyzedphenotypes_autocomplete_search() {
+
+
+}
