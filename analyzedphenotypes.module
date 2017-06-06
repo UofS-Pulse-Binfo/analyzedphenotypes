@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * @file
+ * The main functionality of this module.
+ */
+
+
+/**
+ * Implements hook_menu().
+ */
+function analyzedphenotypes_menu() {
+  $items = array();
+
+  // ADMINISTRATIVE PAGES.
+  // Main administrative pages for analyzed phenotypes.
+  $items['admin/tripal/extension/analyzedphenotypes'] = array(
+    'title' => 'Analyzed Phenotypes',
+    'description' => 'Lorem ipsum dolor sit amet (Hello Analyzedphenotypes).',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('analyzedphenotypes_admin_page_directory'),
+    'access arguments' => array('access administration pages'),
+    'file' => 'include/analyzedphenotypes.admin.form.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+
+  // Data Loader.
+  $items['admin/tripal/extension/analyzedphenotypes/data_loader'] = array(
+    'title' => 'Analyzed Phenotypes Data Loader',
+    'description' => 'Lorem Ipsum dolor sit amet.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('analyzedphenotypes_admin_data_loader'),
+    'file' => 'include/analyzedphenotypes.admin.form.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 1,
+  );
+
+
+  return $items;
+}
