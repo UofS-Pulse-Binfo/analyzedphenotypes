@@ -13,8 +13,10 @@ function analyzedphenotypes_menu() {
   $items = array();
 
   // ADMINISTRATIVE PAGES.
+  $tripal_extension_basepath = 'admin/tripal/extension/';
+
   // Main administrative pages for analyzed phenotypes.
-  $items['admin/tripal/extension/analyzedphenotypes'] = array(
+  $items[$tripal_extension_basepath . 'analyzedphenotypes'] = array(
     'title' => 'Analyzed Phenotypes',
     'description' => 'Lorem ipsum dolor sit amet (Hello Analyzedphenotypes).',
     'page callback' => 'drupal_get_form',
@@ -24,18 +26,56 @@ function analyzedphenotypes_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
-
   // Data Loader.
-  $items['admin/tripal/extension/analyzedphenotypes/data_loader'] = array(
+  $items[$tripal_extension_basepath . 'analyzedphenotypes/data_loader'] = array(
     'title' => 'Analyzed Phenotypes Data Loader',
     'description' => 'Lorem Ipsum dolor sit amet.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_data_loader'),
+    'access arguments' => array('access administration pages'),
     'file' => 'include/analyzedphenotypes.admin.form.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 1,
   );
 
 
+
+  // Autocomplete search path.
+  $items[$tripal_extension_basepath . 'analyzedphenotypes/autocompletesearch/%'] = array(
+    'page callback' => 'analyzedphenotypes_autocomplete_search',
+    'page arguments' => array(5),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
+}
+
+
+module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.functions');
+
+
+/**
+ * Implements hook_libraries_info().
+ */
+function analyzedphenotypes_libraries_info() {
+
+
+}
+
+
+/**
+ * Function callback: Fetch records and populate to autocomplete search fields.
+ *
+ * @param $data_type
+ *   A string indicating the source of call and what type of data is requested.
+ *   eg. Projects, ontology etc.
+ *
+ * @return
+ *   A JSON object.
+ */
+function analyzedphenotypes_autocomplete_search($data_type, $key = '') {
+  $arr_data = analyzedphenotypes_fetch_data($data_type, $key);
+
+  drupal_json_output($arr_data);
 }

@@ -1,0 +1,63 @@
+/**
+ * @file
+ * Contains global style used in each stages.
+ */
+
+
+/*
+ * STAGE INDICATOR.
+ */
+
+/* Graphical stage indicator */
+#ap-container-progress {
+  margin: 0 0 20px 0;
+}
+
+div.ap-progress-stage {
+  background-color: #000000;
+  border: none;
+  color: #FFFFFF;
+  cursor: pointer;
+  display: inline-block;
+  float: left;
+  font-size: 1.1em;
+  font-family: serif;
+  font-weight: 100;
+  height: 50px;
+  line-height: 50px;
+  margin: 5px 0 0 0;
+  width: 130px;
+}
+
+div.ap-progress-stage span {
+  background: url('../img/icon-chevron.gif') no-repeat;
+  border: none;
+  display: inline-block;
+  height: 50px;
+  margin: 0;
+  padding: 0 10px 0 0;
+}
+
+div.ap-progress-stage span:first-child {
+  background-position: 0 50%;
+  width: 10px;
+  margin: 0 1.8% 0 0;
+}
+
+div.ap-progress-stage span:last-child {
+  background-position: -18px 50%;
+  float: right;
+  width: 10px;
+}
+
+div.ap-progress-stage-todo {
+  opacity: 0.2;
+}
+
+div.ap-progress-stage-todo:hover {
+  opacity: 0.4;
+}
+
+div.ap-clear-both {
+  clear: both;
+}

@@ -1,0 +1,23 @@
+/**
+ * @file
+ * Contains styles used in Drag and Drop.
+ */
+
+
+/*
+ * DRAG AND DROP.
+ */
+
+#droppable-ap-dnd-field {
+  background-color: #FCFDFD;
+  border: 1px solid #AAAAAA;
+
+  -moz-box-shadow:    1px 1px 5px 3px #EAEAEA;
+  -webkit-box-shadow: 1px 1px 5px 3px #EAEAEA;
+  box-shadow:         inset 1px 1px 5px 3px #EAEAEA;
+
+  height: 150px;
+  margin: 0;
+  padding: 0;
+  width: 99.5%;
+}
