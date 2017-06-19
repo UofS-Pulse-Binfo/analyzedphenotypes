@@ -40,23 +40,23 @@ function analyzedphenotypes_admin_page_directory($form, &$form_state) {
 
 
 /**
- * Function callback: Construct analyzed phenotypes data loader.
+ * Function callback: Construct analyzed phenotypes data loader stages.
  */
 function analyzedphenotypes_admin_data_loader($form, &$form_state) {
   // Attache styles, js and libraries.
   $path = drupal_get_path('module', 'analyzedphenotypes') . '/theme/';
-  $form['#attached']['css'] = array(
-    $path . 'css/analyzedphenotypes.loader.global.css',
-    $path . 'css/analyzedphenotypes.loader.dragdrop.css');
 
+  $form['#attached']['css'] = array();
+  $form['#attached']['css'][] = $path . 'css/analyzedphenotypes.loader.global.css';
 
-  // Inform user when and how to load data.
-  $m = 'Phenotypic data should be <strong>filtered for outliers and mis-entries</strong> before being uploaded here.
-    Do not upload data that should not be used in the final analysis for a scientific article.
-    Furthermore, data should <strong>NOT be averaged across replicates or site-year.</strong>';
+  // Inform user when and how to load data. Do not repost on any AJAX-triggered submit.
+  if (!$form_state['submitted'] && !isset($form_state['values'])) {
+    $m = 'Phenotypic data should be <strong>filtered for outliers and mis-entries</strong> before being uploaded here.
+      Do not upload data that should not be used in the final analysis for a scientific article.
+      Furthermore, data should <strong>NOT be averaged across replicates or site-year.</strong>';
 
-  drupal_set_message(t($m), 'warning');
-
+    drupal_set_message(t($m), 'warning');
+  }
 
   // On page load, initialize loader to STAGE 1 - Upload.
   if (!isset($form_state['stage'])) {
@@ -77,6 +77,7 @@ function analyzedphenotypes_admin_data_loader($form, &$form_state) {
     '#title' => $stage_title,
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
+    '#id' => 'ap-main-form-fieldset',
   );
 
   // Render stage indicator markup
@@ -91,6 +92,9 @@ function analyzedphenotypes_admin_data_loader($form, &$form_state) {
     case 'upload':
       // Is STAGE 1.
       // This stage is to let user select project, genus and upload file.
+      $form['#attached']['css'][] = $path . 'css/analyzedphenotypes.loader.dragdrop.css';
+      $form['#attached']['js']    = array($path . 'js/analyzedphenotypes.loader.dragdrop.js');
+
       $form = analyzedphenotypes_loader_form_upload($form, $form_state);
       break;
 
@@ -113,6 +117,19 @@ function analyzedphenotypes_admin_data_loader($form, &$form_state) {
       break;
   }
 
+
+  // Next stage submit button.
+  // No button on last stage and by default is hidden.
+  if ($current_page != 'save') {
+    $form['next_step'] = array(
+      '#type' => 'submit',
+      '#value' => 'Next Step',
+      '#weight' => 100,
+      '#id' => 'ap-next-stage-submit-field',
+    );
+  }
+
+
   return $form;
 }
 
@@ -131,19 +148,37 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
   $form[$main_fieldset]['ap_project_select_field'] = array(
     '#title' => 'Experiment',
     '#type' => 'textfield',
-    '#maxlength' => 50,
+    '#maxlength' => 200,
     '#size' => 100,
     '#required' => TRUE,
     '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/autocompletesearch/project',
     '#description' => t('Lorem ipsum dolor sit amet'),
+
+    // When project is selected, autofill the genus field with corresponding project genus.
+    '#ajax' => array(
+      'callback' => 'analyazedphenotypes_AJAX_callback',
+      'wrapper' => 'ap-AJAX-container',
+      'method' => 'replace',
+    ),
     '#id' => 'ap-project-select-field'
   );
 
   // Select genus form field.
   // Fetch genus.
+  $form[$main_fieldset]['ap_AJAX_container'] = array(
+    '#prefix' => '<div id="ap-AJAX-container">',
+    '#suffix' => '</div>',
+  );
+
+  // Default to all genus.
   $arr_genus = analyzedphenotypes_fetch_data('genus');
 
-  $form[$main_fieldset]['ap_genus_select_field'] = array(
+  if (isset($form_state['values']['ap_project_select_field'])) {
+    // Default the genus to project genus.
+    $arr_genus = array(1 => 'Test genus');
+  }
+
+  $form[$main_fieldset]['ap_AJAX_container']['ap_genus_select_field'] = array(
     '#type' => 'select',
     '#title' => t('Genus'),
     '#required' => TRUE,
@@ -156,8 +191,24 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
   // Drag and Drop file upload form field.
   $form = analyzedphenotypes_loader_dnd($form, $form_state);
 
+
   return $form;
 }
+
+
+
+
+
+function analyazedphenotypes_AJAX_callback($form, $form_state) {
+  $main_fieldset = $form['ap_main_fieldset_title']['#value'];
+
+  return $form[$main_fieldset]['ap_AJAX_container']['ap_genus_select_field'];
+}
+
+
+
+
+
 
 /**
  * Function callback: Construct STAGE 2 - VALIDATE form interface.
@@ -200,25 +251,22 @@ function analyzedphenotypes_loader_dnd($form, &$form_state) {
 
   $form[$main_fieldset]['ap_dnd_field'] = array(
     '#type' => 'dragndrop_upload',
+    '#title' => t('TSV Data File'),
     '#file_upload_max_size' => '10M',
     '#upload_location' => 'public://',
     '#upload_event' => 'auto',
-    // NOTE: Accept the listed file extension and let the spreadsheet reader tell if file is valid to generate an an error message.
-    //       No silent treatment.
     '#upload_validators' => array(
-      'file_validate_extensions' => array('xlsx xls jpg jpeg gif png txt doc pdf ppt pps odt ods odp csv'),
+      'file_validate_extensions' => array('tsv txt'),
     ),
+    '#required' => TRUE,
     '#droppable_area_text' => t('Drag and drop your tsv file here'),
     '#progress_indicator' => 'throbber',
     '#progress_message' => 'Validating your file. Please wait...',
     '#allow_replace' => 1,
     '#standard_upload' => 1,
     '#upload_button_text' => '',
-
-    // We are adding our own element process function so that we can make a successfully
-    // uploaded/validated file permanent during the AJAX process rather than waiting for
-    // them to click the "Next" button.
-    '#id' => 'ap-dnd-field'
+    '#description' => t('Tab Separated Values (.tsv) or Text file (.txt) only'),
+    '#id' => 'ap-dnd-field',
   );
 
   return $form;
@@ -285,3 +333,4 @@ function analyzedphenotypes_get_stage($stage) {
 
 
 
+  

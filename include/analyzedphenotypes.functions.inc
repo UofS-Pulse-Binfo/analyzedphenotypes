@@ -11,7 +11,7 @@ function analyzedphenotypes_fetch_data($data_type, $key = null) {
   switch($data_type) {
     case 'project':
       $sql = "
-        SELECT project_id, name
+        SELECT name, name
         FROM {project}
         WHERE LOWER(name) LIKE :query_string
         ORDER BY name ASC
@@ -28,7 +28,11 @@ function analyzedphenotypes_fetch_data($data_type, $key = null) {
       break;
 
   case 'genus':
-    $sql = "SELECT genus, UPPER(genus) FROM {organism} GROUP BY genus ORDER BY genus";
+    $sql = "
+      SELECT genus, UPPER(genus)
+      FROM {organism}
+      GROUP BY genus
+      ORDER BY genus";
     $result = chado_query($sql);
 
     if ($result->rowCount() > 0) {

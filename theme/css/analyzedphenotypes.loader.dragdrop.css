@@ -7,7 +7,6 @@
 /*
  * DRAG AND DROP.
  */
-
 #droppable-ap-dnd-field {
   background-color: #FCFDFD;
   border: 1px solid #AAAAAA;
@@ -20,4 +19,110 @@
   margin: 0;
   padding: 0;
   width: 99.5%;
+}
+
+
+/*
+ * Drag file here message and link container
+ */
+.droppable-message {
+  border: medium none;
+  margin: 10px;
+  height: 85%;
+}
+
+.droppable-message > span {
+  color: #666666;
+  font-family: serif;
+  font-size: 1.1em;
+  display: block;
+  line-height: normal;
+  margin: 0 auto;
+  position: relative;
+  text-align: center;
+  top: 32px;
+  width: 480px;
+}
+
+.droppable-message span.text-drag {
+  width: 480px !important;
+}
+
+
+/*
+ * Choose file link
+ */
+div.droppable-standard-upload {
+  color: #666666;
+  font-family: serif;
+  font-size: 0.9em;
+  line-height: normal;
+  margin: 7px auto 0 auto;
+  min-height: 20px;
+  padding: 0;
+  position: relative;
+  top: 30px;
+  width: 165px;
+}
+
+#droppable-ap-dnd-field a,
+#droppable-ap-dnd-field a:link {
+  background: none;
+  border: none;
+  color: #118324;
+  font-weight: 300;
+  left: 0;
+  line-height: 0;
+  margin: 0;
+  padding: 0;
+  text-decoration: underline;
+}
+
+
+/*
+ * Preview file
+ */
+.droppable-preview {
+  position: absolute;
+  display: none;
+  height: 0;
+  overflow: hidden;
+  width: 0;
+}
+
+
+/*
+ * AJAX wait animation
+ */
+div.droppable-controls {
+  left: 0;
+  position: absolute;
+  text-align: center;
+  width: 100%;
+  top: 80%;
+}
+
+.droppable-controls div {
+  display: inline;
+  margin: 0 auto;
+  padding: 0 12px 0 0 !important;
+}
+
+
+/*
+ * Remove button
+ */
+#edit-ap-dnd-field-remove-button, .file {
+  display: none;
+  height: 0;
+  width: 0;
+}
+
+
+/*
+ * Next step button: this button is not available
+ * on initial page and when error is detected.
+ */
+input#ap-next-stage-submit-field.form-button-disabled {
+  display: none;
 }
