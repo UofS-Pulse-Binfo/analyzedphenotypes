@@ -6,6 +6,11 @@
 (function($) {
   Drupal.behaviors.apDragAndDrop = {
     attach: function (context, settings) {
+      // Add event listener to project autocomplete search field.
+      $('#ap-project-select-field').click(function() {
+        $(this).select();
+      });
+
       // Handle events when user drags a file to drop zone.
       // Reference main container of drag and drop.
       var dnd = 'ap-dnd-field-upload';
@@ -46,6 +51,25 @@
         submitButton.addClass('form-button-disabled');
         submitButton.attr('disabled','disabled');
       }
+
+
+      $(document)
+      .ajaxComplete(function() {
+        // Mute any calls to drupal_set_message() when autoloading
+        // project genus. No clue why autocompletesearch + AJAX reloads
+        // previously posted messages.
+        $('#ap-AJAX-container').find('.messages').remove();
+
+        // Reset the select field to always default to the first option.
+        $('#ap-genus-select-field')
+          .find('option')
+          .each(function() {
+            $(this).attr('selected', '');
+          });
+
+
+      });
+
     }
   };
 }(jQuery));

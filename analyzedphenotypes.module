@@ -38,8 +38,6 @@ function analyzedphenotypes_menu() {
     'weight' => 1,
   );
 
-
-
   // Autocomplete search path.
   $items[$tripal_extension_basepath . 'analyzedphenotypes/autocompletesearch/%'] = array(
     'page callback' => 'analyzedphenotypes_autocomplete_search',
@@ -53,6 +51,32 @@ function analyzedphenotypes_menu() {
 
 
 module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.functions');
+
+
+/**
+ * Implements hook_theme().
+ */
+function analyzedphenotypes_theme($existing, $type, $theme, $path) {
+  $items = array();
+
+  // Administrative page directory
+  $items['analyzedphenotypes_admin_page_directory'] = array(
+    'render element' => 'form',
+    'template' => 'analyzedphenotypes_pages',
+    'path' => $path . '/theme',
+  );
+
+  // Data loader.
+  $items['analyzedphenotypes_admin_data_loader'] = array(
+    'render element' => 'form',
+    'template' => 'analyzedphenotypes_pages',
+    'path' => $path . '/theme',
+  );
+
+
+  return $items;
+}
+
 
 
 /**
@@ -74,8 +98,12 @@ function analyzedphenotypes_libraries_info() {
  * @return
  *   A JSON object.
  */
-function analyzedphenotypes_autocomplete_search($data_type, $key = '') {
-  $arr_data = analyzedphenotypes_fetch_data($data_type, $key);
+function analyzedphenotypes_autocomplete_search($datatype, $key = '') {
+  switch($datatype) {
+    case 'projects':
+      $arr_data = analyzedphenotypes_project_properties('project_pattern_match_name', $key);
+      break;
+  }
 
   drupal_json_output($arr_data);
 }

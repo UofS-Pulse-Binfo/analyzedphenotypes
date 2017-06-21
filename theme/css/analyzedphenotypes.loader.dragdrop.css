@@ -15,7 +15,7 @@
   -webkit-box-shadow: 1px 1px 5px 3px #EAEAEA;
   box-shadow:         inset 1px 1px 5px 3px #EAEAEA;
 
-  height: 150px;
+  height: 250px;
   margin: 0;
   padding: 0;
   width: 99.5%;
@@ -28,13 +28,13 @@
 .droppable-message {
   border: medium none;
   margin: 10px;
-  height: 85%;
+  height: 90%;
 }
 
 .droppable-message > span {
   color: #666666;
   font-family: serif;
-  font-size: 1.1em;
+  font-size: 1.3em;
   display: block;
   line-height: normal;
   margin: 0 auto;
@@ -94,12 +94,22 @@ div.droppable-standard-upload {
 /*
  * AJAX wait animation
  */
+#ap-dnd-field-upload .throbber {
+  background: url('../../theme/img/wait-validating.gif') no-repeat top center;
+  padding: 60px 90px 10px 90px !important;
+}
+
+#ap-dnd-field-upload .message {
+  display: block;
+  padding: 0 0 0 0 !important;
+}
+
 div.droppable-controls {
   left: 0;
   position: absolute;
   text-align: center;
   width: 100%;
-  top: 80%;
+  top: 75%;
 }
 
 .droppable-controls div {
