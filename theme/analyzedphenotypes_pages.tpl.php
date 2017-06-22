@@ -42,9 +42,9 @@ elseif($form_id == 'analyzedphenotypes_admin_data_loader') :
     Furthermore, data should <strong>NOT be averaged across replicates or site-year.</strong>
   </div>
 
+  <?php print drupal_render_children($form); ?>
+
 <?php
-
-  print drupal_render_children($form);
-
 endif;
 ?>
+

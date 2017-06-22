@@ -8,7 +8,9 @@
  * STAGE INDICATOR.
  */
 
-/* Graphical stage indicator */
+/*
+ * Graphical stage indicator
+ */
 #ap-container-progress {
   margin: 0 0 20px 0;
 }
@@ -60,4 +62,85 @@ div.ap-progress-stage-todo:hover {
 
 div.ap-clear-both {
   clear: both;
+}
+
+
+/*
+ * Fieldset style window used in
+ * Validation Result window.
+ */
+.ap-content-window {
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#ap-content-window-title {
+  background-color: #304356;
+  border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
+  color: #FFFFFF;
+  font-size: 1.1em;
+  padding: 10px 0 10px 20px;
+}
+
+#ap-content-window-copy {
+  border: 1px;
+  border-style: solid;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+
+  -moz-box-shadow:    1px 1px 5px 1px #EAEAEA;
+  -webkit-box-shadow: 1px 1px 5px 1px #EAEAEA;
+  box-shadow:         inset 1px 1px 5px 1px #EAEAEA;
+
+  background-color: #FFFFFF;
+  padding: 20px 30px 20px 30px;
+  text-align: left;
+}
+
+.ap-passed {
+  background: url('../img/icon-success.jpg') no-repeat;
+  background-position: 5px 0;
+}
+
+.ap-failed {
+  background: url('../img/icon-failed.jpg') no-repeat;
+  background-position: 5px 0;
+}
+
+.ap-todo {
+  background: url('../img/icon-todo.jpg') no-repeat;
+  background-position: 5px 0;
+  opacity: 0.2;
+}
+
+ul#ap-content-window-list {
+  list-style-type: none;
+  margin: 0 15px 0 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  padding: 15px;
+}
+
+li em {
+  font-weight: bold;
+}
+
+#ap-content-window-list > li {
+  padding: 0 0 10px 15px;
+}
+
+#ap-content-window-list > li em {
+  margin-left: 18px;
+}
+
+ul.ap-content-window-sublist {
+  background-color: #F7F7F7;
+  margin: 0 20px 5px 0 !important;
+  padding: 10px !important;
+}
+
+li.ap-sublist-item {
+  margin-left: 20px;
 }

@@ -174,8 +174,9 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
     '#suffix' => '</div>',
   );
 
-  $arr_genus = analyzedphenotypes_genus_property();
-  array_unshift($arr_genus, '- Select -');
+
+  $arr_all_genus = analyzedphenotypes_genus_property();
+  array_unshift($arr_all_genus, '- Select -');
 
   if (isset($form_state['values']['ap_project_select_field'])
       && !empty($form_state['values']['ap_project_select_field'])) {
@@ -188,17 +189,19 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
     $project_id = analyzedphenotypes_project_properties('project_match_name', $project_name);
 
     if ($project_id) {
-      $arr_genus = analyzedphenotypes_project_properties('project_genus', $project_id);
+      $arr_project_genus = analyzedphenotypes_project_properties('project_genus', $project_id);
     }
   }
+
+  $genus_options = ($arr_project_genus) ? $arr_project_genus : $arr_all_genus;
 
   // SELECT FIELD.
   $form[$main_fieldset]['ap_AJAX_container']['ap_genus_select_field'] = array(
     '#type' => 'select',
     '#title' => t('Genus'),
     '#required' => TRUE,
-    '#options' => $arr_genus,
-    '#default_value' => array_keys($arr_genus)[0],
+    '#options' => $genus_options,
+    '#default_value' => array_keys($genus_options)[0],
     '#description' => t('Lorem ipsum dolor sit amet'),
     '#id' => 'ap-genus-select-field',
   );
@@ -226,16 +229,38 @@ function analyzedphenotypes_file_validate($file) {
     $project_name = $_POST['ap_project_select_field'];
 
     // Genus details.
-    $genus = $_POST['ap_genus_select_field'];
+    $project_genus = $_POST['ap_genus_select_field'];
 
-    // Validattion is at file level.
-    $status = analyzedphenotypes_validate_tsv_file($project_name, $genus, $file);
+    // Validation is at file level.
+    $dataset = array(
+      'project_name'  => $project_name,
+      'project_genus' => $project_genus,
+      'data_file'     => $file,
+    );
 
+    // Begin validation process.
+    $status = analyzedphenotypes_validate_tsv_file($dataset);
 
-    dpm($status);
+    // We want to show the user which steps passed/failed even if all of them passed,
+    // so lets do that now. We use drupal_set_message() because returning from this function
+    // creates an error message and halts file upload, whereas, using drupal_set_message()
+    // allows us to print to the screen regardless of failure/success.
+    drupal_set_message(theme('analyzedphenotypes_validator_report', array('status' => $status)), 'ap-content-window');
 
-    return FALSE;
+    $all_results = array_values($status);
+    // Count all that failed.
+    $result_count = array_count_values($all_results);
 
+    // When failed is found.
+    if ($result_count['failed']) {
+      return FALSE;
+    }
+    else {
+      // NOTE: ap-validator-success class signals that it passed all validation
+      //       may proceed to the next stage.
+      drupal_set_message('Your file uploaded successfully. Please click "Next" to continue', 'status ap-validator-success', $repeat = FALSE);
+      return array();
+    }
   }
 }
 
@@ -339,6 +364,9 @@ function analyzedphenotypes_loader_dnd($form, &$form_state) {
     '#file_upload_max_size' => '10M',
     '#upload_location' => 'public://',
     '#upload_event' => 'auto',
+    '#upload_validators' => array(
+      'file_validate_extensions' => array(),
+    ),
     '#required' => TRUE,
     '#droppable_area_text' => t('- Drag and drop your tsv file here -'),
     '#progress_indicator' => 'throbber',

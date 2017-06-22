@@ -10,7 +10,7 @@
 /**
  *
  */
-function analyzedphenotypes_validate_tsv_file($project_name, $genus, $file) {
+function analyzedphenotypes_validate_tsv_file($data) {
   // Array to hold validation status.
   $arr_status = array();
   // Array to hold all registered validators.
@@ -30,11 +30,13 @@ function analyzedphenotypes_validate_tsv_file($project_name, $genus, $file) {
           && function_exists($item['validation callback'])) {
 
         $callback  = $item['validation callback'];
-        $parameter = $item['arguments'];
+        $case      = $item['case'];
+        $parameter = $item['validation arguments'];
+        $arguments = $data[$parameter];
 
         if ($error_flag == 'no_error') {
           // Perform the validator.
-          $arr_status[$key] = call_user_func($callback, $parameter, $project_name);
+          $arr_status[$key] = call_user_func($callback, $case, $arguments);
         }
         else {
           // Error returned, set all other validators to todo.
@@ -42,18 +44,19 @@ function analyzedphenotypes_validate_tsv_file($project_name, $genus, $file) {
         }
 
         // When validation failed in any of the validators, stop other validation
-        // and tag all the rest to 'todo' - corresponding css rules will indicate
+        // and tag them as to 'todo' - corresponding css rules will indicate
         // that such validation process was not performed.
-        if ($arr_status[$key] === FALSE) {
-          $error_flag = 1;
+        if ($arr_status[$key] == 'failed') {
+          $error_flag = 'error_found';
         }
+
+        unset($validator[$key]);
 
       }
     }
     //
 
   }
-
 
 
   return $arr_status;
@@ -89,38 +92,46 @@ function analyzedphenotypes_ap_validators($all_scope = NULL) {
   $validators['PROJECT_is_specified'] = array(
     'label' => 'Experiment is specified',
     'scope' => $scope['PROJECT'],
-    'message callback' => NULL,
     'validation callback' => 'analyzedphenotypes_validator_project',
-    'arguments' => 'specified'
+    'case' => 'specified',
+    'validation arguments' => 'project_name',
+    'error message' => 'Please ensure to select a project suggested by the Experiment text field before uploading your file.',
   );
 
   $validators['PROJECT_exists'] = array(
     'label' => 'Experiment exists',
     'scope' => $scope['PROJECT'],
-    'message callback' => NULL,
     'validation callback' => 'analyzedphenotypes_validator_project',
-    'arguments' => 'exists'
+    'case' => 'exists',
+    'validation arguments' => 'project_name',
+    'error message' => '',
   );
 
 
-
-
-
-
-/*
-
   // Genus Validators.
   $validators['GENUS_matched_project'] = array(
-    'label' => 'Genus matched project genus',
+    'label' => 'Genus is specified',
     'scope' => $scope['GENUS'],
-    'message callback' => NULL,
     'validation callback' => 'analyzedphenotypes_validator_genus',
-    'arguments' => 'match'
+    'case' => 'specified',
+    'validation arguments' => 'project_genus',
+    'error message' => '',
   );
 
 
   // File validators.
-  $validators['FILE_has_right_extension'] = array();
+  $validators['FILE_has_right_file_extension'] = array(
+    'label' => 'Data file is .tsv or .txt',
+    'scope' => $scope['FILE'],
+    'validation callback' => 'analyzedphenotypes_validator_datafile',
+    'case' => 'extension',
+    'validation arguments' => 'data_file',
+    'error message' => 'Please ensure that the file you are uploading has .tsv or .txt file extension.',
+  );
+
+
+
+/*
   $validators['FILE_is_readable'] = array();
   $validators['FILE_has_content_and_tab_separted'] = array();
 
@@ -138,11 +149,12 @@ function analyzedphenotypes_ap_validators($all_scope = NULL) {
 /**
  *
  */
-function analyzedphenotypes_validator_project($validator, $project_name) {
-  switch($validator) {
+function analyzedphenotypes_validator_project($case, $project_name) {
+  switch($case) {
     case 'specified':
+      // See if project name is provided. Extra trim if blank space is provided.
       if (empty(trim($project_name))) {
-        return FALSE;
+        return 'failed';
       }
 
       break;
@@ -152,17 +164,74 @@ function analyzedphenotypes_validator_project($validator, $project_name) {
       $exists = analyzedphenotypes_project_properties('project_match_name', $project_name);
 
       if (!$exists) {
-        return FALSE;
+        return 'failed';
       }
 
       break;
   }
 
-  return TRUE;
+
+  return 'passed';
 }
 
 
 
+function analyzedphenotypes_validator_genus($case, $project_genus) {
+  switch($case) {
+    case 'specified':
+      // See if project name is provided. Extra trim if blank space is provided.
+      if (empty(trim($project_genus))) {
+        return 'failed';
+      }
+
+      break;
+  }
+
+
+  return 'passed';
+}
+
+
+
+
+function analyzedphenotypes_validator_datafile($case, $data_file) {
+  switch($case) {
+    case 'extension':
+      // Array of valid file extension.
+      $arr_valid_extension = array('tsv', 'txt');
+      // File check - extension should be tsv or txt only.
+      $file_extension = pathinfo($data_file->filename, PATHINFO_EXTENSION);
+
+      if (!in_array($file_extension, $arr_valid_extension)) {
+        return 'failed';
+      }
+
+      break;
+  }
+
+
+  return 'passed';
+}
+
+
+
+
+
+
+
+
+/**
+ *
+ */
+function analyzedphenotypes_validator_generate_message($validator, $error_info) {
+  // Array to hold error messages.
+  $arr_messages = array();
+
+  if ($validator == 'PROJECT_is_specified') {
+    $arr_message = '';
+  }
+
+}
 
 
 
