@@ -19,26 +19,38 @@ $ap_validators =  module_invoke_all('ap_validators');
 
       <?php
         foreach($status as $validator => $result) {
+          $type = $result['type'];
+          $details = $result['details'];
+
           // Style each error based on validation result.
           $style = '';
 
-          if ($result == 'passed') {
+          if ($type == 'passed') {
             $style = 'ap-passed';
+            $title = 'Passed';
           }
-          elseif ($result == 'failed') {
+          elseif ($type == 'failed') {
             $style = 'ap-failed';
+            $title = 'Failed';
           }
           else {
             $style = 'ap-todo';
+            $title = 'Pending';
           }
 
-          print '<li class="' . $style . '"><em>' . $ap_validators[$validator]['label'] . '</em></li>';
+          print '<li class="' . $style . '" title="' . $title . '"><em>' . $ap_validators[$validator]['label'] . '</em></li>';
 
           // See if validator has more message about the error.
-          if ($result == 'failed') {
+          if ($type == 'failed') {
             $error_message = $ap_validators[$validator]['error message'];
 
             if (!empty($error_message)) {
+
+              // Check for additional info.
+              if (!empty(trim($details))) {
+                $error_message = str_replace('@replace', '<i class="ap-error-details">' . $details . '</i>', $error_message);
+              }
+
               print '<ul class="ap-content-window-sublist">';
               print '<li class="ap-sublist-item">' . $error_message . '</li>';
               print '</ul>';

@@ -16,15 +16,15 @@ $form_id = $form['#form_id'];
  */
 
 if ($form_id == 'analyzedphenotypes_admin_page_directory') :
-  $title = drupal_render($form['admin_directory']);
-  $tmp = $form['admin_directory']['#item'];
-  // Use string separator to access each elements.
-  $links = explode('@', $tmp);
+  $links = '';
+  foreach($directory as $key => $options) {
+    $url = l(ucwords($key), 'admin/tripal/extension/analyzedphenotypes/' . $options['page_id']);
+    $links .= '<li>' . $url . '<br />' . $options['info'] . '</li>';
+  }
 ?>
 
-  <h2><?php print $title; ?></h2>
   <ul>
-    <?php print implode('</li><li>', str_replace('#', '<br />', $links)); ?>
+    <?php print $links; ?>
   </ul>
 
 

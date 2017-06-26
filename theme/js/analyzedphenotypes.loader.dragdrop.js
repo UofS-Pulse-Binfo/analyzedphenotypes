@@ -47,17 +47,33 @@
       $(document)
       .ajaxStart(function() {
         // Remove any previous messages or validation result window.
-        $('#ap-main-form-fieldset').find('.messages').remove();
+        $('#ap-validation-result-embed').children().remove();
+
+        // Disable form fields.
+        $('#ap-project-select-field, #ap-genus-select-field').attr('readonly', 'readonly');
       })
       .ajaxComplete(function() {
+        var vr = $('.ap-content-window').clone();
+        var em = $('.ap-content-window').next('.messages').clone();
+
+        $('.ap-content-window').next('.messages').remove();
+        $('.ap-content-window').remove();
+
+        $(vr).appendTo('#ap-validation-result-embed');
+        $(em).appendTo('#ap-validation-result-embed');
+
+
         // When DOM has upload success message.
         if ($('div.ap-validator-success').length) {
           $('.form-item').hide();
 
           submitButton.removeClass('form-button-disabled');
           submitButton.removeAttr('disabled');
-          nextStage()
+          nextStage();
         }
+
+        // Enable form fields.
+        $('#ap-project-select-field, #ap-genus-select-field').removeAttr('readonly', 'readonly');
 
         // Mute any calls to drupal_set_message() when autoloading
         // project genus. No clue why autocompletesearch + AJAX reloads
@@ -74,7 +90,7 @@
 
 
       /**
-       * Inform user of the next page before clicking the next step
+       * Inform user of the next stage before clicking the next step
        * button in every stage.
        */
       function nextStage() {
@@ -85,20 +101,22 @@
 
         if (countStagesLeft == 1) {
           // Completed stages 1 and 2.
-          nextStage = 'Stage 3 - Save Spreadsheet';
+          nextStage = 'Stage 4 - Save Data';
         }
         else if(countStagesLeft == 2) {
           // Completed stage 1 only.
-          nextStage = 'Stage 2 - Describe New Trait';
+          nextStage = 'Stage 3 - Describe Traits';
         }
         else if(countStagesLeft == 3) {
           // Completed stage 1 only.
-          nextStage = 'Stage 2 - Describe New Trait';
+          nextStage = 'Stage 2 - Validate Data';
         }
 
 
-        $('#container-upload').once(function() {
-          $(this).append('<span class="text-next-step">&#x25B8; Next Step: ' + nextStage + '</span>');
+        $('#ap-main-form-fieldset').once(function() {
+
+          $('<span class="text-next-step">&#x25B8; Next Step: ' + nextStage + '</span>')
+           .insertAfter('#ap-next-stage-submit-field');
         });
       }
 

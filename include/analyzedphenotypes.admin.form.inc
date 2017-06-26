@@ -17,24 +17,13 @@ function analyzedphenotypes_admin_page_directory($form, &$form_state) {
   // Create a directory of links in the module.
   // Array to hold administrative page directory in this module.
   // Key - page id and page info.
-  $arr_dir = array(
+  $arr_directory = array(
     'data loader' => array('page_id' => 'data_loader', 'info' => 'Lorem ipsum dolor sit amet'),
     'page xyz' => array('page_id' => 'abc_xyz', 'info' => 'Another page - Lorem ipsum dolor sit amet'),
     'yet another page' => array('page_id' => 'cde_fgh', 'info' => 'Yet Another page - Lorem ipsum dolor sit amet'),
   );
 
-  $links = '';
-  foreach($arr_dir as $key => $page_prop) {
-    $url = l(ucwords($key), 'admin/tripal/extension/analyzedphenotypes/' . $page_prop['page_id']);
-    // String separator: @ and # should be replaced with newline.
-    $links .= '@' . $url . '#' . $page_prop['info'];
-  }
-
-  // Page title.
-  $form['admin_directory'] = array(
-    '#markup' => 'Analyzed Phenotypes Module',
-    '#item' => $links,
-  );
+  $form['#ap_admin_directory'] = $arr_directory;
 
 
   return $form;
@@ -78,6 +67,12 @@ function analyzedphenotypes_admin_data_loader($form, &$form_state) {
   $form[$main_fieldset]['ap_stage_indicator'] = array(
     '#type' => 'markup',
     '#markup' => $stage_indicators
+  );
+
+  // Embed validation result here.
+  $form[$main_fieldset]['ap_validation_result_embed'] = array(
+    '#prefix' => '<div id="ap-validation-result-embed">',
+    '#suffix' => '</div>'
   );
 
 
@@ -175,7 +170,7 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
   );
 
 
-  $arr_all_genus = analyzedphenotypes_genus_property();
+  $arr_all_genus = analyzedphenotypes_genusprop();
   array_unshift($arr_all_genus, '- Select -');
 
   if (isset($form_state['values']['ap_project_select_field'])
@@ -186,14 +181,14 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
 
     // Fetch the project id given project name. This is redunant due to how
     // autocomplete search requirement where the option is both the key and value.
-    $project_id = analyzedphenotypes_project_properties('project_match_name', $project_name);
+    $project_id = analyzedphenotypes_projectprop('project_match_name', $project_name);
 
     if ($project_id) {
-      $arr_project_genus = analyzedphenotypes_project_properties('project_genus', $project_id);
+      $arr_project_genus = analyzedphenotypes_projectprop('project_genus', $project_id);
     }
   }
 
-  $genus_options = ($arr_project_genus) ? $arr_project_genus : $arr_all_genus;
+  $genus_options = (isset($arr_project_genus) && $arr_project_genus != 0) ? $arr_project_genus : $arr_all_genus;
 
   // SELECT FIELD.
   $form[$main_fieldset]['ap_AJAX_container']['ap_genus_select_field'] = array(
@@ -208,7 +203,7 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
 
   // Drag and Drop file upload form field.
   // DND FIELD.
-  $form = analyzedphenotypes_loader_dnd($form, $form_state);
+  $form = analyzedphenotypes_dragdrop($form, $form_state);
 
 
   return $form;
@@ -248,75 +243,21 @@ function analyzedphenotypes_file_validate($file) {
     drupal_set_message(theme('analyzedphenotypes_validator_report', array('status' => $status)), 'ap-content-window');
 
     $all_results = array_values($status);
-    // Count all that failed.
-    $result_count = array_count_values($all_results);
 
-    // When failed is found.
-    if ($result_count['failed']) {
-      return FALSE;
+    // Find a single validator that returned FALSE.
+    // One false result should trigger a validation error.
+    foreach($all_results as $result) {
+      if ($result['type'] == 'failed') {
+        return FALSE;
+      }
     }
-    else {
-      // NOTE: ap-validator-success class signals that it passed all validation
-      //       may proceed to the next stage.
-      drupal_set_message('Your file uploaded successfully. Please click "Next" to continue', 'status ap-validator-success', $repeat = FALSE);
-      return array();
-    }
+
+    // NOTE: ap-validator-success class signals that it passed all validation
+    //       may proceed to the next stage.
+    drupal_set_message('Your file uploaded successfully. Please click "Next Step" to continue', 'status ap-validator-success', $repeat = FALSE);
+    return array();
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /**
@@ -355,7 +296,7 @@ function analyzedphenotypes_loader_save_form($form, &$form_state) {
 /**
  * Helper function: Construct Drag and Drop file upload area.
  */
-function analyzedphenotypes_loader_dnd($form, &$form_state) {
+function analyzedphenotypes_dragdrop($form, &$form_state) {
   $main_fieldset = $form['ap_main_fieldset_title']['#value'];
 
   $form[$main_fieldset]['ap_dnd_field'] = array(
@@ -382,9 +323,6 @@ function analyzedphenotypes_loader_dnd($form, &$form_state) {
 }
 
 
-
-
-
 /**
  * Helper function: Create markup for stage indicators.
  *
@@ -405,9 +343,9 @@ function analyzedphenotypes_get_stage($stage) {
   // Array to hold stages.
   $arr_stages = array(
     1 => 'upload',   // STAGE 1 - Select project, genus and upload file.
-    2 => 'validate', // Validate data.
-    3 => 'describe', // Fully describe all traits.
-    4 => 'save',     // Save data and file.
+    2 => 'validate', // STAGE 2 - Validate data.
+    3 => 'describe', // STAGE 3 - Fully describe all traits.
+    4 => 'save',     // STAGE 4 - Save data and file.
   );
 
   // Current stage.
@@ -438,8 +376,3 @@ function analyzedphenotypes_get_stage($stage) {
 /**
  * Helper function: Register an array to contain stages.
  */
-
-
-
-
-

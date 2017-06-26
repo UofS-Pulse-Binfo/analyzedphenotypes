@@ -61,8 +61,8 @@ function analyzedphenotypes_theme($existing, $type, $theme, $path) {
 
   // Administrative page directory
   $items['analyzedphenotypes_admin_page_directory'] = array(
-    'render element' => 'form',
     'template' => 'analyzedphenotypes_pages',
+    'render element' => 'form',
     'path' => $path . '/theme',
   );
 
@@ -82,6 +82,15 @@ function analyzedphenotypes_theme($existing, $type, $theme, $path) {
   return $items;
 }
 
+
+/**
+ * Implements hook_theme().
+ */
+function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&$variables, $hook) {
+  $variables['directory'] = $variables['form']['#ap_admin_directory'];
+
+  return $variables;
+}
 
 
 /**
@@ -106,7 +115,7 @@ function analyzedphenotypes_libraries_info() {
 function analyzedphenotypes_autocomplete_search($datatype, $key = '') {
   switch($datatype) {
     case 'projects':
-      $arr_data = analyzedphenotypes_project_properties('project_pattern_match_name', $key);
+      $arr_data = analyzedphenotypes_projectprop('project_pattern_match_name', $key);
       break;
   }
 
