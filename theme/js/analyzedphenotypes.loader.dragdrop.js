@@ -35,13 +35,13 @@
 		    });
       }
 
-
+/*
       // Handle Next Step button.
       var submitButton = $('#ap-next-stage-submit-field');
 
       // Not successful.
       submitButton.addClass('form-button-disabled');
-      submitButton.attr('disabled','disabled');
+      submitButton.attr('disabled','disabled'); */
 
 
       $(document)
@@ -78,7 +78,7 @@
         // Mute any calls to drupal_set_message() when autoloading
         // project genus. No clue why autocompletesearch + AJAX reloads
         // previously posted messages.
-        $('#ap-AJAX-container').find('.messages').remove();
+        $('#ap-AJAX-wrapper').find('.messages').remove();
 
         // Reset the select field to always default to the first option.
         $('#ap-genus-select-field')

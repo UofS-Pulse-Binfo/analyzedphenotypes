@@ -73,6 +73,42 @@ function analyzedphenotypes_validate_tsv_file($dataset) {
 
 
 /**
+ *
+ */
+function analyzedphenotypes_validate_tsv_data($project_name, $project_genus, $data_file, $job_id) {
+  // TODO:
+  $file_obj = file_load($data_file);
+  $tsv_file = drupal_realpath($file_obj->uri);
+
+  // 1. Read file.
+  // 2. Read each line.
+  // 3. In each line, read each columns
+  // 4. Validate data in each column
+  //     - Empty
+  //     - Unique combination
+  //     - Trait unit match the data type
+  //     - Germplasm exists
+  //     - Trait name exists
+  // 5. When error is detected, Stop job repost dropzone area
+
+
+  $tmp_dir = file_directory_temp();
+  $filename = $tmp_dir . '/ap-validate-job-progress' . $job_id . '.txt';
+
+  for($i=0; $i<= 4000; $i++) {
+    $percent = round(($i/4000) * 100);
+    print $percent . '% Completed' . "\n";
+    file_unmanaged_save_data($percent, $filename, FILE_EXISTS_REPLACE);
+  }
+}
+
+
+
+
+
+
+
+/**
  * FUNCTION CALLBACK: Register a set of validator to be carried out to individual
  * piece of data collected in the form interface.
  *

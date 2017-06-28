@@ -176,11 +176,7 @@ function analyzedphenotypes_cvprop($term, $cv) {
  *  Function callback: AJAX function callback.
  */
 function analyazedphenotypes_AJAX_callback($form, $form_state) {
-  // Main fieldset form element container.
-  $main_fieldset = $form['ap_main_fieldset_title']['#value'];
-
-
-  return $form[$main_fieldset]['ap_AJAX_container'];
+  return $form['ap_AJAX_wrapper'];
 }
 
 

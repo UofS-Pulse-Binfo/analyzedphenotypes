@@ -1,0 +1,17 @@
+/**
+ * @file
+ * Stage 2 - Validate
+ */
+
+#ap-progress-container {
+  background-color: #EAEAEA;
+  height: 100px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.ap-progress-wrapper {
+  background-color: #FFFFFF;
+  border: 1px solid #CCCCCC;
+  padding: 20px 20px 30px 20px;
+}

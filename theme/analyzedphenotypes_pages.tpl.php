@@ -42,6 +42,83 @@ elseif($form_id == 'analyzedphenotypes_admin_data_loader') :
     Furthermore, data should <strong>NOT be averaged across replicates or site-year.</strong>
   </div>
 
+  <fieldset id="ap-main-form-fieldset" class="form-wrapper">
+    <legend>
+      <span class="fieldset-legend">
+        <?php print $stage_title; ?>
+      </span>
+    </legend>
+
+    <div class="fieldset-wrapper">
+      <div id="ap-stage-indicators-container">
+        <?php
+          $i = 1;
+          foreach($stages as $stage => $status) {
+            $class = ($status == 'todo') ? 'ap-progress-stage-todo' : '';
+            print '<div class="' . $class . ' ap-progress-stage" title="' . $stage . '"><span>&nbsp;</span>' . $i . '. ' . $stage . '<span>&nbsp;</span></div>';
+
+            $i++;
+          }
+        ?>
+        <div class="ap-clear-both">&nbsp;</div>
+      </div>
+
+      <div id="ap-validation-result-embed"></div>
+
+
+      <div id="ap-main-form-elements-container">
+        <?php
+          switch($current_stage) :
+            //
+            case 'upload':
+        ?>
+              <div id="ap-project-select-field-container">
+                <?php print drupal_render($form['ap_project_select_field']); ?>
+              </div>
+
+              <div id="ap-genus-select-field-container">
+                <?php print drupal_render($form['ap_AJAX_wrapper']) . drupal_render($form['ap_genus_select_field']); ?>
+              </div>
+
+              <div id="ap-dnd-container">
+                <?php print drupal_render($form['ap_dnd_field']); ?>
+              </div>
+
+        <?php
+              break;
+
+            //
+            case 'validate':
+        ?>
+
+              <div>
+                <label>Experiment (Genus)</label>
+                <span>AGILE: Application of Genomic Innovation in the Lentil Economy (Lens)</span>
+              </div>
+
+              <br />
+
+              <div>
+                <label>TSV Data File</label>
+                <span>Validating...</span>
+              </div>
+
+              <div id="ap-progress-container">
+                <div class="ap-progress-wrapper">
+                  <div class="progress-pane"></div>
+                </div>
+              <div>
+
+              <?php print drupal_render($form['tripal_job_id']); ?>
+
+        <?php
+            break;
+          endswitch;
+        ?>
+      </div>
+    </div>
+  </fieldset>
+
   <?php print drupal_render_children($form); ?>
 
 <?php

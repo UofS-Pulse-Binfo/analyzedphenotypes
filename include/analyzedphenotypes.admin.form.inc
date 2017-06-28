@@ -45,40 +45,19 @@ function analyzedphenotypes_admin_data_loader($form, &$form_state) {
   if (!isset($form_state['stage'])) {
     $form_state['stage'] = 'upload';
   }
-  $current_page = $form_state['stage'];
+
+  $current_stage = $form_state['stage'];
 
   // Construct markup of stage title and stage tracker.
-  list($stage_title, $stage_indicators) = analyzedphenotypes_get_stage($current_page);
+  list($stage_title, $stage_indicators) = analyzedphenotypes_get_stage($current_stage);
+  $form['#ap_stage_title'] = $stage_title;
+  $form['#ap_stage_indicators'] = $stage_indicators;
 
-  // Main fieldset to contain all form elements.
-  $main_fieldset = 'ap_main_fieldset';
-  $form['ap_main_fieldset_title']['#value'] = $main_fieldset;
-
-  // Main fieldset form container. Use the markup stage title as title.
-  $form[$main_fieldset] = array(
-    '#type' => 'fieldset',
-    '#title' => $stage_title,
-    '#collapsible' => FALSE,
-    '#collapsed' => FALSE,
-    '#id' => 'ap-main-form-fieldset',
-  );
-
-  // Render stage indicator markup
-  $form[$main_fieldset]['ap_stage_indicator'] = array(
-    '#type' => 'markup',
-    '#markup' => $stage_indicators
-  );
-
-  // Embed validation result here.
-  $form[$main_fieldset]['ap_validation_result_embed'] = array(
-    '#prefix' => '<div id="ap-validation-result-embed">',
-    '#suffix' => '</div>'
-  );
-
+  $form['#ap_current_stage'] = $current_stage;
 
   // Main switchboard.
   // Invoke function to construct form for the current stage.
-  switch($current_page) {
+  switch($current_stage) {
     case 'upload':
       // Is STAGE 1.
       // This stage is to let user select project, genus and upload file.
@@ -91,7 +70,11 @@ function analyzedphenotypes_admin_data_loader($form, &$form_state) {
     case 'validate':
       // Is STAGE 2.
       // This will validate data in the file provided.
-      $form = analyzedphenotypes_loader_validate_form($form, $form_state);
+      $form['#attached']['css'][] = $path . 'css/analyzedphenotypes.loader.stage2.css';
+      drupal_add_js('misc/progress.js');
+      $form['#attached']['js']    = array($path . 'js/analyzedphenotypes.loader.progress.js');
+
+      $form = analyzedphenotypes_loader_form_validates($form, $form_state);
       break;
 
     case 'describe':
@@ -107,11 +90,10 @@ function analyzedphenotypes_admin_data_loader($form, &$form_state) {
       break;
   }
 
-
   // Next stage submit button.
   // No button on last stage and by default is hidden.
-  if ($current_page != 'save') {
-    $form['next_step'] = array(
+  if ($current_stage != 'save') {
+    $form['ap_next_step_button'] = array(
       '#type' => 'submit',
       '#value' => 'Next Step',
       '#weight' => 100,
@@ -124,33 +106,29 @@ function analyzedphenotypes_admin_data_loader($form, &$form_state) {
 }
 
 
-
 // FUNCTION CALLBACK: HOOK_FORM().
 
 /**
  * Function callback: Construct STAGE 1 - UPLOAD form interface.
  */
 function analyzedphenotypes_loader_form_upload($form, &$form_state) {
-  // Reference the main fieldset container.
-  $main_fieldset = $form['ap_main_fieldset_title']['#value'];
-
   // Autocomplete search project form field.
   // AUTOCOMPLETE FIELD.
-  $form[$main_fieldset]['ap_project_select_field'] = array(
+  $form['ap_project_select_field'] = array(
     '#title' => 'Experiment',
     '#type' => 'textfield',
     '#maxlength' => 200,
     '#size' => 100,
-    '#required' => TRUE,
+    //'#required' => TRUE,
 
     // @see analyzedphenotypes_autocomplete_search() in function.inc
     // where $dataype = projects.
-    '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/autocompletesearch/projects',
+    '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/projects',
 
     // When project is selected, autofill the genus field with corresponding project genus.
     '#ajax' => array(
       'callback' => 'analyazedphenotypes_AJAX_callback',
-      'wrapper' => 'ap-AJAX-container',
+      'wrapper' => 'ap-AJAX-wrapper',
       'method' => 'replace',
       'progress' => array(
         'type' => 'throbber',
@@ -164,11 +142,10 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
   // Select genus form field.
   // Autofill project genus when set.
   // AJAX WRAPPER.
-  $form[$main_fieldset]['ap_AJAX_container'] = array(
-    '#prefix' => '<div id="ap-AJAX-container">',
+  $form['ap_AJAX_wrapper'] = array(
+    '#prefix' => '<div id="ap-AJAX-wrapper">',
     '#suffix' => '</div>',
   );
-
 
   $arr_all_genus = analyzedphenotypes_genusprop();
   array_unshift($arr_all_genus, '- Select -');
@@ -176,11 +153,8 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
   if (isset($form_state['values']['ap_project_select_field'])
       && !empty($form_state['values']['ap_project_select_field'])) {
 
-    // Default the genus to project genus.
+    // Autocomple provides the project name, with the name find the project id.
     $project_name = $form_state['values']['ap_project_select_field'];
-
-    // Fetch the project id given project name. This is redunant due to how
-    // autocomplete search requirement where the option is both the key and value.
     $project_id = analyzedphenotypes_projectprop('project_match_name', $project_name);
 
     if ($project_id) {
@@ -191,10 +165,10 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
   $genus_options = (isset($arr_project_genus) && $arr_project_genus != 0) ? $arr_project_genus : $arr_all_genus;
 
   // SELECT FIELD.
-  $form[$main_fieldset]['ap_AJAX_container']['ap_genus_select_field'] = array(
+  $form['ap_AJAX_wrapper']['ap_genus_select_field'] = array(
     '#type' => 'select',
     '#title' => t('Genus'),
-    '#required' => TRUE,
+    //'#required' => TRUE,
     '#options' => $genus_options,
     '#default_value' => array_keys($genus_options)[0],
     '#description' => t('Lorem ipsum dolor sit amet'),
@@ -208,6 +182,82 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
 
   return $form;
 }
+
+
+
+/**
+ *
+ */
+function analyzedphenotypes_admin_data_loader_submit($form, &$form_state) {
+  // Which button triggers a submit action.
+  $btn_submit = $form_state['triggering_element']['#value'];
+
+  // Save file id when present.
+  if (isset($form_state['values']['ap_dnd_field'])) {
+    $form_state['multistep_values']['fid'] = $form_state['values']['ap_dnd_field'];
+  }
+
+  if ($btn_submit == 'Next Step') {
+    // Definitely save the form id.
+    if(isset($form_state['multistep_values']['form_build_id'])) {
+      $form_state['values']['form_build_id'] = $form_state['multistep_values']['form_build_id'];
+    }
+
+    // Save the values from the current step.
+    $form_state['multistep_values'][$form_state['stage']] = $form_state['values'];
+
+    // Iterate to the next step.
+    $form_state['new_stage'] = analyzedphenotypes_next_stage($form, $form_state);
+
+    // Ensure the form state is saved and the form is rebuilt.
+    $form_state['multistep_values']['form_build_id'] = $form_state['values']['form_build_id'];
+    $form_state['stage'] = $form_state['new_stage'];
+    $form_state['rebuild'] = TRUE;
+  }
+}
+
+/**
+ *
+ */
+function analyzedphenotypes_next_stage($form, &$form_state) {
+  // Get the address/name of the next page based on the current stage.
+  $next_stage = '';
+
+  switch($form_state['stage']) {
+    //
+    case 'upload':
+      $next_stage = 'validate';
+      break;
+
+    //
+    case 'validate':
+      $next_stage = 'describe';
+      break;
+
+    //
+    case 'describe':
+      $next_stage = 'save';
+      break;
+  }
+
+
+  return $next_stage;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Implements hook_file_validate().
@@ -260,13 +310,62 @@ function analyzedphenotypes_file_validate($file) {
 }
 
 
+
+
+
+
+
 /**
  * Function callback: Construct STAGE 2 - VALIDATE form interface.
  */
-function analyzedphenotypes_loader_validate_form($form, &$form_state) {
+function analyzedphenotypes_loader_form_validates($form, &$form_state) {
+  // Experiment.
+  $project_name = $form_state['values']['ap_project_select_field'];
+  // Genus.
+  $project_genus = $form_state['values']['ap_genus_select_field'];
+  // Data file.
+  $data_file = $form_state['multistep_values']['fid'];
+
+  global $user;
+
+  $job_id = tripal_add_job(
+    'Validate Analyzed Phenotypes',
+    'analyzedphenotypes',
+    'analyzedphenotypes_validate_tsv_data',
+    array(
+      $project_name,
+      $project_genus,
+      $data_file
+    ),
+    $user->uid
+  );
+
+
+  $form['ap_tripal_job_id'] = array(
+    '#type' => 'hidden',
+    '#value' => base_path() . 'admin/tripal/extension/analyzedphenotypes/json/validate_jobstatus/' . $job_id,
+    '#attributes' => array('id' => 'ap-tripal-job-id'),
+  );
 
   return $form;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Function callback: Construct STAGE 1 - DESCRIBE form interface.
@@ -297,9 +396,7 @@ function analyzedphenotypes_loader_save_form($form, &$form_state) {
  * Helper function: Construct Drag and Drop file upload area.
  */
 function analyzedphenotypes_dragdrop($form, &$form_state) {
-  $main_fieldset = $form['ap_main_fieldset_title']['#value'];
-
-  $form[$main_fieldset]['ap_dnd_field'] = array(
+  $form['ap_dnd_field'] = array(
     '#type' => 'dragndrop_upload',
     '#title' => t('TSV Data File'),
     '#file_upload_max_size' => '10M',
@@ -308,7 +405,7 @@ function analyzedphenotypes_dragdrop($form, &$form_state) {
     '#upload_validators' => array(
       'file_validate_extensions' => array(),
     ),
-    '#required' => TRUE,
+    //'#required' => TRUE,
     '#droppable_area_text' => t('- Drag and drop your tsv file here -'),
     '#progress_indicator' => 'throbber',
     '#progress_message' => 'Validating your file. Please wait...',
@@ -325,54 +422,30 @@ function analyzedphenotypes_dragdrop($form, &$form_state) {
 
 /**
  * Helper function: Create markup for stage indicators.
- *
- * @param $stage
- *   A string containing the current stage. On initial page load,
- *   this value contains the first stage. It will also be used to
- *   correctly mark/highlight the stage in the stage indicators.
- *
- * @return
- *   An array containing 2 elements.
- *   1. Markup of the Title of the current page.
- *   2. Markup of each stage
- *
- *   Both values will make up the title and stage indicator on top of
- *   each page/stage.
  */
 function analyzedphenotypes_get_stage($stage) {
-  // Array to hold stages.
   $arr_stages = array(
-    1 => 'upload',   // STAGE 1 - Select project, genus and upload file.
-    2 => 'validate', // STAGE 2 - Validate data.
-    3 => 'describe', // STAGE 3 - Fully describe all traits.
-    4 => 'save',     // STAGE 4 - Save data and file.
+    'Upload'   => '', // Stage 1 - Select project, genus and upload data file.
+    'Validate' => '', // Stage 2 - Validate data.
+    'Describe' => '', // Stage 3 - Fully describe all traits.
+    'Save'     => '', // Stage 4 - Save data and file.
   );
 
   // Current stage.
-  $stage_id = array_search($stage, $arr_stages);
+  $stage = ucfirst($stage);
+  $stage_titles = array_keys($arr_stages);
+  $stage_id = array_search($stage, $stage_titles);
 
-  // Construct markup for each stage indicator.
-  $markup_stages = '<div id="ap-container-progress">';
-  foreach($arr_stages as $i => $v) {
-    // Add the right class to stage indicator to show what is completed and todo.
-    $class = ($i <= $stage_id) ? '' : 'ap-progress-stage-todo';
+  $i = 0;
+  foreach($arr_stages as $stage => $status) {
+    $s = ($i <= $stage_id) ? 'stage' : 'todo';
+    $arr_stages[$stage] = $s;
 
-    $markup_stages .= '
-      <div class="' . $class . ' ap-progress-stage" title="Data loader progress indicator">
-        <span>&nbsp;</span>' . $i . '. ' . ucfirst($v) . '<span>&nbsp;</span>
-      </div>';
+    $i++;
   }
 
-  $markup_stages .= '<div class="ap-clear-both">&nbsp;</div>';
+  $stage_title = 'stage ' . ($stage_id + 1) . ' of ' . count($arr_stages) . ' - ' . $stage;
 
-  // Construct markup for stage title.
-  // eg. STAGE X OF Y - ABCD
-  $markup_title = 'stage ' . $stage_id . ' of ' . count($arr_stages) . ' - ' . $stage;
 
-  return array($markup_title, $markup_stages);
+  return array($stage_title, $arr_stages);
 }
-
-
-/**
- * Helper function: Register an array to contain stages.
- */

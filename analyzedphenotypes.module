@@ -39,18 +39,20 @@ function analyzedphenotypes_menu() {
   );
 
   // Autocomplete search path.
-  $items[$tripal_extension_basepath . 'analyzedphenotypes/autocompletesearch/%'] = array(
-    'page callback' => 'analyzedphenotypes_autocomplete_search',
-    'page arguments' => array(5),
+  $items[$tripal_extension_basepath . 'analyzedphenotypes/json/%/%'] = array(
+    'page callback' => 'analyzedphenotypes_data_json',
+    'page arguments' => array(5, 6),
     'access arguments' => array('access administration pages'),
     'type' => MENU_CALLBACK,
   );
+
 
   return $items;
 }
 
 
 module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.functions');
+module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.validators');
 
 
 /**
@@ -92,6 +94,19 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&
   return $variables;
 }
 
+/**
+ * Implements hook_theme().
+ */
+function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$variables, $hook) {
+  $variables['stage_title'] = $variables['form']['#ap_stage_title'];
+  $variables['stages'] = $variables['form']['#ap_stage_indicators'];
+  $variables['current_stage'] = $variables['form']['#ap_current_stage'];
+
+
+  return $variables;
+}
+
+
 
 /**
  * Implements hook_libraries_info().
@@ -112,12 +127,65 @@ function analyzedphenotypes_libraries_info() {
  * @return
  *   A JSON object.
  */
-function analyzedphenotypes_autocomplete_search($datatype, $key = '') {
+function analyzedphenotypes_data_json($datatype, $data, $key = '') {
+  $arr_data = array();
+
   switch($datatype) {
+    //
     case 'projects':
       $arr_data = analyzedphenotypes_projectprop('project_pattern_match_name', $key);
+
       break;
+
+    //
+    case 'validate_jobstatus':
+      // Variable $data is job_id.
+      $job_id = $data;
+      $job = tripal_get_job($job_id);
+
+      if ($job) {
+        $job_status = strtolower(trim($job->status));
+
+        if ($job_status == 'completed') {
+          // Job completed.
+          $job_percent = 100;
+          $job_message = 'Completed';
+
+          if ($job->progress != '100') {
+            // Set to 100 in case file read returns an empty value.
+            // Happens when file read and write not in sync.
+            db_update('tripal_jobs')
+              ->fields(array('progress' => 100))
+              ->condition('job_id', $job_id, '=')
+              ->execution();
+          }
+        }
+        else {
+          // On going job.
+          $tmp_dir = file_directory_temp();
+          $filename = $tmp_dir . '/ap-validate-job-progress' . $job_id . '.txt';
+          $file_content = file_get_contents($filename);
+
+          $job_percent = (empty($file_content)) ? '...' : trim($file_content);
+          $job_message = ($job_percent == '100' || $job_status == 'completed')
+            ? 'Completed' : $job->status;
+        }
+
+        $arr_data = array(
+          'percentage' => $job_percent,
+          'message' => $job_message
+        );
+      }
+
+      break;
+
   }
 
-  drupal_json_output($arr_data);
+
+  print drupal_json_output($arr_data);
+
+  // Do not show the Drupal headers and formatting.
+  // This is critical as if anything else is printed to the screen you will see
+  // an AJAX error instead of your progress bar ;-).
+  exit();
 }
