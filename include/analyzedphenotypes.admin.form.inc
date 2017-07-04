@@ -29,6 +29,8 @@ function analyzedphenotypes_admin_page_directory($form, &$form_state) {
   return $form;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 /**
  * Function callback: Construct analyzed phenotypes data loader stages.
@@ -105,6 +107,8 @@ function analyzedphenotypes_admin_data_loader($form, &$form_state) {
   return $form;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 // FUNCTION CALLBACK: HOOK_FORM().
 
@@ -119,7 +123,7 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
     '#type' => 'textfield',
     '#maxlength' => 200,
     '#size' => 100,
-    //'#required' => TRUE,
+    '#required' => TRUE,
 
     // @see analyzedphenotypes_autocomplete_search() in function.inc
     // where $dataype = projects.
@@ -128,6 +132,7 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
     // When project is selected, autofill the genus field with corresponding project genus.
     '#ajax' => array(
       'callback' => 'analyazedphenotypes_AJAX_callback',
+      'case' => 'autocomplete_search_project',
       'wrapper' => 'ap-AJAX-wrapper',
       'method' => 'replace',
       'progress' => array(
@@ -138,6 +143,12 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
     '#description' => t('Lorem ipsum dolor sit amet'),
     '#id' => 'ap-project-select-field'
   );
+
+
+
+
+
+
 
   // Select genus form field.
   // Autofill project genus when set.
@@ -184,6 +195,8 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 /**
  *
@@ -216,6 +229,9 @@ function analyzedphenotypes_admin_data_loader_submit($form, &$form_state) {
   }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
  *
  */
@@ -245,17 +261,7 @@ function analyzedphenotypes_next_stage($form, &$form_state) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -290,7 +296,7 @@ function analyzedphenotypes_file_validate($file) {
     // so lets do that now. We use drupal_set_message() because returning from this function
     // creates an error message and halts file upload, whereas, using drupal_set_message()
     // allows us to print to the screen regardless of failure/success.
-    drupal_set_message(theme('analyzedphenotypes_validator_report', array('status' => $status)), 'ap-content-window');
+    drupal_set_message(analyzedphenotypes_validation_result('file', $status), 'ap-content-window');
 
     $all_results = array_values($status);
 
@@ -310,8 +316,7 @@ function analyzedphenotypes_file_validate($file) {
 }
 
 
-
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -319,6 +324,9 @@ function analyzedphenotypes_file_validate($file) {
  * Function callback: Construct STAGE 2 - VALIDATE form interface.
  */
 function analyzedphenotypes_loader_form_validates($form, &$form_state) {
+
+ $job_id = 2632;
+
   // Experiment.
   $project_name = $form_state['values']['ap_project_select_field'];
   // Genus.
@@ -327,6 +335,7 @@ function analyzedphenotypes_loader_form_validates($form, &$form_state) {
   $data_file = $form_state['multistep_values']['fid'];
 
   global $user;
+
 
   $job_id = tripal_add_job(
     'Validate Analyzed Phenotypes',
@@ -341,29 +350,23 @@ function analyzedphenotypes_loader_form_validates($form, &$form_state) {
   );
 
 
-  $form['ap_tripal_job_id'] = array(
-    '#type' => 'hidden',
-    '#value' => base_path() . 'admin/tripal/extension/analyzedphenotypes/json/validate_jobstatus/' . $job_id,
-    '#attributes' => array('id' => 'ap-tripal-job-id'),
+  $path_tripalext = base_path() . 'admin/tripal/extension/analyzedphenotypes';
+
+  $settings = array(
+    'job_id' => $job_id,
+    'path_json' => $path_tripalext . '/json/validate_jobstatus/',
+    'path_validation' => $path_tripalext . '/validation_result/data/',
   );
+
+  drupal_add_js(array('analyzedphenotypes' => array('vars' => $settings)), array('type' => 'setting'));
+
 
   return $form;
 }
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -375,6 +378,10 @@ function analyzedphenotypes_loader_describe_form($form, &$form_state) {
   return $form;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 /**
  * Function callback: Construct STAGE 1 - SAVE form interface.
  */
@@ -383,6 +390,8 @@ function analyzedphenotypes_loader_save_form($form, &$form_state) {
   return $form;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // HOOK VALIDATE
 
@@ -418,6 +427,9 @@ function analyzedphenotypes_dragdrop($form, &$form_state) {
 
   return $form;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 /**

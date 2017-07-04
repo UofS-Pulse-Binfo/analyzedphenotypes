@@ -38,13 +38,23 @@ function analyzedphenotypes_menu() {
     'weight' => 1,
   );
 
-  // Autocomplete search path.
+  // Generate data in JSON object.
   $items[$tripal_extension_basepath . 'analyzedphenotypes/json/%/%'] = array(
     'page callback' => 'analyzedphenotypes_data_json',
     'page arguments' => array(5, 6),
     'access arguments' => array('access administration pages'),
     'type' => MENU_CALLBACK,
   );
+
+
+  // Generate validation result.
+  $items[$tripal_extension_basepath . 'analyzedphenotypes/validation_result/%/%'] = array(
+    'page callback' => 'analyzedphenotypes_validation_result',
+    'page arguments' => array(5, 6),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_CALLBACK,
+  );
+
 
 
   return $items;

@@ -70,6 +70,10 @@ function analyzedphenotypes_projectprop($property, $key = null) {
   return $data;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 /**
  * Helper function: fetch relevant records about a project.
@@ -83,6 +87,10 @@ function analyzedphenotypes_genusprop() {
 
   return ($result->rowCount() > 0) ? $result->fetchAllKeyed(0, 0) : 0;
 }
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 /**
@@ -124,30 +132,65 @@ function analyzedphenotypes_fileprop($property, $data_file) {
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
  * Helper funciton: get cv or cvterm.
  */
 function analyzedphenotypes_columnsprop($property) {
+  $columns_prop = array(
+    'Trait Name'          => 'text',   // #0
+    'Germplasm Accession' => 'text',   // #1
+    'Germplasm Name'      => 'text',   // #2
+    'Year'                => 'number', // #3
+    'Location'            => 'text',   // #4
+    'Replicate'           => 'number', // #5
+    'Value'               => '',       // #6
+    'Data Collector'      => 'text',   // #7
+  );
+
+
   switch($property) {
     //
+    case 'all':
+      $arr_columns = array_keys($columns_prop);
+
+      break;
+
+    //
     case 'expected':
-      $arr_expected_columns = array(
-        'Trait Name',
-        'Germplasm Accession',
-        'Germplasm Name',
-        'Year',
-        'Location',
-        'Replicate',
-        'Value',
-        'Data Collector',
+      $arr_columns = array_keys($columns_prop);
+
+      break;
+
+    //
+    case 'combination':
+      $cols = array_keys($columns_prop);
+      $arr_columns = array(
+        $cols[0],
+        $cols[2],
+        $cols[3],
+        $cols[4],
+        $cols[5],
       );
 
       break;
+
+    //
+    case 'data_type':
+      $arr_columns = $columns_prop;
+
+      break;
+
+    //
   }
 
-  return $arr_expected_columns;
+
+  return $arr_columns;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Helper funciton: get cv or cvterm.
@@ -172,12 +215,67 @@ function analyzedphenotypes_cvprop($term, $cv) {
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/**
+ *
+ */
+function analyzedphenotypes_traitprop($case, $trait) {
+  switch($case) {
+    //
+    case 'right_format':
+      break;
+
+    //
+    case 'no_unit':
+      break;
+
+    //
+    case 'unit':
+      break;
+
+    //
+    case 'sanitize':
+      break;
+
+    //
+    case 'record_set':
+      break;
+
+    //
+    case 'data_type':
+      break;
+
+
+    //
+  }
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 /**
  *  Function callback: AJAX function callback.
  */
 function analyazedphenotypes_AJAX_callback($form, $form_state) {
+  $case = $form_state['triggering_element']['#ajax']['case'];
+
+  switch($case) {
+    //
+    case 'autocomplete_search_project':
+      break;
+
+    //
+  }
+
   return $form['ap_AJAX_wrapper'];
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 /**
@@ -186,3 +284,35 @@ function analyazedphenotypes_AJAX_callback($form, $form_state) {
 function analyzedphenotypes_noformat($string) {
   return strtolower(trim($string));
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/**
+ *
+ */
+function analyzedphenotypes_validation_result($case, $data) {
+  switch($case) {
+    //
+    case 'data':
+      $job_id = $data;
+      $tmp_dir = file_directory_temp();
+      $filename_error = $tmp_dir . '/ap-validate-job-status' . $job_id . '.txt';
+      $e = file_get_contents($filename_error);
+      $status = json_decode($e, TRUE);
+
+      print theme('analyzedphenotypes_validator_report', array('status' => $status));
+
+      break;
+
+    //
+    case 'file':
+      // Data is validation result array.
+      return theme('analyzedphenotypes_validator_report', array('status' => $data));
+
+      break;
+
+    //
+  }
+}
+

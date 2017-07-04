@@ -30,6 +30,7 @@ function analyzedphenotypes_validate_tsv_file($dataset) {
   $validator = module_invoke_all('ap_validators');
   // Array to hold all scope of validators.
   $scope = analyzedphenotypes_ap_validators('return_all_scope');
+  unset($scope['VALUE']);
   // Variable to indicate that a validator has returned a failed status.
   $error_flag = 'no_error';
 
@@ -72,40 +73,149 @@ function analyzedphenotypes_validate_tsv_file($dataset) {
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 /**
  *
  */
 function analyzedphenotypes_validate_tsv_data($project_name, $project_genus, $data_file, $job_id) {
-  // TODO:
-  $file_obj = file_load($data_file);
-  $tsv_file = drupal_realpath($file_obj->uri);
+  // Frequency for Tripal to print to terminal.
+  $report_frequency = 10;
+  // Number or 'all' to validate all values and report the error.
+  $rows_check = 20;
 
-  // 1. Read file.
-  // 2. Read each line.
-  // 3. In each line, read each columns
-  // 4. Validate data in each column
-  //     - Empty
-  //     - Unique combination
-  //     - Trait unit match the data type
-  //     - Germplasm exists
-  //     - Trait name exists
-  // 5. When error is detected, Stop job repost dropzone area
-
-
+  // Temporary files
   $tmp_dir = file_directory_temp();
-  $filename = $tmp_dir . '/ap-validate-job-progress' . $job_id . '.txt';
+  $file_progress = $tmp_dir . '/ap-validate-job-progress' . $job_id . '.txt';
+  $file_status   = $tmp_dir . '/ap-validate-job-status'   . $job_id . '.txt';
 
-  for($i=0; $i<= 4000; $i++) {
-    $percent = round(($i/4000) * 100);
-    print $percent . '% Completed' . "\n";
-    file_unmanaged_save_data($percent, $filename, FILE_EXISTS_REPLACE);
+  // Validators.
+  $arr_status = array();
+  $validator  = module_invoke_all('ap_validators');
+  $scope = analyzedphenotypes_ap_validators('return_all_scope');
+  $scope = $scope['VALUE'];
+
+  // Data file
+  $file = file_load($data_file);
+  $source = drupal_realpath($file->uri);
+  $data_stream = file_get_contents($source);
+  $data = explode("\n", $data_stream);
+  $data_count = count($data) - 1;
+  $columns = str_getcsv($data[0], "\t");
+
+  $error_flag = 'no_error';
+  $error_ctr = 0;
+
+  // VALIDATOR - VALUE/DATA SCOPE.
+  foreach($validator as $key => $item) {
+    if ($error_ctr == $rows_check) {
+      $arr_status[$key]['type']  = 'todo';
+      continue;
+    }
+
+    $callback = (isset($item['validation callback']) && function_exists($item['validation callback']))
+      ? $item['validation callback'] : FALSE;
+
+    if ($callback && $item['scope'] == $scope) {
+      $col_required = $item['columns required'];
+      $case = $item['case'];
+
+      $arr_status[$key]['type']  = 'passed';
+      $arr_status[$key]['details'] = '';
+
+      // DATA ROW.
+      foreach($data as $i => $row) {
+        if ($erro_ctr == $rows_check) {
+          break;
+        }
+
+
+        if ($i > 0 && !empty($row)) {
+
+          $cols = str_getcsv($row, "\t");
+
+          ///////
+          if (is_array($col_required)) {
+            // Apply to all.
+            $combine_cols = implode(', ', $col_required);
+
+            foreach($col_required as $c) {
+              $j = array_search($c, $columns);
+
+              $value .= $columns[$j];
+            }
+
+            // Do validator.
+            $result = call_user_func($callback, $case, $value, $combine_cols, $i);
+
+            // Result.
+            if ($result['status'] == 'failed') {
+              if ($arr_status[$key]['type'] == 'passed') {
+                $arr_status[$key]['status'] = 'failed';
+              }
+
+              // Group details.
+              $arr_status[$key]['details'] .= $result['details'];
+              $error_ctr++;
+            }
+          }
+          elseif ($col_required != '') {
+            // Apply to specific column.
+            $j = array_search($col_required, $columns);
+            $value = $cols[$j];
+
+            // Do validator.
+            $result = call_user_func($callback, $case, $value, $columns[$j], $i);
+
+            // Result.
+            if ($result['status'] == 'failed') {
+              if ($arr_status[$key]['type'] == 'passed') {
+                $arr_status[$key]['type'] = 'failed';
+              }
+
+              // Group details.
+              $arr_status[$key]['details'] .= $result['details'];
+              $error_ctr++;
+            }
+          }
+          else {
+            // Apply to all columns.
+            foreach($cols as $j => $value) {
+              // Do validator.
+              $result = call_user_func($callback, $case, $value, $columns[$j], $i);
+
+              // Result.
+              if ($result['status'] == 'failed') {
+                if ($arr_status[$key]['type'] == 'passed') {
+                  $arr_status[$key]['type'] = 'failed';
+                }
+
+                // Group details.
+                $arr_status[$key]['details'] .= $result['details'];
+                $error_ctr++;
+              }
+            }
+          }
+          ///////
+
+
+
+
+        }
+
+      }
+      //
+    }
   }
+
+  $status_JSON = json_encode($arr_status);
+  file_unmanaged_save_data($status_JSON, $file_status, FILE_EXISTS_REPLACE);
 }
 
 
-
-
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 /**
@@ -122,24 +232,16 @@ function analyzedphenotypes_ap_validators($all_scope = NULL) {
   // Array to hold validator scopes.
   // This is the order of validation flow.
   $scope = array(
-    'PROJECT' => 'project', // Project scope.
-    'GENUS' => 'genus',     // Genus scope.
-    'FILE' => 'file',       // Data file scope.
+    'PROJECT' => 'project',  // Project scope.
+    'GENUS' => 'genus',      // Genus scope.
+    'FILE' => 'file',        // Data file scope.
+    'VALUE' => 'value',     // Data scope.
   );
 
   if ($all_scope == 'return_all_scope') {
     // When scope list is required.
     return $scope;
   }
-
-
-  // VALIDATOR options:
-  // - label : The main title or name of the error. This corresponds to an item with relevant icon in the validation result window.
-  // - scope : This option determins the scope of validator. Values can be one listed in $scope array.
-  // - validation callback : the function callback containing rules and checkt to be perfomed.
-  // - case : Each scope has a master function callback and case identifies which validation is required.
-  // - error message : The error message reported to user when validator fails. A @replace string placeholder text is
-  //   provided in case more details about error are to be displayed.
 
   // Array to hold validations.
   $validators = array();
@@ -179,9 +281,62 @@ function analyzedphenotypes_ap_validators($all_scope = NULL) {
     'error message' => 'Please ensure that all required columns are present. The following columns are missing: @replace.',
   );
 
+  // VALUE.
+  $validators['VALUE_value_provided'] = array(
+    'label' => 'All column has value',
+    'scope' => $scope['VALUE'],
+    'validation callback' => 'analyzedphenotypes_validator_value',
+    'case' => 'value_empty',
+    'columns required' => '',
+    'error message' => 'A column has a blank or 0 value in the following items: @replace',
+  );
+
+  $all_columns = analyzedphenotypes_columnsprop('all');
+  $trait_name = array_values($all_columns)[0];
+  $validators['VALUE_trait_format'] = array(
+    'label' => 'Trait name has the correct format',
+    'scope' => $scope['VALUE'],
+    'validation callback' => 'analyzedphenotypes_validator_value',
+    'case' => 'trait_format',
+    'columns required' => $trait_name,
+    'error message' => 'A value in Trait Name column has incorrect format in items: @replace',
+  );
+
+  $validators['VALUE_column_format'] = array(
+    'label' => 'Value matched the column data type',
+    'scope' => $scope['VALUE'],
+    'validation callback' => 'analyzedphenotypes_validator_value',
+    'case' => 'match_type',
+    'columns required' => '',
+    'error message' => 'A value does not match the data type expected in items: @replace',
+  );
+
+  $validators['VALUE_value_type'] = array(
+    'label' => 'Data was measured using expected units',
+    'scope' => $scope['VALUE'],
+    'validation callback' => 'analyzedphenotypes_validator_value',
+    'case' => 'unit_data',
+    'columns required' => '',
+    'error message' => 'Data does not match the unit of the trait provided in items: @replace',
+  );
+
+  $arr_combine_cols = analyzedphenotypes_columnsprop('combination');
+  $validators['VALUE_unique_combo'] = array(
+    'label' => 'Column combination is unique',
+    'scope' => $scope['VALUE'],
+    'validation callback' => 'analyzedphenotypes_validator_value',
+    'case' => 'unique_combo',
+    'columns required' => $arr_combine_cols,
+    'error message' => 'Column combination is not unique in items: @replace',
+  );
+
 
   return $validators;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 /**
@@ -236,6 +391,9 @@ function analyzedphenotypes_validator_project($case, $dataset) {
 
   return $status;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 /**
@@ -302,6 +460,9 @@ function analyzedphenotypes_validator_genus($case, $dataset) {
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 /**
  * FUNCTION CALLBACK: main function to validate data file.
  * A set of validation process performed on DATA FILE field.
@@ -355,33 +516,127 @@ function analyzedphenotypes_validator_datafile($case, $dataset) {
       $columns = analyzedphenotypes_fileprop('columns', $data_file);
       $expected = analyzedphenotypes_columnsprop('expected');
 
-      if (count($columns) != count($expected)) {
+      $expected_noformat = array_map('analyzedphenotypes_noformat', $expected);
+      $columns_noformat = array_map('analyzedphenotypes_noformat', $columns);
 
+      $missing = array_diff($expected_noformat, $columns_noformat);
+
+      if (count($missing) > 0) {
+        $status['type'] = 'failed';
+
+        $missing = array_map('ucwords', $missing);
+        $status['details'] = implode(', ', $missing) . ' in line #1';
       }
-
-
-
-
-
-        $expected_noformat = array_map('analyzedphenotypes_noformat', $expected);
-        $columns_noformat = array_map('analyzedphenotypes_noformat', $columns);
-
-        $missing = array_diff($expected_noformat, $columns_noformat);
-
-        if (count($missing) > 0) {
-          $status['type'] = 'failed';
-
-          $missing = array_map('ucwords', $missing);
-          $status['details'] = implode(', ', $missing) . ' in line #1';
-        }
-
-
-
 
       break;
 
 
     // Define case here for additional validation on EXPERIMENT/PROJECT.
+  }
+
+
+  return $status;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/**
+ * FUNCTION CALLBACK: main function to validate data file.
+ * A set of validation process performed on DATA FILE field.
+ *
+ * @param $case
+ *   A string matching the definition of case in Validator array in validator function.
+ *   Each case will correspond to a case block which will perform the requsted of validation process.
+ *   @see analyzedphenotypes_ap_validators().
+ *
+ * @param $dataset
+ *   An array containing user supplied values of experiment, genus and data file.
+ *
+ * @return string
+ *   An string passed or failed.
+ *
+ * @see
+ *   analyzedphenotypes_datafile_read() in functions.inc
+ */
+function analyzedphenotypes_validator_value($case, $value, $column, $row) {
+  $value = trim($value);
+  $collumn = trim($column);
+
+  $status = array(
+    'type' => 'passed', // Passed or Failed. Default to passed.
+    'details' => '',    // Include more information.
+  );
+
+  switch($case) {
+    //
+    case 'value_empty':
+      // Check the if value is empty.
+      if (empty($value)) {
+        $status['type'] = 'failed';
+        $status['details'] = ' in ' . $column . ' line #' . $row;
+      }
+
+      break;
+
+    //
+    case 'match_type':
+      // Check if the data in a column match the data type required.
+      if (!empty($value)) {
+        $data_type = analyzedphenotypes_columnsprop('data_type');
+        $column_data_type = $data_type[$column];
+
+        unset($data_type);
+
+        switch($column_data_type) {
+          //
+          case 'text':
+            if (ctype_digit($value)) {
+              $status['type'] = 'failed';
+              $status['details'] = ' in ' . $column . ' line #' . $row . ' (' . $value . ' not a text value)';
+            }
+
+            break;
+
+          //
+          case 'number':
+            if (!ctype_digit($value) || (int)$value < 0) {
+              $status['type'] = 'failed';
+              $status['details'] = ' in ' . $column . ' line #' . $row . ' (' . $value . ' not a number or a negative value)';
+            }
+
+            break;
+        }
+      }
+
+      break;
+
+      //
+      case 'trait_format':
+        // Check if trait name follows expected trait name format.
+        if (!empty($value)) {
+          if (preg_match('/\A[^()]+\s*\({1}[^)(]+\)\z/i', $value) !== 1) {
+            $status['type'] = 'failed';
+            $status['details'] = ' in ' . $column . ' line #' . $row . ' (' . $value . ' invalid trait format)';
+          }
+        }
+
+        break;
+
+      //
+      case 'unit_data':
+        // Check if trait unit match the data.
+
+
+        break;
+
+      //
+      case 'unique_combo':
+
+        break;
+
+      //
   }
 
 

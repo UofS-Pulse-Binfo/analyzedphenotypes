@@ -91,7 +91,9 @@ elseif($form_id == 'analyzedphenotypes_admin_data_loader') :
             case 'validate':
         ?>
 
-              <div>
+             <?php print drupal_render($form['ap_val_res']); ?>
+
+             <div>
                 <label>Experiment (Genus)</label>
                 <span>AGILE: Application of Genomic Innovation in the Lentil Economy (Lens)</span>
               </div>

@@ -6,28 +6,25 @@
 (function($) {
   Drupal.behaviors.apProgress = {
     attach: function (context, settings) {
-      // Link to monitor. The link contains the job id and is
-      // accessing a page callback that generates a JSON object of
-      // the percent completed.
-      var job_id = $('#ap-tripal-job-id').val();
+      var settings = Drupal.settings.analyzedphenotypes.vars;
 
-      // Initializes the progress bar.
-      // This will terminate by itself when progress is null.
+      var jobId = settings['job_id'];
+      var pathJSON = settings['path_json'];
+      var pathValidation = settings['path_validation'];
+
       pb = new Drupal.progressBar('trpdownloadProgressBar', function(percentage, message) {
-        // Also ensure that we stop when the progress bar is complete ;-).
         if (percentage == '100') {
           pb.stopMonitoring();
 
-
+          $('#ap-validation-result-embed').once().load(pathValidation + jobId);
         }
       });
 
-      // Adds the progress bar to the div we created above.
-      // Start the progress bar at 0 - Waiting instead of 1%.
+
       pb.setProgress(0, '');
       $('.progress-pane').append(pb.element);
 
-      pb.startMonitoring(job_id, 500);
+      pb.startMonitoring(pathJSON + jobId, 250);
     }
   };
 }(jQuery));
