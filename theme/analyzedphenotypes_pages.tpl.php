@@ -93,7 +93,7 @@ elseif($form_id == 'analyzedphenotypes_admin_data_loader') :
 
              <?php print drupal_render($form['ap_val_res']); ?>
 
-             <div>
+              <div>
                 <label>Experiment (Genus)</label>
                 <span>AGILE: Application of Genomic Innovation in the Lentil Economy (Lens)</span>
               </div>
@@ -111,17 +111,80 @@ elseif($form_id == 'analyzedphenotypes_admin_data_loader') :
                 </div>
               <div>
 
-              <?php print drupal_render($form['tripal_job_id']); ?>
+              <?php
+                print drupal_render($form['tripal_job_id']);
+              ?>
 
         <?php
             break;
+
+          //
+          case 'describe':
+        ?>
+
+             <div>
+               <label>Experiment (Genus)</label>
+               <span>AGILE: Application of Genomic Innovation in the Lentil Economy (Lens)</span>
+             </div>
+
+             <div class="messages warning">
+               Please fully describe the following traits before clicking the next step button.
+             </div>
+
+             <div id="ap-describe-main-form-container">
+               <?php
+                 $trait_count   = $form['#ap_describe_trait_count'];
+                 $main_fieldset = $form['#ap_main_fieldset'];
+
+                 for ($i = 0; $i < $trait_count; $i++) {
+                   print drupal_render($form[$main_fieldset . $i]);
+                 }
+               ?>
+             </div>
+
+        <?php
+             $inform = '<div class="messages warning"><strong>You have fully described 0 of ' . $trait_count . ' Traits</strong>. Please ensure to describe all traits before clicking the Next Step button</div>';
+
+            break;
+        ?>
+
+        <?php
+          case 'save':
+        ?>
+
+             <div class="messages status">Lorem ipsum dolor sit amet. File succesfully uploaded to server.</div>
+             <div class="messages warning">Lorem ipsum dolor sit amet. Wait for 100% before data becomes available.</div>
+
+
+              <div id="ap-progress-container">
+                <div class="ap-progress-wrapper">
+                  <div class="progress-pane"></div>
+                </div>
+              <div>
+
+              <?php
+                print drupal_render_children($form);
+              ?>
+
+
+        <?php
+            break;
+
           endswitch;
         ?>
       </div>
     </div>
   </fieldset>
 
-  <?php print drupal_render_children($form); ?>
+<?php
+// Messages outside the fieldset go here.
+if ($inform) {
+  print $inform;
+}
+
+print drupal_render_children($form);
+
+?>
 
 <?php
 endif;

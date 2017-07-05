@@ -4,6 +4,110 @@
  * Contains helper functions required by this module.
  */
 
+
+/**
+ *
+ */
+function analyzedphenotypes_moduleprop($property) {
+  switch($property) {
+    //
+    case 'unit_datatype':
+      $value = array(
+        'date'  => array('date', ''),
+        'count' => array('number', 'allow zero'),
+        'days'  => array('number', ''),
+        'cm'    => array('number', 'allow zero'),
+        'g'     => array('number', 'allow zero'),
+        'y/n/?' => array('text', 'y,n,?,yes,no'),
+        'text'  => array('text', ''),
+        'scale' => array('scale', '1,2,3'),
+      );
+
+      break;
+
+    //
+    case 'combine_columns':
+      $value = array(
+        'Trait Name',
+        'Experiment',
+        'Germplasm Accession',
+        'Year',
+        'Location',
+        'Replicate',
+      );
+
+      break;
+
+    //
+    case 'file_extension':
+      $value = array(
+        'tsv' => 'Tab Separated Values',
+        'txt' => 'Text',
+      );
+
+      break;
+
+    //
+    case 'error':
+      $value = array(
+        'stop_at' => 20,
+      );
+
+      break;
+
+    //
+    case 'reporting_frequency':
+      $value = array(
+        'every' => 10,
+      );
+
+      break;
+
+    //
+    case 'columns':
+      $value = array(
+        'Trait Name',
+        'Germplasm Accession',
+        'Germplasm Name',
+        'Year',
+        'Location',
+        'Replicate',
+        'Value',
+        'Data Collector',
+      );
+
+      break;
+
+    //
+    case 'path':
+      $value = array(
+        'module'    => drupal_get_path('module', 'analyzedphenotypes'),
+        'base'      => base_path(),
+        'extension' => base_path() . 'admin/tripal/extension/analyzedphenotypes',
+        'temp'      => file_directory_temp(),
+      );
+
+      break;
+
+    //
+    case 'stages':
+      $value = array(
+        'Upload',   // Stage 1 - Select project, genus and upload data file.
+        'Validate', // Stage 2 - Validate data.
+        'Describe', // Stage 3 - Fully describe all traits.
+        'Save',     // Stage 4 - Save data and file.
+      );
+
+      break;
+
+    //
+  }
+
+
+  return $value;
+}
+
+
 /**
  * HELPER FUNCTION: Fetch relevant records about a project.
  */
@@ -225,31 +329,43 @@ function analyzedphenotypes_traitprop($case, $trait) {
   switch($case) {
     //
     case 'right_format':
+      if (preg_match('/\A[^()]+\s*\({1}[^)(]+\)\z/i', $trait) !== 1) {
+        $value = $trait;
+      }
       break;
 
     //
     case 'no_unit':
+      $value = preg_replace("/.*\(([^)]*)\)/", '', $trait);
       break;
 
     //
     case 'unit':
+      preg_match("/.*\(([^)]*)\)/", $trait, $match);
+      $value = (isset($match[1])) ? $match[1] : 'text';
       break;
 
     //
     case 'sanitize':
+      $value = analyzedphenotypes_noformat($trait);
       break;
 
     //
     case 'record_set':
+      // Query cvterm table.
       break;
 
     //
     case 'data_type':
+
       break;
 
 
     //
   }
+
+
+  return $value;
 }
 
 
@@ -309,6 +425,12 @@ function analyzedphenotypes_validation_result($case, $data) {
     case 'file':
       // Data is validation result array.
       return theme('analyzedphenotypes_validator_report', array('status' => $data));
+
+      break;
+
+    //
+    case 'save':
+      print '';
 
       break;
 

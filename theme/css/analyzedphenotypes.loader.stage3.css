@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Stage 2 - Describe
+ */
+
+#ap-describe-main-form-container .form-type-item label {
+  border-bottom: 1px solid #CCCCCC;
+}
+
+#ap-describe-main-form-container fieldset {
+  background-color: #CCCCCC;
+  margin: 2px;
+}
+
+#ap-describe-main-form-container .fieldset-wrapper {
+  background-color: #FFFFFF;
+}
+
+#ap-describe-main-form-container .fieldset-title {
+  color: #000000;
+}
+
+#ap-describe-main-form-container .fieldset-legend {
+  background: none;
+}
+
