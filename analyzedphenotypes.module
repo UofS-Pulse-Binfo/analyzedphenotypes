@@ -15,6 +15,16 @@ function analyzedphenotypes_menu() {
   // Main menu items for phenotypes: shows a beanplot -select trait and project.
   $items['phenotypes'] = array(
     'title' => 'Phenotypes',
+    'description' => 'Summarizes phenotypic data available.',
+    'page callback' => 'analyzed_phenotypes_all_data_summary_page',
+    'access arguments' => array(TRUE),
+    'file' => 'include/analyzedphenotypes.summary.page.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  // Main menu items for phenotypes: shows a beanplot -select trait and project.
+  $items['phenotypes/trait-distribution'] = array(
+    'title' => 'Trait Distribution Chart',
     'description' => 'Summarizes phenotypic data for a given trait and project.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_beanplot_form'),
@@ -22,7 +32,7 @@ function analyzedphenotypes_menu() {
     'file' => 'include/analyzedphenotypes.beanplot.page.inc',
     'type' => MENU_NORMAL_ITEM,
   );
-  
+
   // JSON for beanplot.
   $items['json/phenotypes/beanplot/%/%'] = array(
     'page callback' => 'analyzedphenotypes_beanplot_json',

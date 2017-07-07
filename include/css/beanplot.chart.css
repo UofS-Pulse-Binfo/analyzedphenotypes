@@ -8,11 +8,27 @@
 #beanplot-container {
   margin-top: 20px;
 }
-.beanplot-nav {
-  width: 300px;
-  margin: 0 auto;
+.beanplot-nav.condensed {
+  margin: 10px;
+  margin-left: 70px;
 }
-.beanplot-nav .form-item {
+.beanplot-nav.condensed fieldset {
+  height: 30px;
+  top: 0;
+}
+.beanplot-nav.condensed legend {
+  position: absolute;
+  top: 0;
+  width: 180px;
+  height: 32px;
+  padding-top: 7px;
+  padding-left: 7px;
+}
+.beanplot-nav.condensed .fieldset-wrapper {
+  margin-left: 200px;
+  margin-top: 10px;
+}
+.beanplot-nav.condensed .form-item {
   display: inline;
   padding: 0px 15px;
 }
