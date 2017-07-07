@@ -12,6 +12,26 @@
 function analyzedphenotypes_menu() {
   $items = array();
 
+  // Main menu items for phenotypes: shows a beanplot -select trait and project.
+  $items['phenotypes'] = array(
+    'title' => 'Phenotypes',
+    'description' => 'Summarizes phenotypic data for a given trait and project.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('analyzedphenotypes_beanplot_form'),
+    'access arguments' => array(TRUE),
+    'file' => 'include/analyzedphenotypes.beanplot.page.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+  
+  // JSON for beanplot.
+  $items['json/phenotypes/beanplot/%/%'] = array(
+    'page callback' => 'analyzedphenotypes_beanplot_json',
+    'page arguments' => array(3, 4),
+    'access arguments' => array(TRUE),
+    'file' => 'include/analyzedphenotypes.beanplot.page.inc',
+    'type' => MENU_CALLBACK,
+  );
+  
   // ADMINISTRATIVE PAGES.
   $tripal_extension_basepath = 'admin/tripal/extension/';
 

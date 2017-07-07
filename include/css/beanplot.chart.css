@@ -1,0 +1,30 @@
+/**
+ * Bean Chart :-).
+ */
+
+/**
+ * Bean Chart Page Elements
+ */
+#beanplot-container {
+  margin-top: 20px;
+}
+.beanplot-nav {
+  width: 300px;
+  margin: 0 auto;
+}
+.beanplot-nav .form-item {
+  display: inline;
+  padding: 0px 15px;
+}
+
+.legend {
+  margin: 10px;
+  margin-left: 50px;
+  text-align: left;
+}
+.legend .title {
+  font-weight: bolder;
+}
+.legend .description {
+  text-align: justify;
+}
