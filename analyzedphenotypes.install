@@ -2,3 +2,78 @@
 /**
  * Implements hook_install().
  */
+
+/**
+ * Implements hook_enable().
+ */
+function analyzedphenotypes_enable() {
+
+  // Add a materialized view to calculate the mean for quantitative data.
+  $query = "
+      SELECT
+        trait.cvterm_id as trait_id,
+        trait.name as trait_name,
+        proj.project_id as project_id,
+        proj.name as project_name,
+        loc.value as location,
+        yr.value as year,
+        s.stock_id as germplasm_id,
+        s.name as germplasm_name,
+        avg( CAST(p.value as FLOAT) ) as mean
+      FROM chado.phenotype p
+      LEFT JOIN chado.cvterm trait ON trait.cvterm_id=p.attr_id
+      LEFT JOIN chado.project proj USING(project_id)
+      LEFT JOIN chado.stock s USING(stock_id)
+      LEFT JOIN chado.phenotypeprop loc ON loc.phenotype_id=p.phenotype_id AND loc.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE name='Location')
+      LEFT JOIN chado.phenotypeprop yr ON yr.phenotype_id=p.phenotype_id AND yr.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE name='Year')
+      GROUP BY trait.cvterm_id, trait.name, proj.project_id, proj.name, loc.value, yr.value, s.stock_id, s.name";
+  $schema = array(
+    'description' => 'Caches phenotypic data for easier retrieval of means. Data replicates are combined.',
+    'table' => 'mview_phenotype',
+    'fields' => array (
+      'trait_id' => array (
+        'size' => 'big',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'trait_name' => array (
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+      ),
+      'experiment_id' => array (
+        'size' => 'big',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'experiment_name' => array (
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+      'location' => array (
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+      'year' => array (
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+      'stock_id' => array (
+        'size' => 'big',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'stock_name' => array (
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+      ),
+      'mean' => array(
+        'type' => 'float',
+      ),
+    ),
+    'indexes' => array(),
+  );
+  tripal_add_mview($schema['table'], 'analyzedphenotypes', $schema, $query, $schema['description']);
+
+}

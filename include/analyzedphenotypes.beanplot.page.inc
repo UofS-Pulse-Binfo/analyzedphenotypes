@@ -10,7 +10,7 @@
  */
 function analyzedphenotypes_beanplot_form($form, $form_state) {
   global $base_url;
-  
+
   // Determine experiment/trait defaults.
   $experiment_id = NULL;
   if (isset($form_state['build_info']['args'][0])) {
@@ -45,12 +45,12 @@ function analyzedphenotypes_beanplot_form($form, $form_state) {
   $form['#attached']['css'] = array(
     $module_path . '/include/css/beanplot.chart.css',
   );
-  
+
   // Retrieve options for Experiment (Project).
   $experiments = array();
   if (!empty($trait_id)) {
     $experiments = chado_query(
-      'SELECT project_id, name FROM {project} 
+      'SELECT project_id, name FROM {project}
       WHERE project_id IN (
           SELECT project_id from {phenotype} WHERE attr_id=:trait_id)',
       array(':trait_id' => $trait_id))->fetchAllKeyed();
@@ -63,14 +63,14 @@ function analyzedphenotypes_beanplot_form($form, $form_state) {
   $traits = array();
   if (!empty($experiment_id)) {
     $traits = chado_query(
-      'SELECT cvt.cvterm_id as trait_id, cvt.name as trait_name 
+      'SELECT cvt.cvterm_id as trait_id, cvt.name as trait_name
        FROM {cvterm} cvt
        WHERE cvt.cvterm_id IN (SELECT attr_id FROM {phenotype} WHERE project_id=:experiment_id)',
        array(':experiment_id' => $experiment_id))->fetchAllKeyed();
   }
   else {
     $traits = chado_query(
-      'SELECT cvt.cvterm_id as trait_id, cvt.name as trait_name 
+      'SELECT cvt.cvterm_id as trait_id, cvt.name as trait_name
        FROM chado.cvterm cvt
        WHERE cvt.cvterm_id IN (SELECT attr_id FROM chado.phenotype)',
        array(':experiment_id' => $experiment_id))->fetchAllKeyed();
@@ -88,12 +88,12 @@ function analyzedphenotypes_beanplot_form($form, $form_state) {
       '#prefix' => '<div class="beanplot-nav expanded">',
       '#suffix' => '</div>',
     );
-    
+
     $form['nav']['intro'] = array(
       '#type' => 'item',
       '#markup' => '<p>This chart is meant to summarize the observed values for a specific trait in a particular phenotyping experiment. Since it is not always statistically correct to combine data across sites and years, this summary keeps the data seperate. This allows you to compare values across site-years.</p>',
     );
-  
+
     // Experiment.
     $form['nav']['experiment'] = array(
       '#type' => 'select',
@@ -111,7 +111,7 @@ function analyzedphenotypes_beanplot_form($form, $form_state) {
       ),
     );
     $experiment_name = (isset($experiments[ $experiment_id ])) ? $experiments[ $experiment_id ] : '';
-  
+
     // Traits.
     $form['nav']['trait'] = array(
       '#type' => 'select',
@@ -131,12 +131,12 @@ function analyzedphenotypes_beanplot_form($form, $form_state) {
     $trait_name = (isset($traits[ $trait_id ])) ? $traits[ $trait_id ] : '';
 
   }
-  
+
   /////////////////////////////////////
   // STAGE II
   // Experiment & Trait already choosen.
   if ($stage === 2) {
-  
+
     // Navigation.
     $form['nav'] = array(
       '#type' => 'fieldset',
@@ -144,7 +144,7 @@ function analyzedphenotypes_beanplot_form($form, $form_state) {
       '#prefix' => '<div class="beanplot-nav condensed">',
       '#suffix' => '</div>',
     );
-  
+
     // Experiment (project).
     $form['nav']['experiment'] = array(
       '#type' => 'select',
@@ -156,7 +156,7 @@ function analyzedphenotypes_beanplot_form($form, $form_state) {
       '#attributes' => array('onChange' => 'document.getElementById("analyzedphenotypes-beanplot-form").submit();'),
     );
     $experiment_name = (isset($experiments[ $experiment_id ])) ? $experiments[ $experiment_id ] : '';
-  
+
     // Traits.
     $form['nav']['trait'] = array(
       '#type' => 'select',
@@ -171,44 +171,44 @@ function analyzedphenotypes_beanplot_form($form, $form_state) {
       $form['nav']['trait']['#disabled'] = TRUE;
     }
     $trait_name = (isset($traits[ $trait_id ])) ? $traits[ $trait_id ] : '';
-  
+
     // Chart Placeholder.
     // This div will be populated by js.
     $form['figure']['placeholder'] = array(
       '#type' => 'markup',
       '#markup' => '<div id="beanplot-container" style="height: 500px; width: 100%;"></div>',
     );
-    
+
     // Figure Legend.
     $form['figure']['legend'] = array(
       '#type' => 'markup',
       '#prefix' => '<div class="legend">',
       '#suffix' => '</div>',
     );
-    
+
     $form['figure']['legend']['title'] = array(
       '#type' => 'markup',
       '#prefix' => '<div class="title">',
       '#suffix' => '</div>',
     );
-  
+
     $form['figure']['legend']['description'] = array(
       '#type' => 'markup',
       '#prefix' => '<div class="description">',
       '#suffix' => '</div>',
     );
-  
+
     $form['figure']['legend']['title']['#markup'] = 'Figure: The Distribution of mean <em>'.$trait_name.'</em> per site year for <em>'.$experiment_name.'</em>.';
-    
+
     $form['figure']['legend']['description']['#markup'] = 'This chart shows the distribution of means observered (y-axis) per site year (x-axis) with the width of each bar representing the number of germplasm a given mean was observed/measured in. Only the data for the <em>'.$experiment_name.'</em> phenotyping experiment is being shown.';
 
     $settings = array(
       'trait' => $trait_name,
       'germplasm' => '',
       'jsonUrl' => strtr(
-        $base_url . '/json/phenotypes/beanplot/:project_id/:trait_id', 
+        $base_url . '/json/phenotypes/beanplot/:project_id/:trait_id',
         array(
-            ':project_id' => $experiment_id, 
+            ':project_id' => $experiment_id,
             ':trait_id' => $trait_id
         )
       ),
@@ -254,7 +254,7 @@ function ajax_analyzedphenotypes_beanplot_page_nav_callback($form, $form_state) 
 
 /**
  * Generates the data for the beanplot as JSON.
- * 
+ *
  * @param $project_id
  *   Retrieve phenotypic data for the specified project.
  * @param $trait_id
@@ -266,14 +266,9 @@ function analyzedphenotypes_beanplot_json($project_id, $trait_id) {
   $results = array();
 
   $resource = chado_query(
-    "SELECT loc.value as location, yr.value as year, s.name as germplasm_name, p.value as mean
-      FROM chado.phenotype p 
-      LEFT JOIN chado.cvterm trait ON trait.cvterm_id=p.attr_id 
-      LEFT JOIN chado.project proj USING(project_id) 
-      LEFT JOIN chado.stock s USING(stock_id)
-      LEFT JOIN chado.phenotypeprop loc ON loc.phenotype_id=p.phenotype_id AND loc.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE name='Location')
-      LEFT JOIN chado.phenotypeprop yr ON yr.phenotype_id=p.phenotype_id AND yr.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE name='Year')
-      WHERE p.project_id=:project_id AND p.attr_id=:trait_id",
+    "SELECT location, year, stock_name, mean
+      FROM chado.mview_phenotype
+      WHERE experiment_id=:project_id AND trait_id=:trait_id",
     array(':project_id' => $project_id, 'trait_id' => $trait_id));
   foreach($resource as $r) {
 
@@ -297,12 +292,12 @@ function analyzedphenotypes_beanplot_json($project_id, $trait_id) {
       );
     }
   }
-  
+
   // Sort the results by key.
   ksort($results);
-  
+
   // Switch from associative array to sequenctial indexed array.
   $results = array_values($results);
-  
+
   return drupal_json_output($results);
 }
