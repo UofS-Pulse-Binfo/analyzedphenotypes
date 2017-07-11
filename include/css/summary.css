@@ -1,0 +1,51 @@
+/**
+ * Summary Page CSS.
+ */
+
+/**
+ * Style the table to be cleaner and more info-graphic like.
+ */
+#phenoype-summary-table thead tr th {
+  background: #FFF;
+  color: black;
+  border: 1px solid #FFF;
+  height: 50px;
+  text-align: center;
+  vertical-align: bottom;
+}
+#phenoype-summary-table thead tr th.Crop, #phenoype-summary-table tbody tr td.Crop {
+  text-align: left;
+}
+#phenoype-summary-table tbody tr td {
+  background: #FFF;
+  border: 1px solid #FFF;
+  height: 50px;
+  text-align: center;
+  font-size: 2em;
+  color: #292929;
+  font-weight: bolder;
+}
+/* Arrow for the crop name */
+#phenoype-summary-table tbody tr td.Crop {
+  background-color: #292929;
+  color: white;
+  border-bottom: 1px solid #292929;
+}
+#phenoype-summary-table tbody tr td.Traits {
+    position: relative;
+}
+#phenoype-summary-table tbody tr td.Traits:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    left: -25px;
+    background-color: inherit;
+    border-left: 25px solid #292929;
+    border-top: 30px solid transparent;
+    border-bottom: 30px solid transparent;
+}
+#phenoype-summary-table tbody tr td.Traits:before {
+    border-left-color: #292929;
+}
