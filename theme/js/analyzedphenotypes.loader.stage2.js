@@ -4,28 +4,38 @@
  */
 
 (function($) {
-  Drupal.behaviors.apDragAndDrop = {
+  Drupal.behaviors.stage02 = {
     attach: function (context, settings) {
+      //
+      var vrContainerId = 'ap-validation-result-embed';
+      var vrId = 'ap-content-window-container';
+
+
+
       $(document)
-      .ajaxStart(function() {
-        // Remove any previous messages or validation result window.
-        $('#ap-validation-result-embed').children().remove();
-      })
-      .ajaxComplete(function() {
-        var vr = $('.ap-content-window').clone();
-        var em = $('.ap-content-window').next('.messages').clone();
+        //
+        .ajaxComplete(function() {
+          if ($('#ap-validator-passed').length > 0) {
+            $('#ap-dnd-container').hide();
+            $('.ap-tsv-file-form-element').show();
+          }
 
-        $('.ap-content-window').next('.messages').remove();
-        $('.ap-content-window').remove();
 
-        $(vr).appendTo('#ap-validation-result-embed');
-        $(em).appendTo('#ap-validation-result-embed');
+          if (Drupal.settings.analyzedphenotypes.job_id) {
+            var jobId = Drupal.settings.analyzedphenotypes.job_id;
+            var jobIdField = $('#ap-job-id-hidden-field');
 
-        // Mute any calls to drupal_set_message() when autoloading
-        // project genus. No clue why autocompletesearch + AJAX reloads
-        // previously posted messages.
-        $('#ap-AJAX-wrapper').find('.messages').remove();
+            jobIdField.once(function() {
+              $(this).val(jobId);
+            });
+          }
+        });
+
+
+      // Tell user what's next.
+      $('#ap-main-form-fieldset').once(function() {
+        $('<span class="text-next-step">&#x25B8; Next Step: Stage 3 - Describe Traits</span>')
+          .insertAfter('#ap-next-stage-submit-field');
       });
-    }
-  };
-}(jQuery));
+      //
+} }; }(jQuery));

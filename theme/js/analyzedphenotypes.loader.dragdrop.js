@@ -6,120 +6,59 @@
 (function($) {
   Drupal.behaviors.apDragAndDrop = {
     attach: function (context, settings) {
-      // Add event listener to project autocomplete search field.
-      $('#ap-project-select-field').click(function() {
-        $(this).select();
-      });
+      // Main container.
+      var dndId = '#ap-dnd-container';
 
-      // Handle events when user drags a file to drop zone.
-      // Reference main container of drag and drop.
-      var dnd = 'ap-dnd-field-upload';
+      // Active dropzone.
+      var settings = Drupal.settings.analyzedphenotypes.vars;
+      var dndField = 'droppable-' + settings['source'];
 
-      // Replace button value from browse to choose your file.
-      $('#' + dnd + ' .droppable-browse-button').text('choose your file');
+      // DND validation Result window.
+      var vrEmbedId = '#ap-validation-result-embed';
 
-      // Drop area element.
-	    var dropZone = document.getElementById('droppable-ap-dnd-field');
-	    // Initial/default meassage of the drop area.
-	    var dropMessage = $('.droppable-message');
+      // Customize:
+      // Replace browse button to link.
+      $(dndId).find('a').text('choose a file')
+        .click(function() {
+          $(vrEmbedId).children().remove();
+        });
+
+      // Event listeners:
+      // When user drags or drops a file.
+      var dropZone = document.getElementById(dndField);
+      var dropMessage = $('.droppable-message');
 
       if (dropZone) {
-	      // User drags file into the drop area.
-		    dropZone.addEventListener('dragover', function() {
-		      dropMessage.css('border','2px dashed #AAAAAA');
-	  	  });
+        dropZone.addEventListener('dragover', function() {
+          dropMessage.css('border', '2px dashed #AAAAAA');
+        });
 
-      	// User cancels file drop.
-		    dropZone.addEventListener('dragleave', function() {
-		      dropMessage.css('border','none');
-		    });
-      }
+        dropZone.addEventListener('dragleave', function() {
+          dropMessage.css('border', 'none');
+        });
 
-/*
-      // Handle Next Step button.
-      var submitButton = $('#ap-next-stage-submit-field');
-
-      // Not successful.
-      submitButton.addClass('form-button-disabled');
-      submitButton.attr('disabled','disabled'); */
-
-
-      $(document)
-      .ajaxStart(function() {
-        // Remove any previous messages or validation result window.
-        $('#ap-validation-result-embed').children().remove();
-
-        // Disable form fields.
-        $('#ap-project-select-field, #ap-genus-select-field').attr('readonly', 'readonly');
-      })
-      .ajaxComplete(function() {
-        var vr = $('.ap-content-window').clone();
-        var em = $('.ap-content-window').next('.messages').clone();
-
-        $('.ap-content-window').next('.messages').remove();
-        $('.ap-content-window').remove();
-
-        $(vr).appendTo('#ap-validation-result-embed');
-        $(em).appendTo('#ap-validation-result-embed');
-
-
-        // When DOM has upload success message.
-        if ($('div.ap-validator-success').length) {
-          $('.form-item').hide();
-
-          submitButton.removeClass('form-button-disabled');
-          submitButton.removeAttr('disabled');
-          nextStage();
-        }
-
-        // Enable form fields.
-        $('#ap-project-select-field, #ap-genus-select-field').removeAttr('readonly', 'readonly');
-
-        // Mute any calls to drupal_set_message() when autoloading
-        // project genus. No clue why autocompletesearch + AJAX reloads
-        // previously posted messages.
-        $('#ap-AJAX-wrapper').find('.messages').remove();
-
-        // Reset the select field to always default to the first option.
-        $('#ap-genus-select-field')
-          .find('option')
-          .each(function() {
-            $(this).attr('selected', '');
-          });
-      });
-
-
-      /**
-       * Inform user of the next stage before clicking the next step
-       * button in every stage.
-       */
-      function nextStage() {
-        // Need to figure out what is the current stage and next stage.
-        // Fron the progress indicator, count the remaining stages
-        var countStagesLeft = $('div.ap-progress-stage-todo').length;
-        var nextStage = '';
-
-        if (countStagesLeft == 1) {
-          // Completed stages 1 and 2.
-          nextStage = 'Stage 4 - Save Data';
-        }
-        else if(countStagesLeft == 2) {
-          // Completed stage 1 only.
-          nextStage = 'Stage 3 - Describe Traits';
-        }
-        else if(countStagesLeft == 3) {
-          // Completed stage 1 only.
-          nextStage = 'Stage 2 - Validate Data';
-        }
-
-
-        $('#ap-main-form-fieldset').once(function() {
-
-          $('<span class="text-next-step">&#x25B8; Next Step: ' + nextStage + '</span>')
-           .insertAfter('#ap-next-stage-submit-field');
+        dropZone.addEventListener('drop', function() {
+          $(vrEmbedId).children().remove();
+          dropMessage.css('border', 'none');
         });
       }
 
-    }
-  };
-}(jQuery));
+      // Reposition the validation result.
+      if ($(dndId).has('.ap-result-panel').length > 0) {
+        var vrResult = $('.ap-result-panel');
+        var vrResultClone = vrResult.clone();
+
+        vrResult.prev('.messages').remove();
+        vrResult.next('.messages').remove();
+
+        vrResult.remove();
+
+        $(vrResultClone).appendTo(vrEmbedId);
+      }
+
+      // Suppress any alert.
+      alerts = function() {
+        // no alert.
+      }
+
+} }; }(jQuery));

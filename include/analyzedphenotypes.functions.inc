@@ -7,91 +7,15 @@
 
 /**
  *
+ * Default to return path/directory.
  */
-function analyzedphenotypes_moduleprop($property) {
+function analyzedphenotypes_moduleprop($property = null) {
+  $moduleprop = '';
+
   switch($property) {
     //
-    case 'unit_datatype':
-      $value = array(
-        'date'  => array('date', ''),
-        'count' => array('number', 'allow zero'),
-        'days'  => array('number', ''),
-        'cm'    => array('number', 'allow zero'),
-        'g'     => array('number', 'allow zero'),
-        'y/n/?' => array('text', 'y,n,?,yes,no'),
-        'text'  => array('text', ''),
-        'scale' => array('scale', '1,2,3'),
-      );
-
-      break;
-
-    //
-    case 'combine_columns':
-      $value = array(
-        'Trait Name',
-        'Experiment',
-        'Germplasm Accession',
-        'Year',
-        'Location',
-        'Replicate',
-      );
-
-      break;
-
-    //
-    case 'file_extension':
-      $value = array(
-        'tsv' => 'Tab Separated Values',
-        'txt' => 'Text',
-      );
-
-      break;
-
-    //
-    case 'error':
-      $value = array(
-        'stop_at' => 20,
-      );
-
-      break;
-
-    //
-    case 'reporting_frequency':
-      $value = array(
-        'every' => 10,
-      );
-
-      break;
-
-    //
-    case 'columns':
-      $value = array(
-        'Trait Name',
-        'Germplasm Accession',
-        'Germplasm Name',
-        'Year',
-        'Location',
-        'Replicate',
-        'Value',
-        'Data Collector',
-      );
-
-      break;
-
-    //
-    case 'path':
-      $value = array(
-        'module'    => drupal_get_path('module', 'analyzedphenotypes'),
-        'base'      => base_path(),
-        'extension' => base_path() . 'admin/tripal/extension/analyzedphenotypes',
-        'temp'      => file_directory_temp(),
-      );
-
-      break;
-
-    //
     case 'stages':
-      $value = array(
+      $moduleprop = array(
         'Upload',   // Stage 1 - Select project, genus and upload data file.
         'Validate', // Stage 2 - Validate data.
         'Describe', // Stage 3 - Fully describe all traits.
@@ -101,54 +25,77 @@ function analyzedphenotypes_moduleprop($property) {
       break;
 
     //
+    case 'report_frequency':
+      // Every 10%.
+      $moduleprop = 5;
+
+      break;
+
+    case 'error_limit':
+      // Stop when error is x number.
+      $moduleprop = 10;
+
+      break;
+
+    //
+    // Additional case here.
+
+    //
+    default:
+      // Return module path.
+      $module = 'analyzedphenotypes';
+      $tripal_ext = 'admin/tripal/extension';
+
+      $moduleprop = array(
+        'module'     => drupal_get_path('module', $module),
+        'base_admin' => base_path() . $tripal_ext . '/' . $module,
+        'extension'  => base_path() . $tripal_ext,
+        'temp'       => file_directory_temp(),
+        'ap'         => $tripal_ext . '/' . $module,
+      );
+
+      break;
   }
 
 
-  return $value;
+  return $moduleprop;
 }
 
 
 /**
- * HELPER FUNCTION: Fetch relevant records about a project.
+ *
  */
-function analyzedphenotypes_projectprop($property, $key = null) {
-  if ($key) {
-    $key = strip_tags($key);
+function analyzedphenotypes_projectprop($property = null, $data = null) {
+  $projectprop = '';
+
+  if ($data) {
+    $data = strip_tags($data);
   }
 
   switch($property) {
     //
-    case 'project_all':
-      $sql = "SELECT project_id, name FROM {project} ORDER BY name ASC";
-      $result = chado_query($sql);
-
-      $data = ($result->rowCount() > 0) ? $result->fetchAllKeyed(0, 1) : 0;
-
-      break;
-
-    //
-    case 'project_pattern_match_name':
+    case 'pattern_match_name':
       $sql = "SELECT name FROM {project}
       WHERE LOWER(name) LIKE :project_name ORDER BY name ASC
       LIMIT 10";
 
-      $args = array(':project_name' => '%' . strtolower($key) . '%');
+      $args = array(':project_name' => '%' . strtolower($data) . '%');
       $result = chado_query($sql, $args);
 
-      $data = ($result->rowCount() > 0) ? $result->fetchAllKeyed(0, 0) : 0;
+      $projectprop = ($result->rowCount() > 0) ? $result->fetchAllKeyed(0, 0) : 0;
 
       break;
 
     //
-    case 'project_match_name':
+    case 'match_name':
       $sql = "SELECT project_id FROM {project}
       WHERE LOWER(name) = TRIM(LOWER(:project_name)) ORDER BY name ASC
       LIMIT 10";
 
-      $args = array(':project_name' => $key);
+      $args = array(':project_name' => $data);
       $result = chado_query($sql, $args);
 
-      $data = ($result->rowCount() > 0) ? $result->fetchField() : 0;
+      $projectprop = ($result->rowCount() > 0) ? $result->fetchField() : 0;
 
       break;
 
@@ -162,16 +109,28 @@ function analyzedphenotypes_projectprop($property, $key = null) {
       WHERE project_id = :project_id AND type_id = :type_id
       LIMIT 1";
 
-      $args = array(':project_id' => $key, ':type_id' => $cvid_genus);
+      $args = array(':project_id' => $data, ':type_id' => $cvid_genus);
       $result = chado_query($sql, $args);
 
-      $data = ($result->rowCount() > 0) ? $result->fetchAllKeyed(0, 0) : 0;
+      $projectprop = ($result->rowCount() > 0) ? $result->fetchField() : 0;
+
+      break;
+
+     //
+     // Additional case here.
+
+    //
+    default:
+      $sql = "SELECT project_id, name FROM {project} ORDER BY name ASC";
+      $result = chado_query($sql);
+
+      $projectprop = ($result->rowCount() > 0) ? $result->fetchAllKeyed(0, 1) : 0;
 
       break;
   }
 
 
-  return $data;
+  return $projectprop;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -182,14 +141,41 @@ function analyzedphenotypes_projectprop($property, $key = null) {
 /**
  * Helper function: fetch relevant records about a project.
  */
-function analyzedphenotypes_genusprop() {
-  // All genus.
-  $sql = "SELECT genus FROM {organism}
-  GROUP BY genus ORDER BY genus ASC";
+function analyzedphenotypes_genusprop($property = null, $data = null) {
+  $genusprop = '';
 
-  $result = chado_query($sql);
+  switch($property) {
+    //
+    case 'project_genus':
+      // Get genus cvterm.
+      $t = analyzedphenotypes_cvprop('genus', 'taxonomic_rank');
+      $cvid_genus = $t['id'];
 
-  return ($result->rowCount() > 0) ? $result->fetchAllKeyed(0, 0) : 0;
+      $sql = "SELECT value FROM {projectprop}
+      WHERE project_id = :project_id AND type_id = :type_id
+      LIMIT 1";
+
+      $args = array(':project_id' => $data, ':type_id' => $cvid_genus);
+      $result = chado_query($sql, $args);
+
+      $genusprop = ($result->rowCount() > 0) ? $result->fetchField() : 0;
+
+      break;
+
+    //
+    // Additional case here.
+
+    //
+    default:
+      $sql = "SELECT genus FROM {organism}
+      GROUP BY genus ORDER BY genus ASC";
+
+      $result = chado_query($sql);
+      $genusprop = ($result->rowCount() > 0) ? $result->fetchAllKeyed(0, 0) : 0;
+  }
+
+
+  return $genusprop;
 }
 
 
@@ -200,39 +186,69 @@ function analyzedphenotypes_genusprop() {
 /**
  * Helper function: fetch relevant information about data file.
  */
-function analyzedphenotypes_fileprop($property, $data_file) {
-  $source = drupal_realpath($data_file->uri);
-  $text_data = file_get_contents($source);
+function analyzedphenotypes_fileprop($property = null, $data_file = null) {
+  $fileprop = '';
 
   switch($property) {
     //
-    case 'readable':
-      $readable = ($text_data) ? TRUE : FALSE;
+    case 'get_contents':
+      $source = drupal_realpath($data_file->uri);
+      $text_data = file_get_contents($source);
 
-      return $readable;
+      $fileprop = $text_data;
+
+      break;
+
+    //
+    case 'readable':
+      $source = drupal_realpath($data_file->uri);
+      $text_data = file_get_contents($source);
+
+      $fileprop = ($text_data) ? TRUE : FALSE;
 
       break;
 
     //
     case 'columns':
+      $source = drupal_realpath($data_file->uri);
+      $text_data = file_get_contents($source);
+
       if ($text_data) {
         $rows = explode("\n", $text_data);
+        $columns_row = $rows[0];
+        unset($rows);
 
-        foreach($rows as $i => $line) {
-          if ($i == 0) {
-            $arr_columns = str_getcsv($line, "\t");
-            return $arr_columns;
-          }
+        if (!empty($columns_row)) {
+          $fileprop = str_getcsv($columns_row, "\t");
         }
       }
 
       break;
 
     //
-    case 'rows':
+    case 'filename':
+      // Replace @JOB_ID with registered Tripal job id.
+      $fileprop = array(
+        'validate progress' => 'ap_validate_tripaljob_progress@JOB_ID.txt',
+        'validate result'   => 'ap_validate_tripaljob_progress@JOB_ID.txt',
+        'save progress'     => 'ap_save_tripaljob_progress@JOB_ID.txt',
+      );
 
       break;
+
+    //
+    // Additional case here.
+
+    //
+    default:
+      $fileprop = array(
+        'tsv' => 'Tab Separated Values',
+        'txt' => 'Text File',
+      );
   }
+
+
+  return $fileprop;
 }
 
 
@@ -241,8 +257,10 @@ function analyzedphenotypes_fileprop($property, $data_file) {
 /**
  * Helper funciton: get cv or cvterm.
  */
-function analyzedphenotypes_columnsprop($property) {
-  $columns_prop = array(
+function analyzedphenotypes_columnsprop($property = null) {
+  $columnsprop = '';
+
+  $columns = array(
     'Trait Name'          => 'text',   // #0
     'Germplasm Accession' => 'text',   // #1
     'Germplasm Name'      => 'text',   // #2
@@ -256,41 +274,34 @@ function analyzedphenotypes_columnsprop($property) {
 
   switch($property) {
     //
-    case 'all':
-      $arr_columns = array_keys($columns_prop);
-
-      break;
-
-    //
     case 'expected':
-      $arr_columns = array_keys($columns_prop);
+      $columnsprop = array_keys($columns);
 
       break;
 
     //
     case 'combination':
-      $cols = array_keys($columns_prop);
-      $arr_columns = array(
-        $cols[0],
-        $cols[2],
-        $cols[3],
-        $cols[4],
-        $cols[5],
+      $cols = array_keys($columns);
+      $columnsprop = array(
+        $cols[0],  // Trait Name.
+        $cols[1],  // Germplasm Accession.
+        $cols[3],  // Year.
+        $cols[4],  // Location.
+        $cols[5],  // Replicate.
       );
 
       break;
 
     //
-    case 'data_type':
-      $arr_columns = $columns_prop;
-
-      break;
+    // Additional case here.
 
     //
+    default:
+      $columnsprop = $columns;
   }
 
 
-  return $arr_columns;
+  return $columnsprop;
 }
 
 
@@ -381,7 +392,7 @@ function analyazedphenotypes_AJAX_callback($form, $form_state) {
 
   switch($case) {
     //
-    case 'autocomplete_search_project':
+    case 'autofill_genus':
       break;
 
     //
@@ -401,6 +412,28 @@ function analyzedphenotypes_noformat($string) {
   return strtolower(trim($string));
 }
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function analyzedphenotypes_dataprop($property, $data = null) {
+  switch($property) {
+    //
+    case 'sanitize':
+
+      break;
+
+    //
+    case 'save':
+
+      break;
+
+    //
+    case 'exists':
+
+      break;
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -412,11 +445,12 @@ function analyzedphenotypes_validation_result($case, $data) {
     //
     case 'data':
       $job_id = $data;
-      $tmp_dir = file_directory_temp();
-      $filename_error = $tmp_dir . '/ap-validate-job-status' . $job_id . '.txt';
-      $e = file_get_contents($filename_error);
-      $status = json_decode($e, TRUE);
+      $all_path = analyzedphenotypes_moduleprop();
+      $all_filename =  analyzedphenotypes_fileprop('filename');
+      $file_result   = $all_path['temp'] . '/' . str_replace('@JOB_ID', $job_id, $all_filename['validate result']);
+      $result = file_get_contents($file_result);
 
+      $status = json_decode($result, TRUE);
       print theme('analyzedphenotypes_validator_report', array('status' => $status));
 
       break;
@@ -424,7 +458,8 @@ function analyzedphenotypes_validation_result($case, $data) {
     //
     case 'file':
       // Data is validation result array.
-      return theme('analyzedphenotypes_validator_report', array('status' => $data));
+      $status = $data;
+      return theme('analyzedphenotypes_validator_report', array('status' => $status));
 
       break;
 

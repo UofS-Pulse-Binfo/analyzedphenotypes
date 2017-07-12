@@ -6,17 +6,23 @@
  */
 
 
+module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.functions');
+module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.validators');
+
+
 /**
  * Implements hook_menu().
  */
 function analyzedphenotypes_menu() {
   $items = array();
 
+  $all_path = analyzedphenotypes_moduleprop();
+  $tripal_extension_ap = $all_path['ap'];
+
   // ADMINISTRATIVE PAGES.
-  $tripal_extension_basepath = 'admin/tripal/extension/';
 
   // Main administrative pages for analyzed phenotypes.
-  $items[$tripal_extension_basepath . 'analyzedphenotypes'] = array(
+  $items[$tripal_extension_ap] = array(
     'title' => 'Analyzed Phenotypes',
     'description' => 'Lorem ipsum dolor sit amet (Hello Analyzedphenotypes).',
     'page callback' => 'drupal_get_form',
@@ -27,19 +33,19 @@ function analyzedphenotypes_menu() {
   );
 
   // Data Loader.
-  $items[$tripal_extension_basepath . 'analyzedphenotypes/data_loader'] = array(
+  $items[$tripal_extension_ap . '/data_loader'] = array(
     'title' => 'Analyzed Phenotypes Data Loader',
     'description' => 'Lorem Ipsum dolor sit amet.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_data_loader'),
     'access arguments' => array('access administration pages'),
     'file' => 'include/analyzedphenotypes.admin.form.inc',
-    'type' => MENU_LOCAL_TASK,
     'weight' => 1,
+    'type' => MENU_LOCAL_TASK,
   );
 
   // Generate data in JSON object.
-  $items[$tripal_extension_basepath . 'analyzedphenotypes/json/%/%'] = array(
+  $items[$tripal_extension_ap . '/json/%/%'] = array(
     'page callback' => 'analyzedphenotypes_data_json',
     'page arguments' => array(5, 6),
     'access arguments' => array('access administration pages'),
@@ -48,7 +54,7 @@ function analyzedphenotypes_menu() {
 
 
   // Generate validation result.
-  $items[$tripal_extension_basepath . 'analyzedphenotypes/validation_result/%/%'] = array(
+  $items[$tripal_extension_ap . '/validation_result/%/%'] = array(
     'page callback' => 'analyzedphenotypes_validation_result',
     'page arguments' => array(5, 6),
     'access arguments' => array('access administration pages'),
@@ -56,13 +62,11 @@ function analyzedphenotypes_menu() {
   );
 
 
-
   return $items;
 }
 
 
-module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.functions');
-module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.validators');
+
 
 
 /**
@@ -138,18 +142,17 @@ function analyzedphenotypes_libraries_info() {
  *   A JSON object.
  */
 function analyzedphenotypes_data_json($datatype, $data, $key = '') {
-  $arr_data = array();
+  $data_JSON = array();
 
   switch($datatype) {
     //
     case 'projects':
-      $arr_data = analyzedphenotypes_projectprop('project_pattern_match_name', $key);
+      $data_JSON = analyzedphenotypes_projectprop('pattern_match_name', $key);
 
       break;
 
     //
     case 'validate_jobstatus':
-      // Variable $data is job_id.
       $job_id = $data;
       $job = tripal_get_job($job_id);
 
@@ -157,33 +160,31 @@ function analyzedphenotypes_data_json($datatype, $data, $key = '') {
         $job_status = strtolower(trim($job->status));
 
         if ($job_status == 'completed') {
-          // Job completed.
-          $job_percent = 100;
-          $job_message = 'Completed';
+          $progress = 100;
+          $message  = 'Completed';
 
-          if ($job->progress != '100') {
-            // Set to 100 in case file read returns an empty value.
-            // Happens when file read and write not in sync.
-            db_update('tripal_jobs')
-              ->fields(array('progress' => 100))
+          if ($job->progress != $progress) {
+            dp_update('tripal_jobs')
+              ->fields(array('progress' => $progress))
               ->condition('job_id', $job_id, '=')
               ->execution();
           }
         }
         else {
-          // On going job.
-          $tmp_dir = file_directory_temp();
-          $filename = $tmp_dir . '/ap-validate-job-progress' . $job_id . '.txt';
-          $file_content = file_get_contents($filename);
+          $all_path = analyzedphenotypes_moduleprop();
+          $all_filename =  analyzedphenotypes_fileprop('filename');
 
-          $job_percent = (empty($file_content)) ? '...' : trim($file_content);
-          $job_message = ($job_percent == '100' || $job_status == 'completed')
+          $file_result   = $all_path['temp'] . '/' . str_replace('@JOB_ID', $job_id, $all_filename['validate progress']);
+          $file_content = file_get_contents($file_result);
+
+          $progress = (empty($file_content)) ? '...' : trim($file_content);
+          $message  = ($progress == '100' || $job_status == 'completed')
             ? 'Completed' : $job->status;
         }
 
-        $arr_data = array(
-          'percentage' => $job_percent,
-          'message' => $job_message
+        $data_JSON = array(
+          'percentage' => $progress,
+          'message'    => $message,
         );
       }
 
@@ -201,7 +202,7 @@ function analyzedphenotypes_data_json($datatype, $data, $key = '') {
   }
 
 
-  print drupal_json_output($arr_data);
+  print drupal_json_output($data_JSON);
 
   // Do not show the Drupal headers and formatting.
   // This is critical as if anything else is printed to the screen you will see

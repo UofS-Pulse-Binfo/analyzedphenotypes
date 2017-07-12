@@ -69,7 +69,7 @@ div.ap-clear-both {
  * Fieldset style window used in
  * Validation Result window.
  */
-.ap-content-window {
+.ap-result-panel {
   border: none !important;
   margin: 0 !important;
   padding: 0 !important;

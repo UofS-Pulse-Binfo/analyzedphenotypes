@@ -15,3 +15,14 @@
   border: 1px solid #CCCCCC;
   padding: 20px 20px 30px 20px;
 }
+
+#ap-dnd-container {
+  display: none;
+}
+
+#ap-job-id-hidden-field {
+  display: none;
+  visibility: hidden;
+  width: 1px;
+  height: 1px;
+}

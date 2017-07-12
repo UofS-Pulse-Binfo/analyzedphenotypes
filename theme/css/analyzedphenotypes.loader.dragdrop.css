@@ -7,7 +7,8 @@
 /*
  * DRAG AND DROP.
  */
-#droppable-ap-dnd-field {
+#droppable-ap-dnd-field,
+#droppable-ap-dnd-field-reupload {
   background-color: #FCFDFD;
   border: 1px solid #AAAAAA;
 
@@ -65,8 +66,8 @@ div.droppable-standard-upload {
   width: 165px;
 }
 
-#droppable-ap-dnd-field a,
-#droppable-ap-dnd-field a:link {
+#ap-dnd-container a,
+#ap-dnd-container a:link {
   background: none;
   border: none;
   color: #118324;
@@ -77,7 +78,6 @@ div.droppable-standard-upload {
   padding: 0;
   text-decoration: underline;
 }
-
 
 /*
  * Preview file
@@ -94,12 +94,12 @@ div.droppable-standard-upload {
 /*
  * AJAX wait animation
  */
-#ap-dnd-field-upload .throbber {
+#ap-dnd-container .throbber {
   background: url('../../theme/img/wait-validating.gif') no-repeat top center;
   padding: 60px 90px 10px 90px !important;
 }
 
-#ap-dnd-field-upload .message {
+#ap-dnd-container .message {
   display: block;
   padding: 0 0 0 0 !important;
 }
@@ -122,7 +122,9 @@ div.droppable-controls {
 /*
  * Remove button
  */
-#edit-ap-dnd-field-remove-button, .file {
+#edit-ap-dnd-field-reupload-remove-button,
+#edit-ap-dnd-field-remove-button,
+.file {
   display: none;
   height: 0;
   width: 0;

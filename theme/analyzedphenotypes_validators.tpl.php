@@ -7,6 +7,7 @@
  */
 
 $ap_validators =  module_invoke_all('ap_validators');
+$failed_counter = 0;
 ?>
 
 <div id="ap-content-window-container">
@@ -21,6 +22,7 @@ $ap_validators =  module_invoke_all('ap_validators');
         foreach($status as $validator => $result) {
           $type = $result['type'];
           $details = $result['details'];
+          $details = rtrim($details, ', ');
 
           // Style each error based on validation result.
           $style = '';
@@ -32,6 +34,8 @@ $ap_validators =  module_invoke_all('ap_validators');
           elseif ($type == 'failed') {
             $style = 'ap-failed';
             $title = 'Failed';
+
+            $failed_counter++;
           }
           else {
             $style = 'ap-todo';
@@ -48,7 +52,7 @@ $ap_validators =  module_invoke_all('ap_validators');
 
               // Check for additional info.
               if (!empty(trim($details))) {
-                $error_message = str_replace('@replace', '<i class="ap-error-details">' . $details . '</i>', $error_message);
+                $error_message = str_replace('@replace', '<i class="ap-error-details">' . $details . '.</i>', $error_message);
               }
 
               print '<ul class="ap-content-window-sublist">';
@@ -61,4 +65,22 @@ $ap_validators =  module_invoke_all('ap_validators');
 
     </ul>
   </div>
+</div>
+
+<?php
+  // Keep the validation result and drupal set message error/success together.
+  if ($failed_counter > 0) {
+    $type = 'messages error';
+    $message = 'The specified file could not be uploaded. See Validation Result for more information about the error.';
+    $id = 'ap-validator-failed';
+  }
+  else {
+    $type = 'messages status';
+    $message = 'Your file uploaded successfully. Please click "Next Step" to continue.';
+    $id = 'ap-validator-passed';
+  }
+?>
+
+<div <?php print 'class="' . $type .'" id="' . $id . '"'; ?>>
+  <?php print $message; ?>
 </div>

@@ -65,7 +65,6 @@ elseif($form_id == 'analyzedphenotypes_admin_data_loader') :
 
       <div id="ap-validation-result-embed"></div>
 
-
       <div id="ap-main-form-elements-container">
         <?php
           switch($current_stage) :
@@ -100,20 +99,22 @@ elseif($form_id == 'analyzedphenotypes_admin_data_loader') :
 
               <br />
 
-              <div>
+              <div class="ap-tsv-file-form-element">
                 <label>TSV Data File</label>
                 <span>Validating...</span>
               </div>
 
-              <div id="ap-progress-container">
+              <div id="ap-progress-container" class="ap-tsv-file-form-element">
                 <div class="ap-progress-wrapper">
                   <div class="progress-pane"></div>
                 </div>
-              <div>
+              </div>
 
-              <?php
-                print drupal_render($form['tripal_job_id']);
-              ?>
+              <div id="ap-dnd-container">
+                <?php
+                  print drupal_render($form['ap_dnd_field_reupload']);
+                ?>
+              </div>
 
         <?php
             break;
@@ -178,7 +179,7 @@ elseif($form_id == 'analyzedphenotypes_admin_data_loader') :
 
 <?php
 // Messages outside the fieldset go here.
-if ($inform) {
+if (isset($inform)) {
   print $inform;
 }
 
