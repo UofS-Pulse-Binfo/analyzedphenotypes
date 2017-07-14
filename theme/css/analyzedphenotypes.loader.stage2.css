@@ -20,9 +20,8 @@
   display: none;
 }
 
-#ap-job-id-hidden-field {
+#ap-wait {
+  color: red;
+  text-align:center;
   display: none;
-  visibility: hidden;
-  width: 1px;
-  height: 1px;
 }

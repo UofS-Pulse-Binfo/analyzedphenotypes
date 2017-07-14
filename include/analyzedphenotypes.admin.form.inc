@@ -36,9 +36,24 @@ function analyzedphenotypes_admin_page_directory($form, &$form_state) {
  * Function callback: Construct analyzed phenotypes data loader stages.
  */
 function analyzedphenotypes_admin_data_loader($form, &$form_state) {
+  drupal_session_start();
+
   if (!isset($form_state['stage'])) {
     // Default loader to upload stage.
     $form_state['stage'] = 'upload';
+
+    if (isset($_SESSION['analyzedphenotypes']['projectprop'])) {
+      $p = $_SESSION['analyzedphenotypes']['projectprop'];
+      $projectprop = unserialize($p);
+
+      $job_id = $projectprop['job_id'];
+      $job_id = analyzedphenotypes_tripaljobprop('get_job', $job_id);
+
+      if ($job_id) {
+        $form_state['stage'] = 'validate';
+        unset($_SESSION['analyzedphenotypes']['projectprop']);
+      }
+    }
   }
 
   $current_stage = $form_state['stage'];
@@ -85,7 +100,7 @@ function analyzedphenotypes_admin_data_loader($form, &$form_state) {
 
       drupal_add_js('misc/progress.js');
 
-      $form = analyzedphenotypes_loader_form_validates($form, $form_state);
+      $form = analyzedphenotypes_loader_form_validates($form, $form_state, $projectprop);
 
       break;
 
@@ -210,6 +225,7 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
   // @see analyzedphenotypes_dragdrop() below.
   $form = analyzedphenotypes_dragdrop($form, $form_state, 'ap_dnd_field');
 
+  $form_state['storage']['testing'] = 'hello';
 
   return $form;
 }
@@ -264,28 +280,33 @@ function analyzedphenotypes_file_insert($file) {
   $source = $file->source;
 
   if ($source == 'ap_dnd_field_reupload') {
-    global $user;
+    if (isset($_POST['ap_project_select_field']) &&
+        isset($_POST['ap_genus_select_field'])) {
 
-    // Project details.
-    $project_name = $_POST['ap_project_select_field'];
+      $project_name = $_POST['ap_project_select_field'];
+      $project_genus = $_POST['ap_genus_select_field'];
+      $data_file = $file->fid;
 
-    // Genus details.
-    $project_genus = $_POST['ap_genus_select_field'];
+      $dataset = array(
+        'description' => 'Validate Analyzed Phenotypes',
+        'callback'    => 'analyzedphenotypes_validate_tsv_data',
+        'data' => array(
+          'project_name'  => $project_name,
+          'project_genus' => $project_genus,
+          'data_file'     => $data_file,
+        )
+      );
 
+      $job_id = analyzedphenotypes_tripaljobprop('new_job', $dataset);
 
-    $job_id = tripal_add_job(
-      'Validate Analyzed Phenotypes Reupload',
-      'analyzedphenotypes',
-      'analyzedphenotypes_validate_tsv_data',
-      array(
-        $project_name,
-        $project_genus,
-        $file->fid,
-      ),
-      $user->uid
-    );
+      if ($job_id) {
+        $dataset['data']['job_id'] = $job_id;
+        $_SESSION['analyzedphenotypes']['projectprop'] = serialize($dataset['data']);
 
-    drupal_add_js(array('analyzedphenotypes' => array('job_id' => $job_id)), array('type' => 'setting'));
+        $all_path = analyzedphenotypes_moduleprop();
+        drupal_add_js(array('analyzedphenotypes' => array('redirect' => $all_path['loader'])), array('type' => 'setting'));
+      }
+    }
   }
 }
 
@@ -298,51 +319,33 @@ function analyzedphenotypes_file_validate($file) {
   $source = $file->source;
 
   if ($source == 'ap_dnd_field' || $source == 'ap_dnd_field_reupload') {
-    // Project details.
-    $project_name = $_POST['ap_project_select_field'];
+    if (isset($_POST['ap_project_select_field']) &&
+        isset($_POST['ap_genus_select_field'])) {
 
-    // Genus details.
-    $project_genus = $_POST['ap_genus_select_field'];
+      $project_name = $_POST['ap_project_select_field'];
+      $project_genus = $_POST['ap_genus_select_field'];
 
-    // Validation is at file level.
-    $dataset = array(
-      'project_name'  => $project_name,
-      'project_genus' => $project_genus,
-      'data_file'     => $file,
-    );
+      // Validation is at file level.
+      $dataset = array(
+        'project_name'  => $project_name,
+        'project_genus' => $project_genus,
+        'data_file'     => $file,
+      );
 
-    // Begin validation process.
-    $status = analyzedphenotypes_validate_tsv_file($dataset);
+      // Begin validation process.
+      $status = analyzedphenotypes_validate_tsv_file($dataset);
+      drupal_set_message(analyzedphenotypes_validation_result('file', $status), 'ap-result-panel');
 
-    // We want to show the user which steps passed/failed even if all of them passed,
-    // so lets do that now. We use drupal_set_message() because returning from this function
-    // creates an error message and halts file upload, whereas, using drupal_set_message()
-    // allows us to print to the screen regardless of failure/success.
-    drupal_set_message(analyzedphenotypes_validation_result('file', $status), 'ap-result-panel');
+      $all_results = array_values($status);
 
-    $all_results = array_values($status);
-
-    // Find a single validator that returned FALSE.
-    // One false result should trigger a validation error.
-    foreach($all_results as $result) {
-      if ($result['type'] == 'failed') {
-        return FALSE;
+      foreach($all_results as $result) {
+        if ($result['type'] == 'failed') {
+          return FALSE;
+        }
       }
+
+      return array();
     }
-
-
-    if ($source == 'ap_dnd_field_reupload') {
-      // Try to validate on VALUE/DATA level.
-      // The return value will indicate either
-      // to repost the dropzone on error or it will
-      // just accept the file after perfoming
-      // validation on FILE level.
-
-
-    }
-
-
-    return array();
   }
 }
 
@@ -355,41 +358,54 @@ function analyzedphenotypes_file_validate($file) {
 /**
  *
  */
-function analyzedphenotypes_loader_form_validates($form, &$form_state) {
-  // Define dataset.
-  $project_name = $form_state['values']['ap_project_select_field'];
-  $project_genus = $form_state['values']['ap_genus_select_field'];
-  $data_file = $form_state['multistep_values']['fid'];
+function analyzedphenotypes_loader_form_validates($form, &$form_state, $projectprop) {
+  $all_path = analyzedphenotypes_moduleprop();
 
-  if (!empty($project_name) && !empty($project_genus) && !empty($data_file)) {
-    global $user;
+  if (isset($form_state['values']['ap_project_select_field']) &&
+      isset($form_state['values']['ap_genus_select_field'])   &&
+      isset($form_state['multistep_values']['fid'])) {
 
-    //$job_id = 2691;
-    $job_id = tripal_add_job(
-      'Validate Analyzed Phenotypes',
-      'analyzedphenotypes',
-      'analyzedphenotypes_validate_tsv_data',
-      array(
-        $project_name,
-        $project_genus,
-        $data_file
-      ),
-      $user->uid
+    $project_name = $form_state['values']['ap_project_select_field'];
+    $project_genus = $form_state['values']['ap_genus_select_field'];
+    $data_file = $form_state['multistep_values']['fid'];
+
+    $dataset = array(
+      'description' => 'Validate Analyzed Phenotypes',
+      'callback'    => 'analyzedphenotypes_validate_tsv_data',
+      'data' => array(
+        'project_name'  => $project_name,
+        'project_genus' => $project_genus,
+        'data_file'     => $data_file,
+      )
     );
+
+    $job_id = analyzedphenotypes_tripaljobprop('new_job', $dataset);
+  }
+  elseif ($projectprop) {
+    $job_id = $projectprop['job_id'];
+    $job_id = analyzedphenotypes_tripaljobprop('get_job', $job_id);
+
+    $project_name  = $projectprop['project_name'];
+    $project_genus = $projectprop['project_genus'];
   }
 
-  $form['ap_job_id_hidden_field'] = array(
-    '#type' => 'textfield',
-    '#value' => $job_id,
-    '#id' => 'ap-job-id-hidden-field',
-    '#theme_wrappers' => array(),
-  );
+  if ($job_id) {
+    $js_var = array(
+      'job_id'    => $job_id,
+      'path_JSON' => $all_path['base_admin'] . '/json/validate_jobstatus/',
+      'path_VR'   => $all_path['base_admin'] . '/validation_result/data/',
+    );
 
+    drupal_add_js(array('analyzedphenotypes' => array('vars' => $js_var)), array('type' => 'setting'));
+  }
+
+  // Hidden field: Experiment/project name.
   $form['ap_project_select_field'] = array(
     '#type' => 'hidden',
     '#value' => $project_name,
   );
 
+  // Hidden field: Genus.
   $form['ap_genus_select_field'] = array(
     '#type' => 'hidden',
     '#value' => $project_genus,

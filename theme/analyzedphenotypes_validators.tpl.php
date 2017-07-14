@@ -81,6 +81,6 @@ $failed_counter = 0;
   }
 ?>
 
-<div <?php print 'class="' . $type .'" id="' . $id . '"'; ?>>
+<div <?php print 'class="' . $type . ' ' . $scope . '" id="' . $id . '"'; ?>>
   <?php print $message; ?>
 </div>

@@ -89,7 +89,6 @@ elseif($form_id == 'analyzedphenotypes_admin_data_loader') :
             //
             case 'validate':
         ?>
-
              <?php print drupal_render($form['ap_val_res']); ?>
 
               <div>

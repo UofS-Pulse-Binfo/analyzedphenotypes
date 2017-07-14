@@ -191,7 +191,7 @@ function analyzedphenotypes_validator_project($case, $dataset) {
       else {
         $exists = analyzedphenotypes_projectprop('match_name', $project_name);
 
-        if (!exists) {
+        if (!$exists) {
           $status['type'] = 'failed';
         }
       }
@@ -313,9 +313,10 @@ function analyzedphenotypes_validator_datafile($case, $dataset) {
 /**
  *
  */
-function analyzedphenotypes_validate_tsv_data($project_name, $project_genus, $data_file, $job_id) {
-  $file_obj = file_load($data_file);
-  $file_content = analyzedphenotypes_fileprop('get_contents', $file_obj);
+function analyzedphenotypes_validate_tsv_data($dataset, $job_id = null) {
+  $dataset = unserialize($dataset);
+  $data_file = file_load($dataset['data_file']);
+  $file_content = analyzedphenotypes_fileprop('get_contents', $data_file);
 
   if ($file_content) {
   ///
@@ -323,16 +324,20 @@ function analyzedphenotypes_validate_tsv_data($project_name, $project_genus, $da
     $arr_status = '';
 
     // Get module settings.
-    $all_path = analyzedphenotypes_moduleprop();
-    $error_limit = analyzedphenotypes_moduleprop('error_limit');
-    $error_counter = 0;
-    $report_frequency = analyzedphenotypes_moduleprop('report_frequency');
+    if ($job_id) {
+      $all_path = analyzedphenotypes_moduleprop();
+      $error_limit = analyzedphenotypes_moduleprop('error_limit');
+      $error_counter = 0;
+      $report_frequency = analyzedphenotypes_moduleprop('report_frequency');
 
-    // Temporary files.
-    $all_filename = analyzedphenotypes_fileprop('filename');
-    $file_progress = $all_path['temp'] . '/' . str_replace('@JOB_ID', $job_id, $all_filename['validate progress']);
-    $file_result   = $all_path['temp'] . '/' . str_replace('@JOB_ID', $job_id, $all_filename['validate result']);
-    unset($all_path, $all_filename);
+      // Temporary files.
+      $all_filename = analyzedphenotypes_fileprop('filename');
+      $file_progress = $all_path['temp'] . '/' . str_replace('@JOB_ID', $job_id, $all_filename['validate progress']);
+      $file_result   = $all_path['temp'] . '/' . str_replace('@JOB_ID', $job_id, $all_filename['validate result']);
+      unset($all_path, $all_filename);
+
+      print '0% Complete...' . "\n";
+    }
 
     // Scope - just do value/data scope.
     $scope = analyzedphenotypes_ap_validators('return_all_scope');
@@ -365,8 +370,6 @@ function analyzedphenotypes_validate_tsv_data($project_name, $project_genus, $da
     $columns_combination = analyzedphenotypes_columnsprop('combination');
 
     $prev_percent = 0;
-
-    print '0% Complete...' . "\n";
 
     // BEGIN TRIPAL VALIDATION.
     foreach($rows as $i => $line) {
@@ -405,33 +408,43 @@ function analyzedphenotypes_validate_tsv_data($project_name, $project_genus, $da
         }
         else {
           // Apply to combination or specific column.
+          // if array and string.
 
         }
       }
 
 
-      if ($error_counter >= $error_limit) {
-        print 'Error limit reached. Job terminated.' . "\n";
-        break;
-      }
-
-      //
-      $percent = round((($i + 1) / $rows_count) * 100);
-
-      if ($percent % $report_frequency == 0) {
-        if ($percent != $prev_percent) {
-          print $percent . '% Complete...' . "\n";
-          $prev_percent = $percent;
+      if ($job_id) {
+        if ($error_counter >= $error_limit) {
+          print 'Error limit reached. Job terminated.' . "\n";
+          break;
         }
-      }
 
-      file_unmanaged_save_data($percent, $file_progress, FILE_EXISTS_REPLACE);
+        //
+        $percent = round((($i + 1) / $rows_count) * 100);
+
+        if ($percent % $report_frequency == 0) {
+          if ($percent != $prev_percent) {
+            print $percent . '% Complete...' . "\n";
+            $prev_percent = $percent;
+          }
+        }
+
+        file_unmanaged_save_data($percent, $file_progress, FILE_EXISTS_REPLACE);
+      }
     }
 
-    $status_JSON = json_encode($arr_status);
-    file_unmanaged_save_data($status_JSON, $file_result, FILE_EXISTS_REPLACE);
 
-    print '100% Complete...' . "\n";
+    if ($job_id) {
+      $status_JSON = json_encode($arr_status);
+      file_unmanaged_save_data($status_JSON, $file_result, FILE_EXISTS_REPLACE);
+
+      print '100% Complete...' . "\n";
+    }
+    else {
+      return $arr_status;
+    }
+
   ///
   }
 }

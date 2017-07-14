@@ -50,6 +50,7 @@ function analyzedphenotypes_moduleprop($property = null) {
         'module'     => drupal_get_path('module', $module),
         'base_admin' => base_path() . $tripal_ext . '/' . $module,
         'extension'  => base_path() . $tripal_ext,
+        'loader'     => base_path() . $tripal_ext . '/' . $module . '/data_loader',
         'temp'       => file_directory_temp(),
         'ap'         => $tripal_ext . '/' . $module,
       );
@@ -451,7 +452,7 @@ function analyzedphenotypes_validation_result($case, $data) {
       $result = file_get_contents($file_result);
 
       $status = json_decode($result, TRUE);
-      print theme('analyzedphenotypes_validator_report', array('status' => $status));
+      print theme('analyzedphenotypes_validator_report', array('status' => $status, 'scope' => 'ap-data-scope'));
 
       break;
 
@@ -459,7 +460,7 @@ function analyzedphenotypes_validation_result($case, $data) {
     case 'file':
       // Data is validation result array.
       $status = $data;
-      return theme('analyzedphenotypes_validator_report', array('status' => $status));
+      return theme('analyzedphenotypes_validator_report', array('status' => $status, 'scope' => 'ap-file-scope'));
 
       break;
 
@@ -473,3 +474,53 @@ function analyzedphenotypes_validation_result($case, $data) {
   }
 }
 
+
+/**
+ *
+ */
+function analyzedphenotypes_tripaljobprop($property, $dataset) {
+  $tripaljobprop = '';
+  global $user;
+
+  switch($property) {
+    //
+    case 'new_job':
+
+      $job_id = tripal_add_job(
+        $dataset['description'],
+        'analyzedphenotypes',
+        $dataset['callback'],
+        array(
+          serialize($dataset['data'])
+        ),
+        $user->uid
+      );
+
+      if ($job_id) {
+        $tripaljobprop = $job_id;
+      }
+
+      break;
+
+    //
+    case 'get_job':
+      $job_id = $dataset;
+      $job = tripal_get_job($job_id);
+      $job_status = array('Completed', 'Error', 'Cancelled');
+
+      if ($job && $job->uid == $user->uid && !in_array($job->status, $job_status)) {
+        $tripaljobprop = $job->job_id;
+      }
+
+      break;
+
+    //
+    // Additional case here.
+
+    //
+    default:
+  }
+
+
+  return $tripaljobprop;
+}
