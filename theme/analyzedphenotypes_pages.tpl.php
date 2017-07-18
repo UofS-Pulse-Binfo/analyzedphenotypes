@@ -162,10 +162,6 @@ elseif($form_id == 'analyzedphenotypes_admin_data_loader') :
                 </div>
               <div>
 
-              <?php
-                print drupal_render_children($form);
-              ?>
-
 
         <?php
             break;

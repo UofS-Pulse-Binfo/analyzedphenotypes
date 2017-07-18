@@ -254,7 +254,6 @@ function analyzedphenotypes_dragdrop($form, &$form_state, $source_name) {
     '#upload_validators' => array(
       'file_validate_extensions' => array(),
     ),
-    '#required' => TRUE,
     '#droppable_area_text' => t('- Drag and drop your file here -'),
     '#progress_indicator' => 'throbber',
     '#progress_message' => 'Validating your file. Please wait...',
@@ -387,10 +386,12 @@ function analyzedphenotypes_loader_form_validates($form, &$form_state, $projectp
 
     $project_name  = $projectprop['project_name'];
     $project_genus = $projectprop['project_genus'];
+    $data_file     = $projectprop['data_file'];
   }
 
   if ($job_id) {
     $js_var = array(
+      'stage'    => 'validate',
       'job_id'    => $job_id,
       'path_JSON' => $all_path['base_admin'] . '/json/validate_jobstatus/',
       'path_VR'   => $all_path['base_admin'] . '/validation_result/data/',
@@ -409,6 +410,12 @@ function analyzedphenotypes_loader_form_validates($form, &$form_state, $projectp
   $form['ap_genus_select_field'] = array(
     '#type' => 'hidden',
     '#value' => $project_genus,
+  );
+
+  // Hidden field: File FID.
+  $form['ap_file_fid_field'] = array(
+    '#type' => 'hidden',
+    '#value' => $data_file,
   );
 
   // Drag and Drop:
@@ -541,134 +548,198 @@ function analyzedphenotypes_next_stage($form, &$form_state) {
  * Function callback: Construct STAGE 1 - DESCRIBE form interface.
  */
 function analyzedphenotypes_loader_form_describe($form, &$form_state) {
-  $a = array('Plant Height (cm)', 'Plant Colour (color)', 'x');
-  $main_fieldset = 'ap_trait_form_fieldset';
+  $project_name = $form_state['values']['ap_project_select_field'];
+  $project_genus = $form_state['values']['ap_genus_select_field'];
+  $data_file = $form_state['values']['ap_file_fid_field'];
 
-  $form['#ap_describe_trait_count'] = count($a);
-  $form['#ap_main_fieldset'] = $main_fieldset;
 
-  foreach($a as $i => $name) {
+  // Hidden field: Experiment/project name.
+  $form['ap_project_select_field'] = array(
+    '#type' => 'hidden',
+    '#value' => $project_name,
+  );
+
+  // Hidden field: Genus.
+  $form['ap_genus_select_field'] = array(
+    '#type' => 'hidden',
+    '#value' => $project_genus,
+  );
+
+  // Hidden field: File FID.
+  $form['ap_file_fid_field'] = array(
+    '#type' => 'hidden',
+    '#value' => $data_file,
+  );
+
+
+  $data_file = file_load($data_file);
+  $file_content = analyzedphenotypes_fileprop('get_contents', $data_file);
+
+  if ($file_content) {
     ///
-    $class_collapsed = ($i == 0) ? '' : 'collapsed';
-    $ap_fieldset = $main_fieldset . $i;
+    $all_path = analyzedphenotypes_moduleprop();
+
+    $rows = explode("\n", $file_content);
+    unset($file_content);
+
+    $t = analyzedphenotypes_columnsprop();
+    $trait_name = array_keys($t)[0];
+
+    $c = str_getcsv($columns_row, "\t");
+    $columns = array_map('trim', $c);
+
+    $index = array_search($trait_name, $columns);
+
+    $arr_trait_describe = array();
+
+    $i = 0;
+    $main_fieldset = 'ap_trait_form_fieldset';
+
+    foreach($rows as $j => $line) {
+      if ($j > 0) {
+        $data = str_getcsv($line, "\t");
+        $trait = trim($data[$index]);
+
+        if (in_array($trait, $arr_trait_describe)) {
+          continue;
+        }
+        else {
+          /////////////////////////////////////////////////////////////////////////////////
+          $arr_trait_describe[] = $trait;
+          $class_collapsed = ($i == 0) ? '' : 'collapsed';
+          $ap_fieldset = $main_fieldset . $i;
+
+          // Fieldset:
+          $form[$ap_fieldset] = array(
+            '#type' => 'fieldset',
+            '#title' => '#' . ($i + 1) . '. ' . $trait,
+            '#collapsible' => TRUE,
+            '#attributes' => array(
+              'class' => array('ap-form-fieldset-container', $class_collapsed)
+            ),
+            '#id' => $main_fieldset . $i,
+          );
+
+          // Field group title:
+          $form[$ap_fieldset]['ap_group_about_the_trait' . $i] = array(
+            '#type' => 'item',
+            '#title' => t('&#9660; ABOUT THE TRAIT'),
+          );
+
+          // Trait name:
+          $form[$ap_fieldset]['ap_name_form_field' . $i] = array(
+            '#type' => 'textfield',
+            '#title' => t('Name'),
+            '#description' => t('Lorem ispsum dolor sit amet'),
+            '#id' => 'ap-name-form-field' . $i,
+          );
+
+          // Description:
+          $form[$ap_fieldset]['ap_description_form_field' . $i] = array(
+            '#type' => 'textarea',
+            '#title' => t('Description'),
+            '#description' => t('Loren ipsum dolor sit amet'),
+            '#id' => 'ap-description-form-field' . $i,
+          );
+
+          // Unit
+          $form[$ap_fieldset]['ap_unit_form_field' . $i] = array(
+            '#type' => 'textfield',
+            '#title' => t('Unit'),
+            '#description' => t('Lorem ispsum dolor sit amet'),
+            '#id' => 'ap-unit-form-field' . $i,
+          );
+
+          // Scale:
+          $form[$ap_fieldset]['ap_scale_form_field' . $i] = array(
+            '#type' => 'textfield',
+            '#title' => t('Scale'),
+            '#description' => t('Lorem ispsum dolor sit amet'),
+            '#id' => 'ap-scale-form-field' . $i,
+          );
+
+          // Field group title:
+          $form[$ap_fieldset]['ap_group_mapping_information' . $i] = array(
+            '#type' => 'item',
+            '#title' => t('&#9660; MAPPING INFORMATION'),
+          );
+
+          // Crop ontology:
+          $form[$ap_fieldset]['ap_crop_ontology_form_field' . $i] = array(
+            '#title' => 'Crop Ontology',
+            '#type' => 'textfield',
+
+            // @see analyzedphenotypes_autocomplete_search() in function.inc
+            // where $dataype = ontology.
+            '#autocomplete_path' => $all_path['ap'] . '/json/ontology',
+            '#id' => 'ap-crop-ontology-form-field' . $i,
+          );
+
+          // Plant ontology:
+          $form[$ap_fieldset]['ap_plant_ontology_form_field' . $i] = array(
+            '#title' => 'Plant Trait Ontology',
+            '#type' => 'textfield',
+
+            // @see analyzedphenotypes_autocomplete_search() in function.inc
+            // where $dataype = ontology.
+            '#autocomplete_path' => $all_path['ap'] . '/json/ontology',
+            '#id' => 'ap-plant-ontology-form-field' . $i,
+          );
+
+          // Field group title:
+          $form[$ap_fieldset]['ap_group_photo_upload' . $i] = array(
+            '#type' => 'item',
+            '#title' => t('&#9660; PHOTO UPLOAD'),
+          );
+
+          // Photo 1:
+          $form[$ap_fieldset]['ap_photo_1_form_field' . $i] = array(
+            '#type' => 'file',
+            '#title' => t('Image 1 of 2'),
+            '#id' => 'ap-photo-1-form-field' . $i,
+          );
+
+          // Photo 2:
+          $form[$ap_fieldset]['ap_photo_2_form_field' . $i] = array(
+            '#type' => 'file',
+            '#title' => t('Image 2 of 2'),
+            '#id' => 'ap-photo-2-form-field' . $i,
+          );
+
+          // Field group title:
+          $form[$ap_fieldset]['ap_group_summary_table' . $i] = array(
+            '#type' => 'item',
+            '#title' => t('&#9660; SUMMARY TABLE'),
+          );
+
+          $table_rows[] = array('Regina 2014', 213.5, 9.5, 22.58, 55.3);
+          $table_rows[] = array('Saskatton 2016', 23.5, 29.5, 12.58, 85.3);
+          $table_rows[] = array('Broadway Ave, Saskatton', 1.5, 3.5, 5.58, 3.3);
+
+          // Summary table.
+          $form[$ap_fieldset]['ap_summary_table' . $i] = array(
+            '#type' => 'markup',
+            '#markup' => theme('table',
+              array(
+                'header' => array('Site-year', 'Minimum Value', 'Maximum Value', 'Mean Value', 'Standard Deviation'),
+                'rows' => $table_rows,
+                'attributes' => array('id' => 'ap_summary_table' . $i)
+              )
+            ),
+          );
 
 
-    $form[$ap_fieldset] = array(
-      '#type' => 'fieldset',
-      '#title' => '#' . ($i+1) . '. ' . $name,
-      '#collapsible' => TRUE,
-      '#attributes' => array(
-        'class' => array('ap-form-fieldset-container', $class_collapsed)
-      ),
-      '#id' => $main_fieldset . $i,
-    );
-
-    //
-    $form[$ap_fieldset]['ap_group_about_the_trait' . $i] = array(
-      '#type' => 'item',
-      '#title' => t('&#9660; ABOUT THE TRAIT'),
-    );
-
-    $form[$ap_fieldset]['ap_name_form_field' . $i] = array(
-      '#type' => 'textfield',
-      '#title' => t('Name'),
-      '#description' => t('Lorem ispsum dolor sit amet'),
-      '#id' => 'ap-name-form-field' . $i,
-    );
-
-    $form[$ap_fieldset]['ap_description_form_field' . $i] = array(
-      '#type' => 'textarea',
-      '#title' => t('Description'),
-      '#description' => t('Loren ipsum dolor sit amet'),
-      '#id' => 'ap-description-form-field' . $i,
-    );
-
-    $form[$ap_fieldset]['ap_unit_form_field' . $i] = array(
-      '#type' => 'textfield',
-      '#title' => t('Unit'),
-      '#description' => t('Lorem ispsum dolor sit amet'),
-      '#id' => 'ap-unit-form-field' . $i,
-    );
-
-    $form[$ap_fieldset]['ap_scale_form_field' . $i] = array(
-      '#type' => 'textfield',
-      '#title' => t('Scale'),
-      '#description' => t('Lorem ispsum dolor sit amet'),
-      '#id' => 'ap-scale-form-field' . $i,
-    );
-
-
-    //
-    $form[$ap_fieldset]['ap_group_mapping_information' . $i] = array(
-      '#type' => 'item',
-      '#title' => t('&#9660; MAPPING INFORMATION'),
-    );
-
-    $form[$ap_fieldset]['ap_crop_ontology_form_field' . $i] = array(
-      '#title' => 'Crop Ontology',
-      '#type' => 'textfield',
-
-      // @see analyzedphenotypes_autocomplete_search() in function.inc
-      // where $dataype = ontology.
-      '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/ontology',
-      '#id' => 'ap-crop-ontology-form-field' . $i,
-    );
-
-    $form[$ap_fieldset]['ap_plant_ontology_form_field' . $i] = array(
-      '#title' => 'Plant Trait Ontology',
-      '#type' => 'textfield',
-
-      // @see analyzedphenotypes_autocomplete_search() in function.inc
-      // where $dataype = ontology.
-      '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/ontology',
-      '#id' => 'ap-plant-ontology-form-field' . $i,
-    );
-
-
-    //
-    $form[$ap_fieldset]['ap_group_photo_upload' . $i] = array(
-      '#type' => 'item',
-      '#title' => t('&#9660; PHOTO UPLOAD'),
-   );
-
-    $form[$ap_fieldset]['ap_photo_1_form_field' . $i] = array(
-      '#type' => 'file',
-      '#title' => t('Image 1 of 2'),
-      '#id' => 'ap-photo-1-form-field' . $i,
-    );
-
-    $form[$ap_fieldset]['ap_photo_2_form_field' . $i] = array(
-      '#type' => 'file',
-      '#title' => t('Image 2 of 2'),
-      '#id' => 'ap-photo-2-form-field' . $i,
-    );
-
-
-    //
-    $form[$ap_fieldset]['ap_group_summary_table' . $i] = array(
-      '#type' => 'item',
-      '#title' => t('&#9660; SUMMARY TABLE'),
-    );
-
-    $table_rows[] = array('Regina 2014', 213.5, 9.5, 22.58, 55.3);
-    $table_rows[] = array('Saskatton 2016', 23.5, 29.5, 12.58, 85.3);
-    $table_rows[] = array('Broadway Ave, Saskatton', 1.5, 3.5, 5.58, 3.3);
-
-    $form[$ap_fieldset]['ap_summary_table' . $i] = array(
-      '#type' => 'markup',
-      '#markup' => theme('table',
-        array(
-          'header' => array('Site-year', 'Minimum Value', 'Maximum Value', 'Mean Value', 'Standard Deviation'),
-          'rows' => $table_rows,
-          'attributes' => array('id' => 'ap_summary_table' . $i)
-        )
-      ),
-    );
-
-
-
+          $i++;
+          /////////////////////////////////////////////////////////////////////////////////
+        }
+      }
+    }
     ///
   }
+
+  $form_state['multistep_values']['new_headers'] = $arr_trait_describe;
+  $form['#ap_describe_trait_count'] = count($arr_trait_describe);
+  $form['#ap_main_fieldset'] = $main_fieldset;
 
   return $form;
 }
@@ -681,43 +752,60 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
  * Function callback: Construct STAGE 1 - SAVE form interface.
  */
 function analyzedphenotypes_loader_form_save($form, &$form_state) {
+  $project_name     = $form_state['values']['ap_project_select_field'];
+  $project_genus    = $form_state['values']['ap_genus_select_field'];
+  $data_file        = $form_state['values']['ap_file_fid_field'];
 
-  $job_id = 2632;
+  $arr_trait_describe = $form_state['multistep_values']['new_headers'];
 
-  // Experiment.
-  $project_name = $form_state['values']['ap_project_select_field'];
-  // Genus.
-  $project_genus = $form_state['values']['ap_genus_select_field'];
-  // Data file.
-  $data_file = $form_state['multistep_values']['fid'];
+  foreach ($arr_trait_describe as $i => $trait) {
+    $name           = $form_state['values']['ap_name_form_field'           . $i];
+    $description    = $form_state['values']['ap_description_form_field'    . $i];
+    $unit           = $form_state['values']['ap_unit_form_field'           . $i];
+    $scale          = $form_state['values']['ap_scale_form_field'          . $i];
+    $crop_ontology  = $form_state['values']['ap_crop_ontology_form_field'  . $i];
+    $plant_ontology = $form_state['values']['ap_plant_ontology_form_field' . $i];
+    $photo_1        = $form_state['values']['ap_photo_1_form_field'        . $i];
+    $photo_2        = $form_state['values']['ap_photo_2_form_field'        . $i];
 
-  // Prevent user from refreshing that creates
-  // a new and fresh tripal job.
+    analyzedphenotypes_traitprop('insert', array(
+      'name'           => $name,
+      'description'    => $description,
+      'unit'           => $unit,
+      'scale'          => $scale,
+      'crop_ontology'  => $crop_ontology,
+      'plant_ontology' => $plant_ontology,
+      'photo_1'        => $photo_1,
+      'photo_2'        => $photo_2,
+    ));
+  }
 
-  global $user;
 
-/*
-  $job_id = tripal_add_job(
-    'Validate Analyzed Phenotypes',
-    'analyzedphenotypes',
-    'analyzedphenotypes_validate_tsv_data',
-    array(
-      $project_name,
-      $project_genus,
-      $data_file
-    ),
-    $user->uid
+  $dataset = array(
+    'description' => 'Save Analyzed Phenotype',
+    'callback' => 'analyzedphenotypes_save_tsv_data',
+    'data' => array(
+      'project_name' => $project_name,
+      'project_genus' => $project_genus,
+      'data_file' => $data_file
+    )
   );
-*/
-  $path_tripalext = base_path() . 'admin/tripal/extension/analyzedphenotypes';
 
-  $settings = array(
-    'job_id' => $job_id,
-    'path_json' => $path_tripalext . '/json/save_jobstatus/',
-    'path_validation' => $path_tripalext . '/validation_result/save/',
-  );
+  // Register a job.
+  $job_id = analyzedphenotypes_tripaljobprop('new_job', $dataset);
 
-  drupal_add_js(array('analyzedphenotypes' => array('vars' => $settings)), array('type' => 'setting'));
+  if ($job_id) {
+    $all_path = analyzedphenotypes_moduleprop();
+
+    $js_var = array(
+      'stage'    => 'save',
+      'job_id'    => $job_id,
+      'path_JSON' => $all_path['base_admin'] . '/json/validate_jobstatus/',
+      'path_VR'   => $all_path['base_admin'] . '/validation_result/data/',
+    );
+
+    drupal_add_js(array('analyzedphenotypes' => array('vars' => $js_var)), array('type' => 'setting'));
+  }
 
 
   return $form;

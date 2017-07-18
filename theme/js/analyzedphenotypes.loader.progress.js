@@ -14,13 +14,14 @@
         pbVar.jobId    = tmp['job_id'];
         pbVar.pathJSON = tmp['path_JSON'];
         pbVar.pathVR   = tmp['path_VR'];
+        pbVar.stage   = tmp['stage'];
 
         var vrContainerId = '#ap-validation-result-embed';
 
         var DrupalProgressBar = new Drupal.progressBar('ap-tripal-download-progress-bar', progressBarResult);
         $('.progress-pane').once().append(DrupalProgressBar.element);
 
-        DrupalProgressBar.setProgress(0, 'Validating Data...');
+        DrupalProgressBar.setProgress(0, '...');
         DrupalProgressBar.startMonitoring(pbVar.pathJSON + pbVar.jobId, 500);
       }
 
@@ -29,7 +30,10 @@
        */
       function progressBarResult(percentage, message) {
         if ((percentage == '100' || message == 'Error') && pbVar.jobId > 0) {
-          $(vrContainerId).once().load(pbVar.pathVR + pbVar.jobId, progressBarValidationResult);
+          if (pbVar.stage == 'validate') {
+            $(vrContainerId).once().load(pbVar.pathVR + pbVar.jobId, progressBarValidationResult);
+          }
+
           DrupalProgressBar.stopMonitoring();
         }
       }

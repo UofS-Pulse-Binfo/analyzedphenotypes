@@ -5,6 +5,38 @@
  * These functions are currently used when new data is being uploaded.
  */
 
+
+/**
+ *
+ */
+function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
+  $dataset = unserialize($dataset);
+  //
+  $data_file = file_load($dataset['data_file']);
+  $file_content = analyzedphenotypes_fileprop('get_contents', $data_file);
+  $all_path = analyzedphenotypes_moduleprop();
+  //
+  $error_limit = analyzedphenotypes_moduleprop('error_limit');
+  $error_counter = 0;
+  //
+  $report_frequency = analyzedphenotypes_moduleprop('report_frequency');
+
+  // Temporary files.
+  $all_filename = analyzedphenotypes_fileprop('filename');
+  $file_progress = $all_path['temp'] . '/' . str_replace('@JOB_ID', $job_id, $all_filename['validate progress']);
+  unset($all_path, $all_filename);
+
+  print '0% Complete...' . "\n";
+
+  $rows = explode("\n", $file_content);
+  $rows_count = count($rows);
+
+  foreach($rows as $i => $line) {
+    $percent = round((($i + 1) / $rows_count) * 100);
+    file_unmanaged_save_data($percent, $file_progress, FILE_EXISTS_REPLACE);
+  }
+}
+
 /**
  *
  */

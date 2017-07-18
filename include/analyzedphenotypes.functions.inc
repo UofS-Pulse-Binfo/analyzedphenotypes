@@ -372,6 +372,46 @@ function analyzedphenotypes_traitprop($case, $trait) {
 
       break;
 
+    //
+    case 'insert':
+      /*
+      $cv_description = tripal_get_cv(array('name' => 'phenotype_collection_method'));
+      $cv_unit = tripal_get_cv(array('name' => 'phenotype_measurement_units'));
+
+      $name           = $data['name'];
+      $description    = $data['description'];
+      $unit           = $data['unit'];
+      $scale          = $data['scale'];
+      $crop_ontology  = $data['crop_ontology'];
+      $plant_ontology = $data['plant_ontology'];
+      $photo_1        = $data['photo_1'];
+      $photo_2        = $data['photo_2'];
+
+      $cvterm_unit = tripal_get_cvterm(array('name' => $unit, 'cv_id' => $cv_unit->cv_id));
+
+      $cvterm = tripal_insert_cvterm(array(
+        'id' => 'analyzedphenotype_tripal' . $name,
+        'name' => $name,
+        'cv_name' => 'phenotypes_measurement_types',
+        'definition' => $description,
+      ));
+
+      chado_insert_record('cvtermprop', array(
+        'cvterm_id' => $cvterm->cvterm_id,
+        'type_id' => $cv_description->cv_id,
+        'value' => $description,
+        'rank' => 0,
+      ));
+
+      chado_insert_record('cvterm_relationship', array(
+        'type_id' => $cv_unit->cv_id,
+        'object_id' => $cvterm->cvterm_id,
+        'subject_id' => $cvterm_unit->cvterm_id,
+      ));
+
+      $traitprop = $cvterm->cvterm_id; */
+
+      break;
 
     //
   }
