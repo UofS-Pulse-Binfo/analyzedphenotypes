@@ -33,7 +33,7 @@ function analyzedphenotypes_menu() {
   );
 
   // Data Loader.
-  $items[$tripal_extension_ap . '/data_loader'] = array(
+  $items[$tripal_extension_ap . '/upload'] = array(
     'title' => 'Analyzed Phenotypes Data Loader',
     'description' => 'Lorem Ipsum dolor sit amet.',
     'page callback' => 'drupal_get_form',
@@ -103,6 +103,8 @@ function analyzedphenotypes_theme($existing, $type, $theme, $path) {
  * Implements hook_theme().
  */
 function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&$variables, $hook) {
+  $all_path = analyzedphenotypes_moduleprop();
+  $variables['path_extension'] = $all_path['ap'];
   $variables['directory'] = $variables['form']['#ap_admin_directory'];
 
   return $variables;

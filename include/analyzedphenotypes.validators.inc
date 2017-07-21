@@ -29,11 +29,41 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
   print '0% Complete...' . "\n";
 
   $rows = explode("\n", $file_content);
+  $c = $rows[0];
+  $columns = str_getcsv($c, "\t");
+
+  $all_columns = analyzedphenotypes_columnsprop();
+  $index = array();
+  foreach($all_columns as $i => $c) {
+    $j = array_search($c, $columns);
+    $index[$c] = $j;
+  }
+
   $rows_count = count($rows);
 
   foreach($rows as $i => $line) {
-    $percent = round((($i + 1) / $rows_count) * 100);
-    file_unmanaged_save_data($percent, $file_progress, FILE_EXISTS_REPLACE);
+    ///
+    if ($i > 0 && !empty($line)) {
+      $data = str_getcsv($line, "\t");
+
+      $dataset = array(
+        'Trait Name'          => $data[$index[$all_columns[0]]],
+        'Germplasm Accession' => $data[$index[$all_columns[1]]],
+        'Germplasm Name'      => $data[$index[$all_columns[2]]],
+        'Year'                => $data[$index[$all_columns[3]]],
+        'Location'            => $data[$index[$all_columns[4]]],
+        'Replicate'           => $data[$index[$all_columns[5]]],
+        'Value'               => $data[$index[$all_columns[6]]],
+        'Data Collector'      => $data[$index[$all_columns[7]]],
+      );
+
+      $id = analyzedphenotypes_traitprop('phenotype_insert', $dataset);
+
+
+      $percent = round((($i + 1) / $rows_count) * 100);
+      file_unmanaged_save_data($percent, $file_progress, FILE_EXISTS_REPLACE);
+    }
+    ///
   }
 }
 

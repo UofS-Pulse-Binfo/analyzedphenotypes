@@ -17,8 +17,9 @@ $form_id = $form['#form_id'];
 
 if ($form_id == 'analyzedphenotypes_admin_page_directory') :
   $links = '';
+
   foreach($directory as $key => $options) {
-    $url = l(ucwords($key), 'admin/tripal/extension/analyzedphenotypes/' . $options['page_id']);
+    $url = l(ucwords($key), $path_extension . '/' . $options['page_id']);
     $links .= '<li>' . $url . '<br />' . $options['info'] . '</li>';
   }
 ?>
@@ -133,11 +134,19 @@ elseif($form_id == 'analyzedphenotypes_admin_data_loader') :
 
              <div id="ap-describe-main-form-container">
                <?php
-                 $trait_count   = $form['#ap_describe_trait_count'];
                  $main_fieldset = $form['#ap_main_fieldset'];
+                 $traits = $form['#ap_describe_trait'];
+                 $trait_count = count($trait);
 
-                 for ($i = 0; $i < $trait_count; $i++) {
+                 $i = 0;
+                 foreach($traits as $key => $existing) {
+                   if ($existing) {
+                     $warn = '<div class="messages warning">We have detected same trait autofilled the form lorem ipsum dolor sit amet.</div>';
+                     $form[$main_fieldset . $i]['ap_warning' . $i]['#markup'] = $warn;
+                   }
+
                    print drupal_render($form[$main_fieldset . $i]);
+                   $i++;
                  }
                ?>
              </div>

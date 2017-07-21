@@ -14,6 +14,12 @@ function analyzedphenotypes_moduleprop($property = null) {
 
   switch($property) {
     //
+    case 'db':
+      $moduleprop = 'analyzedphenotype-tripal';
+
+      break;
+
+    //
     case 'stages':
       $moduleprop = array(
         'Upload',   // Stage 1 - Select project, genus and upload data file.
@@ -26,7 +32,7 @@ function analyzedphenotypes_moduleprop($property = null) {
 
     //
     case 'report_frequency':
-      // Every 10%.
+      // Every 5%.
       $moduleprop = 5;
 
       break;
@@ -50,7 +56,7 @@ function analyzedphenotypes_moduleprop($property = null) {
         'module'     => drupal_get_path('module', $module),
         'base_admin' => base_path() . $tripal_ext . '/' . $module,
         'extension'  => base_path() . $tripal_ext,
-        'loader'     => base_path() . $tripal_ext . '/' . $module . '/data_loader',
+        'loader'     => base_path() . $tripal_ext . '/' . $module . '/upload',
         'temp'       => file_directory_temp(),
         'ap'         => $tripal_ext . '/' . $module,
       );
@@ -338,33 +344,51 @@ function analyzedphenotypes_cvprop($term, $cv) {
  *
  */
 function analyzedphenotypes_traitprop($case, $trait) {
+  $traitprop = '';
+
   switch($case) {
     //
     case 'right_format':
       if (preg_match('/\A[^()]+\s*\({1}[^)(]+\)\z/i', $trait) !== 1) {
-        $value = $trait;
+        $traitprop = $trait;
       }
+
       break;
 
     //
     case 'no_unit':
-      $value = preg_replace("/.*\(([^)]*)\)/", '', $trait);
+      $traitprop = preg_replace("/.*\(([^)]*)\)/", '', $trait);
+
       break;
 
     //
     case 'unit':
       preg_match("/.*\(([^)]*)\)/", $trait, $match);
-      $value = (isset($match[1])) ? $match[1] : 'text';
+      $traitprop = (isset($match[1])) ? $match[1] : 'text';
+
       break;
 
     //
     case 'sanitize':
-      $value = analyzedphenotypes_noformat($trait);
+      $traitprop = analyzedphenotypes_noformat($trait);
+
       break;
 
     //
-    case 'record_set':
-      // Query cvterm table.
+    case 'recordset':
+      //$cvterm = tripal_get_cvterm($trait);
+
+     $traitprop = array(
+        'name'           => 'Test Name',
+        'definition'     => 'Test Definition',
+        'unit'           => 'Test Unit',
+        'scale'          => 'Test Scale',
+        'crop_ontology'  => 'Test Crop Ontology',
+        'plant_ontology' => 'Test Plant Ontology',
+        'photo_1'        => 'Test Photo 1',
+        'photo_2'        => 'Test Photo 2',
+      );
+
       break;
 
     //
@@ -373,43 +397,13 @@ function analyzedphenotypes_traitprop($case, $trait) {
       break;
 
     //
-    case 'insert':
-      /*
-      $cv_description = tripal_get_cv(array('name' => 'phenotype_collection_method'));
-      $cv_unit = tripal_get_cv(array('name' => 'phenotype_measurement_units'));
+    case 'insert_trait':
 
-      $name           = $data['name'];
-      $description    = $data['description'];
-      $unit           = $data['unit'];
-      $scale          = $data['scale'];
-      $crop_ontology  = $data['crop_ontology'];
-      $plant_ontology = $data['plant_ontology'];
-      $photo_1        = $data['photo_1'];
-      $photo_2        = $data['photo_2'];
 
-      $cvterm_unit = tripal_get_cvterm(array('name' => $unit, 'cv_id' => $cv_unit->cv_id));
+      break;
 
-      $cvterm = tripal_insert_cvterm(array(
-        'id' => 'analyzedphenotype_tripal' . $name,
-        'name' => $name,
-        'cv_name' => 'phenotypes_measurement_types',
-        'definition' => $description,
-      ));
-
-      chado_insert_record('cvtermprop', array(
-        'cvterm_id' => $cvterm->cvterm_id,
-        'type_id' => $cv_description->cv_id,
-        'value' => $description,
-        'rank' => 0,
-      ));
-
-      chado_insert_record('cvterm_relationship', array(
-        'type_id' => $cv_unit->cv_id,
-        'object_id' => $cvterm->cvterm_id,
-        'subject_id' => $cvterm_unit->cvterm_id,
-      ));
-
-      $traitprop = $cvterm->cvterm_id; */
+    //
+    case 'property_insert':
 
       break;
 
@@ -417,7 +411,7 @@ function analyzedphenotypes_traitprop($case, $trait) {
   }
 
 
-  return $value;
+  return $traitprop;
 }
 
 
@@ -505,12 +499,6 @@ function analyzedphenotypes_validation_result($case, $data) {
       break;
 
     //
-    case 'save':
-      print '';
-
-      break;
-
-    //
   }
 }
 
@@ -551,6 +539,12 @@ function analyzedphenotypes_tripaljobprop($property, $dataset) {
       if ($job && $job->uid == $user->uid && !in_array($job->status, $job_status)) {
         $tripaljobprop = $job->job_id;
       }
+
+      break;
+
+    //
+    case 'save':
+      print '';
 
       break;
 
