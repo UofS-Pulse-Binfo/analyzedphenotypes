@@ -83,6 +83,49 @@ function analyzedphenotypes_enable() {
   );
   tripal_add_mview($schema['table'], 'analyzedphenotypes', $schema, $query, $schema['description']);
 
+  // Add a summary materialized view.
+  $query = "
+    (SELECT organism_genus, 1 as num, 1 as count
+       FROM chado.mview_phenotype
+       GROUP BY organism_genus)
+    UNION
+      (SELECT organism_genus, 2 as num, count(1)
+       FROM (SELECT DISTINCT organism_genus, trait_id FROM chado.mview_phenotype) d2
+       GROUP BY organism_genus)
+    UNION
+      (SELECT organism_genus, 3 as num, count(1)
+       FROM (SELECT DISTINCT organism_genus, experiment_id FROM chado.mview_phenotype) d3
+       GROUP BY organism_genus)
+    UNION
+      (SELECT organism_genus, 4 as num, count(1)
+       FROM (SELECT DISTINCT organism_genus, stock_id FROM chado.mview_phenotype) d4
+       GROUP BY organism_genus)
+    UNION
+      (SELECT organism_genus, 5 as num, count(1)
+       FROM chado.mview_phenotype
+       GROUP BY organism_genus)
+  ";
+  $schema = array (
+    'table' => 'mview_phenotype_summary',
+    'description' => 'A summary of phenotypes.',
+    'fields' => array (
+      'organism_genus' => array (
+        'type' => 'text',
+        'not null' => true,
+      ),
+      'column_num' => array (
+        'type' => 'int',
+        'unsigned' => true,
+        'not null' => true,
+      ),
+      'count' => array (
+        'type' => 'int',
+        'unsigned' => true,
+        'not null' => true,
+      ),
+    ),
+  );
+  tripal_add_mview($schema['table'], 'analyzedphenotypes', $schema, $query, $schema['description']);
 }
 
 function analyzedphenotypes_schema() {
