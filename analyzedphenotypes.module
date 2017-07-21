@@ -16,9 +16,42 @@ module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.val
 function analyzedphenotypes_menu() {
   $items = array();
 
+<<<<<<< HEAD
   $all_path = analyzedphenotypes_moduleprop();
   $tripal_extension_ap = $all_path['ap'];
 
+=======
+  // Main menu items for phenotypes: shows a beanplot -select trait and project.
+  $items['phenotypes'] = array(
+    'title' => 'Phenotypes',
+    'description' => 'Summarizes phenotypic data available.',
+    'page callback' => 'analyzed_phenotypes_all_data_summary_page',
+    'access arguments' => array(TRUE),
+    'file' => 'include/analyzedphenotypes.summary.page.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  // Main menu items for phenotypes: shows a beanplot -select trait and project.
+  $items['phenotypes/trait-distribution'] = array(
+    'title' => 'Trait Distribution Chart',
+    'description' => 'Summarizes phenotypic data for a given trait and project.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('analyzedphenotypes_beanplot_form'),
+    'access arguments' => array(TRUE),
+    'file' => 'include/analyzedphenotypes.beanplot.page.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  // JSON for beanplot.
+  $items['json/phenotypes/beanplot/%/%'] = array(
+    'page callback' => 'analyzedphenotypes_beanplot_json',
+    'page arguments' => array(3, 4),
+    'access arguments' => array(TRUE),
+    'file' => 'include/analyzedphenotypes.beanplot.page.inc',
+    'type' => MENU_CALLBACK,
+  );
+  
+>>>>>>> origin/7.x-3.x
   // ADMINISTRATIVE PAGES.
 
   // Main administrative pages for analyzed phenotypes.

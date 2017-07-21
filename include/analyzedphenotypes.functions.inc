@@ -400,6 +400,10 @@ function analyzedphenotypes_traitprop($case, $trait) {
     case 'insert_trait':
 
 
+
+
+
+
       break;
 
     //
