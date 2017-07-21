@@ -16,11 +16,9 @@ module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.val
 function analyzedphenotypes_menu() {
   $items = array();
 
-<<<<<<< HEAD
   $all_path = analyzedphenotypes_moduleprop();
   $tripal_extension_ap = $all_path['ap'];
 
-=======
   // Main menu items for phenotypes: shows a beanplot -select trait and project.
   $items['phenotypes'] = array(
     'title' => 'Phenotypes',
@@ -51,7 +49,6 @@ function analyzedphenotypes_menu() {
     'type' => MENU_CALLBACK,
   );
   
->>>>>>> origin/7.x-3.x
   // ADMINISTRATIVE PAGES.
 
   // Main administrative pages for analyzed phenotypes.
@@ -85,7 +82,6 @@ function analyzedphenotypes_menu() {
     'type' => MENU_CALLBACK,
   );
 
-
   // Generate validation result.
   $items[$tripal_extension_ap . '/validation_result/%/%'] = array(
     'page callback' => 'analyzedphenotypes_validation_result',
@@ -94,13 +90,8 @@ function analyzedphenotypes_menu() {
     'type' => MENU_CALLBACK,
   );
 
-
   return $items;
 }
-
-
-
-
 
 /**
  * Implements hook_theme().
