@@ -335,6 +335,9 @@ function analyzedphenotypes_fileprop($property = null, $data_file = null) {
 function analyzedphenotypes_columnsprop($property = null) {
   $columnsprop = '';
 
+  /*
+    replace this since module prop provides all columns used.
+  */
   $columns = array(
     'Trait Name'          => 'text',   // #0
     'Germplasm Accession' => 'text',   // #1

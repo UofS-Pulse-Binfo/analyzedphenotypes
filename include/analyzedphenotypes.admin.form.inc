@@ -6,7 +6,7 @@
 
 
 module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.validators');
-
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
 
 /**
  *
@@ -924,16 +924,24 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
             '#title' => t('&#9660; SUMMARY TABLE'),
           );
 
+          // Summary table.
+          $summary_data = analyzedphenotypes_table_values($rows, $columns, $trait);
 
+          if ($summary_data) {
+            $siteyear = $summary_data['siteyear'];
+            $syvalues = $summary_data['values'];
 
+            $table_rows = array();
 
+            foreach($siteyear as $sy) {
+              $max = max($syvalues[$sy]);
+              $min = min($syvalues[$sy]);
+              $avg = array_sum($syvalues[$sy]) / count($syvalues[$sy]);
+              $sdv = analyzedphenotypes_stats_standard_deviation($syvalues[$sy]);
 
-
-
-
-          $table_rows[] = array('Regina 2014', 213.5, 9.5, 22.58, 55.3);
-          $table_rows[] = array('Saskatton 2016', 23.5, 29.5, 12.58, 85.3);
-          $table_rows[] = array('Broadway Ave, Saskatton', 1.5, 3.5, 5.58, 3.3);
+              $table_rows[] = array($sy, $min, $max, round($avg, 2), round($sdv, 2));
+            }
+          }
 
           // Summary table.
           $form[$ap_fieldset]['ap_summary_table' . $i] = array(
