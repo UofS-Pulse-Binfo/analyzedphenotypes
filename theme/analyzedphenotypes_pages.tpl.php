@@ -15,7 +15,11 @@ $form_id = $form['#form_id'];
  * Analyzed Phenotypes administrative pages directory.
  */
 
-if ($form_id == 'analyzedphenotypes_admin_page_directory') :
+if ($form_id == 'analyzedphenotypes_admin_settings') :
+  // Settings.
+
+elseif ($form_id == 'analyzedphenotypes_admin_page_directory') :
+  // Directory.
   $links = '';
 
   foreach($directory as $key => $options) {
@@ -34,7 +38,7 @@ if ($form_id == 'analyzedphenotypes_admin_page_directory') :
  * Analyzed Phenotypes Data Loader.
  */
 
-elseif($form_id == 'analyzedphenotypes_admin_data_loader') :
+elseif ($form_id == 'analyzedphenotypes_admin_data_loader') :
 ?>
 
   <div class="messages warning ap-messages">
@@ -77,7 +81,7 @@ elseif($form_id == 'analyzedphenotypes_admin_data_loader') :
               </div>
 
               <div id="ap-genus-select-field-container">
-                <?php print drupal_render($form['ap_AJAX_wrapper']) . drupal_render($form['ap_genus_select_field']); ?>
+                <?php print drupal_render($form['ap_AJAX_wrapper_autofillgenus']) . drupal_render($form['ap_genus_select_field']); ?>
               </div>
 
               <div id="ap-dnd-container">

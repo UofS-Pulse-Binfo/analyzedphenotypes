@@ -9,6 +9,127 @@ module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.val
 
 
 /**
+ *
+ */
+function analyzedphenotypes_admin_settings($form, &$form_state) {
+  // Defaults.
+  $default = analyzedphenotypes_moduleprop('module_vars');
+
+  // Db
+  $db_varname = $default['ap_database']['var'];
+  $db_var = variable_get($db_varname);
+
+  $db = analyzedphenotypes_dbprop();
+  $db_options = array_map(function($d) {
+    return $d['name'];
+  }, $db);
+
+  // AJAX callback wrapper.
+  $form['ap_AJAX_wrapper_dbdescription'] = array(
+    '#prefix' => '<div id="ap-AJAX-wrapper-dbdescription">',
+    '#suffix' => '</div>',
+  );
+
+  if (isset($form_state['values'][$db_varname])) {
+    $db_value = $form_state['values'][$db_varname];
+
+    if ($db_value > 0) {
+      $db_id = $db_value;
+    }
+  }
+  else {
+    $db_id = $db_var;
+  }
+
+  $db_description = empty($db[$db_id]['description'])
+    ? 'Description not available.'
+    : $db[$db_id]['description'];
+
+  $form['ap_AJAX_wrapper_dbdescription'][$db_varname] = array(
+    '#type' => 'select',
+    '#title' => t('Database'),
+    '#required' => TRUE,
+    '#options' => $db_options,
+    '#default_value' => $db_var,
+    '#description' => $db_description,
+
+    // Load database description.
+    '#ajax' => array(
+      'event' => 'change',
+      'callback' => 'analyzedphenotypes_AJAX_callback',
+      'case' => 'dbdescription',
+      'wrapper' => 'ap-AJAX-wrapper-dbdescription',
+      'progress' => array('type' => 'throbber', 'message' => 'Loading Database description...'),
+    ),
+    '#id' => 'ap-db-select-field',
+  );
+
+  // Controlled Vocabulary.
+  $cv_varname = $default['ap_cv']['var'];
+  $cv_var = variable_get($cv_varname);
+
+  $cv = analyzedphenotypes_cvprop();
+  $cv_options = array_map(function($c) {
+    return $c['name'];
+  }, $cv);
+
+
+ // AJAX callback wrapper.
+  $form['ap_AJAX_wrapper_cvdescription'] = array(
+    '#prefix' => '<div id="ap-AJAX-wrapper-cvdescription">',
+    '#suffix' => '</div>',
+  );
+
+  if (isset($form_state['values'][$cv_varname])) {
+    $cv_value = $form_state['values'][$cv_varname];
+
+    if ($cv_value > 0) {
+      $cv_id = $cv_value;
+    }
+  }
+  else {
+    $cv_id = $cv_var;
+  }
+
+  $cv_description = empty($cv[$cv_id]['definition'])
+    ? 'Description not available'
+    : $cv[$cv_id]['definition'];
+
+  $form['ap_AJAX_wrapper_cvdescription'][$cv_varname] = array(
+    '#type' => 'select',
+    '#title' => t('Controlled Vocabulary'),
+    '#required' => TRUE,
+    '#options' => $cv_options,
+    '#default_value' => $cv_var,
+    '#description' => $cv_description,
+    //
+    '#ajax' => array(
+      'event' => 'change',
+      'callback' => 'analyzedphenotypes_AJAX_callback',
+      'case' => 'cvdescription',
+      'wrapper' => 'ap-AJAX-wrapper-cvdescription',
+      'progress' => array('type' => 'throbber', 'message' => 'Loading CV description...'),
+    ),
+    '#id' => 'ap-cv-select-field',
+  );
+
+  // Allow new terms.
+  $allownew_varname = $default['ap_allow_new']['var'];
+  $allownew_var = variable_get($allownew_varname);
+
+  $form[$allownew_varname] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow new term to be added to the Controlled Vocabulary'),
+    '#default_value' => $allownew_var,
+    '#id' => 'ap-allownewterm-checkbox-field',
+  );
+
+
+  return system_settings_form($form);
+}
+
+
+/**
  * Function callback: Construct main administrative page directory of this module.
  *
  * Update $arr_dir to add or remove page directories. Order of links is the order of the array.
@@ -167,9 +288,9 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
     // @see analyazedphenotypes_AJAX_callback() in functions.inc
     // where $case = autofill_genus.
     '#ajax' => array(
-      'callback' => 'analyazedphenotypes_AJAX_callback',
-      'case' => 'autofill_genus',
-      'wrapper' => 'ap-AJAX-wrapper',
+      'callback' => 'analyzedphenotypes_AJAX_callback',
+      'case' => 'autofillgenus',
+      'wrapper' => 'ap-AJAX-wrapper-autofillgenus',
       'method' => 'replace',
       'progress' => array(
         'type' => 'throbber',
@@ -206,13 +327,13 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
   $genus_options = (isset($arr_project_genus)) ? $arr_project_genus : $arr_all_genus;
 
   // AJAX callback wrapper.
-  $form['ap_AJAX_wrapper'] = array(
-    '#prefix' => '<div id="ap-AJAX-wrapper">',
+  $form['ap_AJAX_wrapper_autofillgenus'] = array(
+    '#prefix' => '<div id="ap-AJAX-wrapper-autofillgenus">',
     '#suffix' => '</div>',
   );
 
   // Genus:
-  $form['ap_AJAX_wrapper']['ap_genus_select_field'] = array(
+  $form['ap_AJAX_wrapper_autofillgenus']['ap_genus_select_field'] = array(
     '#type' => 'select',
     '#title' => t('Genus'),
     '#required' => TRUE,
@@ -802,6 +923,13 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
             '#type' => 'item',
             '#title' => t('&#9660; SUMMARY TABLE'),
           );
+
+
+
+
+
+
+
 
           $table_rows[] = array('Regina 2014', 213.5, 9.5, 22.58, 55.3);
           $table_rows[] = array('Saskatton 2016', 23.5, 29.5, 12.58, 85.3);

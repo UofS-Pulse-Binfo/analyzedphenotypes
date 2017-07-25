@@ -14,8 +14,66 @@ function analyzedphenotypes_moduleprop($property = null) {
 
   switch($property) {
     //
+    case 'module_vars':
+      $default_db = analyzedphenotypes_dbprop('default');
+      $default_cv = analyzedphenotypes_cvprop('default');
+      $default_allow_new = 1;
+
+      $moduleprop = array(
+        'ap_database'  => array(
+          'var' => 'analyzedphenotypes_module_db',
+          'default' => $default_db
+        ),
+
+        'ap_cv' => array(
+          'var' => 'analyzedphenotypes_module_cv',
+          'default' => $default_cv
+        ),
+
+        'ap_allow_new' => array(
+          'var' =>  'analyzedphenotypes_module_allow_new',
+          'default' => $default_allow_new
+        )
+      );
+
+      break;
+
+
+    //
     case 'db':
       $moduleprop = 'analyzedphenotype-tripal';
+
+      break;
+
+    //
+    case 'column_type':
+      $moduleprop = array(
+        'Trait Name'          => 'text',   // #0
+        'Germplasm Accession' => 'text',   // #1
+        'Germplasm Name'      => 'text',   // #2
+        'Year'                => 'number', // #3
+        'Location'            => 'text',   // #4
+        'Replicate'           => 'number', // #5
+        'Value'               => '',       // #6
+        'Data Collector'      => 'text',   // #7
+      );
+
+      break;
+
+    //
+    case 'unit_type':
+      $moduleprop = array(
+        'cm'         => array('name' => 'centimeters', 'type' => 'number'),
+        'days'       => array('name' => 'days',        'type' => 'number'),
+        'count'      => array('name' => 'count',       'type' => 'number'),
+        'g'          => array('name' => 'grams',       'type' => 'number'),
+        'kg'         => array('name' => 'kilograms',   'type' => 'number'),
+        'scale 1-5'  => array('name' => 'scale 1-5',   'type' => 'scale 1-5'),
+        'scale 1-10' => array('name' => 'scale 1-10',  'type' => 'scale 2-5'),
+        'comments'   => array('name' => 'comments',    'type' => 'text'),
+        'colour'     => array('name' => 'color',       'type' => 'text'),
+        'y/n/?'      => array('name' => 'Yes (y), No (n) or Unsure (?)',  'type' => 'y/n/?'),
+      );
 
       break;
 
@@ -109,7 +167,12 @@ function analyzedphenotypes_projectprop($property = null, $data = null) {
     //
     case 'project_genus':
       // Get genus cvterm.
-      $t = analyzedphenotypes_cvprop('genus', 'taxonomic_rank');
+      $terms = array(
+        'term' => 'genus',
+        'cv' => 'taxonomic_rank'
+      );
+
+      $t = analyzedphenotypes_cvprop('get_term', $terms);
       $cvid_genus = $t['id'];
 
       $sql = "SELECT value FROM {projectprop}
@@ -155,7 +218,12 @@ function analyzedphenotypes_genusprop($property = null, $data = null) {
     //
     case 'project_genus':
       // Get genus cvterm.
-      $t = analyzedphenotypes_cvprop('genus', 'taxonomic_rank');
+      $term = array(
+        'term' => 'genus',
+        'cv'   => 'taxonomic_rank'
+      );
+
+      $t = analyzedphenotypes_cvprop('get_term', $term);
       $cvid_genus = $t['id'];
 
       $sql = "SELECT value FROM {projectprop}
@@ -299,6 +367,16 @@ function analyzedphenotypes_columnsprop($property = null) {
 
       break;
 
+    case 'match_combination':
+      // REPLACE THIS WITH AN SQL QUERY TO FIND THIS STRING
+      // IN THE TABLE.
+      $combo = 'Plant Height (cm)KP:GERM260282015Saskatchewan, Canada1';
+      if ($combo == $data) {
+        $columnsprop = TRUE;
+      }
+
+      break;
+
     //
     // Additional case here.
 
@@ -311,29 +389,136 @@ function analyzedphenotypes_columnsprop($property = null) {
   return $columnsprop;
 }
 
+/////////
+function analyzedphenotypes_datatypeprop($property, $data) {
+  $datatypeprop = TRUE;
+
+  switch($property) {
+    //
+    case 'text':
+      if (ctype_digit($data)) {
+        $datatypeprop = FALSE;
+      }
+
+      break;
+
+    //
+    case 'number':
+      if (is_numeric($data) && $data <= 0) {
+        $datatypeprop = FALSE;
+      }
+
+      break;
+
+    //
+    case 'scale 1-5':
+      $data = (int)$data;
+      $min = 1;
+      $max = 5;
+      if ($data < $min || $data > $max) {
+        $datatypeprop = FALSE;
+      }
+
+      break;
+
+    //
+    case 'scale 1-10':
+      $data = (int)$data;
+      $min = 1;
+      $max = 10;
+      if ($data < $min || $data > $max) {
+        $datatypeprop = FALSE;
+      }
+
+      break;
+
+    //
+    case 'y/n/?':
+      $enum = array('y', 'yes', 'n', 'no', 'unsure', '?');
+      if (!in_array($data, $enum)) {
+        $datatypeprop = FALSE;
+      }
+
+      break;
+
+    //
+    case 'date':
+      if (preg_match('/^([0-9]{4})-([0-9]{2})-([0-9]{2})/', $data, $matches)) {
+        $year  = $matches[1];
+        $month = $matches[2];
+        $day   = $matches[3];
+
+        if ($month >= 1 AND $month <= 12 AND $day >= 1 AND $day <= 31 AND $year > 1900) {
+          $today = new DateTime();
+          $date = DateTime::createFromFormat('Y-m-d', $value);
+
+          if ($date <= $today) {
+            $datatypeprop = FALSE;
+          }
+        }
+      }
+
+      break;
+
+     //
+     // Additional case here.
+  }
+
+  return $datatypeprop;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Helper funciton: get cv or cvterm.
  */
-function analyzedphenotypes_cvprop($term, $cv) {
-  $term = array(
-    'name' => $term,
-    'cv_id' => array('name' => $cv)
-  );
+function analyzedphenotypes_cvprop($property = null, $data = null) {
+  $cvprop = '';
 
-  $cvterm = tripal_get_cvterm($term);
+  switch($property) {
+    //
+    case 'default':
+      $default_cv = 'tripal';
 
-  if ($cvterm) {
-    return array(
-      'id' => $cvterm->cvterm_id,
-      'name' => $cvterm->name,
-    );
+      $c = tripal_get_cv(array('name' => $default_cv));
+      $cvprop = $c->cv_id;
+
+      break;
+
+    //
+    case 'get_term':
+      $term = array(
+        'name' => $data['term'],
+        'cv_id' => array('name' => $data['cv'])
+      );
+
+      $cvterm = tripal_get_cvterm($term);
+      $cvprop = array(
+        'id' => $cvterm->cvterm_id,
+        'name' => $cvterm->name,
+      );
+
+      break;
+
+    //
+    default:
+      $sql = "SELECT cv_id, name, definition
+      FROM {cv}
+      ORDER BY name ASC";
+
+      $cv = chado_query($sql);
+
+      if ($cv->rowCount() > 0) {
+        foreach($cv as $c) {
+          $cvprop[$c->cv_id] = array(
+            'name' => $c->name,
+            'definition' => $c->definition,
+          );
+        }
+      }
   }
-  else {
-    return 0;
-  }
+
+  return $cvprop;
 }
 
 
@@ -426,18 +611,12 @@ function analyzedphenotypes_traitprop($case, $trait) {
 /**
  *  Function callback: AJAX function callback.
  */
-function analyazedphenotypes_AJAX_callback($form, $form_state) {
+function analyzedphenotypes_AJAX_callback($form, $form_state) {
   $case = $form_state['triggering_element']['#ajax']['case'];
+  $element = 'ap_AJAX_wrapper' . '_' . $case;
 
-  switch($case) {
-    //
-    case 'autofill_genus':
-      break;
 
-    //
-  }
-
-  return $form['ap_AJAX_wrapper'];
+  return $form[$element];
 }
 
 
@@ -475,6 +654,49 @@ function analyzedphenotypes_dataprop($property, $data = null) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+function analyzedphenotypes_dbprop($property = null, $data = null) {
+  $dbprop = '';
+
+  $sql = "SELECT db_id, name, description
+  FROM {db}
+  ORDER BY name ASC";
+
+  $db = chado_query($sql);
+
+  switch($property) {
+    //
+    case 'default':
+      $default_db = 'tripal';
+
+      if ($db->rowCount() > 0) {
+        foreach($db as $d) {
+          if ($d->name == $default_db) {
+            $dbprop = $d->db_id;
+          }
+        }
+      }
+
+      break;
+
+    //
+    // Additional case here.
+
+    //
+    default:
+      if ($db->rowCount() > 0) {
+        foreach($db as $d) {
+          $dbprop[$d->db_id] = array(
+            'name' => $d->name,
+            'description' => $d->description,
+          );
+        }
+      }
+  }
+
+  return $dbprop;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  *

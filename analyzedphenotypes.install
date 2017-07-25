@@ -128,117 +128,13 @@ function analyzedphenotypes_enable() {
   tripal_add_mview($schema['table'], 'analyzedphenotypes', $schema, $query, $schema['description']);
 }
 
-function analyzedphenotypes_schema() {
-  //
-  $schema['ap_phenotypes'] = array(
-    'description' => t('Table for analyzed phenotype.'),
-    'fields' => array(
-      'phenotype_id' => array(
-        'description' => t('A unique id number. Primary key.'),
-        'type' => 'serial',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'uniquename' => array(
-        'description' => t('Unique name.'),
-        'type' => 'text',
-        'not null' => TRUE,
-      ),
-      'observable_id' => array(
-        'description' => t('The entity (anatomy part, biological process).'),
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'attr_id' => array(
-        'description' => t('Primary key for the trait.'),
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'value' => array(
-        'description' => t('The measured value.'),
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-      ),
-      'cvalue_id' => array(
-        'description' => t('Link to the scale value recorded.'),
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'assay_id' => array(
-        'description' => t('The evidence type.'),
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'project_id' => array(
-        'description' => t('Link to the experiment.'),
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'stock_id' => array(
-        'description' => t('Link to the stock the trait was observed/measured on.'),
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-    ),
-    'primary key' => array('phenotype_id'),
-  );
+/**
+ *
+ */
+function analyzedphenotypes_install() {
+  $vars = analyzedphenotypes_moduleprop('module_vars');
 
-  //
-  $schema['ap_phenotypeprop'] = array(
-    'description' => t('Analyzed phenotype properties'),
-    'fields' => array(
-      'phenotypeprop_id' => array(
-        'description' => t('A unique id number. Priimary key.'),
-        'type' => 'serial',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'phenotype_id' => array(
-        'description' => t('Foreign key: ap_phenotypes.'),
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'type_id' => array(
-        'description' => t('Property type.'),
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'value' => array(
-        'description' => t('The free-text value of the property.'),
-        'type' => 'text',
-        'not null' => TRUE,
-      ),
-      'cvalue_id' => array(
-        'description' => t('Links to cvterm if property is controlled.'),
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'rank' => array(
-        'description' => t('Property value ordering'),
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-    ),
-    'primary key' => array('phenotypeprop_id'),
-    'foreign keys' => array(
-      'ap_phenotypes' => array(
-        'table' => 'ap_phenotypes',
-        'columns' => array('phenotype_id' => 'phenotype_id')
-      ),
-    ),
-  );
-
-
-  return $schema;
+  foreach($vars as $i => $v) {
+    variable_set($v['var'], $v['default']);
+  }
 }

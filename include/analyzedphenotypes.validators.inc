@@ -375,31 +375,33 @@ function analyzedphenotypes_validator_datafile($case, $dataset) {
 /**
  *
  */
-function analyzedphenotypes_validate_tsv_data($dataset, $job_id = null) {
+function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
   $dataset = unserialize($dataset);
+  //
   $data_file = file_load($dataset['data_file']);
   $file_content = analyzedphenotypes_fileprop('get_contents', $data_file);
 
   if ($file_content) {
   ///
 
-    $arr_status = '';
+    $arr_status = array();
 
     // Get module settings.
-    if ($job_id) {
-      $all_path = analyzedphenotypes_moduleprop();
-      $error_limit = analyzedphenotypes_moduleprop('error_limit');
-      $error_counter = 0;
-      $report_frequency = analyzedphenotypes_moduleprop('report_frequency');
+    $all_path = analyzedphenotypes_moduleprop();
+    //
+    $error_limit = analyzedphenotypes_moduleprop('error_limit');
+    $error_counter = 0;
+    //
+    $report_frequency = analyzedphenotypes_moduleprop('report_frequency');
 
-      // Temporary files.
-      $all_filename = analyzedphenotypes_fileprop('filename');
-      $file_progress = $all_path['temp'] . '/' . str_replace('@JOB_ID', $job_id, $all_filename['validate progress']);
-      $file_result   = $all_path['temp'] . '/' . str_replace('@JOB_ID', $job_id, $all_filename['validate result']);
-      unset($all_path, $all_filename);
+    // Temporary files.
+    $all_filename = analyzedphenotypes_fileprop('filename');
+    $file_progress = $all_path['temp'] . '/' . str_replace('@JOB_ID', $job_id, $all_filename['validate progress']);
+    $file_result   = $all_path['temp'] . '/' . str_replace('@JOB_ID', $job_id, $all_filename['validate result']);
+    unset($all_path, $all_filename);
 
-      print '0% Complete...' . "\n";
-    }
+    print '0% Complete...' . "\n";
+
 
     // Scope - just do value/data scope.
     $scope = analyzedphenotypes_ap_validators('return_all_scope');
@@ -428,8 +430,8 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id = null) {
     $columns_row = $rows[0];
     unset($rows[0]);
 
-    $columns = str_getcsv($columns_row, "\t");
-    $columns_combination = analyzedphenotypes_columnsprop('combination');
+    $c = str_getcsv($columns_row, "\t");
+    $columns = array_map('trim', $c);
 
     $prev_percent = 0;
 
@@ -439,7 +441,9 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id = null) {
         continue;
       }
 
-      $data = str_getcsv($line, "\t");
+      $d = str_getcsv($line, "\t");
+      $data = array_map('trim', $d);
+      $trait_name = $data[0];
 
       foreach($validator as $key => $item) {
         $case = $item['case'];
@@ -453,8 +457,8 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id = null) {
         if (empty($columns_required)) {
           // Apply to all.
           foreach($data as $j => $value) {
-            $value = trim($value);
-            $result = call_user_func($callback, $case, $value, $columns[$j], ($i + 1));
+            $value = trim($value, '"');
+            $result = call_user_func($callback, $case, $value, $columns[$j], ($i + 1), $trait_name);
 
             if ($result['type'] == 'failed') {
               if ($arr_status[$key]['type'] == 'passed') {
@@ -469,43 +473,59 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id = null) {
           }
         }
         else {
-          // Apply to combination or specific column.
-          // if array and string.
+          if (is_array($columns_required)) {
+            // Column combination.
+            $value = '';
+            foreach($columns_required as $v) {
+              $j = array_search($v, $columns);
+              $value .= trim($data[$j], '"');
+            }
+          }
+          else {
+            // Specific column,
+            $j = array_search($columns_required, $columns);
+            $value = trim($data[$j], '"');
+          }
 
-        }
-      }
+          $result = call_user_func($callback, $case, $value, $columns_required, ($i + 1), $trait_name);
 
+          if ($result['type'] == 'failed') {
+            if ($arr_status[$key]['type'] == 'passed') {
+              $arr_status[$key]['type'] = 'failed';
+            }
 
-      if ($job_id) {
-        if ($error_counter >= $error_limit) {
-          print 'Error limit reached. Job terminated.' . "\n";
-          break;
-        }
+            // Group details.
+            $arr_status[$key]['details'] .= $result['details'] . ', ';
 
-        //
-        $percent = round((($i + 1) / $rows_count) * 100);
-
-        if ($percent % $report_frequency == 0) {
-          if ($percent != $prev_percent) {
-            print $percent . '% Complete...' . "\n";
-            $prev_percent = $percent;
+            $error_counter++;
           }
         }
-
-        file_unmanaged_save_data($percent, $file_progress, FILE_EXISTS_REPLACE);
       }
+
+
+      if ($error_counter >= $error_limit) {
+        print 'Error limit reached. Job terminated.' . "\n";
+        break;
+      }
+
+      //
+      $percent = round((($i + 1) / $rows_count) * 100);
+
+      if ($percent % $report_frequency == 0) {
+        if ($percent != $prev_percent) {
+          print $percent . '% Complete...' . "\n";
+          $prev_percent = $percent;
+        }
+      }
+
+      file_unmanaged_save_data($percent, $file_progress, FILE_EXISTS_REPLACE);
     }
 
 
-    if ($job_id) {
-      $status_JSON = json_encode($arr_status);
-      file_unmanaged_save_data($status_JSON, $file_result, FILE_EXISTS_REPLACE);
+    $status_JSON = json_encode($arr_status);
+    file_unmanaged_save_data($status_JSON, $file_result, FILE_EXISTS_REPLACE);
 
-      print '100% Complete...' . "\n";
-    }
-    else {
-      return $arr_status;
-    }
+    print '100% Complete...' . "\n";
 
   ///
   }
@@ -515,9 +535,8 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id = null) {
 /**
  *
  */
-function analyzedphenotypes_validator_value($case, $value, $column, $row) {
+function analyzedphenotypes_validator_value($case, $value, $column, $row, $tait_name = null) {
   $value = trim($value);
-  $collumn = trim($column);
 
   $status = array(
     'type' => 'passed', // Passed or Failed. Default to passed.
@@ -538,37 +557,29 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row) {
     //
     case 'match_type':
       // Check if the data in a column match the data type required.
-      if (!empty($value)) {
-        $data_type = analyzedphenotypes_columnsprop();
-        $column_data_type = $data_type[$column];
+      $data_type = analyzedphenotypes_columnsprop();
+      $column_data_type = $data_type[$column];
 
-        unset($data_type);
+      if (empty($column_data_type)) {
+        $unit = analyzedphenotypes_traitprop('unit', $trait_name);
+        $unit_type = analyzedphenotypes_moduleprop('unit_type');
+        $column_data_type = $unit_type[$unit]['type'];
+      }
 
-        switch($column_data_type) {
-          //
-          case 'text':
-            if (ctype_digit($value)) {
-              $status['type'] = 'failed';
-              $status['details'] = ' in ' . $column . ' line #' . $row . ' (' . $value . ' not a text value)';
-            }
+      unset($data_type);
+      //unset($unit_type);
 
-            break;
+      $is_unit = analyzedphenotypes_datatypeprop($column_data_type, $value);
 
-          //
-          case 'number':
-            if (!ctype_digit($value)) {
-              $status['type'] = 'failed';
-              $status['details'] = ' in ' . $column . ' line #' . $row . ' (' . $value . ' not a number or a negative value)';
-            }
-
-            break;
-        }
+      if (!$is_unit) {
+        $status['type'] = 'failed';
+        $status['details'] = ' in ' . $column . ' line #' . $row . ' (' . $value . ' is not a valid ' . $column_data_type . ')';
       }
 
       break;
 
-      //
-      case 'trait_format':
+    //
+    case 'trait_format':
         // Check if trait name follows expected trait name format.
         if (!empty($value)) {
           if (preg_match('/\A[^()]+\s*\({1}[^)(]+\)\z/i', $value) !== 1) {
@@ -580,14 +591,12 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row) {
         break;
 
       //
-      case 'unit_data':
-        // Check if trait unit match the data.
-
-
-        break;
-
-      //
-      case 'unique_combo':
+      case 'unique_combination':
+        $match = analyzedphenotypes_columnsprop('match_combination', $value);
+        if ($match) {
+          $status['type'] = 'failed';
+          $status['details'] = 'in line #'. $row;
+        }
 
         break;
 

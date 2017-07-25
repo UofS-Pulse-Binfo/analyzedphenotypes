@@ -16,9 +16,6 @@ module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.val
 function analyzedphenotypes_menu() {
   $items = array();
 
-  $all_path = analyzedphenotypes_moduleprop();
-  $tripal_extension_ap = $all_path['ap'];
-
   // Main menu items for phenotypes: shows a beanplot -select trait and project.
   $items['phenotypes'] = array(
     'title' => 'Phenotypes',
@@ -48,8 +45,10 @@ function analyzedphenotypes_menu() {
     'file' => 'include/analyzedphenotypes.beanplot.page.inc',
     'type' => MENU_CALLBACK,
   );
-  
+
   // ADMINISTRATIVE PAGES.
+  $all_path = analyzedphenotypes_moduleprop();
+  $tripal_extension_ap = $all_path['ap'];
 
   // Main administrative pages for analyzed phenotypes.
   $items[$tripal_extension_ap] = array(
@@ -57,6 +56,17 @@ function analyzedphenotypes_menu() {
     'description' => 'Lorem ipsum dolor sit amet (Hello Analyzedphenotypes).',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_page_directory'),
+    'access arguments' => array('access administration pages'),
+    'file' => 'include/analyzedphenotypes.admin.form.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+ // Settings.
+  $items[$tripal_extension_ap . '/settings'] = array(
+    'title' => 'Analyzed Phenotypes Settings',
+    'description' => 'Lorem Ipsum dolor sit amet.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('analyzedphenotypes_admin_settings'),
     'access arguments' => array('access administration pages'),
     'file' => 'include/analyzedphenotypes.admin.form.inc',
     'type' => MENU_NORMAL_ITEM,
