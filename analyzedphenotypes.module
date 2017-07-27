@@ -235,6 +235,17 @@ function analyzedphenotypes_data_json($datatype, $data, $key = '') {
     case 'save_jobstatus':
       break;
 
+    //
+    case 'ontology':
+      $o = analyzedphenotypes_ontologyprop('suggest', $data);
+      $ontology_suggestions = array_keys($o);
+
+      foreach($ontology_suggestions as $i) {
+        $data_JSON[$i] = $i;
+      }
+
+      break;
+
   }
 
 

@@ -33,7 +33,7 @@
       //
       .ajaxComplete(function() {
         // Mute unnecessary drupal_set_message().
-        $('#ap-AJAX-wrapper').find('.messages').remove();
+        $('#ap-AJAX-wrapper-autofillgenus').find('.messages').remove();
 
         // Reset the select field to always default to the first option.
         $('#ap-genus-select-field')

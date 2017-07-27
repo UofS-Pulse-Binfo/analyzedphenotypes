@@ -770,7 +770,8 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
             $existing_trait['unit']           = $exists['unit'];
             $existing_trait['scale']          = $exists['scale'];
             $existing_trait['crop_ontology']  = $exists['crop_ontology'];
-            $existing_trait['plant_ontology'] = $exists['plant_ontology'];
+            // NOT SAVED.
+            // $existing_trait['plant_ontology'] = $exists['plant_ontology'];
             $existing_trait['photo_1']        = $exists['photo_1'];
             $existing_trait['photo_2']        = $exists['photo_2'];
 
@@ -782,47 +783,49 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
           }
 
           // Trait name:
-          $form[$ap_fieldset]['ap_name_form_field' . $i] = array(
+          $form[$ap_fieldset]['ap_name_text_field' . $i] = array(
             '#type' => 'textfield',
             '#title' => t('Name'),
             '#required' => TRUE,
+            '#element_validate' => array('analyzedphenotypes_validate_field_name'),
 
             '#default_value' => $existing_trait['name'],
             '#description' => t('Lorem ispsum dolor sit amet'),
-            '#id' => 'ap-name-form-field' . $i,
+            '#id' => 'ap-name-text-field' . $i,
           );
 
           // Description:
-          $form[$ap_fieldset]['ap_description_form_field' . $i] = array(
+          $form[$ap_fieldset]['ap_description_text_field' . $i] = array(
             '#type' => 'textarea',
             '#title' => t('Description'),
             '#required' => TRUE,
 
             '#default_value' => $existing_trait['description'],
             '#description' => t('Loren ipsum dolor sit amet'),
-            '#id' => 'ap-description-form-field' . $i,
+            '#id' => 'ap-description-text-field' . $i,
           );
 
           // Unit
-          $form[$ap_fieldset]['ap_unit_form_field' . $i] = array(
+          $form[$ap_fieldset]['ap_unit_text_field' . $i] = array(
             '#type' => 'textfield',
             '#title' => t('Unit'),
             '#required' => TRUE,
+            '#element_validate' => array('analyzedphenotypes_validate_field_unit'),
 
             '#default_value' => $existing_trait['unit'],
             '#description' => t('Lorem ispsum dolor sit amet'),
-            '#id' => 'ap-unit-form-field' . $i,
+            '#id' => 'ap-unit-text-field' . $i,
           );
 
           // Scale:
-          $form[$ap_fieldset]['ap_scale_form_field' . $i] = array(
+          $form[$ap_fieldset]['ap_scale_text_field' . $i] = array(
             '#type' => 'textfield',
             '#title' => t('Scale'),
             '#required' => TRUE,
 
             '#default_value' => $existing_trait['scale'],
             '#description' => t('Lorem ispsum dolor sit amet'),
-            '#id' => 'ap-scale-form-field' . $i,
+            '#id' => 'ap-scale-text-field' . $i,
           );
 
           // Field group title:
@@ -832,20 +835,39 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
           );
 
           // Crop ontology:
-          $form[$ap_fieldset]['ap_crop_ontology_form_field' . $i] = array(
+          $form[$ap_fieldset]['ap_crop_ontology_text_field' . $i] = array(
             '#title' => 'Crop Ontology',
             '#type' => 'textfield',
             '#required' => TRUE,
+
 
             '#default_value' => $existing_trait['crop_ontology'],
             '#description' => t('Lorem ipsum dolor sit amet'),
             // @see analyzedphenotypes_autocomplete_search() in function.inc
             // where $dataype = ontology.
-            '#autocomplete_path' => $all_path['ap'] . '/json/ontology',
-            '#id' => 'ap-crop-ontology-form-field' . $i,
+            '#autocomplete_path' => $all_path['ap'] . '/json/ontology/' . $existing_trait['name'],
+            '#id' => drupal_html_id('ap-crop-ontology-text-field' . $i),
           );
 
+          /*
+           * Add ontology suggestions.
+           */
+          $ontology_suggestions = analyzedphenotypes_ontologyprop('suggest', $existing_trait['name']);
+
+          if ($ontology_suggestions) {
+            $a = array();
+            foreach($ontology_suggestions as $i => $term) {
+              $a[] = l($i, '#');
+            }
+
+            $list = theme('item_list', array('items' => $a, 'title' => 'Did you mean?'));
+            $form[$ap_fieldset]['ap_ontology_suggestion_markup_field' . $i] = array(
+              '#markup' => $list,
+            );
+          }
+
           // Plant ontology:
+          /*
           $form[$ap_fieldset]['ap_plant_ontology_form_field' . $i] = array(
             '#title' => 'Plant Trait Ontology',
             '#type' => 'textfield',
@@ -858,6 +880,7 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
             '#autocomplete_path' => $all_path['ap'] . '/json/ontology',
             '#id' => 'ap-plant-ontology-form-field' . $i,
           );
+          */
 
           // Field group title:
           $form[$ap_fieldset]['ap_group_photo_upload' . $i] = array(
@@ -882,14 +905,14 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
             );
           }
 
-          $form[$ap_fieldset]['ap_photo_1_form_field' . $i] = array(
+          $form[$ap_fieldset]['ap_photo_1_file_field' . $i] = array(
             '#type' => 'file',
             '#title' => t('Image 1 of 2'),
-            '#required' => TRUE,
             '#upload_validators' => array(
-              'file_validate_extensions' => array('jpg jpeg gif png'),
+              'file_validate_extensions' => array('jpg'),
             ),
-            '#id' => 'ap-photo-1-form-field' . $i,
+            '#name' => 'files[ap_photo_1' . $i . ']',
+            '#id' => 'ap-photo-1-file-field' . $i,
           );
 
           // Photo 2:
@@ -908,14 +931,14 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
             );
           }
 
-          $form[$ap_fieldset]['ap_photo_2_form_field' . $i] = array(
+          $form[$ap_fieldset]['ap_photo_2_file_field' . $i] = array(
             '#type' => 'file',
             '#title' => t('Image 2 of 2'),
-            '#required' => TRUE,
             '#upload_validators' => array(
-              'file_validate_extensions' => array('jpg jpeg gif png'),
+              'file_validate_extensions' => array('jpg'),
             ),
-            '#id' => 'ap-photo-2-form-field' . $i,
+            '#name' => 'files[ap_photo_2' . $i . ']',
+            '#id' => 'ap-photo-2-file-field' . $i,
           );
 
           // Field group title:
@@ -925,6 +948,10 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
           );
 
           // Summary table.
+          $form[$ap_fieldset]['ap_summary_table' . $i] = array(
+            '#type' => 'markup',
+          );
+
           $summary_data = analyzedphenotypes_table_values($rows, $columns, $trait);
 
           if ($summary_data) {
@@ -941,20 +968,15 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
 
               $table_rows[] = array($sy, $min, $max, round($avg, 2), round($sdv, 2));
             }
-          }
 
-          // Summary table.
-          $form[$ap_fieldset]['ap_summary_table' . $i] = array(
-            '#type' => 'markup',
-            '#markup' => theme('table',
+            $form[$ap_fieldset]['ap_summary_table' . $i]['#markup'] = theme('table',
               array(
                 'header' => array('Site-year', 'Minimum Value', 'Maximum Value', 'Mean Value', 'Standard Deviation'),
                 'rows' => $table_rows,
                 'attributes' => array('id' => 'ap_summary_table' . $i)
               )
-            ),
-          );
-
+            );
+          }
 
           $i++;
           /////////////////////////////////////////////////////////////////////////////////
@@ -965,8 +987,9 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
   }
 
   $form['#ap_describe_trait'] = $arr_trait_describe;
-  $form_state['multistep_values']['new_headers'] = $form['#ap_describe_trait'];
+  $form_state['multistep_values']['new_headers'] = array_keys($form['#ap_describe_trait']);
   $form['#ap_main_fieldset'] = $main_fieldset;
+
 
   return $form;
 }
@@ -974,6 +997,32 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+function analyzedphenotypes_validate_field_name(&$element, &$form, &$form_state) {
+  $i = preg_replace('/[a-z\_]/', '', $element['#name']);
+  $describe_traits = $form['multistep_values']['new_headers'];
+  $in_trait = $describe_traits[trim($i)];
+
+  if (strpbrk($element['#value'], '()')) {
+    form_set_error($element['#name'], t('Characters "(" and/or ")" found in column header name of @trait.
+    Please remove these characters and try again.', array('@trait' => $in_trait)));
+  }
+}
+
+
+function analyzedphenotypes_validate_field_unit(&$element, &$form, &$form_state) {
+  $i = preg_replace('/[a-z\_]/', '', $element['#name']);
+  $describe_traits = $form['multistep_values']['new_headers'];
+  $in_trait = $describe_traits[trim($i)];
+
+  if (strpbrk($element['#value'], '()')) {
+    form_set_error($element['#name'], t('Characters "(" and/or ")" found in column header unit of @trait.
+    Please remove these characters and try again.', array('@trait' => $in_trait)));
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Function callback: Construct STAGE 1 - SAVE form interface.
@@ -986,27 +1035,30 @@ function analyzedphenotypes_loader_form_save($form, &$form_state) {
   $arr_trait_describe = $form_state['multistep_values']['new_headers'];
 
   foreach ($arr_trait_describe as $i => $trait) {
-    $name           = $form_state['values']['ap_name_form_field'           . $i];
-    $description    = $form_state['values']['ap_description_form_field'    . $i];
-    $unit           = $form_state['values']['ap_unit_form_field'           . $i];
-    $scale          = $form_state['values']['ap_scale_form_field'          . $i];
-    $crop_ontology  = $form_state['values']['ap_crop_ontology_form_field'  . $i];
-    $plant_ontology = $form_state['values']['ap_plant_ontology_form_field' . $i];
-    $photo_1        = $form_state['values']['ap_photo_1_form_field'        . $i];
-    $photo_2        = $form_state['values']['ap_photo_2_form_field'        . $i];
+    $name           = $form_state['values']['ap_name_text_field'           . $i];
+    $description    = $form_state['values']['ap_description_text_field'    . $i];
+    $unit           = $form_state['values']['ap_unit_text_field'           . $i];
+    $scale          = $form_state['values']['ap_scale_text_field'          . $i];
+    $crop_ontology  = $form_state['values']['ap_crop_ontology_text_field'  . $i];
+    // $plant_ontology = $form_state['values']['ap_plant_ontology_form_field' . $i];
+    $photo_1        = 'ap_photo_1' . $i;
+    $photo_2        = 'ap_photo_2' . $i;
 
-    analyzedphenotypes_traitprop('insert_trait', array(
-      'name'           => $name,
-      'description'    => $description,
-      'unit'           => $unit,
-      'scale'          => $scale,
-      'crop_ontology'  => $crop_ontology,
-      'plant_ontology' => $plant_ontology,
-      'photo_1'        => $photo_1,
-      'photo_2'        => $photo_2,
+    $cvterm = analyzedphenotypes_traitprop('insert_trait', array(
+      'cvterm'      => $name . '(' . $unit . ')',
+      'description' => $description,
     ));
-  }
 
+    // Mamage photo.
+    if ($cvterm) {
+      $photo = array(
+        'cvterm_id' => $cvterm,
+        'photo' => array($photo_1, $photo_2),
+      );
+
+      analyzedphenotypes_fileprop('save_photo', $photo);
+    }
+  }
 
   $dataset = array(
     'description' => 'Save Analyzed Phenotype',
