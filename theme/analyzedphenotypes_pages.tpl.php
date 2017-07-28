@@ -137,26 +137,30 @@ elseif ($form_id == 'analyzedphenotypes_admin_data_loader') :
              </div>
 
              <div id="ap-describe-main-form-container">
-               <?php
-                 $main_fieldset = $form['#ap_main_fieldset'];
-                 $traits = $form['#ap_describe_trait'];
-                 $trait_count = count($trait);
+               <div id="accordion">
+                 <?php
+                   $main_fieldset = $form['#ap_main_fieldset'];
+                   $traits = $form['#ap_describe_trait'];
+                   $trait_count = count($traits);
 
-                 $i = 0;
-                 foreach($traits as $key => $existing) {
-                   if ($existing) {
-                     $warn = '<div class="messages warning">We have detected same trait autofilled the form lorem ipsum dolor sit amet.</div>';
-                     $form[$main_fieldset . $i]['ap_warning' . $i]['#markup'] = $warn;
+                   $i = 0;
+                   foreach($traits as $key => $existing) {
+                     if ($existing) {
+                       $warn = '<div class="messages warning">We have detected same trait autofilled the form lorem ipsum dolor sit amet.</div>';
+                       $form[$main_fieldset . $i]['ap_warning' . $i]['#markup'] = $warn;
+                     }
+
+                     print '<h3>#' . ($i + 1) . '. ' . $form['#ap_cvterm_hidden_field' . $i] . '</h3>';
+                     print '<div id="ap-accordion-container' . $i . '" class="ap-form-describe-trait">' . drupal_render($form[$main_fieldset . $i]) . '</div>';
+
+                     $i++;
                    }
-
-                   print drupal_render($form[$main_fieldset . $i]);
-                   $i++;
-                 }
-               ?>
+                 ?>
+               </div>
              </div>
 
         <?php
-             $inform = '<div class="messages warning"><strong>You have fully described 0 of ' . $trait_count . ' Traits</strong>. Please ensure to describe all traits before clicking the Next Step button</div>';
+             $inform = '<div class="messages warning"><strong>You have fully described <span id="ap-form-filled-count">0</span> of ' . $trait_count . ' Traits</strong>. Please ensure to describe all traits before clicking the Next Step button</div>';
 
             break;
         ?>

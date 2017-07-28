@@ -61,28 +61,50 @@ function analyzedphenotypes_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
- // Settings.
-  $items[$tripal_extension_ap . '/settings'] = array(
-    'title' => 'Analyzed Phenotypes Settings',
-    'description' => 'Lorem Ipsum dolor sit amet.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('analyzedphenotypes_admin_settings'),
-    'access arguments' => array('access administration pages'),
-    'file' => 'include/analyzedphenotypes.admin.form.inc',
-    'type' => MENU_NORMAL_ITEM,
-  );
-
   // Data Loader.
   $items[$tripal_extension_ap . '/upload'] = array(
-    'title' => 'Analyzed Phenotypes Data Loader',
+    'title' => 'Upload Data',
     'description' => 'Lorem Ipsum dolor sit amet.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_data_loader'),
     'access arguments' => array('access administration pages'),
     'file' => 'include/analyzedphenotypes.admin.form.inc',
     'weight' => 1,
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  // Settings.
+  $items[$tripal_extension_ap . '/settings'] = array(
+    'title' => 'Settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('analyzedphenotypes_admin_settings'),
+    'access arguments' => array('access administration pages'),
+    'file' => 'include/analyzedphenotypes.admin.form.inc',
+    'weight' => 2,
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items[$tripal_extension_ap . '/settings/database_cv'] = array(
+    'title' => 'DB and CV',
+    'description' => 'Lorem Ipsum dolor sit amet.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('analyzedphenotypes_admin_settings', 5),
+    'access arguments' => array('access administration pages'),
+    'file' => 'include/analyzedphenotypes.admin.form.inc',
     'type' => MENU_LOCAL_TASK,
   );
+
+  // Settings.
+  $items[$tripal_extension_ap . '/settings/property_terms'] = array(
+    'title' => 'CV Terms',
+    'description' => 'Lorem Ipsum dolor sit amet.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('analyzedphenotypes_admin_settings', 5),
+    'access arguments' => array('access administration pages'),
+    'file' => 'include/analyzedphenotypes.admin.form.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+
 
   // Generate data in JSON object.
   $items[$tripal_extension_ap . '/json/%/%'] = array(

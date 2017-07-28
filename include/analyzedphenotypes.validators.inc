@@ -46,6 +46,9 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
     if ($i > 0 && !empty($line)) {
       $data = str_getcsv($line, "\t");
 
+
+      /*
+
       $dataset = array(
         'Trait Name'          => $data[$index[$all_columns[0]]],
         'Germplasm Accession' => $data[$index[$all_columns[1]]],
@@ -57,7 +60,30 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
         'Data Collector'      => $data[$index[$all_columns[7]]],
       );
 
+      // Phenotype.
+      $uniquename = implode('_', array(
+        $trait_id, $project_id, $genus_id,
+        $dataset['Location'], $dataset['Year'], $dataset['Replicate'],
+        date('Ymd'),
+      ));
+
+      $data = array(
+        'Genus Id'    => $genus_id,
+        'Project Id'  => $project_id,
+        'Unique Name' => $uniquename,
+        'Trait Name'  => $dataset['Trait Name'],
+        'Value'       => $dataset['Value'],
+      );
+
       $id = analyzedphenotypes_traitprop('phenotype_insert', $dataset);
+
+      // Phenotype property.
+      if ($id) {
+
+
+
+      }
+      */
 
 
       $percent = round((($i + 1) / $rows_count) * 100);

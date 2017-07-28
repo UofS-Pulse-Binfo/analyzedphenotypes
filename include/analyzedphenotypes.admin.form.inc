@@ -11,121 +11,129 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
 /**
  *
  */
-function analyzedphenotypes_admin_settings($form, &$form_state) {
-  // Defaults.
-  $default = analyzedphenotypes_moduleprop('module_vars');
+function analyzedphenotypes_admin_settings($form, &$form_state, $source) {
+  if ($source == 'database_cv') {
+    // Defaults.
+    $default = analyzedphenotypes_moduleprop('module_vars');
 
-  // Db
-  $db_varname = $default['ap_database']['var'];
-  $db_var = variable_get($db_varname);
+    // Db
+    $db_varname = $default['ap_database']['var'];
+    $db_var = variable_get($db_varname);
 
-  $db = analyzedphenotypes_dbprop();
-  $db_options = array_map(function($d) {
-    return $d['name'];
-  }, $db);
+    $db = analyzedphenotypes_dbprop();
+    $db_options = array_map(function($d) {
+      return $d['name'];
+    }, $db);
 
-  // AJAX callback wrapper.
-  $form['ap_AJAX_wrapper_dbdescription'] = array(
-    '#prefix' => '<div id="ap-AJAX-wrapper-dbdescription">',
-    '#suffix' => '</div>',
-  );
+    // AJAX callback wrapper.
+    $form['ap_AJAX_wrapper_dbdescription'] = array(
+      '#prefix' => '<div id="ap-AJAX-wrapper-dbdescription">',
+      '#suffix' => '</div>',
+    );
 
-  if (isset($form_state['values'][$db_varname])) {
-    $db_value = $form_state['values'][$db_varname];
+    if (isset($form_state['values'][$db_varname])) {
+      $db_value = $form_state['values'][$db_varname];
 
-    if ($db_value > 0) {
-      $db_id = $db_value;
+      if ($db_value > 0) {
+        $db_id = $db_value;
+      }
     }
+    else {
+      $db_id = $db_var;
+    }
+
+    $db_description = empty($db[$db_id]['description'])
+      ? 'Description not available.'
+      : $db[$db_id]['description'];
+
+    $form['ap_AJAX_wrapper_dbdescription'][$db_varname] = array(
+      '#type' => 'select',
+      '#title' => t('Database'),
+      '#required' => TRUE,
+      '#options' => $db_options,
+      '#default_value' => $db_var,
+      '#description' => $db_description,
+
+      // Load database description.
+      '#ajax' => array(
+        'event' => 'change',
+        'callback' => 'analyzedphenotypes_AJAX_callback',
+        'case' => 'dbdescription',
+        'wrapper' => 'ap-AJAX-wrapper-dbdescription',
+        'progress' => array('type' => 'throbber', 'message' => 'Loading Database description...'),
+      ),
+      '#id' => 'ap-db-select-field',
+    );
+
+    // Controlled Vocabulary.
+    $cv_varname = $default['ap_cv']['var'];
+    $cv_var = variable_get($cv_varname);
+
+    $cv = analyzedphenotypes_cvprop();
+    $cv_options = array_map(function($c) {
+      return $c['name'];
+    }, $cv);
+
+
+   // AJAX callback wrapper.
+    $form['ap_AJAX_wrapper_cvdescription'] = array(
+      '#prefix' => '<div id="ap-AJAX-wrapper-cvdescription">',
+      '#suffix' => '</div>',
+    );
+
+    if (isset($form_state['values'][$cv_varname])) {
+      $cv_value = $form_state['values'][$cv_varname];
+
+      if ($cv_value > 0) {
+        $cv_id = $cv_value;
+      }
+    }
+    else {
+      $cv_id = $cv_var;
+    }
+
+    $cv_description = empty($cv[$cv_id]['definition'])
+      ? 'Description not available'
+      : $cv[$cv_id]['definition'];
+
+    $form['ap_AJAX_wrapper_cvdescription'][$cv_varname] = array(
+      '#type' => 'select',
+      '#title' => t('Controlled Vocabulary'),
+      '#required' => TRUE,
+      '#options' => $cv_options,
+      '#default_value' => $cv_var,
+      '#description' => $cv_description,
+      //
+      '#ajax' => array(
+        'event' => 'change',
+        'callback' => 'analyzedphenotypes_AJAX_callback',
+        'case' => 'cvdescription',
+        'wrapper' => 'ap-AJAX-wrapper-cvdescription',
+        'progress' => array('type' => 'throbber', 'message' => 'Loading CV description...'),
+      ),
+      '#id' => 'ap-cv-select-field',
+    );
+
+    // Allow new terms.
+    $allownew_varname = $default['ap_allow_new']['var'];
+    $allownew_var = variable_get($allownew_varname);
+
+    $form[$allownew_varname] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Allow new term to be added to the Controlled Vocabulary'),
+      '#default_value' => $allownew_var,
+      '#id' => 'ap-allownewterm-checkbox-field',
+    );
+
+
+    return system_settings_form($form);
+  }
+  elseif ($source == 'property_terms') {
+
   }
   else {
-    $db_id = $db_var;
+    // Main settings.
   }
-
-  $db_description = empty($db[$db_id]['description'])
-    ? 'Description not available.'
-    : $db[$db_id]['description'];
-
-  $form['ap_AJAX_wrapper_dbdescription'][$db_varname] = array(
-    '#type' => 'select',
-    '#title' => t('Database'),
-    '#required' => TRUE,
-    '#options' => $db_options,
-    '#default_value' => $db_var,
-    '#description' => $db_description,
-
-    // Load database description.
-    '#ajax' => array(
-      'event' => 'change',
-      'callback' => 'analyzedphenotypes_AJAX_callback',
-      'case' => 'dbdescription',
-      'wrapper' => 'ap-AJAX-wrapper-dbdescription',
-      'progress' => array('type' => 'throbber', 'message' => 'Loading Database description...'),
-    ),
-    '#id' => 'ap-db-select-field',
-  );
-
-  // Controlled Vocabulary.
-  $cv_varname = $default['ap_cv']['var'];
-  $cv_var = variable_get($cv_varname);
-
-  $cv = analyzedphenotypes_cvprop();
-  $cv_options = array_map(function($c) {
-    return $c['name'];
-  }, $cv);
-
-
- // AJAX callback wrapper.
-  $form['ap_AJAX_wrapper_cvdescription'] = array(
-    '#prefix' => '<div id="ap-AJAX-wrapper-cvdescription">',
-    '#suffix' => '</div>',
-  );
-
-  if (isset($form_state['values'][$cv_varname])) {
-    $cv_value = $form_state['values'][$cv_varname];
-
-    if ($cv_value > 0) {
-      $cv_id = $cv_value;
-    }
-  }
-  else {
-    $cv_id = $cv_var;
-  }
-
-  $cv_description = empty($cv[$cv_id]['definition'])
-    ? 'Description not available'
-    : $cv[$cv_id]['definition'];
-
-  $form['ap_AJAX_wrapper_cvdescription'][$cv_varname] = array(
-    '#type' => 'select',
-    '#title' => t('Controlled Vocabulary'),
-    '#required' => TRUE,
-    '#options' => $cv_options,
-    '#default_value' => $cv_var,
-    '#description' => $cv_description,
-    //
-    '#ajax' => array(
-      'event' => 'change',
-      'callback' => 'analyzedphenotypes_AJAX_callback',
-      'case' => 'cvdescription',
-      'wrapper' => 'ap-AJAX-wrapper-cvdescription',
-      'progress' => array('type' => 'throbber', 'message' => 'Loading CV description...'),
-    ),
-    '#id' => 'ap-cv-select-field',
-  );
-
-  // Allow new terms.
-  $allownew_varname = $default['ap_allow_new']['var'];
-  $allownew_var = variable_get($allownew_varname);
-
-  $form[$allownew_varname] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Allow new term to be added to the Controlled Vocabulary'),
-    '#default_value' => $allownew_var,
-    '#id' => 'ap-allownewterm-checkbox-field',
-  );
-
-
-  return system_settings_form($form);
 }
 
 
@@ -228,6 +236,9 @@ function analyzedphenotypes_admin_data_loader($form, &$form_state) {
     //
     case 'describe':
       $form['#attached']['css'][] = $path_theme . 'css/analyzedphenotypes.loader.stage3.css';
+      $form['#attached']['js'][]  = $path_theme . 'js/analyzedphenotypes.loader.stage3.js';
+
+drupal_add_library('system', 'ui.accordion');
 
       $form = analyzedphenotypes_loader_form_describe($form, $form_state);
 
@@ -728,6 +739,7 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
         else {
           /////////////////////////////////////////////////////////////////////////////////
           $existing_trait = array(
+            'term'           => '',
             'name'           => '',
             'definition'     => '',
             'unit'           => '',
@@ -739,18 +751,6 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
           );
 
           $ap_fieldset = $main_fieldset . $i;
-          $class_collapsed = ($i == 0) ? '' : 'collapsed';
-
-          // Fieldset:
-          $form[$ap_fieldset] = array(
-            '#type' => 'fieldset',
-            '#title' => '#' . ($i + 1) . '. ' . $trait,
-            '#collapsible' => TRUE,
-            '#attributes' => array(
-              'class' => array('ap-form-fieldset-container', $class_collapsed)
-            ),
-            '#id' => $main_fieldset . $i,
-          );
 
           // Field group title:
           $form[$ap_fieldset]['ap_group_about_the_trait' . $i] = array(
@@ -761,13 +761,15 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
 
           // Check if trait is available, then suggest the trait and autfill the form.
           $exists = analyzedphenotypes_traitprop('recordset', $trait);
-          $arr_trait_describe[$trait] = ($exists) ? 1 : 0;
+          $arr_trait_describe[$trait] = $exists['found'];
 
-          if ($exists) {
-            $existing_trait['name']           = $exists['name'];
+          $existing_trait['term'] = $exists['term'];
+          $existing_trait['name'] = $exists['name'];
+          $existing_trait['unit'] = $exists['unit'];
+
+          if ($exists['found']) {
             // Field is description while cvterm field is definition.
             $existing_trait['description']    = $exists['definition'];
-            $existing_trait['unit']           = $exists['unit'];
             $existing_trait['scale']          = $exists['scale'];
             $existing_trait['crop_ontology']  = $exists['crop_ontology'];
             // NOT SAVED.
@@ -782,6 +784,10 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
             );
           }
 
+          // CVTerm:
+          $form['#ap_cvterm_hidden_field' . $i] = $existing_trait['term'];
+
+
           // Trait name:
           $form[$ap_fieldset]['ap_name_text_field' . $i] = array(
             '#type' => 'textfield',
@@ -791,6 +797,7 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
 
             '#default_value' => $existing_trait['name'],
             '#description' => t('Lorem ispsum dolor sit amet'),
+            '#attributes' => array('class' => array('ap-required')),
             '#id' => 'ap-name-text-field' . $i,
           );
 
@@ -802,6 +809,7 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
 
             '#default_value' => $existing_trait['description'],
             '#description' => t('Loren ipsum dolor sit amet'),
+            '#attributes' => array('class' => array('ap-required')),
             '#id' => 'ap-description-text-field' . $i,
           );
 
@@ -814,6 +822,7 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
 
             '#default_value' => $existing_trait['unit'],
             '#description' => t('Lorem ispsum dolor sit amet'),
+            '#attributes' => array('class' => array('ap-required')),
             '#id' => 'ap-unit-text-field' . $i,
           );
 
@@ -821,7 +830,6 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
           $form[$ap_fieldset]['ap_scale_text_field' . $i] = array(
             '#type' => 'textfield',
             '#title' => t('Scale'),
-            '#required' => TRUE,
 
             '#default_value' => $existing_trait['scale'],
             '#description' => t('Lorem ispsum dolor sit amet'),
@@ -846,6 +854,7 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
             // @see analyzedphenotypes_autocomplete_search() in function.inc
             // where $dataype = ontology.
             '#autocomplete_path' => $all_path['ap'] . '/json/ontology/' . $existing_trait['name'],
+            '#attributes' => array('class' => array('ap-autocomplete-search', 'ap-required')),
             '#id' => drupal_html_id('ap-crop-ontology-text-field' . $i),
           );
 
@@ -856,11 +865,21 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
 
           if ($ontology_suggestions) {
             $a = array();
-            foreach($ontology_suggestions as $i => $term) {
-              $a[] = l($i, '#');
+            foreach($ontology_suggestions as $k => $term) {
+              $definition = empty($term['definition']) ? $k : $term['definition'];
+
+              $a[] = l($k, '#', array('attributes' => array(
+                'alt' => $definition,
+                'title' => $definition,
+              )));
             }
 
-            $list = theme('item_list', array('items' => $a, 'title' => 'Did you mean?'));
+            $list = theme('item_list', array(
+              'items' => $a,
+              'title' => 'Ontology Found:',
+              'attributes' => array('id' => 'ap-ontology-suggest-' . $i, 'class' => 'ap-item-list'),
+            ));
+
             $form[$ap_fieldset]['ap_ontology_suggestion_markup_field' . $i] = array(
               '#markup' => $list,
             );
@@ -908,10 +927,12 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
           $form[$ap_fieldset]['ap_photo_1_file_field' . $i] = array(
             '#type' => 'file',
             '#title' => t('Image 1 of 2'),
+            '#required' => TRUE,
             '#upload_validators' => array(
               'file_validate_extensions' => array('jpg'),
             ),
             '#name' => 'files[ap_photo_1' . $i . ']',
+            '#attributes' => array('class' => array('ap-required')),
             '#id' => 'ap-photo-1-file-field' . $i,
           );
 

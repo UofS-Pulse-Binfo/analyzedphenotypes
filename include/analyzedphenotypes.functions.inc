@@ -14,6 +14,17 @@ function analyzedphenotypes_moduleprop($property = null) {
 
   switch($property) {
     //
+    case 'phenotype_properties':
+      $moduleprop = array(
+        'year' => array('Accession'   => 'stock_types'),
+        'location' => array('Accession' => 'stock_types'),
+        'replicate'   => array('Variety'  => 'stock_types'),
+        'data collector' => array('Population' => 'stock_types'),
+      );
+
+      break;
+
+    //
     case 'module_vars':
       $default_db = analyzedphenotypes_dbprop('default');
       $default_cv = analyzedphenotypes_cvprop('default');
@@ -521,6 +532,14 @@ function analyzedphenotypes_cvprop($property = null, $data = null) {
       break;
 
     //
+    case 'get_cvname':
+      $c = tripal_get_cv(array('cv_id' => $data));
+      $cvprop = $c->name;
+
+      break;
+
+
+    //
     case 'get_term':
       $term = array();
       $term['name'] = $data['term'];
@@ -629,21 +648,26 @@ function analyzedphenotypes_traitprop($property, $data) {
     case 'recordset':
       // Get module system settings.
       $vars = analyzedphenotypes_moduleprop('module_vars');
-      $cv = variable_get($vars['ap_cv']['var']);
+      $cv_id = variable_get($vars['ap_cv']['var']);
+      $cv_name = analyzedphenotypes_cvprop('get_cvname', $cv_id);
 
       $cvterm = analyzedphenotypes_cvprop('get_term', array(
         'term' => $data,
-        'cv' => $cv,
+        'cv' => $cv_name,
       ));
 
       if ($cvterm) {
-        $name = $cvterm->name;
+        $found = TRUE;
+        $term = $cvterm->name;
+        $name = $term;
         $definition = $cvterm->definition;
         $photo_1 = $cvterm->cvterm_id . '_1.jpg';
         $photo_2 = $cvterm->cvterm_id . '_2.jpg';
       }
       else {
-        $name = $data;
+        $found = FALSE;
+        $term = $data;
+        $name = $term;
         $definition = '';
         $photo_1 = '';
         $photo_2 = '';
@@ -653,6 +677,8 @@ function analyzedphenotypes_traitprop($property, $data) {
       $name = analyzedphenotypes_traitprop('no_unit', $name);
 
       $traitprop = array(
+        'found'      => $found,
+        'term'       => $term,
         'name'       => $name,
         'unit'       => $unit,
         'definition' => $definition,
@@ -943,7 +969,7 @@ function analyzedphenotypes_ontologyprop($property = null, $data = null) {
           $keywords = explode(' ', $data);
 
           foreach($keywords as $key) {
-            if (strstr($i, $key)) {
+            if (strstr($i, trim($key))) {
               $ontologyprop[$i] = $term;
             }
           }

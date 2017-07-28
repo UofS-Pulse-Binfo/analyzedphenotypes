@@ -1,6 +1,6 @@
 /**
  * @file
- * Stage 2 - Describe
+ * Stage 3 - Describe
  */
 
 #ap-describe-main-form-container .form-type-item label {
@@ -24,3 +24,35 @@
   background: none;
 }
 
+ul.ap-item-list {
+  margin-left: 0 !important;
+  padding-left: 0;
+}
+
+.ap-item-list li {
+  display: inline-block;
+}
+
+.ap-item-list a {
+  padding: 0 5px;
+  border-left: 1px solid black;
+}
+
+.ap-form-fieldset-container .fieldset-legend {
+  width: 98%;
+}
+
+.ap-form-fieldset-container a.fieldset-title {
+  display: inline-block;
+  width: inherit;
+}
+
+
+.ui-accordion-header {
+  background-color: #CCCCCC;
+  padding: 10px;
+}
+
+#accordion .ui-icon {
+  display: none;
+}
