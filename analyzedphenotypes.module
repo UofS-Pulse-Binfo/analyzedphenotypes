@@ -85,7 +85,7 @@ function analyzedphenotypes_menu() {
   );
 
   $items[$tripal_extension_ap . '/settings/database_cv'] = array(
-    'title' => 'DB and CV',
+    'title' => 'Database & CV Terms',
     'description' => 'Lorem Ipsum dolor sit amet.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_settings', 5),
@@ -96,7 +96,7 @@ function analyzedphenotypes_menu() {
 
   // Settings.
   $items[$tripal_extension_ap . '/settings/property_terms'] = array(
-    'title' => 'CV Terms',
+    'title' => 'Plant Property Traits',
     'description' => 'Lorem Ipsum dolor sit amet.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_settings', 5),
@@ -131,6 +131,13 @@ function analyzedphenotypes_menu() {
 function analyzedphenotypes_theme($existing, $type, $theme, $path) {
   $items = array();
 
+  // Administrative settings
+  $items['analyzedphenotypes_admin_settings'] = array(
+    'template' => 'analyzedphenotypes_pages',
+    'render element' => 'form',
+    'path' => $path . '/theme',
+  );
+
   // Administrative page directory
   $items['analyzedphenotypes_admin_page_directory'] = array(
     'template' => 'analyzedphenotypes_pages',
@@ -140,8 +147,8 @@ function analyzedphenotypes_theme($existing, $type, $theme, $path) {
 
   // Data loader.
   $items['analyzedphenotypes_admin_data_loader'] = array(
-    'render element' => 'form',
     'template' => 'analyzedphenotypes_pages',
+    'render element' => 'form',
     'path' => $path . '/theme',
   );
 
@@ -163,6 +170,7 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&
   $variables['path_extension'] = $all_path['ap'];
   $variables['directory'] = $variables['form']['#ap_admin_directory'];
 
+
   return $variables;
 }
 
@@ -170,8 +178,22 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&
  * Implements hook_theme().
  */
 function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$variables, $hook) {
-  $variables['stage_title'] = $variables['form']['#ap_stage_title'];
+  $notset = '';
+  $mod_vars = analyzedphenotypes_moduleprop('settings');
+
+  foreach($mod_vars as $i => $var) {
+    $system_var = variable_get($var);
+
+    if ($system_var == 'not set' && $i != 'ap_allow_new') {
+      $notset = 'not set';
+      break;
+    }
+  }
+
+  $variables['system_set'] = $notset;
+
   $variables['stages'] = $variables['form']['#ap_stage_indicators'];
+  $variables['stage_title'] = $variables['form']['#ap_stage_title'];
   $variables['current_stage'] = $variables['form']['#ap_current_stage'];
 
 
@@ -205,7 +227,7 @@ function analyzedphenotypes_data_json($datatype, $data, $key = '') {
   switch($datatype) {
     //
     case 'projects':
-      $data_JSON = analyzedphenotypes_projectprop('pattern_match_name', $key);
+      $data_JSON = analyzedphenotypes_projectprop('match_key', $key);
 
       break;
 
