@@ -184,13 +184,19 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$va
   foreach($mod_vars as $i => $var) {
     $system_var = variable_get($var);
 
-    if ($system_var == 'not set' && $i != 'ap_allow_new') {
+    if ($i == 'ap_allow_new') {
+      $allow_new = $system_var;
+      continue;
+    }
+
+    if ($system_var == 'not set') {
       $notset = 'not set';
       break;
     }
   }
 
   $variables['system_set'] = $notset;
+  $variables['allow_new']  = $allow_new;
 
   $variables['stages'] = $variables['form']['#ap_stage_indicators'];
   $variables['stage_title'] = $variables['form']['#ap_stage_title'];

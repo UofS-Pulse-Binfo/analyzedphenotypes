@@ -25,6 +25,13 @@ if ($form_id == $ap_admin . 'data_loader') {
       Furthermore, data should <strong>NOT be averaged across replicates or site-year.</strong>
     </div>
 
+    <?php
+      if ($allow_new == 0) {
+        // New traits not allowed.
+        print '<div class="messages warning">This module is set to NOT allow new traits to be added into the system. Please contact the administrator of this website before loading your analyzed phenotypes.</div>';
+      }
+    ?>
+
     <fieldset id="ap-main-form-fieldset" class="form-wrapper">
       <legend>
         <span class="fieldset-legend">

@@ -259,7 +259,7 @@ function analyzedphenotypes_genusprop($property = null, $data = null) {
       // $data : String value, A genus (eg. Lens).
 
       // Match a given genus and return Genus organism_id.
-      $sql = "SELECT organism_id FROM {organism} 'WHERE genus = :genus LIMIT 1";
+      $sql = "SELECT organism_id FROM {organism} 'WHERE LOWER(genus) = LOWER(:genus) LIMIT 1";
       $result = chado_query($sql, array(
         ':genus' => $data,
       ));
@@ -306,6 +306,33 @@ function analyzedphenotypes_genusprop($property = null, $data = null) {
 
   return $genusprop;
 }
+
+
+/**
+ *
+ */
+function analyzedphenotypes_stockprop($property, $data = null) {
+  $stockprop = null;
+
+  switch($property) {
+    //
+    case 'match_name':
+      $sql = "SELECT stock_id FROM {stock} WHERE name = :name AND uniquename = :uniquename LIMIT 1";
+      $result = chado_query($sql, array(
+        ':name' => $data['name'],
+        ':uniquename' => $data['uniquename']
+      ));
+
+      $stockprop = ($result) ? $result->fetchField() : $stockprop;
+
+      break;
+
+    //
+  }
+
+  return $stockprop;
+}
+
 
 
 /**
@@ -451,7 +478,7 @@ function analyzedphenotypes_fileprop($property = null, $file = null) {
  * @see
  *   analyzedphenotypes_moduleprop().
  */
-function analyzedphenotypes_columnsprop($property = null) {
+function analyzedphenotypes_columnsprop($property = null, $data = null) {
   $columnsprop = null;
   $columns = analyzedphenotypes_moduleprop('column_type');
 
@@ -483,13 +510,40 @@ function analyzedphenotypes_columnsprop($property = null) {
 
     //
     case 'match_combination':
-      // With the combination of columns listed above test a line
-      // if they match a record in database.
-      $combo = 'Plant Height (cm)KP:GERM260282015Saskatchewan, Canada1';
+      $mod_vars = analyzedphenotypes_moduleprop('settings');
+      unset($mod_vars['ap_database'], $mod_vars['ap_cv'], $mod_vars['ap_allow_new'], $mod_vars['ap_collector']);
 
-      if ($combo == $data) {
-        $columnsprop = TRUE;
+      $arr_plantprop = array();
+
+      foreach($mod_vars as $k => $var) {
+        $property = trim(str_replace('ap_', '', $k));
+
+        $system_var = variable_get($var);
+        $arr_plantprop[$property] = $system_var;
       }
+
+      $sql = "SELECT phenotype.phenotype_id
+        FROM
+          {phenotype} AS phenotype
+          LEFT JOIN {cvterm} AS trait_name ON phenotype.attr_id = trait_name.cvterm_id
+          LEFT JOIN {stock} AS germplasm_accession USING (stock_id)
+          LEFT JOIN {phenotypeprop} AS year USING (phenotype_id)
+          LEFT JOIN {phenotypeprop} AS location USING (phenotype_id)
+          LEFT JOIN {phenotypeprop} AS replicate USING (phenotype_id)
+        WHERE
+          year.type_id = :year_cvterm
+          AND location.type_id = :location_cvterm
+          AND replicate.type_id = :replicate_cvterm
+          AND CONCAT(trait_name.name, germplasm_accession.uniquename, year.value, location.value, replicate.value) = :value_combination";
+
+      $result = chado_query($sql, array(
+        ':year_cvterm'    => $arr_plantprop['year'],
+        ':location_cvterm' => $arr_plantprop['location'],
+        ':replicate_cvterm' => $arr_plantprop['replicate'],
+        ':value_combination' => $data
+      ));
+
+      $columnsprop = ($result) ? $result->fetchField() : $columnsprop;
 
       break;
 
@@ -628,7 +682,7 @@ function analyzedphenotypes_datatypeprop($property, $data) {
  * @see
  */
 function analyzedphenotypes_cvprop($property = null, $data = null) {
-  $cvprop = '';
+  $cvprop = null;
 
   switch($property) {
     //
@@ -1071,7 +1125,7 @@ function analyzedphenotypes_tripaljobprop($property, $dataset = null) {
       $true_print = array('print' => TRUE);
 
       tripal_report_error($ap, TRIPAL_CRITICAL,
-        $dataset['message'] . ' [VALUE: @param]',
+        "\n" . $dataset['message'] . ' [VALUE: @param]' . "\n",
         array('@param' => $dataset['param']),
         $true_print
       );
