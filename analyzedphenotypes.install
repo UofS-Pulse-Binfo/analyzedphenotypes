@@ -277,6 +277,13 @@ function analyzedphenotypes_enable() {
  *
  */
 function analyzedphenotypes_install() {
+  // TODO:
+  // Check if taxonomic_rank/genus present.
+
+
+  analyzedphenotypes_ontologyprop('settings');
+
+
   $vars = analyzedphenotypes_moduleprop('settings');
 
   foreach($vars as $i => $v) {

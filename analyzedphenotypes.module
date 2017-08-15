@@ -53,7 +53,7 @@ function analyzedphenotypes_menu() {
   // Main administrative pages for analyzed phenotypes.
   $items[$tripal_extension_ap] = array(
     'title' => 'Analyzed Phenotypes',
-    'description' => 'Lorem ipsum dolor sit amet (Hello Analyzedphenotypes).',
+    'description' => 'Analyzed Phenotypes Administrative Pages.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_page_directory'),
     'access arguments' => array('access administration pages'),
@@ -63,8 +63,8 @@ function analyzedphenotypes_menu() {
 
   // Data Loader.
   $items[$tripal_extension_ap . '/upload'] = array(
-    'title' => 'Upload Data',
-    'description' => 'Lorem Ipsum dolor sit amet.',
+    'title' => 'Upload Analyzed Phenotypic Data',
+    'description' => 'Upload Analyzed Phenotypic Data.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_data_loader'),
     'access arguments' => array('access administration pages'),
@@ -86,7 +86,7 @@ function analyzedphenotypes_menu() {
 
   $items[$tripal_extension_ap . '/settings/database_cv'] = array(
     'title' => 'Database & CV Terms',
-    'description' => 'Lorem Ipsum dolor sit amet.',
+    'description' => 'Database and Controlled Vocabulary.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_settings', 5),
     'access arguments' => array('access administration pages'),
@@ -94,16 +94,26 @@ function analyzedphenotypes_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
-  // Settings.
   $items[$tripal_extension_ap . '/settings/property_terms'] = array(
     'title' => 'Plant Property Traits',
-    'description' => 'Lorem Ipsum dolor sit amet.',
+    'description' => 'Plant Property Terms.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_settings', 5),
     'access arguments' => array('access administration pages'),
     'file' => 'include/analyzedphenotypes.admin.form.inc',
     'type' => MENU_LOCAL_TASK,
   );
+
+  $items[$tripal_extension_ap . '/settings/crop_ontology'] = array(
+    'title' => 'Crop Ontology',
+    'description' => 'Crop Ontology Terms.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('analyzedphenotypes_admin_settings', 5),
+    'access arguments' => array('access administration pages'),
+    'file' => 'include/analyzedphenotypes.admin.form.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+
 
 
   // Generate data in JSON object.
@@ -116,7 +126,7 @@ function analyzedphenotypes_menu() {
 
   // Generate validation result.
   $items[$tripal_extension_ap . '/validation_result/%/%'] = array(
-    'page callback' => 'analyzedphenotypes_validation_result',
+    'page callback' => 'analyzedphenotypes_validationresultprop',
     'page arguments' => array(5, 6),
     'access arguments' => array('access administration pages'),
     'type' => MENU_CALLBACK,
@@ -233,9 +243,27 @@ function analyzedphenotypes_data_json($datatype, $data, $key = '') {
   switch($datatype) {
     //
     case 'projects':
-      $data_JSON = analyzedphenotypes_projectprop('match_key', $key);
+      // Return projects that match a given keyword, as an
+      // associative array where key and value are both the
+      // project name. Result is populated in autocomplete
+      // search form field.
+      $projectprop = analyzedphenotypes_projectprop('match_key', array(
+        'project_keyword' => $key,
+      ));
+
+      if ($projectprop) {
+        foreach($projectprop as $id => $name) {
+          $data_JSON[$name] = $name;
+        }
+      }
 
       break;
+
+
+
+
+
+
 
     //
     case 'validate_jobstatus':
@@ -258,9 +286,9 @@ function analyzedphenotypes_data_json($datatype, $data, $key = '') {
         }
         else {
           $all_path = analyzedphenotypes_moduleprop();
-          $all_filename =  analyzedphenotypes_fileprop('filename');
+          $tripaljob_settings =  analyzedphenotypes_tripaljobprop('settings');
 
-          $file_result   = $all_path['temp'] . '/' . str_replace('@JOB_ID', $job_id, $all_filename['validate progress']);
+          $file_result   = $all_path['temp'] . '/' . str_replace('@JOB_ID', $job_id, $tripaljob_settings['validate_progress']);
           $file_content = file_get_contents($file_result);
 
           $progress = (empty($file_content)) ? '...' : trim($file_content);

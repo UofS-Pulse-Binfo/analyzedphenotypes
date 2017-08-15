@@ -67,7 +67,10 @@ if ($form_id == $ap_admin . 'data_loader') {
                 print drupal_render($form['ap_val_res']);
                 ?>
 
-                <div><label>Experiment (Genus)</label><span>AGILE: Application of Genomic Innovation in the Lentil Economy (Lens)</span></div>
+                <div>
+                  <label>Experiment (Genus)</label>
+                  <span><?php print $form['ap_project_select_field']['#value'] . ' (' . $form['ap_genus_select_field']['#value'] . ')'; ?></span>
+                </div>
                 <br />
                 <div class="ap-tsv-file-form-element"><label>TSV Data File</label><span>Validating...</span></div>
 
@@ -86,7 +89,10 @@ if ($form_id == $ap_admin . 'data_loader') {
               case 'describe':
                 ?>
 
-                <div><label>Experiment (Genus)</label><span>AGILE: Application of Genomic Innovation in the Lentil Economy (Lens)</span></div>
+                <div>
+                  <label>Experiment (Genus)</label>
+                  <span><?php print $form['ap_project_select_field']['#value'] . ' (' . $form['ap_genus_select_field']['#value'] . ')'; ?></span>
+                </div>
                 <div class="messages warning">
                   Please fully describe the following traits before clicking the next step button.
                 </div>
