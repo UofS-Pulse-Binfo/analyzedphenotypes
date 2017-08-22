@@ -34,8 +34,7 @@ ul.ap-item-list {
 }
 
 .ap-item-list a {
-  padding: 0 5px;
-  border-left: 1px solid black;
+  padding: 0 5px 0 0;
 }
 
 .ap-form-fieldset-container .fieldset-legend {

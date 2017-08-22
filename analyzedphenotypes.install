@@ -3,6 +3,10 @@
  * Implements hook_install().
  */
 
+
+module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.functions');
+
+
 function analyzedphenotypes_schema() {
   $schema = array();
 
@@ -277,14 +281,7 @@ function analyzedphenotypes_enable() {
  *
  */
 function analyzedphenotypes_install() {
-  // TODO:
-  // Check if taxonomic_rank/genus present.
-
-
-  analyzedphenotypes_ontologyprop('settings');
-
-
-  $vars = analyzedphenotypes_moduleprop('settings');
+  $vars = analyzedphenotypes_systemvars();
 
   foreach($vars as $i => $v) {
     variable_set($v, 'not set');

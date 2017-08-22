@@ -14,7 +14,7 @@
         pbVar.jobId    = tmp['job_id'];
         pbVar.pathJSON = tmp['path_JSON'];
         pbVar.pathVR   = tmp['path_VR'];
-        pbVar.stage   = tmp['stage'];
+        pbVar.stage    = tmp['stage'];
 
         var vrContainerId = '#ap-validation-result-embed';
 

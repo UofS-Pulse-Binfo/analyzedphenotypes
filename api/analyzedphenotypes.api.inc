@@ -41,7 +41,8 @@ function analyzedphenotypes_stats_standard_deviation(array $a, $sample = false) 
  *
  */
 function analyzedphenotypes_table_values($rows, $column_row, $trait) {
-  $columns = analyzedphenotypes_columnsprop('expected');
+  $c = analyzedphenotypes_columnsprop();
+  $columns = array_keys($c);
 
   $index_trait = array_search($columns[0], $column_row);
   $index_value = array_search($columns[6], $column_row);
@@ -58,7 +59,9 @@ function analyzedphenotypes_table_values($rows, $column_row, $trait) {
 
       if ($data[$index_trait] == $trait) {
         $value = $data[$index_value];
-        $is_number = analyzedphenotypes_datatypeprop('number', $value);
+        $is_number = analyzedphenotypes_datatypeprop('number', array(
+          'value' => $value
+        ));
 
         if ($is_number) {
           $site_year = $data[$index_site] . ' ' . $data[$index_year];
@@ -82,4 +85,21 @@ function analyzedphenotypes_table_values($rows, $column_row, $trait) {
 
   sort($arr_siteyear);
   return array('siteyear' => $arr_siteyear, 'values' => $arr_values);
+}
+
+
+/**
+ *
+ */
+function analyzedphenotypes_scale_photo($parameter) {
+  $h = $parameter['height'];
+  $w = $parameter['width'];
+  $scale_to = $parameter['scale_to'];
+
+  $ratio = ($w > $h) ? $scale_to / $w : $scale_to / $h;
+
+  $new_w = round($w * $ratio);
+  $new_h = round($h * $ratio);
+
+  return array('height' => $new_h, 'width' => $new_w);
 }

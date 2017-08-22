@@ -25,11 +25,11 @@
         var t = setInterval(function() {
           m++;
 
-          if (m == 2) {
+          if (m == 1) {
             dMessage.text('Validating data... Please wait.');
           }
 
-          if (m == 3) {
+          if (m == 2) {
             location.assign(redirect);
             clearInterval(t);
             return;

@@ -17,7 +17,6 @@ $failed_counter = 0;
 
   <div id="ap-content-window-copy">
     <ul id="ap-content-window-list">
-
       <?php
         foreach($status as $validator => $result) {
           $type = $result['type'];
@@ -62,8 +61,14 @@ $failed_counter = 0;
           }
         }
       ?>
-
     </ul>
+
+    <?php
+      if ($scope == 'ap-data-scope' && $failed_counter > 0) {
+        $tripaljob_settings = analyzedphenotypes_tripaljobprop();
+        print '<em>We have stopped validation process to report the first ' . $tripaljob_settings['error_limit'] . ' number of errors found. Please fix the errors reported below and then upload the fixed file. <br /><br /></em>';
+      }
+    ?>
   </div>
 </div>
 

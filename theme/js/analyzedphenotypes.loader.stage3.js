@@ -6,6 +6,28 @@
 (function($) {
   Drupal.behaviors.stage03 = {
     attach: function (context, settings) {
+      // Start JQuery Accordion.
+      $('#ap-describe-main-form-container').find('#accordion')
+      .accordion({
+        autoHeight: false,
+        collapsible: true,
+      });
+
+      // Reference ul.
+      var listItem = $('.ap-item-list a');
+
+      listItem.click(function(e) {
+        e.preventDefault();
+        var ontology = $(this).text();
+
+        $(this).closest('div').prev('div')
+        .find('.ap-crop-ontology')
+        .val(function() {
+          return ontology;
+        })
+        .focus();
+      });
+
       apFormFilledout();
 
       // Listen to the form and see if they are filled out.
@@ -19,36 +41,11 @@
         apFormFilledout();
       });
 
-      // Start JQuery Accordion.
-      $('#ap-describe-main-form-container').find('#accordion')
-      .accordion({
-        active: 0,
-        autoHeight: false,
-        collapsible: true,
-      });
-
-      // Reference ul.
-      var listItem = $('.ap-item-list a');
-
-      listItem.click(function(e) {
-        e.preventDefault();
-        var ontology = $(this).text();
-
-        $(this).closest('div').prev('div')
-        .find('.ap-autocomplete-search')
-        .val(function() {
-          return ontology;
-        })
-        .focus();
-      });
-
-
       // Tell user what's next.
       $('#ap-main-form-fieldset').once(function() {
         $('<span class="text-next-step">&#x25B8; Next Step: Stage 4 - Save Data</span>')
           .insertAfter('#ap-next-stage-submit-field');
       });
-
 
       /**
        * Function: check if forms were filled out.
@@ -63,7 +60,7 @@
            for (var j = 0; j < reqFld.length; j++) {
              var v = reqFld.eq(j).val();
 
-             if (v === '') {
+             if (v === '' || v <= -1) {
                formset[i] = 0;
              }
            }

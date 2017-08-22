@@ -118,15 +118,6 @@ function analyzedphenotypes_genusprop($property = null, $parameter = null) {
 
   switch($property) {
     //
-    case 'initialize':
-      // On install, see if the term genus in cv taxonomic rank is
-      // present in the system.
-      $genusprop_cv = tripal_get_cvterm($genusprop_term);
-      $genusprop = ($genusprop_cv) ? 1 : $genusprop;
-
-      break;
-
-    //
     case 'project_genus':
       // Given a project id, test to see if a genus has been
       // associated in chado.projectprop table.
@@ -192,8 +183,8 @@ function analyzedphenotypes_stockprop($property, $parameter = null) {
       $result = chado_query(
         "SELECT stock_id FROM {stock} WHERE name = :name AND uniquename = :uniquename LIMIT 1",
         array(
-          ':name' => $data['name'],
-          ':uniquename' => $data['uniquename'],
+          ':name' => $parameter['name'],
+          ':uniquename' => $parameter['uniquename'],
         )
       );
 
@@ -226,12 +217,14 @@ function analyzedphenotypes_stockprop($property, $parameter = null) {
  * @see
  *   ####
  */
-function analyzedphenotypes_datafileprop($property = null, $data_file = null) {
+function analyzedphenotypes_datafileprop($property = null, $parameter = null) {
   $datafileprop = null;
 
   switch($property) {
     //
     case 'get_contents':
+      $data_file = $parameter['data_file'];
+
       // Read the supplied file and return the contents.
       $source = drupal_realpath($data_file->uri);
       $datafile_contents = file_get_contents($source);
@@ -244,6 +237,8 @@ function analyzedphenotypes_datafileprop($property = null, $data_file = null) {
 
     //
     case 'get_columns':
+      $data_file = $parameter['data_file'];
+
       // Read the file supplied and return the columns row.
       $source = drupal_realpath($data_file->uri);
       $datafile_contents = file_get_contents($source);
@@ -296,14 +291,14 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
 
   // Trait name, data type, index number
   $columnsprop_expectedcols = array(
-    'Trait Name'          => 'text',   // #0
-    'Germplasm Accession' => 'text',   // #1
-    'Germplasm Name'      => 'text',   // #2
-    'Year'                => 'number', // #3
-    'Location'            => 'text',   // #4
-    'Replicate'           => 'number', // #5
-    'Value'               => '',       // #6
-    'Data Collector'      => 'text',   // #7
+    'Trait Name'          => 'trait',        // #0
+    'Germplasm Accession' => 'alphanumeric', // #1
+    'Germplasm Name'      => 'alphanumeric', // #2
+    'Year'                => 'number',       // #3
+    'Location'            => 'text',         // #4
+    'Replicate'           => 'number',       // #5
+    'Value'               => '',             // #6
+    'Data Collector'      => 'text',         // #7
   );
 
   switch($property) {
@@ -318,6 +313,44 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
         $cols[4],  // Location.
         $cols[5],  // Replicate.
       );
+
+      break;
+
+    //
+    case 'match_combination':
+      $vars = analyzedphenotypes_systemvars('plant_property');
+      $arr_plantprop = array();
+
+      foreach($vars as $i => $var) {
+        $property = trim(str_replace('ap_', '', $i));
+        $var_value = variable_get($var);
+        $arr_plantprop[$property] = $var_value;
+      }
+
+      $result = chado_query(
+        "SELECT phenotype.phenotype_id
+         FROM
+           {phenotype} AS phenotype
+           LEFT JOIN {cvterm} AS trait_name ON phenotype.attr_id = trait_name.cvterm_id
+           LEFT JOIN {stock} AS germplasm_accession USING (stock_id)
+           LEFT JOIN {phenotypeprop} AS year USING (phenotype_id)
+           LEFT JOIN {phenotypeprop} AS location USING (phenotype_id)
+           LEFT JOIN {phenotypeprop} AS replicate USING (phenotype_id)
+         WHERE
+           year.type_id = :year_cvterm
+           AND location.type_id = :location_cvterm
+           AND replicate.type_id = :replicate_cvterm
+           AND CONCAT(trait_name.name, germplasm_accession.uniquename, year.value, location.value, replicate.value) = :value_combination"
+        ,
+        array(
+          ':year_cvterm'    => $arr_plantprop['year'],
+          ':location_cvterm' => $arr_plantprop['location'],
+          ':replicate_cvterm' => $arr_plantprop['replicate'],
+          ':value_combination' => $parameter['combination'],
+        )
+      );
+
+      $columnsprop = ($result) ? $result->fetchField() : $columnsprop;
 
       break;
 
@@ -351,10 +384,10 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
  * @see
  *   ####
  */
-function analyzedphenotypes_datatypeprop($property, $parameter) {
+function analyzedphenotypes_datatypeprop($property, $parameter = null) {
   $datatypeprop = TRUE;
 
-  $value = $paramenter['value'];
+  $value = $parameter['value'];
 
   switch($property) {
     //
@@ -375,8 +408,23 @@ function analyzedphenotypes_datatypeprop($property, $parameter) {
       break;
 
     //
+    case 'alphanumeric':
+      if (preg_match('/[a-z0-9.*]/i', $value) !== 1) {
+        $datatypeprop = FALSE;
+      }
+
+      break;
+
+    //
+    case 'trait':
+      if (preg_match('/\A[^()]+\s*\({1}[^)(]+\)\z/i', $value) !== 1) {
+        $datatypeprop = FALSE;
+      }
+
+      break;
+
     case 'text':
-      if (ctype_digit($value)) {
+      if (preg_match('/[a-z]/i', $value) !== 1) {
         $datatypeprop = FALSE;
       }
 
@@ -384,7 +432,7 @@ function analyzedphenotypes_datatypeprop($property, $parameter) {
 
     //
     case 'number':
-      if (!is_numeric($value)) {
+      if (preg_match('/[0-9]/', $value) !== 1) {
         $datatypeprop = FALSE;
       }
 
@@ -392,7 +440,7 @@ function analyzedphenotypes_datatypeprop($property, $parameter) {
 
     //
     case 'number_no_zero':
-      if (is_numeric($value) && $value <= 0) {
+      if (preg_match('/[1-9]/', $value) !== 1) {
         $datatypeprop = FALSE;
       }
 
@@ -479,6 +527,26 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
 
   switch($property) {
     //
+    case 'match_key':
+      $vars = analyzedphenotypes_systemvars('dv_cv');
+      $cv_id = variable_get($vars['ap_cv']);
+      unset($vars);
+
+      $result = chado_query(
+        "SELECT cvterm_id, name FROM {cvterm} WHERE cv_id = :cv_id AND LOWER(name) LIKE :cvterm_key ORDER BY name ASC",
+        array(
+          'cv_id' => $cv_id,
+          'cvterm_key' => '%' . strtolower(trim($parameter['cvterm_keyword'])) . '%',
+        )
+      );
+
+      if ($result) {
+        $cvprop = $result->fetchAllKeyed();
+      }
+
+      break;
+
+    //
     case 'match_cvid':
       // Match controlled vocabulary (cv) given a cv_id number.
       $cv = tripal_get_cv(array(
@@ -516,12 +584,20 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
     //
     case 'get_cvterm':
       // Get term definition in chado.cvterm and chado.db.
-      $vars = analyzedphenotypes_moduleprop('settings');
+      $term = array();
+      $vars = analyzedphenotypes_systemvars('db_cv');
       $cv_id = variable_get($vars['ap_cv']);
 
-      $term = array();
-      $term['cv_id'] = array('cv_id' => $cv_id);
-      $index = isset($parameter['cvterm_id']) ? 'cvterm_id' : 'name';
+      if (isset($parameter['cvterm_id'])) {
+        // Global search.
+        $index = 'cvterm_id';
+      }
+      else {
+        // Term in cv.
+        $term['cv_id'] = array('cv_id' => $cv_id);
+        $index = 'name';
+      }
+
       $term[$index] = $parameter[$index];
 
       $cvterm = tripal_get_cvterm($term);
@@ -545,7 +621,7 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
           array(':dbxref_id' => $cvprop['dbxref_id'])
         );
 
-        if ($result->rowCount() == 1) {
+        if ($result) {
           $db_id = $result->fetchField();
 
           $cvprop['db_id'] = $db_id;
@@ -555,7 +631,24 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
         }
 
         // Crop ontology.
-        $cvprop['crop_ontology'] = null;
+        unset($result);
+        $related_cvterm = variable_get($vars['ap_related']);
+        $result = chado_query(
+          "SELECT t1.name, t2.subject_id FROM {cvterm} AS t1 INNER JOIN {cvterm_relationship} AS t2 ON t1.cvterm_id = t2.subject_id
+           WHERE type_id = :related AND object_id = :cvterm_id LIMIT 1",
+          array(
+            ':related' => $related_cvterm,
+            ':cvterm_id' => $cvprop['cvterm_id'],
+          )
+        );
+
+        if ($result) {
+          $cvprop['crop_ontology_cvterm_id'] = $result->subject_id;
+          $cvprop['crop_ontology_name'] = $result->name;
+        }
+        else {
+          $cvprop['crop_ontology'] = null;
+        }
 
         // Scale.
         $cvprop['scale'] = null;
@@ -650,6 +743,33 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
       break;
 
     //
+    case 'cvterm_get_photo':
+      $photo = array('photo_1', 'photo_2');
+
+      foreach($photo as $i => $v) {
+        $filename = $parameter['cvterm_id'] . '_' . ($i + 1) . '.jpg';
+        $filedir = 'public://ap-photo';
+
+        $fileuri = drupal_realpath($filedir) . '/' . $filename;
+
+        if (file_exists($fileuri)) {
+          $info = image_get_info($fileuri);
+
+          $cvprop[$v] = array(
+            'filename' => $filename,
+            'uri' => $filedir . '/' . $filename,
+            'height' => $info['height'],
+            'width' => $info['width'],
+          );
+        }
+        else {
+          $cvprop[$v] = null;
+        }
+      }
+
+      break;
+
+    //
     // Define additional case here.
 
     //
@@ -689,25 +809,15 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
  * @see
  *   ####
  */
-function analyzedphenotypes_traitprop($property, $data) {
-  $traitprop = '';
+function analyzedphenotypes_traitprop($property, $parameter) {
+  $traitprop = null;
 
   switch($property) {
-    //
-    case 'right_format':
-      // Ensures that each trait provided matches the
-      // the following format: Trait Name (unit).
-      if (preg_match('/\A[^()]+\s*\({1}[^)(]+\)\z/i', $data) !== 1) {
-        $traitprop = $data;
-      }
-
-      break;
-
     //
     case 'no_unit':
       // Exclude the unit from the returned value
       // given a Trait Name (unit) value.
-      $traitprop = preg_replace("/\(.+\)/", '', $data);
+      $traitprop = preg_replace("/\(.+\)/", '', $parameter['trait_name']);
 
       break;
 
@@ -716,7 +826,7 @@ function analyzedphenotypes_traitprop($property, $data) {
       // Exclude the trait name from the returned value
       // given a Trait Name (unit) value.
       // Note: When unit could not be established, default to text.
-      preg_match("/.*\(([^)]*)\)/", $data, $match);
+      preg_match("/.*\(([^)]*)\)/", $parameter['trait_name'], $match);
       $traitprop = (isset($match[1])) ? $match[1] : 'text';
 
       break;
@@ -748,8 +858,14 @@ function analyzedphenotypes_AJAX_callback($form, $form_state) {
   $case = $form_state['triggering_element']['#ajax']['case'];
   $element = 'ap_AJAX_wrapper' . '_' . $case;
 
+  if ($form_state['triggering_element']['#ajax']['contain']) {
+    $contain = $form_state['triggering_element']['#ajax']['contain'];
 
-  return $form[$element];
+    return $form[$contain][$element];
+  }
+  else {
+    return $form[$element];
+  }
 }
 
 
@@ -824,16 +940,16 @@ function analyzedphenotypes_dbprop($property = null, $parameter = null) {
  * @see
  *   ####
  */
-function analyzedphenotypes_validation_result($property, $parameter) {
-  switch($case) {
+function analyzedphenotypes_validationresult($property, $parameter) {
+  switch($property) {
     //
     case 'data':
-      $job_id = $parameter['job_id'];
+      $job_id = $parameter;
 
-      $all_path = analyzedphenotypes_moduleprop();
-      $all_filename =  analyzedphenotypes_fileprop('filename');
-      $file_result   = $all_path['temp'] . '/' . str_replace('@JOB_ID', $job_id, $all_filename['validate result']);
-      $result = file_get_contents($file_result);
+      $result = analyzedphenotypes_tripaljobprop('read_progress', array(
+        'job_id' => $job_id,
+        'source' => 'validateresult',
+      ));
 
       $status = json_decode($result, TRUE);
       print theme('analyzedphenotypes_validator_report', array('status' => $status, 'scope' => 'ap-data-scope'));
@@ -842,8 +958,8 @@ function analyzedphenotypes_validation_result($property, $parameter) {
 
     //
     case 'file':
-      // Data is validation result array.
-      $status = $data;
+      $status = $parameter;
+
       return theme('analyzedphenotypes_validator_report', array('status' => $status, 'scope' => 'ap-file-scope'));
 
       break;
@@ -871,15 +987,22 @@ function analyzedphenotypes_validation_result($property, $parameter) {
  * @see
  *   ####
  */
-function analyzedphenotypes_tripaljobprop($property, $parameter = null) {
+function analyzedphenotypes_tripaljobprop($property = null, $parameter = null) {
+  // Filenames:
+  // validateprogress - validation progress.
+  // validateresult   - validation result.
+  // savefile         - save file progress.
+
   $tripaljobprop = null;
 
   switch($property) {
     //
     case 'new_job':
       // Create/Register a Tripal Job.
+      global $user;
+
       $job_id = tripal_add_job(
-        $dataset['description'], 'analyzedphenotypes', $dataset['callback'],
+        $parameter['description'], 'analyzedphenotypes', $parameter['callback'],
         array(serialize($parameter['dataset'])),
         $user->uid
       );
@@ -894,13 +1017,39 @@ function analyzedphenotypes_tripaljobprop($property, $parameter = null) {
     case 'get_job':
       // Return Tripal Job registered to user.
       global $user;
-
       $job = tripal_get_job($parameter['job_id']);
-      $job_status = array('Completed', 'Error', 'Cancelled');
 
-      if ($job && $job->uid == $user->uid && !in_array($job->status, $job_status)) {
-        $tripaljobprop = $job->job_id;
+      if ($job && $job->uid == $user->uid && $job->modulename == 'analyzedphenotypes') {
+        $tripaljobprop = array(
+          'job_id' => $job->job_id,
+          'status' => $job->status,
+          'uid' => $job->uid,
+          'progress' => $job->progress,
+        );
       }
+
+      break;
+
+    //
+    case 'update_progress':
+      $tripaljobprop = dp_update('tripal_jobs')
+        ->fields(array('progress' => $parameter['progress']))
+        ->condition('job_id', $parameter['job_id'], '=')
+        ->execution();
+
+      break;
+
+    //
+    case 'write_progress':
+      $file = file_directory_temp() . '/ap_' . $parameter['source'] . '_tripaljob_' . $parameter['job_id'] . '.txt';
+      $tripaljobprop = file_unmanaged_save_data($parameter['progress'], $file, FILE_EXISTS_REPLACE);
+
+      break;
+
+    //
+    case 'read_progress':
+      $file = file_directory_temp() . '/ap_' . $parameter['source'] . '_tripaljob_' . $parameter['job_id'] . '.txt';
+      $tripaljobprop = file_get_contents($file);
 
       break;
 
@@ -930,13 +1079,8 @@ function analyzedphenotypes_tripaljobprop($property, $parameter = null) {
     default:
       // Settings used in creating an instance of Tripal Job.
       $tripaljobprop = array(
-        'error_limit'       => 10,
+        'error_limit'       => 5,
         'report_frequency'  => 5,
-        // Filenames used to track progress and validation result.
-        // Replace @JOB_ID with job_id.
-        'validate_result'   => 'ap_validate_tripaljob_result@JOB_ID.txt',
-        'progress_save'     => 'ap_save_tripaljob_progress@JOB_ID.txt',
-        'progress_validate' => 'ap_validate_tripaljob_progress@JOB_ID.txt',
       );
   }
 
@@ -961,34 +1105,49 @@ function analyzedphenotypes_tripaljobprop($property, $parameter = null) {
  *   ####
  */
 function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
-  $ontologyprop = '';
+  $ontologyprop = null;
 
   switch($property) {
     //
     case 'suggest':
-      // Get module system settings.
-      $vars = analyzedphenotypes_moduleprop('settings');
-      $cv = variable_get($vars['ap_cv']);
+      $suggest_limit = 10;
 
-      $all_terms = analyzedphenotypes_cvprop('terms_in_cv', $cv);
-      foreach($all_terms as $i => $term) {
-        if ($i == $data) {
+      $vars = analyzedphenotypes_systemvars('genus_ontology');
+      $var_name = 'ap_' . strtolower(str_replace(' ', '_', $parameter['project_genus']));
+      $cv_id = variable_get($vars[$var_name]);
+      unset($vars);
+
+      $ontology_terms = analyzedphenotypes_cvprop('terms_in_cv', array(
+        'cv_id' => $cv_id,
+      ));
+
+      // No unit.
+      $trait_name = strtolower(trim($parameter['trait_name']));
+      $keywords = explode(' ', $trait_name);
+
+      foreach($ontology_terms as $i => $term) {
+        $name = strtolower(trim($term['name']));
+
+        if ($name == $trait_name) {
           $ontologyprop[$i] = $term;
+
           break;
         }
         else {
-          $keywords = explode(' ', $data);
+          $j = 0;
 
           foreach($keywords as $key) {
-            if (strstr($i, trim($key))) {
+            if (strstr($name, $key)) {
               $ontologyprop[$i] = $term;
+
+              if ($j >= $suggest_limit) {
+                break;
+              }
+
+              $j++;
             }
           }
         }
-      }
-
-      if (empty($ontologyprop)) {
-        $ontologyprop = array($data => array());
       }
 
       break;
@@ -1004,81 +1163,76 @@ function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
 }
 
 
-
-
-
-
-
-
-
-
 /**
- * Function: Manage module settings and operations.
- * Default to return all module related directories.
+ * ####
+ * ####
  *
  * @param $property
- *   An sting value indicating property requested.
- *   Each $property corresponds to a case in the main switch inmplementation.
+ *   ####
+ * @param $parameter
+ *   ####
  *
- * @return $moduleprop
- *   Information about the module.
+ * @return
+ *   #####
  *
- * @see analyzedphenotypes_datatypeprop().
+ * @see
+ *   ####
  */
-function analyzedphenotypes_moduleprop($property = null) {
-  $moduleprop = null;
+function analyzedphenotypes_systemvars($property = null) {
+  $systemvars = null;
+
+  $basename = 'analyzedphenotypes_systemvar_';
+
+  $vars_database = array(
+    'ap_cv'        => $basename . 'cv',
+    'ap_database'  => $basename . 'db',
+    'ap_allow_new' => $basename . 'allow_new',
+    // cvterm genus.
+    'ap_genus'     => $basename . 'genus',
+    // cvterm related used in ontology.
+    'ap_related'   => $basename . 'related',
+  );
+
+  $vars_plantprop = array(
+    // Plant property cvterms.
+    'ap_year'      => $basename . 'year',
+    'ap_location'  => $basename . 'location',
+    'ap_replicate' => $basename . 'replicate',
+    'ap_collector' => $basename . 'collector',
+  );
+
+  $genus = analyzedphenotypes_genusprop();
+  $vars_ontology = array();
+
+  foreach($genus as $g) {
+    $g = strtolower(str_replace(' ', '_', $g));
+    $vars_ontology['ap_' .  $g] = $basename . $g;
+  }
 
   switch($property) {
     //
-    case 'settings':
-      // Define module variable names to define:.
-      // 1. Database and Controlled Vocabulary.
-      // 2. Controlled Vocabulary Terms for plant property types.
-      $basename = 'analyzedphenotypes_modulevar_';
+    case 'db_cv':
+      $systemvars = $vars_database;
 
-      $moduleprop = array(
-        // Database to use in data upload.
-        'ap_cv'        => $basename . 'cv',
-        // Controlled Vocabulary CV to use in data upload.
-        'ap_database'  => $basename . 'db',
-        // Allow new trait to be inserted into the CV.
-        'ap_allow_new' => $basename . 'allow_new',
-        // Plant property cvterms.
-        'ap_year'      => $basename . 'year',
-        'ap_location'  => $basename . 'location',
-        'ap_replicate' => $basename . 'replicate',
-        'ap_collector' => $basename . 'collector',
-      );
+      break;
+
+    case 'plant_property':
+      $systemvars = $vars_plantprop;
+
+      break;
+
+    case 'genus_ontology':
+      $systemvars = $vars_ontology;
 
       break;
 
     //
     // Additional case here.
 
-    //
     default:
-      // Return all module relavant directories.
-      $tripal_ext = 'admin/tripal/extension';
-      $module = 'analyzedphenotypes';
-
-      $moduleprop = array(
-        // Base directory of tripal extension.
-        'ap'   => $tripal_ext . '/' . $module,
-        // Temporary directory.
-        'temp'  => file_directory_temp(),
-        // Path to the data loader.
-        'loader' => base_path() . $tripal_ext . '/' . $module . '/upload',
-        // Path to analyzedphenotype module.
-        'module'  => drupal_get_path('module', $module),
-        // Absolute path to base tripal extension.
-        'extension' => base_path() . $tripal_ext,
-        // Directory for storing trait photo.
-        'photo_dir'  => 'public://ap-photo',
-        // Absolute path to analyzedphenotype administrative pages.
-        'base_admin'  =>  base_path() . $tripal_ext . '/' . $module,
-      );
+      $systemvars = $vars_database + $vars_plantprop + $vars_ontology;
   }
 
 
-  return $moduleprop;
+  return $systemvars;
 }

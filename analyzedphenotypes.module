@@ -47,8 +47,7 @@ function analyzedphenotypes_menu() {
   );
 
   // ADMINISTRATIVE PAGES.
-  $all_path = analyzedphenotypes_moduleprop();
-  $tripal_extension_ap = $all_path['ap'];
+  $tripal_extension_ap = 'admin/tripal/extension/analyzedphenotypes';
 
   // Main administrative pages for analyzed phenotypes.
   $items[$tripal_extension_ap] = array(
@@ -126,7 +125,7 @@ function analyzedphenotypes_menu() {
 
   // Generate validation result.
   $items[$tripal_extension_ap . '/validation_result/%/%'] = array(
-    'page callback' => 'analyzedphenotypes_validationresultprop',
+    'page callback' => 'analyzedphenotypes_validationresult',
     'page arguments' => array(5, 6),
     'access arguments' => array('access administration pages'),
     'type' => MENU_CALLBACK,
@@ -176,8 +175,7 @@ function analyzedphenotypes_theme($existing, $type, $theme, $path) {
  * Implements hook_theme().
  */
 function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&$variables, $hook) {
-  $all_path = analyzedphenotypes_moduleprop();
-  $variables['path_extension'] = $all_path['ap'];
+  $variables['path_extension'] = 'admin/tripal/extension/analyzedphenotypes';
   $variables['directory'] = $variables['form']['#ap_admin_directory'];
 
 
@@ -189,9 +187,9 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&
  */
 function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$variables, $hook) {
   $notset = '';
-  $mod_vars = analyzedphenotypes_moduleprop('settings');
+  $vars = analyzedphenotypes_systemvars('db_cv');
 
-  foreach($mod_vars as $i => $var) {
+  foreach($vars as $i => $var) {
     $system_var = variable_get($var);
 
     if ($i == 'ap_allow_new') {
@@ -237,16 +235,15 @@ function analyzedphenotypes_libraries_info() {
  * @return
  *   A JSON object.
  */
-function analyzedphenotypes_data_json($datatype, $data, $key = '') {
+function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key = '') {
   $data_JSON = array();
 
-  switch($datatype) {
+  $property = $page_argument_5;
+  $argument = $page_argument_6;
+
+  switch($property) {
     //
     case 'projects':
-      // Return projects that match a given keyword, as an
-      // associative array where key and value are both the
-      // project name. Result is populated in autocomplete
-      // search form field.
       $projectprop = analyzedphenotypes_projectprop('match_key', array(
         'project_keyword' => $key,
       ));
@@ -259,46 +256,41 @@ function analyzedphenotypes_data_json($datatype, $data, $key = '') {
 
       break;
 
-
-
-
-
-
-
     //
     case 'validate_jobstatus':
-      $job_id = $data;
-      $job = tripal_get_job($job_id);
+      $job = analyzedphenotypes_tripaljobprop('get_job', array(
+        'job_id' => $argument,
+      ));
 
       if ($job) {
-        $job_status = strtolower(trim($job->status));
+
+        $job_status = strtolower(trim($job['status']));
 
         if ($job_status == 'completed') {
           $progress = 100;
           $message  = 'Completed';
 
-          if ($job->progress != $progress) {
-            dp_update('tripal_jobs')
-              ->fields(array('progress' => $progress))
-              ->condition('job_id', $job_id, '=')
-              ->execution();
+          if ($job['progress'] != $progress) {
+            analyzedphenotypes_tripaljobprop('update_progress', array(
+              'job_id' => $argument,
+              'progress' => $progress,
+            ));
           }
         }
         else {
-          $all_path = analyzedphenotypes_moduleprop();
-          $tripaljob_settings =  analyzedphenotypes_tripaljobprop('settings');
+          $tripaljobprop = analyzedphenotypes_tripaljobprop('read_progress', array(
+            'job_id' => $argument,
+            'source' => 'validateprogress',
+          ));
 
-          $file_result   = $all_path['temp'] . '/' . str_replace('@JOB_ID', $job_id, $tripaljob_settings['validate_progress']);
-          $file_content = file_get_contents($file_result);
-
-          $progress = (empty($file_content)) ? '...' : trim($file_content);
-          $message  = ($progress == '100' || $job_status == 'completed')
-            ? 'Completed' : $job->status;
+          $progress = (empty($tripaljobprop)) ? '...' : trim($tripaljobprop);
+          $message = ($progress == '100' || $job['status'] == $job_status)
+            ? 'Completed' : $job['status'];
         }
 
         $data_JSON = array(
           'percentage' => $progress,
-          'message'    => $message,
+          'message' => $message,
         );
       }
 
@@ -315,7 +307,7 @@ function analyzedphenotypes_data_json($datatype, $data, $key = '') {
 
     //
     case 'ontology':
-      $o = analyzedphenotypes_ontologyprop('suggest', $data);
+      $o = analyzedphenotypes_ontologyprop('suggest', $argument);
       $ontology_suggestions = array_keys($o);
 
       foreach($ontology_suggestions as $i) {
@@ -324,6 +316,10 @@ function analyzedphenotypes_data_json($datatype, $data, $key = '') {
 
       break;
 
+    //
+    // Define additional case here.
+
+    // default:
   }
 
 
@@ -334,3 +330,6 @@ function analyzedphenotypes_data_json($datatype, $data, $key = '') {
   // an AJAX error instead of your progress bar ;-).
   exit();
 }
+
+
+
