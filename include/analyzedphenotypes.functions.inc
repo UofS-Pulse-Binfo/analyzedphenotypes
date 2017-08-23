@@ -586,7 +586,6 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
       // Get term definition in chado.cvterm and chado.db.
       $term = array();
       $vars = analyzedphenotypes_systemvars('db_cv');
-      $cv_id = variable_get($vars['ap_cv']);
 
       if (isset($parameter['cvterm_id'])) {
         // Global search.
@@ -594,7 +593,14 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
       }
       else {
         // Term in cv.
-        $term['cv_id'] = array('cv_id' => $cv_id);
+        if (isset($parameter['cv_id'])) {
+          $term['cv_id'] = array('cv_id' => $parameter['cv_id']);
+        }
+        else {
+          $cv_id = variable_get($vars['ap_cv']);
+          $term['cv_id'] = array('cv_id' => $cv_id);
+        }
+
         $index = 'name';
       }
 
@@ -659,47 +665,31 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
     //
     case 'insert_cvterm':
       // Insert a cterm record.
-      $vars = analyzedphenotypes_moduleprop('settings');
+      $vars = analyzedphenotypes_systemvars('db_cv');
 
-      $db = variable_get($vars['ap_database']);
-      $cv = variable_get($vars['ap_cv']);
-      $allow_new = variable_get($vars['ap_allow_new']);
+      $var_db_value = variable_get($vars['ap_database']);
+      $dbprop = analyzedphenotypes_dbprop('match_db', array(
+        'db_id' => $var_db_value,
+      ));
+      $db_name = array_values($dbprop)['name'];
 
-      // Find the term in the controlled vocabulary.
-      $cvterm = analyzedphenotypes_cvprop('get_cvterm', array(
-        'cvterm_name' => $parameter['cvterm_name'],
+      $var_cv_value = variable_get($vars['ap_cv']);
+      $cvprop = analyzedphenotypes_cvprop('match_cvid', array(
+        'cv_id' => $var_cv_value,
+      ));
+      $cv_name = array_values($cvprop)['name'];
+
+      // Save it.
+      $cvterm = tripal_insert_cvterm(array(
+        'id' => trim($db_name) . ':' . $parameter['name'],
+        'name' => $parameter['name'],
+        'cv_name'  => $cv_name,
+        'definition' => $parameter['definition'],
       ));
 
-      if ($cvterm) {
-        if ($cvterm['definition']   == $parameter['definition']
-            && $cvterm['db_id'] == $db
-            && $cvterm['cv_id']->cv_id == $cv) {
+      $traitprop = $cvterm->cvterm_id;
 
-          // Term exists
-          $traitprop = $cvterm['id'];
-        }
-        else {
-          // A new trait.
-          $newtrait = 1;
-        }
-      }
-
-      if (!$cvterm || isset($newtrait)) {
-        if ($allow_new) {
-          $cv_name = analyzedphenotypes_cvprop('get_cvname', $cv);
-          $db_name = analyzedphenotypes_dbprop('get_dbname', $db);
-
-          // Save it.
-          $cvterm = tripal_insert_cvterm(array(
-            'id' => trim($db_name) . ':' . $data['cvterm'],
-            'name' => $parameter['cvterm_name'],
-            'cv_name'  => $cv_name,
-            'definition' => $parameter['definition'],
-          ));
-
-          $traitprop = $cvterm->cvterm_id;
-        }
-      }
+      break;
 
     //
     case 'cvterm_save_photo':
@@ -885,7 +875,7 @@ function analyzedphenotypes_AJAX_callback($form, $form_state) {
  *   ####
  */
 function analyzedphenotypes_dbprop($property = null, $parameter = null) {
-  $dbprop = '';
+  $dbprop = null;
 
   $dbs = chado_query(
     "SELECT db_id, name, description FROM {db} ORDER BY name ASC"
@@ -897,10 +887,13 @@ function analyzedphenotypes_dbprop($property = null, $parameter = null) {
 
   switch($property) {
     //
-    case 'match_name':
+    case 'match_db':
       foreach($dbs as $db) {
-        if ($db->db_id == $parameter['db_name']) {
-          $dbprop = $db->name;
+        if ($db->db_id == $parameter['db_id']) {
+          $dbprop[$db->db_id] = array(
+            'name' => $db->name,
+            'description' => $db->description,
+          );
 
           break;
         }
@@ -1060,14 +1053,14 @@ function analyzedphenotypes_tripaljobprop($property = null, $parameter = null) {
       $true_print = array('print' => TRUE);
 
       tripal_report_error($ap, TRIPAL_CRITICAL,
-        "\n" . $dataset['message'] . ' [VALUE: @param]' . "\n",
-        array('@param' => $dataset['param']),
+        "\n" . $parameter['message'] . ' [VALUE: @param]' . "\n",
+        array('@param' => $parameter['param']),
         $true_print
       );
 
       tripal_report_error($ap, TRIPAL_CRITICAL,
         'Failed to load phenotypic data in Tripal Job #!job_id.',
-        array('!job_id' => $dataset['job_id']),
+        array('!job_id' => $parameter['job_id']),
         $true_print
       );
 
@@ -1108,6 +1101,21 @@ function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
   $ontologyprop = null;
 
   switch($property) {
+    //
+    case 'map_ontology_trait':
+      $vars = analyzedphenotypes_systemvars('db_cv');
+      $related_cv_id = variable_get($vars['ap_related']);
+
+      $values = array(
+        'type_id' => $related_cv_id,
+        'subject_id' => $parameter['ontology_cvterm_id'],
+        'object_id'  => $parameter['trait_cvterm_id'],
+      );
+
+      chado_insert_record('cvterm_relationship', $values);
+
+      break;
+
     //
     case 'suggest':
       $suggest_limit = 10;

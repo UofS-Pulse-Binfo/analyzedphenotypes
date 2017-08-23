@@ -604,7 +604,7 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
 
       analyzedphenotypes_tripaljobprop('write_progress', array(
         'job_id' => $job_id,
-        'source' => 'validateprogress',
+        'source' => 'jobprogress',
         'progress' => $percent,
       ));
     }
@@ -765,7 +765,9 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
   // Dataset - project_name.
   // Dataset - project_genus.
   // Dataset - datafile (FID).
+  // Dataset - trait_cvterm.
   $dataset = unserialize($dataset);
+  $trait_cvterm = $dataset['trait_cvterm'];
 
   // # PROJECT.
   $projectprop = analyzedphenotypes_projectprop('match_name', array(
@@ -778,7 +780,7 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
     analyzedphenotypes_tripaljobprop('tripal_fail', array(
       'message' => 'CODE:100 Experiment or project is not recognized by this system.',
       'param' => $dataset['project_name'],
-      'job_id' => $job_id
+      'job_id' => $job_id,
     ));
 
     exit(1);
@@ -792,7 +794,7 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
     analyzedphenotypes_tripaljobprop('tripal_fail', array(
       'message' => 'CODE:101 Experiment or project genus is not recognized by this system.',
       'param' => $genus,
-      'job_id' => $job_id
+      'job_id' => $job_id,
     ));
 
     exit(2);
@@ -805,168 +807,154 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
     analyzedphenotypes_tripaljobprop('tripal_fail', array(
       'message' => 'CODE:102 Unable to read or open data file.',
       'param' => 'FID#' . $dataset['data_file'],
-      'job_id' => $job_id
+      'job_id' => $job_id,
     ));
 
     exit(3);
   }
 
-  $file_contents = analyzedphenotypes_datafileprop('get_contents', $data_file);
+  $file_contents = analyzedphenotypes_datafileprop('get_contents', array(
+    'data_file' => $data_file,
+  ));
 
   if (empty($file_contents)) {
     analyzedphenotypes_tripaljobprop('tripal_fail', array(
       'message' => 'CODE:103 File is empty.',
       'param' => $data_file->uri,
-      'job_id' => $job_id
+      'job_id' => $job_id,
     ));
 
     exit(4);
   }
 
   // # DATA
-  $all_path = analyzedphenotypes_moduleprop();
-  $tripaljob_settings = analyzedphenotypes_tripaljobprop('settings');
-
-  $error_limit = $tripaljob_settings['error_limit'];
-  $report_frequency = $tripaljob_settings['report_frequency'];
-
-  $file_progress = $all_path['temp'] . '/' . str_replace('@JOB_ID', $job_id, $tripaljob_settings['validate_progress']);
-  unset($all_path, $tripaljob_settings);
-
-  print '0% Complete...' . "\n";
+  $tripaljob_settings = analyzedphenotypes_tripaljobprop();
 
   $rows = explode("\n", $file_contents);
   $columns = str_getcsv($rows[0], "\t");
   unset($file_contents, $rows[0]);
-
+  // Excluding columns row.
   $row_count = count($rows);
 
-  $columnsprop = analyzedphenotypes_columnsprop('expected');
-  $all_columns = array_keys($columnsprop);
-  $index = array();
+  $col_index = array();
+  $columnsprop = analyzedphenotypes_columnsprop();
+  foreach($columnsprop as $col => $t) {
+    $j = array_search($col, $columns);
+    $col_index[$col] = $j;
+  }
+  unset($columnsprop);
 
-  $mod_vars = analyzedphenotypes_moduleprop('settings');
-  $system_cvid = variable_get($mod_vars['ap_cv']);
+  $vars = analyzedphenotypes_systemvars();
+  $var_cv_id = variable_get($vars['ap_cv']);
 
   $cvprop = analyzedphenotypes_cvprop('match_cvid', array(
-    'cv_id' => $system_cvid,
+    'cv_id' => $var_cv_id,
   ));
 
-  $system_cvname = $cvprop[$system_cvid]['name'];
+  $var_cv_name = array_values($cvprop)['name'];
 
-  unset($mod_vars['ap_database'], $mod_vars['ap_cv'], $mod_vars['ap_allow_new']);
+  // Get plantprop (year, location, replicate, collector) system vars.
+  $plantprop = array();
+  $plantprop['Year'] = variable_get($vars['ap_year']);
+  $plantprop['Location'] = variable_get($vars['ap_location']);
+  $plantprop['Replicate'] = variable_get($vars['ap_replicate']);
+  $plantprop['Data Collector'] = variable_get($vars['ap_collector']);
 
-  $arr_plantprop = array();
-
-  foreach($all_columns as $i => $c) {
-    $j = array_search($c, $columns);
-    $index[$c] = $j;
-
-    foreach($mod_vars as $k => $var) {
-      $property = trim(str_replace('ap_', '', $k));
-
-      if (stripos($c, $property) !== FALSE) {
-        $system_var = variable_get($var);
-        $arr_plantprop[$c] = $system_var;
-      }
-    }
-  }
+  print '0% Complete...' . "\n";
 
   // # DB TRANSACTION.
   $TRANSACTION = db_transaction();
 
   try {
     // BEGIN TRANSACTION:
-    foreach($rows as $i => $line) :
+    foreach($rows as $i => $line) {
       if (!empty($line)) {
         $data = str_getcsv($line, "\t");
 
         // ## PHENOTYPES.
-        $file_traitname = $data[$index[$all_columns[0]]];
+        $file_traitname = $data[$col_index['Trait Name']];
+        // cvterm_id used by this trait name from trait to cvterm_id in previous stage.
+        $cvterm_id = $trait_cvterm[$file_traitname];
+
         $trait_property = analyzedphenotypes_cvprop('get_cvterm', array(
-          'cvterm_name' => $file_traitname,
-          'cv_name' => $system_cvname
+          'cvterm_id' => $cvterm_id,
         ));
 
         if (!$trait_property) {
           analyzedphenotypes_tripaljobprop('tripal_fail', array(
             'message' => 'CODE:104 Trait name is not recognized by this system.',
             'param' => $file_traitname,
-            'job_id' => $job_id
+            'job_id' => $job_id,
           ));
 
           exit(31);
         }
 
-
-        $file_germplasm_accession = $data[$index[$all_columns[1]]];
-        $file_germplasm_name = $data[$index[$all_columns[2]]];
+        $file_germplasm_accession = $data[$col_index['Germplasm Accession']];
+        $file_germplasm_name = $data[$col_index['Germplasm Name']];
 
         $stock_id = analyzedphenotypes_stockprop('match_name', array(
+          'name' => $file_germplasm_name,
           'uniquename' => $file_germplasm_accession,
-          'name' => $file_germplasm_name
         ));
-
 
         if (!$stock_id) {
           analyzedphenotypes_tripaljobprop('tripal_fail', array(
             'message' => 'CODE:105 Stock/Germplasm name is not recognized by this system.',
             'param' => $file_germplasm_name . ':' . $file_germplasm_accession,
-            'job_id' => $job_id
+            'job_id' => $job_id,
           ));
 
           exit(32);
         }
 
         $trait_id = $trait_property['id'];
-        $file_year = $data[$index[$all_columns[3]]];
-        $file_value = $data[$index[$all_columns[6]]];
-        $file_location = $data[$index[$all_columns[4]]];
-        $file_replicate = $data[$index[$all_columns[5]]];
+
+        $file_year = $data[$col_index['Year']];
+        $file_location = $data[$col_index['Location']];
+        $file_replicate = $data[$col_index['Replicate']];
+
+        $uniquename = str_replace(array(' ', ','), '', implode('_', array(
+          $trait_id, $project_id, $stock_id, $file_location, $file_year, $file_replicate, date('c'), $i
+        )));
+
+        $file_value = $data[$col_index['Value']];
 
         $phenotype_data = array(
-          'uniquename' => implode('_', array(
-            $trait_id, $project_id, $stock_id, $file_location, $file_year, $file_replicate, date('c'), $i
-          )),
+          'uniquename'    => $uniquename,
           'observable_id' => null,
-          'attr_id' => $trait_id,
-          'value' => $file_value,
-          'cvalue_id' => null,
-          'assay_id' => null,
-          'project_id' => $project_id,
-          'stock_id' => $stock_id,
+          'attr_id'       => $trait_id,
+          'value'         => $file_value,
+          'cvalue_id'     => null,
+          'assay_id'      => null,
+          'project_id'    => $project_id,
+          'stock_id'      => $stock_id,
         );
 
-        //$phenotype_insert = chado_insert_record('phenotype', $phenotype_data);
-
-        $phenotype_insert = db_insert('chado.phenotype')
-          ->fields($phenotype_data)
-          ->execute();
+        $phenotype_insert = chado_insert_record('phenotype', $phenotype_data);
 
         if ($phenotype_insert) {
           $phenotype_id = $phenotype_insert;
 
-          foreach($arr_plantprop as $col_title => $system_var) {
-            $file_property_value = $data[$index[$col_title]];
+          foreach($plantprop as $col_title => $var_value) {
+            $file_property_value = $data[$col_index[$col_title]];
 
             $property_data = array(
               'phenotype_id' => $phenotype_id,
-              'type_id'   => $system_var,
+              'type_id'   => $var_value,
               'value'  => $file_property_value,
               // NOTE: THIS FIELD HAS NOT-NULL CONSTRAINT.
-              'cvalue_id' => mt_rand(1, 10),
+              'cvalue_id' => 1,
               'rank' => 0,
             );
 
-            $property_insert = db_insert('chado.phenotypeprop')
-              ->fields($property_data)
-              ->execute();
+            $property_insert = chado_insert_record('phenotypeprop', $property_data);
 
             if (!$property_insert) {
               analyzedphenotypes_tripaljobprop('tripal_fail', array(
                 'message' => 'CODE:107 Unable to insert phenotype property record.',
-                'param' => $dataset['project_genus'],
-                'job_id' => $job_id
+                'param' => print_r($property_data),
+                'job_id' => $job_id,
               ));
 
               exit(34);
@@ -977,21 +965,26 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
           analyzedphenotypes_tripaljobprop('tripal_fail', array(
             'message' => 'CODE:106 Unable to insert phenotype record.',
             'param' => print_r($phenotype_data),
-            'job_id' => $job_id
+            'job_id' => $job_id,
           ));
 
           exit(33);
         }
 
         // Report.
-        $percent_complete = round(($i / $row_count) * 100);
+        $percent = round(($i / $row_count) * 100);
 
-        if ($percent_complete % $report_frequency == 0) {
-          print $percent_complete . '% Complete...' . "\n";
-          file_unmanaged_save_data($percent_complete, $file_progress, FILE_EXISTS_REPLACE);
+        if ($percent % $tripaljob_settings['report_frequency'] == 0) {
+          print $percent . '% Complete...' . "\n";
         }
+
+        analyzedphenotypes_tripaljobprop('write_progress', array(
+          'job_id' => $job_id,
+          'source' => 'jobprogress',
+          'progress' => $percent,
+        ));
       }
-    endforeach;
+    }
     // END TRANSACTION:
   }
   catch(Exception $e) {
@@ -1001,7 +994,7 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
     analyzedphenotypes_tripaljobprop('tripal_fail', array(
       'message' => 'CODE:107 Failed to insert records.',
       'param' => 'Tripal Job',
-      'job_id' => $job_id
+      'job_id' => $job_id,
     ));
 
     exit(5);

@@ -235,11 +235,11 @@ function analyzedphenotypes_libraries_info() {
  * @return
  *   A JSON object.
  */
-function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key = '') {
+function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key = null) {
   $data_JSON = array();
 
   $property = $page_argument_5;
-  $argument = $page_argument_6;
+  $parameter = $page_argument_6;
 
   switch($property) {
     //
@@ -257,13 +257,12 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
       break;
 
     //
-    case 'validate_jobstatus':
+    case 'jobstatus':
       $job = analyzedphenotypes_tripaljobprop('get_job', array(
-        'job_id' => $argument,
+        'job_id' => $parameter,
       ));
 
       if ($job) {
-
         $job_status = strtolower(trim($job['status']));
 
         if ($job_status == 'completed') {
@@ -272,15 +271,15 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
 
           if ($job['progress'] != $progress) {
             analyzedphenotypes_tripaljobprop('update_progress', array(
-              'job_id' => $argument,
+              'job_id' => $parameter,
               'progress' => $progress,
             ));
           }
         }
         else {
           $tripaljobprop = analyzedphenotypes_tripaljobprop('read_progress', array(
-            'job_id' => $argument,
-            'source' => 'validateprogress',
+            'job_id' => $parameter,
+            'source' => 'jobprogress',
           ));
 
           $progress = (empty($tripaljobprop)) ? '...' : trim($tripaljobprop);
@@ -307,11 +306,16 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
 
     //
     case 'ontology':
-      $o = analyzedphenotypes_ontologyprop('suggest', $argument);
-      $ontology_suggestions = array_keys($o);
+      list($project_genus, $trait_name) = explode(':', $parameter);
 
-      foreach($ontology_suggestions as $i) {
-        $data_JSON[$i] = $i;
+      $ontology_suggestions = analyzedphenotypes_ontologyprop('suggest', array(
+        'project_genus' => $project_genus,
+        'trait_name' => $trait_name,
+      ));
+
+      foreach($ontology_suggestions as $i => $term) {
+        $name = $term['name'];
+        $data_JSON[$name] = $name;
       }
 
       break;

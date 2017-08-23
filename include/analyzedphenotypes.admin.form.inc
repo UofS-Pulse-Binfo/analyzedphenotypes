@@ -260,7 +260,7 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
     '#required' => TRUE,
     '#options' => $genus_options,
     '#default_value' => $default_genus,
-    '#description' => t('Select Genus. When experiment or project has genus set, a value will be automatically selected.'),
+    '#description' => t('Select Genus. When experiment or project has genus set, a value will be selected.'),
     '#id' => 'ap-genus-select-field',
   );
 
@@ -329,7 +329,7 @@ function analyzedphenotypes_loader_form_validates($form, &$form_state, $projectp
     $js_var = array(
       'stage'    => 'validate',
       'job_id'    => $job_id,
-      'path_JSON' => $base_admin . '/json/validate_jobstatus/',
+      'path_JSON' => $base_admin . '/json/jobstatus/',
       'path_VR'   => $base_admin . '/validation_result/data/',
     );
 
@@ -598,6 +598,7 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
                '#default_value' => $traitprop['crop_ontology'],
                '#description' => t('Type in crop ontology or click one from suggestions below.'),
                '#attributes' => array('class' => array('ap-crop-ontology', $class)),
+               '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/ontology/' . $project_genus . ':' . $traitprop['name'],
                '#element_validate' => array('analyzedphenotypes_validate_field_ontology'),
                '#id' => drupal_html_id('ap-crop-ontology-text-field' . $i),
              );
@@ -607,6 +608,13 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
                  'trait_name' => $traitprop['name'],
                  'project_genus' => $project_genus,
                ));
+
+               // Nothing found in the ontology, suggest the trait name.
+               if (!$ontology_suggestions) {
+                 $ontology_suggestions[1] = array(
+                   'name' => $traitprop['name'],
+                 );
+               }
 
                if ($ontology_suggestions) {
                  $a = array();
@@ -755,9 +763,8 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
  *   ####
  */
  function analyzedphenotypes_loader_form_save($form, &$form_state) {
-  $vars = analyzedphenotypes_moduleprop('db_cv');
+  $vars = analyzedphenotypes_systemvars();
   $allow_new = variable_get($vars['ap_allow_new']);
-  unset($vars);
 
   if ($allow_new) {
     $arr_trait_describe = $form_state['multistep_values']['new_headers'];
@@ -767,36 +774,62 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
       $project_genus = $form_state['values']['ap_genus_select_field'];
       $data_file = $form_state['values']['ap_file_fid_field'];
 
+      $arr_traitname_cvtermid = array();
+
       foreach ($arr_trait_describe as $i => $trait) {
-        $description = $form_state['values']['ap_description_text_field' . $i];
-
-        $cvterm = analyzedphenotypes_cvprop('insert_cvterm', array(
-          'cvterm_name'      => $trait,
-          'definition' => $description,
-        ));
-
-        if ($cvterm) {
-          // Save Unit.
-          // $unit = $form_state['values']['ap_unit_text_field' . $i];
-
-          // Save Scale.
-          // $scale = $form_state['values']['ap_scale_text_field' . $i];
-
-          // Save Ontology
-          // $crop_ontology = $form_state['values']['ap_crop_ontology_text_field' . $i];
-          // $plant_ontology = $form_state['values']['ap_plant_ontology_form_field' . $i];
-
-          // Save Photo.
-          $photo_1        = 'ap_photo_1' . $i;
-          $photo_2        = 'ap_photo_2' . $i;
-
-          $photo = array(
-            'cvterm_id' => $cvterm,
-            'photo' => array($photo_1, $photo_2),
-          );
-
-          analyzedphenotypes_cvprop('cvterm_save_photo', $photo);
+        if (isset($form_state['values']['ap_similar_trait_select_field' . $i]) &&
+            (int)$form_state['values']['ap_similar_trait_select_field' . $i] > 0) {
+          // Use existing cvterm.
+          $cvterm_id = $form_state['values']['ap_similar_trait_select_field' . $i];
         }
+        else {
+          // Insert new cvterm.
+          $description = $form_state['values']['ap_description_text_field' . $i];
+          $cvterm = analyzedphenotypes_cvprop('insert_cvterm', array(
+            'name' => $trait,
+            'definition' => $description,
+          ));
+
+          if ($cvterm) {
+            $cvterm_id = $cvterm['cvterm_id'];
+            // Unit.
+
+            // Scale.
+
+            // Ontology.
+            $ontology_value = $form_state['values']['ap_crop_ontology_text_field' . $i];
+            $var_name = 'ap_' . strtolower(str_replace(' ', '_', $project_genus));
+            $cv_id = variable_get($vars[$var_name]);
+
+            $ontologyprop = analyzedphenotypes_cvprop('get_cvterm', array(
+              'name' => $ontology_value,
+              'cv_id' => $cv_id,
+            ));
+
+            if ($ontologyprop) {
+              // Create relationship.
+              analyzedphenotypes_ontologyprop('map_ontology_trait', array(
+                'ontology_cvterm_id' => $ontologyprop['cvterm_id'],
+                'trait_cvterm_id' => $cvterm_id,
+              ));
+            }
+
+            // Photo.
+            $photo_1        = 'ap_photo_1' . $i;
+            $photo_2        = 'ap_photo_2' . $i;
+
+            $photo = array(
+              'cvterm_id' => $cvterm_id,
+              'photo' => array($photo_1, $photo_2),
+            );
+
+            analyzedphenotypes_cvprop('cvterm_save_photo', array(
+              'photo' => $photo,
+            ));
+          }
+        }
+
+        $arr_traitname_cvtermid[$trait] = $cvterm_id;
       }
     }
   }
@@ -808,7 +841,8 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
     'dataset' => array(
       'project_name' => $project_name,
       'project_genus' => $project_genus,
-      'data_file' => $data_file
+      'data_file' => $data_file,
+      'trait_cvterm' => $arr_traitname_cvtermid,
     )
   );
 
@@ -820,7 +854,7 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
     $js_var = array(
       'stage'     => 'save',
       'job_id'    => $job_id,
-      'path_JSON' => $base_admin . '/json/validate_jobstatus/',
+      'path_JSON' => $base_admin . '/json/jobstatus/',
       'path_VR'   => $base_admin . '/validation_result/data/',
     );
 
@@ -968,7 +1002,7 @@ function analyzedphenotypes_validate_field_description(&$element, &$form, &$form
 }
 
 function analyzedphenotypes_validate_field_ontology(&$element, &$form, &$form_state) {
-  if (empty($element['#value'])) {
+  if (empty($element['#value']) && $element['#disabled'] === FALSE) {
     drupal_add_library('system', 'ui.accordion');
 
     form_set_error($element['#name'], t('Please enter or select ontology.'));

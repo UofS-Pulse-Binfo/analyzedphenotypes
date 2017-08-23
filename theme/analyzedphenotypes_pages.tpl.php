@@ -124,8 +124,8 @@ if ($form_id == $ap_admin . 'data_loader') {
               case 'save':
                 ?>
 
-                <div class="messages status">Lorem ipsum dolor sit amet. File succesfully uploaded to server.</div>
-                <div class="messages warning">Lorem ipsum dolor sit amet. Wait for 100% before data becomes available.</div>
+                <div class="messages status">Your file has been successfully submitted and <em>will not be interupted</em> if you choose to leave this page.</div>
+                <div class="messages warning">The progress bar below indicates our progress updating <?php print strtoupper($_SERVER['SERVER_NAME']) ?>. <em>Your data will not be available until the progress bar below completes</em>.</div>
 
                 <div id="ap-progress-container">
                   <div class="ap-progress-wrapper">
