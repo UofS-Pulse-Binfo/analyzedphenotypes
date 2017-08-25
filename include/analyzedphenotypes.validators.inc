@@ -292,22 +292,13 @@ function analyzedphenotypes_validator_genus($case, $dataset) {
         $status['type'] = 'failed';
       }
       else {
-        $projectprop = analyzedphenotypes_projectprop('match_name', array(
-          'project_name' => $dataset['project_name'],
+        $genusprop = analyzedphenotypes_genusprop('project_genus', array(
+          'project_name' =>  $dataset['project_name'],
         ));
 
-        if ($projectprop) {
-          $project_id = array_keys($projectprop);
-          $genusprop = analyzedphenotypes_genusprop('project_genus', array(
-            'project_id' =>  $project_id,
-          ));
-
-          if ($genusprop) {
-            if ($dataset['project_genus'] != $genusprop) {
-              $status['type'] = 'failed';
-              $status['details'] = $dataset['project_name'];
-            }
-          }
+        if ($genusprop && $dataset['project_genus'] != $genusprop) {
+          $status['type'] = 'failed';
+          $status['details'] = $dataset['project_name'];
         }
       }
 
@@ -722,9 +713,6 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
     //
     case 'unique_combo':
       if ($value) {
-        $value = implode('', $value);
-
-        // Move to values property.
         $match = analyzedphenotypes_columnsprop('match_combination', array(
           'combination' => $value,
         ));
@@ -765,7 +753,7 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
   // Dataset - project_name.
   // Dataset - project_genus.
   // Dataset - datafile (FID).
-  // Dataset - trait_cvterm.
+  // Dataset - traits.
   $dataset = unserialize($dataset);
   $trait_cvterm = $dataset['trait_cvterm'];
 
@@ -774,7 +762,7 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
     'project_name' => $dataset['project_name'],
   ));
 
-  $project_id = ($projectprop) ? array_keys($projectprop) : 0;
+  $project_id = ($projectprop) ? $projectprop['project_id'] : 0;
 
   if (!$project_id) {
     analyzedphenotypes_tripaljobprop('tripal_fail', array(
@@ -844,16 +832,9 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
   }
   unset($columnsprop);
 
-  $vars = analyzedphenotypes_systemvars();
-  $var_cv_id = variable_get($vars['ap_cv']);
-
-  $cvprop = analyzedphenotypes_cvprop('match_cvid', array(
-    'cv_id' => $var_cv_id,
-  ));
-
-  $var_cv_name = array_values($cvprop)['name'];
-
   // Get plantprop (year, location, replicate, collector) system vars.
+  $vars = analyzedphenotypes_systemvars('plant_property');
+
   $plantprop = array();
   $plantprop['Year'] = variable_get($vars['ap_year']);
   $plantprop['Location'] = variable_get($vars['ap_location']);
@@ -908,7 +889,7 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
           exit(32);
         }
 
-        $trait_id = $trait_property['id'];
+        $trait_id = $trait_property['cvterm_id'];
 
         $file_year = $data[$col_index['Year']];
         $file_location = $data[$col_index['Location']];
@@ -931,7 +912,9 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
           'stock_id'      => $stock_id,
         );
 
-        $phenotype_insert = chado_insert_record('phenotype', $phenotype_data);
+        $phenotype_insert = db_insert('chado.phenotype')
+         ->fields($phenotype_data)
+         ->execute();
 
         if ($phenotype_insert) {
           $phenotype_id = $phenotype_insert;
@@ -948,7 +931,9 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
               'rank' => 0,
             );
 
-            $property_insert = chado_insert_record('phenotypeprop', $property_data);
+            $property_insert = db_insert('chado.phenotypeprop')
+              ->fields($property_data)
+              ->execute();
 
             if (!$property_insert) {
               analyzedphenotypes_tripaljobprop('tripal_fail', array(
@@ -998,6 +983,13 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
     ));
 
     exit(5);
+  }
+
+  // Make file permanent.
+  if ($data_file) {
+    analyzedphenotypes_datafileprop('make_permanent', array(
+      'data_file' => $data_file,
+    ));
   }
 }
 

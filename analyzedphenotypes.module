@@ -6,7 +6,7 @@
  */
 
 
-module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.functions');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
 module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.validators');
 
 
@@ -188,6 +188,7 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&
 function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$variables, $hook) {
   $notset = '';
   $vars = analyzedphenotypes_systemvars('db_cv');
+  $allow_new = '';
 
   foreach($vars as $i => $var) {
     $system_var = variable_get($var);
@@ -212,16 +213,6 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$va
 
 
   return $variables;
-}
-
-
-
-/**
- * Implements hook_libraries_info().
- */
-function analyzedphenotypes_libraries_info() {
-
-
 }
 
 

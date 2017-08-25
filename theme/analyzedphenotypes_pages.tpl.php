@@ -175,6 +175,7 @@ elseif ($form_id == $ap_admin . 'settings') {
   // this theme is not recognized for some reason.
 
   // Displays a blank screen on /settings.
+  print drupal_render_children($form);
 }
 // # AP DIRECTORY (DEFAULT PAGE).
 else {
