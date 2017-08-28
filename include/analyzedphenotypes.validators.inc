@@ -6,19 +6,18 @@
  */
 
 /**
- * ####
- * ####
+ * VALIDATOR DEFINITIONS
+ * List of validators performed to user data file.
+ * Default to: Return all scope of validation.
+ * Dependencies: analyzedphenotypes_systemvars().
  *
- * @param $property
- *   ####
- * @param $parameter
- *   ####
+ * @param String $all_scope
+ *  A string value indicating a request to return all validator scope values.
  *
- * @return
- *   #####
+ * @return Array
+ *   Array of validator definition or validator scope values.
  *
- * @see
- *   ####
+ * @see analyzedphenotypes_validate_tsv_file().
  */
 function analyzedphenotypes_ap_validators($all_scope = NULL) {
   $scope = array(
@@ -152,19 +151,21 @@ function analyzedphenotypes_ap_validators($all_scope = NULL) {
 
 
 /**
- * ####
- * ####
+ * DATA FILE LEVEL VALIDATION
+ * Perform data-file level, non Tripal Job validation to user data file.
+ * Default to:
+ * Dependencies: analyzedphenotypes_ap_validators().
  *
- * @param $property
- *   ####
- * @param $parameter
- *   ####
+ * @param Array $dataset
+ *  An associative array containing user provide values:
+ *  - project_name  : Project/experiment selected. 
+ *  - project_genus : Project/experiment genus selected.
+ *  - data_file     : tsv or txt data file containing analyzed phenotypic data.
+ * 
+ * @return Array
+ *   An associative array, indicating if a validator passed or failed the requirements.
  *
- * @return
- *   #####
- *
- * @see
- *   ####
+ * @see analyzedphenotypes_file_validate() in admin.form.inc.
  */
 function analyzedphenotypes_validate_tsv_file($dataset) {
   // Array to hold validation status.
@@ -217,19 +218,22 @@ function analyzedphenotypes_validate_tsv_file($dataset) {
 
 
 /**
- * ####
- * ####
+ * PROJECT VALIDATOR
+ * Perform validation to project/experiment.
+ * Default to: 
+ * Dependencies: analyzedphenotypes_projectprop().
  *
- * @param $property
- *   ####
- * @param $parameter
- *   ####
- *
- * @return
- *   #####
- *
- * @see
- *   ####
+ * @param String $case
+ *  A value representing a validation requested (each case represents a case in the switch implementation):
+ *  - exists : Check to see if project exists in chado.projects table.
+ * @param Array $dataset
+ *  An associative array containing user provide values:
+ *  - project_name  : Project/experiment selected. 
+ *  - project_genus : Project/experiment genus selected.
+ *  - data_file     : tsv or txt data file containing analyzed phenotypic data.
+ * 
+ * @return Array
+ *   An associative array, indicating if a validator passed or failed the requirements.
  */
 function analyzedphenotypes_validator_project($case, $dataset) {
   $status = array(
@@ -265,19 +269,22 @@ function analyzedphenotypes_validator_project($case, $dataset) {
 
 
 /**
- * ####
- * ####
+ * GENUS VALIDATOR
+ * Perform validation to project/experiment genus.
+ * Default to: 
+ * Dependencies: analyzedphenotypes_genusprop().
  *
- * @param $property
- *   ####
- * @param $parameter
- *   ####
- *
- * @return
- *   #####
- *
- * @see
- *   ####
+ * @param String $case
+ *  A value representing a validation requested (each case represents a case in the switch implementation):
+ *  - exists : Check to see if genus exits in the system and see if it matches the Experiment/project.
+ * @param Array $dataset
+ *  An associative array containing user provide values:
+ *  - project_name  : Project/experiment selected. 
+ *  - project_genus : Project/experiment genus selected.
+ *  - data_file     : tsv or txt data file containing analyzed phenotypic data.
+ * 
+ * @return Array
+ *   An associative array, indicating if a validator passed or failed the requirements.
  */
 function analyzedphenotypes_validator_genus($case, $dataset) {
   $status = array(
@@ -314,19 +321,24 @@ function analyzedphenotypes_validator_genus($case, $dataset) {
 
 
 /**
- * ####
- * ####
+ * GENUS VALIDATOR
+ * Perform validation to project/experiment genus.
+ * Default to: 
+ * Dependencies: analyzedphenotypes_datafileprop(), analyzedphenotypes_columnsprop(), analyzedphenotypes_cvprop().
  *
- * @param $property
- *   ####
- * @param $parameter
- *   ####
- *
- * @return
- *   #####
- *
- * @see
- *   ####
+ * @param String $case
+ *  A value representing a validation requested (each case represents a case in the switch implementation):
+ *  - format    : Check file format.
+ *  - columns   : Check if all expected column headres are present.
+ *  - allow_new : When set to not allow new trait to be added, this check will test if all traits are existing trait.
+ * @param Array $dataset
+ *  An associative array containing user provide values:
+ *  - project_name  : Project/experiment selected. 
+ *  - project_genus : Project/experiment genus selected.
+ *  - data_file     : tsv or txt data file containing analyzed phenotypic data.
+ * 
+ * @return Array
+ *   An associative array, indicating if a validator passed or failed the requirements.
  */
 function analyzedphenotypes_validator_datafile($case, $dataset) {
   $status = array(
@@ -441,19 +453,23 @@ function analyzedphenotypes_validator_datafile($case, $dataset) {
 
 
 /**
- * ####
- * ####
+ * DATA FILE VALUE LEVEL VALIDATION
+ * Perform data-file value level, a Tripal Job validation to user data file.
+ * Default to:
+ * Dependencies: analyzedphenotypes_ap_validators(), analyzedphenotypes_datafileprop(), analyzedphenotypes_tripaljobprop().
  *
- * @param $property
- *   ####
- * @param $parameter
- *   ####
+ * @param Array $dataset
+ *  An associative array containing user provide values:
+ *  - project_name  : Project/experiment selected. 
+ *  - project_genus : Project/experiment genus selected.
+ *  - data_file     : Standard Drupal File Id Number (FID).
+ * @param Integer $job_id
+ *  - Registered Tripal Job Id number.
+ * 
+ * @return Array
+ *   An associative array, indicating if a validator passed or failed the requirements.
  *
- * @return
- *   #####
- *
- * @see
- *   ####
+ * @see analyzedphenotypes_loader_form_save() in admin.form.inc.
  */
 function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
   $dataset = unserialize($dataset);
@@ -616,19 +632,29 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
 
 
 /**
- * ####
- * ####
+ * DATA FILE VALUE VALIDATOR
+ * Perform validation to values.
+ * Default to:
+ * Dependencies: analyzedphenotypes_columnsprop(), analyzedphenotypes_datatypeprop(), analyzedphenotypes_stockprop().
  *
- * @param $property
- *   ####
- * @param $parameter
- *   ####
- *
- * @return
- *   #####
- *
- * @see
- *   ####
+ * @param String $case
+ *  A value representing a validation requested (each case represents a case in the switch implementation):
+ *  - value_empty         : Check if value is empty.
+ *  - match_type          : Check if value in a column matches the expected data type of the column header.
+ *  - unit_data           : Check if value matches the unit in the trait name.
+ *  - gemplsam_recognized : Check if germ accession is recognized by this resource.
+ *  - unique_combo        : Check if a combination of column header is unique record.
+ * @param $value
+ *  An array of values when validator requires a set of values or string value.
+ * @param String $column
+ *  Column header of the current row.
+ * @param Integer $row
+ *  The current row number.
+ * @param String $trait_name
+ *  A value representing the trait name in a given row.
+ * 
+ * @return Array
+ *   An associative array, indicating if a validator passed or failed the requirements.
  */
 function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait_name) {
   $status = array(
@@ -735,19 +761,18 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
 
 
 /**
- * ####
- * ####
+ * SAVE ANALYZED PHENOTYPES.
+ * Save project, genus and analyzed phenotypic data.
+ * Default to:
+ * Dependencies: analyzedphenotypes_tripaljobpro(), analyzedphenotypes_projectprop(), analyzedphenotypes_systemvars().
  *
- * @param $property
- *   ####
- * @param $parameter
- *   ####
- *
- * @return
- *   #####
- *
- * @see
- *   ####
+ * @param Array $dataset
+ *  An associative array containing user provide values:
+ *  - project_name  : Project/experiment selected. 
+ *  - project_genus : Project/experiment genus selected.
+ *  - data_file     : Standard Drupal File Id Number (FID).
+ * @param Integer $job_id
+ *  - Registered Tripal Job Id number.
  */
 function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
   // Dataset - project_name.
@@ -995,19 +1020,8 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
 
 
 /**
- * ####
- * ####
- *
- * @param $property
- *   ####
- * @param $parameter
- *   ####
- *
- * @return
- *   #####
- *
- * @see
- *   ####
+ * Function callback.
+ * Remove text fomatting, leading and trailing spaces and convert to lowercase.
  */
 function analyzedphenotypes_noformat($string) {
   return strtolower(trim($string));

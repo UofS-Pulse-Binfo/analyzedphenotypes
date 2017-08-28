@@ -764,7 +764,7 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
           array(':dbxref_id' => $cvprop['dbxref_id'])
         );
 
-        if ($result->rowCount == 1) {
+        if ($result->rowCount() == 1) {
           $db_id = $result->fetchField();
 
           $cvprop['db_id'] = $db_id;
@@ -855,6 +855,9 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
             'width' => $info['width'],
             'scale_to' => 400,
           ));
+
+          $photo_dir = 'public://ap-photo'; 
+          file_prepare_directory($photo_dir, FILE_CREATE_DIRECTORY);
 
           $new_image = imagecreatetruecolor($scale['width'], $scale['height']);
           $img_file  = imagecreatefromjpeg($source_file);

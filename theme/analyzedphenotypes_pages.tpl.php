@@ -103,13 +103,9 @@ if ($form_id == $ap_admin . 'data_loader') {
                       $traits = $form['#ap_describe_trait'];
                       $trait_count = count($traits);
 
-                      $i = 0;
-
-                      foreach($traits as $key => $existing) {
-                        print '<h3>#' . ($i + 1) . '. ' . $form['#ap_cvterm_hidden_field' . $i] . '</h3>';
-                        print '<div id="ap-accordion-container' . $i . '" class="ap-form-describe-trait">' . drupal_render($form[$main_fieldset . $i]) . '</div>';
-
-                        $i++;
+                      foreach($traits as $m => $trait) {
+                        print '<h3>#' . ($m + 1) . '. ' . $trait . '</h3>';
+                        print '<div id="ap-accordion-container' . $m . '" class="ap-form-describe-trait">' . drupal_render($form[$main_fieldset . $m]) . '</div>';
                       }
                     ?>
                   </div>

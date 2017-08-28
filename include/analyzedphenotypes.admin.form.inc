@@ -407,8 +407,6 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
            $ap_fieldset = $main_fieldset . $i;
            $arr_trait_describe[] = $trait_name_value;
 
-           $form['#ap_cvterm_hidden_field' . $i] = $trait_name_value;
-
            $name = analyzedphenotypes_traitprop('no_unit', array(
              'trait_name' => $trait_name_value,
            ));
@@ -462,7 +460,14 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
                    $traitprop['cvterm_id']     = $exists['cvterm_id'];
                    $traitprop['definition']    = $exists['definition'];
                    $traitprop['scale']         = '';
-                   $traitprop['crop_ontology'] = $exists['crop_ontology'];
+                   
+                   if ($exists['crop_ontology']) {
+                     $traitprop['crop_ontology'] = $exists['crop_ontology']['ontology_name'];
+                   }
+                   else {
+                     $traitprop['crop_ontology'] = null;
+                   }
+                   
                    $traitprop['photos'] = analyzedphenotypes_cvprop('cvterm_get_photo', array(
                      'cvterm_id' => $exists['cvterm_id'],
                    ));
@@ -539,7 +544,7 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
                '#title' => 'Crop Ontology',
                '#type' => 'textfield',
                '#disabled' => $disabled,
-               '#default_value' => $traitprop['crop_ontology']['ontology_name'],
+               '#default_value' => $traitprop['crop_ontology'],
                '#description' => t('Type in crop ontology or click one from suggestions below.'),
                '#attributes' => array('class' => array('ap-crop-ontology', $class)),
                '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/ontology/' . $project_genus . ':' . $traitprop['name'],
@@ -670,12 +675,12 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
                  )
                );
              }
+           
+             $i++;
            }
            ////
           }
         }
-
-        $i++;
       }
 
       $form['#ap_describe_trait'] = $arr_trait_describe;
@@ -758,14 +763,18 @@ function analyzedphenotypes_loader_form_save($form, &$form_state) {
 
     // Save genus and project.
     // Does project have a genus?
-    $genus = analyzedphenotypes_genusprop('project_genus', array(
+    $projectprop = analyzedphenotypes_genusprop('project_genus', array(
       'project_name' => $project_name,
     ));
 
-    if (!$genus) {
-      analyzedphenotypes_genus('assign_genus', array(
+    if (!$projectprop) {
+      $projectprop = analyzedphenotypes_projectprop('match_name', array(
         'project_name' => $project_name,
+      ));
+      
+      analyzedphenotypes_genusprop('assign_genus', array(
         'project_genus' => $project_genus,
+        'project_id' => $projectprop['project_id'],
       ));
     }
 
