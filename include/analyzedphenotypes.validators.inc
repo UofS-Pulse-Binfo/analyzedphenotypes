@@ -1027,12 +1027,10 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
   }
   
   // Update materialized views.
-  /*
   foreach(array('mview_phenotype', 'mview_phenotype_summary') as $mview) {
     $mview_id = tripal_get_mview_id($mview);
     if ($mview_id) tripal_populate_mview($mview_id);
   }
-  */
 }
 
 
