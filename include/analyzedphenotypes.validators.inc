@@ -300,7 +300,7 @@ function analyzedphenotypes_validator_genus($case, $dataset) {
       }
       else {
         $genusprop = analyzedphenotypes_genusprop('project_genus', array(
-          'project_name' =>  $dataset['project_name'],
+          'project_name' => $dataset['project_name'],
         ));
 
         if ($genusprop && $dataset['project_genus'] != $genusprop) {
@@ -524,18 +524,22 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
     $trait_name_index = array_search($expected_columns[0], $columns);
 
     $prev_percent = 0;
-
+    $line_number = 1;
+    
     // BEGIN TRIPAL VALIDATION.
     foreach($rows as $i => $line) {
       if (empty($line)) {
         continue;
+      }
+      else {
+        $line_number ++;
       }
 
       $d = str_getcsv($line, "\t");
       $data = array_map('trim', $d);
 
       $trait_name = $data[$trait_name_index];
-
+      
       foreach($validator as $key => $item) {
         $case = $item['case'];
         $callback = $item['validation callback'];
@@ -549,7 +553,7 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
           // Apply to all.
           foreach($data as $j => $value) {
             $value = trim($value, '"');
-            $result = call_user_func($callback, $case, $value, $columns[$j], ($i + 1), $trait_name);
+            $result = call_user_func($callback, $case, $value, $columns[$j], $line_number, $trait_name);
 
             if ($result['type'] == 'failed') {
               if ($arr_status[$key]['type'] == 'passed') {
@@ -578,7 +582,7 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
             $value = trim($data[$j], '"');
           }
 
-          $result = call_user_func($callback, $case, $value, $columns_required, ($i + 1), $trait_name);
+          $result = call_user_func($callback, $case, $value, $columns_required, $line_number, $trait_name);
 
           if ($result['type'] == 'failed') {
             if ($arr_status[$key]['type'] == 'passed') {
@@ -856,7 +860,12 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
     $col_index[$col] = $j;
   }
   unset($columnsprop);
-
+  
+  $vars = analyzedphenotypes_systemvars('db_cv');
+  // Assay id : method/taken by eye.
+  $method = variable_get($vars['ap_method']);
+  unset($vars);
+    
   // Get plantprop (year, location, replicate, collector) system vars.
   $vars = analyzedphenotypes_systemvars('plant_property');
 
@@ -932,7 +941,7 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
           'attr_id'       => $trait_id,
           'value'         => $file_value,
           'cvalue_id'     => null,
-          'assay_id'      => null,
+          'assay_id'      => $method,
           'project_id'    => $project_id,
           'stock_id'      => $stock_id,
         );
@@ -1016,6 +1025,14 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
       'data_file' => $data_file,
     ));
   }
+  
+  // Update materialized views.
+  /*
+  foreach(array('mview_phenotype', 'mview_phenotype_summary') as $mview) {
+    $mview_id = tripal_get_mview_id($mview);
+    if ($mview_id) tripal_populate_mview($mview_id);
+  }
+  */
 }
 
 

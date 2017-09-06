@@ -4,7 +4,7 @@
  */
 
 
-module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.functions');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
 
 
 function analyzedphenotypes_schema() {
@@ -284,6 +284,31 @@ function analyzedphenotypes_install() {
   $vars = analyzedphenotypes_systemvars();
 
   foreach($vars as $i => $v) {
-    variable_set($v, 'not set');
+    if (is_array($v)) {
+      foreach($v as $j => $k) {
+        variable_set($k, 'not set');
+      }
+    }
+    else {
+      variable_set($v, 'not set');
+    }
+  }
+}
+
+/**
+ *
+ */
+function analyzedphenotypes_uninstall() {
+  $vars = analyzedphenotypes_systemvars();
+
+  foreach($vars as $i => $v) {
+    if (is_array($v)) {
+      foreach($v as $j => $k) {
+        variable_del($k);
+      }
+    }
+    else { 
+      variable_del($v);
+    }
   }
 }

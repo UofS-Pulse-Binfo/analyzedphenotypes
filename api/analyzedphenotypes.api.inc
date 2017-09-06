@@ -383,7 +383,7 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
     'Trait Name'          => 'trait',        // #0
     'Germplasm Accession' => 'alphanumeric', // #1
     'Germplasm Name'      => 'alphanumeric', // #2
-    'Year'                => 'number',       // #3
+    'Year'                => 'year',         // #3
     'Location'            => 'text',         // #4
     'Replicate'           => 'number',       // #5
     'Value'               => '',             // #6
@@ -431,27 +431,18 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
            year.type_id = :year_cvterm
            AND location.type_id = :location_cvterm
            AND replicate.type_id = :replicate_cvterm
-
-           AND trait_name.name = :value_traitname
-           AND germplasm_accession.uniquename = :value_accession
-           AND year.value = :value_year
-           AND location.value = :value_location
-           AND replicate.value = :value_replicate"
+           AND trait_name.name || germplasm_accession.uniquename || year.value || location.value || replicate.value = :combination"
         ,
         array(
-          ':year_cvterm'    => $arr_plantprop['year'],
-          ':location_cvterm' => $arr_plantprop['location'],
+          ':year_cvterm'      => $arr_plantprop['year'],
+          ':location_cvterm'  => $arr_plantprop['location'],
           ':replicate_cvterm' => $arr_plantprop['replicate'],
-
-          ':value_traitname' => $parameter[$cols[0]],
-          ':value_accession' => $parameter[$cols[1]],
-          ':value_year'      => $parameter[$cols[3]],
-          ':value_location'  => $parameter[$cols[4]],
-          ':value_replicate' => $parameter[$cols[5]],
+          // Trait name, Germplasm Accession, Year, Location and Replicate.
+          ':combination'      => $parameter['combination'][$cols[0]] . $parameter['combination'][$cols[1]] . $parameter['combination'][$cols[3]] . $parameter['combination'][$cols[4]] . $parameter['combination'][$cols[5]],
         )
       );
 
-      $columnsprop = ($result) ? $result->fetchField() : $columnsprop;
+      $columnsprop = ($result->rowCount() > 0) ? $result->fetchField() : $columnsprop;
 
       break;
 
@@ -556,6 +547,15 @@ function analyzedphenotypes_datatypeprop($property, $parameter = null) {
 
       break;
 
+    //
+    case 'four_digit_year':
+      // Numbers, no 0.
+      if ($value < 1900 && $value > date('Y')) {
+        $datatypeprop = FALSE;
+      }
+
+      break;
+      
     //
     case 'number_no_zero':
       // Numbers, no 0.
@@ -779,28 +779,14 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
 
         // Fetch crop ontology of trait in chado.cvterm_relationship.
         $result = chado_query(
-          "SELECT t1.name AS name, t2.subject_id AS subject_id FROM {cvterm} AS t1 INNER JOIN {cvterm_relationship} AS t2 ON t1.cvterm_id = t2.object_id
-           WHERE t2.type_id = :related AND t2.object_id = :cvterm_id LIMIT 1",
+          "SELECT name FROM {cvterm} WHERE cvterm_id = (SELECT subject_id FROM {cvterm_relationship} WHERE type_id = :related AND object_id = :cvterm_id LIMIT 1)",
           array(
             ':related' => $related_cvterm,
             ':cvterm_id' => $cvprop['cvterm_id'],
           )
         );
-
-        if ($result->rowCount() == 1) {
-          $co = $result->fetchObject();
-
-          $cvprop['crop_ontology'] = array(
-            'cvterm_id' => $co->subject_id,
-            'ontology_name' => $co->name,
-          );
-        }
-        else {
-          $cvprop['crop_ontology'] = array(
-            'cvterm_id' => null,
-            'ontology_name' => null,
-          );
-        }
+        
+        $cvprop['crop_ontology'] = ($result->rowCount() == 1) ? $result->fetchField() : null;
 
         // Scale.
         $cvprop['scale'] = null;
@@ -1139,7 +1125,7 @@ function analyzedphenotypes_tripaljobprop($property = null, $parameter = null) {
 
       $job = tripal_get_job($parameter['job_id']);
 
-      if ($job > 0 && $job->uid == $user->uid && $job->modulename == 'analyzedphenotypes') {
+      if ($job->job_id > 0 && $job->uid == $user->uid && $job->modulename == 'analyzedphenotypes') {
         $tripaljobprop = array(
           'job_id' => $job->job_id,
           'status' => $job->status,
@@ -1226,6 +1212,7 @@ function analyzedphenotypes_tripaljobprop($property = null, $parameter = null) {
  *   - trait_cvterm_id
  *   - project_genus
  *   - trait_name
+ *   - ontology
  *
  * @return Array $ontologyprop
  *   Array of ontology properties.
@@ -1257,9 +1244,8 @@ function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
 
       $vars = analyzedphenotypes_systemvars('genus_ontology');
       $var_name = 'ap_' . strtolower(str_replace(' ', '_', $parameter['project_genus']));
-      $cv_id = variable_get($vars[$var_name]);
-      unset($vars);
-
+      $cv_id = variable_get($vars[$var_name]['var']);
+      
       $ontology_terms = analyzedphenotypes_cvprop('terms_in_cv', array(
         'cv_id' => $cv_id,
       ));
@@ -1267,33 +1253,56 @@ function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
       // No unit.
       $trait_name = strtolower(trim($parameter['trait_name']));
 
+      $ctr = 0;
       foreach($ontology_terms as $i => $term) {
-        $name = strtolower(trim($term['name']));
-        if ($name == $trait_name) {
-          $ontologyprop[$i] = $term;
-
-          break;
-        }
-        else {
-          $j = 0;
-          $keywords = explode(' ', $name);
-
-          foreach($keywords as $key) {
-            if (stristr($trait_name, $key)) {
+        $ontology = strtolower(trim($term['name']));
+        $keywords = explode(' ', $ontology);
+        
+        foreach($keywords as $key){
+          if ($ctr >= $suggest_limit) {
+            break;
+          }
+          else {
+            if (strlen($key) > 2 && stristr($trait_name, $key)) {
               $ontologyprop[$i] = $term;
 
-              if ($j >= $suggest_limit) {
-                break;
-              }
-
-              $j++;
-            }
+              $ctr++;
+            }  
           }
         }
+      }
+      
+      if (count($ontologyprop) <= 0) {
+        $var_default = variable_get($vars[$var_name]['def']);
+        $default_ontology = analyzedphenotypes_cvprop('get_cvterm', array(
+          'cvterm_id' => $var_default,
+        ));
+        
+        $ontologyprop[$default_ontology['cvterm_id']] = array(
+          'name' => $default_ontology['name'],
+          'definition' => $default_ontology['definition'],
+        );
       }
 
       break;
 
+    //
+    case 'match_ontology':
+      $vars = analyzedphenotypes_systemvars('genus_ontology');
+      $var_name = 'ap_' . strtolower(str_replace(' ', '_', $parameter['project_genus']));
+      $cv_id = variable_get($vars[$var_name]['var']);
+      
+      $cvtermprop = analyzedphenotypes_cvprop('get_cvterm', array(
+        'name' => $parameter['ontology'],
+        'cv_id' => $cv_id,
+      ));
+      
+      if ($cvtermprop) {
+          $ontologyprop[$cvtermprop['cvterm_id']] = $cvtermprop['name'];
+      }
+      
+      break;
+    
     //
     // Additional case here.
 
@@ -1341,6 +1350,8 @@ function analyzedphenotypes_systemvars($property = null) {
     'ap_genus'     => $basename . 'genus',
     // cvterm related used in ontology.
     'ap_related'   => $basename . 'related',
+    // cvterm taken by eye.
+    'ap_method'    => $basename . 'method',
   );
 
   $vars_plantprop = array(
@@ -1357,7 +1368,10 @@ function analyzedphenotypes_systemvars($property = null) {
   // Genus to ontology terms.
   foreach($genus as $g) {
     $g = strtolower(str_replace(' ', '_', $g));
-    $vars_ontology['ap_' .  $g] = $basename . $g;
+    $vars_ontology['ap_' .  $g] = array(
+      'var' => $basename . $g,
+      'def' => $basename . '_def_' . $g,
+    );
   }
 
   switch($property) {
@@ -1366,12 +1380,14 @@ function analyzedphenotypes_systemvars($property = null) {
       $systemvars = $vars_database;
 
       break;
-
+    
+    //
     case 'plant_property':
       $systemvars = $vars_plantprop;
 
       break;
-
+    
+    //
     case 'genus_ontology':
       $systemvars = $vars_ontology;
 

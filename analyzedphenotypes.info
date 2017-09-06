@@ -1,5 +1,5 @@
 name = Analyzed Phenotypes Module
-description = Lorem ipsum dolor sit amet, consectetur adipiscing elit
+description = Manage Analyzed Phenotypic Data
 package = DEV
 version = VERSION
 core = 7.x

@@ -325,6 +325,3 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
   // an AJAX error instead of your progress bar ;-).
   exit();
 }
-
-
-
