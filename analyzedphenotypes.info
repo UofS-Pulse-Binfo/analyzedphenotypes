@@ -1,5 +1,9 @@
 name = Analyzed Phenotypes Module
 description = Manage Analyzed Phenotypic Data
 package = DEV
+dependencies[] = dragndrop_upload_element
+dependencies[] = tripal_cv
 version = VERSION
 core = 7.x
+configure = admin/tripal/extension/analyzedphenotypes/settings
+

@@ -506,8 +506,8 @@ function analyzedphenotypes_datatypeprop($property, $parameter = null) {
         'count'  => array('name' => 'count', 'type' => 'number'),
         'colour'  => array('name' => 'color', 'type' => 'text'),
         'comments' => array('name' => 'comments', 'type' => 'text'),
-        'scale_1-5' => array('name' => 'scale 1-5', 'type' => 'scale 1-5'),
-        'scale_1-10' => array('name' => 'scale 1-10', 'type' => 'scale 2-5'),
+        'scale 1-5' => array('name' => 'scale 1-5', 'type' => 'scale_1-5'),
+        'scale 1-10' => array('name' => 'scale 1-10', 'type' => 'scale_1-10'),
       );
 
       break;

@@ -278,7 +278,7 @@ function analyzedphenotypes_enable() {
 }
 
 /**
- *
+ * Implements hook_install().
  */
 function analyzedphenotypes_install() {
   $vars = analyzedphenotypes_systemvars();
@@ -296,7 +296,7 @@ function analyzedphenotypes_install() {
 }
 
 /**
- *
+ * Implements hook_uninstall().
  */
 function analyzedphenotypes_uninstall() {
   $vars = analyzedphenotypes_systemvars();
