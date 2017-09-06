@@ -311,4 +311,12 @@ function analyzedphenotypes_uninstall() {
       variable_del($v);
     }
   }
+  
+  foreach(array('mview_phenotype', 'mview_phenotype_summary') as $mview) {
+    $mview_id = tripal_get_mview_id($mview);
+
+    if (isset($mview_id) && $mview_id > 0) {
+      tripal_delete_mview($mview_id);
+    }
+  }
 }
