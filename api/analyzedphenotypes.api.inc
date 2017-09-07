@@ -501,6 +501,10 @@ function analyzedphenotypes_datatypeprop($property, $parameter = null) {
         'g' => array('name' => 'grams', 'type' => 'number'),
         'kg' => array('name' => 'kilograms', 'type' => 'number'),
         'cm'  => array('name' => 'centimeters', 'type' => 'number'),
+        'mg'  => array('name' => 'milligrams', 'type' => 'number'),
+        'mM'  => array('name' => 'milimolar', 'type' => 'number'),
+        'days' => array('name' => 'days', 'type' => 'number_no_zero'),
+        'days' => array('name' => 'days', 'type' => 'number_no_zero'),
         'days' => array('name' => 'days', 'type' => 'number_no_zero'),
         'y/n/?' => array('name' => 'Yes (y), No (n) or Unsure (?)', 'type' => 'y/n/?'),
         'count'  => array('name' => 'count', 'type' => 'number'),
@@ -508,6 +512,8 @@ function analyzedphenotypes_datatypeprop($property, $parameter = null) {
         'comments' => array('name' => 'comments', 'type' => 'text'),
         'scale 1-5' => array('name' => 'scale 1-5', 'type' => 'scale_1-5'),
         'scale 1-10' => array('name' => 'scale 1-10', 'type' => 'scale_1-10'),
+        'percent'  => array('name' => 'percentage', 'type' => 'number'),
+        'average count'  => array('name' => 'average count', 'type' => 'number'),
       );
 
       break;
@@ -541,7 +547,7 @@ function analyzedphenotypes_datatypeprop($property, $parameter = null) {
     //
     case 'number':
       // Numbers including 0.
-      if (preg_match('/[0-9]/', $value) !== 1) {
+      if (!is_numeric($value)) {
         $datatypeprop = FALSE;
       }
 
