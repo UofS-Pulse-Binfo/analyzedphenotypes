@@ -512,8 +512,8 @@ function analyzedphenotypes_datatypeprop($property, $parameter = null) {
         'comments' => array('name' => 'comments', 'type' => 'text'),
         'scale 1-5' => array('name' => 'scale 1-5', 'type' => 'scale_1-5'),
         'scale 1-10' => array('name' => 'scale 1-10', 'type' => 'scale_1-10'),
-        'percent'  => array('name' => 'percentage', 'type' => 'number'),
-        'average count'  => array('name' => 'average count', 'type' => 'number'),
+        'percent' => array('name' => 'percentage', 'type' => 'number'),
+        'average count' => array('name' => 'average count', 'type' => 'number'),
       );
 
       break;
@@ -1256,14 +1256,23 @@ function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
         'cv_id' => $cv_id,
       ));
 
+      $var_default = variable_get($vars[$var_name]['def']);
+      $default_ontology = analyzedphenotypes_cvprop('get_cvterm', array(
+        'cvterm_id' => $var_default,
+      ));
+
       // No unit.
       $trait_name = strtolower(trim($parameter['trait_name']));
 
       $ctr = 0;
       foreach($ontology_terms as $i => $term) {
+        if ($i == $default_ontology['cvterm_id']) {
+          continue;
+        }
+        
         $ontology = strtolower(trim($term['name']));
         $keywords = explode(' ', $ontology);
-        
+
         foreach($keywords as $key){
           if ($ctr >= $suggest_limit) {
             break;
@@ -1277,18 +1286,11 @@ function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
           }
         }
       }
-      
-      if (count($ontologyprop) <= 0) {
-        $var_default = variable_get($vars[$var_name]['def']);
-        $default_ontology = analyzedphenotypes_cvprop('get_cvterm', array(
-          'cvterm_id' => $var_default,
-        ));
         
-        $ontologyprop[$default_ontology['cvterm_id']] = array(
-          'name' => $default_ontology['name'],
-          'definition' => $default_ontology['definition'],
-        );
-      }
+      $ontologyprop[$default_ontology['cvterm_id']] = array(
+        'name' => $default_ontology['name'],
+        'definition' => $default_ontology['definition'],
+      );
 
       break;
 
