@@ -55,33 +55,38 @@ function analyzed_phenotypes_all_data_summary_page() {
       'Tripalus' => '#56AC0D',
     ),
   );
+  
   // Add inline styles to colour-code the crops as specified by the user.
   foreach ($user_style['genus colours'] as $genus => $colour) {
     $css = "
-#phenoype-summary-table tbody tr.$genus td {
-  color: $colour;
-}
-#phenoype-summary-table tbody tr.$genus td.Crop {
-  background-color: $colour;
-  color: white;
-  border-bottom: 1px solid $colour;
-}
-#phenoype-summary-table tbody tr.$genus td.Traits:before {
-    border-left: 25px solid $colour;
-}
-#phenoype-summary-table tbody tr.$genus td.Traits:before {
-    border-left-color: $colour;
-}
+      #phenotype-summary-table tbody tr.$genus td {
+        color: $colour;
+      }
+      
+      #phenotype-summary-table tbody tr.$genus td.Genus {
+        background-color: $colour;
+        color: white;
+        border-bottom: 1px solid $colour;
+      }
+
+      #phenotype-summary-table tbody tr.$genus td.Traits:before {
+        border-left: 25px solid $colour;
+      }
+
+      #phenotype-summary-table tbody tr.$genus td.Traits:before {
+        border-left-color: $colour; 
+      }
     ";
+    
     drupal_add_css($css, array('type' => 'inline'));
   }
 
   // Initialize the table.
   $table = array(
-    'header' => array('Crop', 'Traits', 'Experiments', 'Germplasm', 'Measurements'),
+    'header' => array('Genus', 'Traits', 'Experiments', 'Germplasm', 'Measurements'),
     'rows' => array(),
     'attributes' => array(
-      'id' => 'phenoype-summary-table'
+      'id' => 'phenotype-summary-table'
     ),
     'sticky' => FALSE,
     'empty' => 'You have no phenotypic data sync\'d with your site.',
@@ -138,7 +143,7 @@ function analyzed_phenotypes_all_data_summary_page() {
 
   $output .= theme('table', $table);
 
-  $output .= '<p>To visualize the distribution of values for a given trait, see the ' . l('Trait Distribution Chart', 'phenotypes/trait-distribution') . '.</p>';
+  $output .= '<p class="to-distribution-chart">To visualize the distribution of values for a given trait, see the ' . l('Trait Distribution Chart', 'phenotypes/trait-distribution') . '.</p>';
 
   return $output;
 }

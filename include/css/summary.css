@@ -5,36 +5,58 @@
 /**
  * Style the table to be cleaner and more info-graphic like.
  */
-#phenoype-summary-table thead tr th {
+#phenotype-summary-table thead tr th {
   background: #FFF;
   color: black;
   border: 1px solid #FFF;
   height: 50px;
   text-align: center;
   vertical-align: bottom;
+  font-size: 1.08em;
+  font-weight: 400;
 }
-#phenoype-summary-table thead tr th.Crop, #phenoype-summary-table tbody tr td.Crop {
+
+#phenotype-summary-table thead tr th.Genus {
+  margin: 0;
+  padding: 0 0 5px 0;
+}
+
+#phenotype-summary-table thead tr th.Genus, #phenoype-summary-table tbody tr td.Genus {
   text-align: left;
 }
-#phenoype-summary-table tbody tr td {
+
+#phenotype-summary-table tbody tr td {
   background: #FFF;
-  border: 1px solid #FFF;
-  height: 50px;
+  height: 54px;
   text-align: center;
   font-size: 2em;
   color: #292929;
   font-weight: bolder;
 }
+
 /* Arrow for the crop name */
-#phenoype-summary-table tbody tr td.Crop {
+#phenotype-summary-table tbody tr td.Genus {
   background-color: #292929;
   color: white;
   border-bottom: 1px solid #292929;
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-style: italic;
+  font-weight: 300;
+  text-align: left;
+  font-size: 1.6em;
+  padding: 0 0 0 15px;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
 }
-#phenoype-summary-table tbody tr td.Traits {
+
+#phenotype-summary-table tbody tr {
+  border-bottom: 5px solid #FFFFFF;
+}
+
+#phenotype-summary-table tbody tr td.Traits {
     position: relative;
 }
-#phenoype-summary-table tbody tr td.Traits:before {
+
+#phenotype-summary-table tbody tr td.Traits:before {
     content: '';
     position: absolute;
     top: 0;
@@ -46,6 +68,17 @@
     border-top: 30px solid transparent;
     border-bottom: 30px solid transparent;
 }
-#phenoype-summary-table tbody tr td.Traits:before {
+
+#phenotype-summary-table tbody tr td.Traits:before {
     border-left-color: #292929;
+}
+
+p.to-distribution-chart {
+  background-color: #F8FFF0;
+  border: 1px solid #89D47F;
+  padding: 15px;
+  color: #234600;
+  font-weight: 300;
+  font-size: 1.09em;
+  margin: 25px 0 0 0;
 }
