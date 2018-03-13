@@ -32,6 +32,7 @@
  * @see analyzedphenotypes_data_json() in .module.
  */
 function analyzedphenotypes_projectprop($property = null, $parameter = null) {
+  // Update: used in data downloader form.
   $projectprop = null;
 
   // Fetch all project/experiment records in chado.project.
@@ -101,7 +102,7 @@ function analyzedphenotypes_projectprop($property = null, $parameter = null) {
       }
 
       break;
-
+  
     //
     // Define additional case here.
 
@@ -141,6 +142,7 @@ function analyzedphenotypes_projectprop($property = null, $parameter = null) {
  * @see analyzedphenotypes_save_tsv_data() in validator.inc.
  */
 function analyzedphenotypes_genusprop($property = null, $parameter = null) {
+  // update: used in data downloader form.
   $genusprop = null;
 
   switch($property) {
@@ -173,7 +175,8 @@ function analyzedphenotypes_genusprop($property = null, $parameter = null) {
       $genusprop = ($result->rowCount() == 1) ? $result->fetchField() : $genusprop;
 
       break;
-
+    
+    //
     case 'assign_genus':
       $vars = analyzedphenotypes_systemvars('db_cv');
       $var_genus = $vars['ap_genus'];
@@ -188,7 +191,19 @@ function analyzedphenotypes_genusprop($property = null, $parameter = null) {
       chado_insert_record('projectprop', $values);
 
       break;
-
+    
+    //
+    case 'genus_species':
+      // Fetch all unique species in chado.organism given a genus.
+      $result = chado_query(
+        "SELECT species FROM {organism} WHERE genus = :genus GROUP BY species ORDER BY species ASC",
+        array(':genus' => $parameter['genus'])
+      );
+      
+      $genusprop = ($result->rowCount() > 0) ? $result->fetchCol() : $genusprop;
+      
+      break;
+    
     //
     // Define additional case here.
 
@@ -335,8 +350,18 @@ function analyzedphenotypes_datafileprop($property = null, $parameter = null) {
       break;
 
     //
+    case 'download_type':
+      $datafileprop = array(
+        'tsv' => '.TSV - Tab Separated Values',
+        'csv' => '.CSV - Comma Separated Values',
+        'xlsx'=> '.XLSX -Microsoft Excel Spreadsheet File',
+      );
+      
+      break;
+    
+    //
     // Define additional case here.
-
+    
     //
     default:
       $datafileprop = array(
@@ -354,7 +379,8 @@ function analyzedphenotypes_datafileprop($property = null, $parameter = null) {
  * API: COLUMN HEADERS
  * Manage property and operation pertaining to column headers.
  * Default to: Return expected column headers.
- * Dependencies: analyzedphenotypes_systemvars().
+ * Dependencies: analyzedphenotypes_systemvars()
+ *               analyzedphenotypes_fieldnames()
  *
  * @param String $property
  *   A value representing a property/operation requested (each property represents a case in the switch implementation):
@@ -404,6 +430,49 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
       );
 
       break;
+    
+    // 
+    case 'downloadable':
+      // Columns used when downloading data.
+      // In order: Experiment*, Trait Name, Germplasm Name, Year
+      //           Location, Replicate, Data Collector, Country of Origin*.
+      // * - additional.
+      $cols = array_keys($columnsprop_expectedcols);
+      $cols[8] = 'Trait Name'; // By default, select all trait names
+      
+      $columnsprop = array(
+        'Experiment',
+        $cols[2], // Germplasm Name
+        $cols[3], // Year
+        $cols[4], // Location
+        $cols[5], // Replicate
+        $cols[7], // Data Collector
+        $cols[8], // Trait Name
+        'Country of Origin',
+        
+        // Additional columns here.
+      );
+      
+      break;
+    
+    //
+    case 'column_to_field':
+      $fldname = analyzedphenotypes_fieldnames();
+      $cols = array_keys($columnsprop_expectedcols);
+
+      $columnsprop = array(
+        'Experiment' => $fldname['experiment']['base'],
+        $cols[2] => $fldname['germplasm']['base'], 
+        $cols[3] => $fldname['year']['base'], 
+        $cols[4] => $fldname['location']['base'], 
+        $cols[5] => $fldname['replicate']['base'], 
+        $cols[7] => $fldname['collector']['base'], 
+        'Country of Origin' => $fldname['origin']['base'],
+        
+        // Additional column to field here.
+      );
+      
+      break;
 
     //
     case 'match_combination':
@@ -446,6 +515,62 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
 
       break;
 
+    case 'rfriendly':
+      // These rules/pattern are from rawphenotypes.
+      $word_rules = 'of,to,have,on,at';
+      $char_rules = '(,),/,-,:,;,%';
+      $replace_rules = '# = num,/ = div,? = unsure,- = to';
+
+      $arr_match = array();
+      $arr_replace = array();
+      $r = explode(',', $replace_rules);
+
+      // Convert the rule to key and value pair. The key is the matching character/word and
+      // the values is the replacement value when key is found in a string.
+      foreach($r as $g) {
+        list($match, $replace) = explode('=', $g);
+        $arr_match[] = trim($match);
+        $arr_replace[] = trim($replace);
+      }
+
+      // Convert special characters transformation rules in string to array.
+      $char_rules = explode(',', $char_rules);
+
+      // Convert words transformation rules in string to array.
+      $word_rules = explode(',', $word_rules);
+
+      // Remove leading and trailing spaces from the selected trait.
+      // Convert string to lowercase.
+      $selected_trait = trim(strtolower($parameter['column_header']));
+      // 1. Break the column header in string to individual words,
+      //    and remove all words that matches an entry in the words transfomation rules.
+      $w = explode(' ', $selected_trait);
+      foreach($w as $c) {
+        $c = trim($c);
+
+        // Skip the words in the traits that are present in the
+        // words transformation rules.
+        if (!in_array($c, $word_rules)) {
+          // Do match and replace, as well as, removal of special characters
+          // only when the current word is not in the words transformation rules.
+          // 2. Match and replace based on match and replace rule.
+          $c = str_replace($arr_match, $arr_replace, $c);
+          // 3. Remove all special characters listed in remove chars rule.
+          $c = str_replace($char_rules, '', $c);
+
+          // All transformation rules applied, make sure that
+          // the result is not a blank space.
+          if (!empty($c)) {
+            $rfriendly[] = trim($c);
+          }
+        }
+      }
+
+      // Final transformation is replacing all spaces to dots/period (.)
+      $columnsprop = ucfirst(implode('.', $rfriendly));
+
+      break;
+   
     //
     // Define additional case here.
 
@@ -750,7 +875,8 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
       $term[$index] = $parameter[$index];
 
       $cvterm = tripal_get_cvterm($term);
-
+      $definition = (isset($cvterm->definition)) ? $cvterm->definition : '';
+      
       if ($cvterm) {
         $cvprop = array(
           'cvterm_id'  => $cvterm->cvterm_id,
@@ -759,7 +885,7 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
           'cv_id'      => $cvterm->cv_id->cv_id,
           'cv_name'    => $cvterm->cv_id->name,
           'name'       => $cvterm->name,
-          'definition' => $cvterm->definition,
+          'definition' => $definition,
           'photo_1'    => $cvterm->cvterm_id . '_1.jpg',
           'photo_2'    => $cvterm->cvterm_id . '_2.jpg',
         );
@@ -960,8 +1086,11 @@ function analyzedphenotypes_traitprop($property, $parameter) {
       $traitprop = (isset($match[1])) ? $match[1] : 'text';
 
       break;
-
+    
     //
+    // Define additional case here.
+    
+    // default.
   }
 
 
@@ -1364,6 +1493,7 @@ function analyzedphenotypes_systemvars($property = null) {
 
   $vars_plantprop = array(
     // Plant property cvterms.
+    'ap_origin'    => $basename . 'origin',
     'ap_year'      => $basename . 'year',
     'ap_location'  => $basename . 'location',
     'ap_replicate' => $basename . 'replicate',
@@ -1421,7 +1551,7 @@ function analyzedphenotypes_AJAX_callback($form, $form_state) {
   $case = $form_state['triggering_element']['#ajax']['case'];
   $element = 'ap_AJAX_wrapper' . '_' . $case;
 
-  if ($form_state['triggering_element']['#ajax']['contain']) {
+  if (isset($form_state['triggering_element']['#ajax']['contain'])) {
     $contain = $form_state['triggering_element']['#ajax']['contain'];
 
     return $form[$contain][$element];
@@ -1511,11 +1641,9 @@ function analyzedphenotypes_table_values($rows, $column_row, $trait) {
         else {
           return 0;
         }
-
       }
     }
   }
-
 
   sort($arr_siteyear);
   return array('siteyear' => $arr_siteyear, 'values' => $arr_values);
@@ -1536,4 +1664,689 @@ function analyzedphenotypes_scale_photo($parameter) {
   $new_h = round($h * $ratio);
 
   return array('height' => $new_h, 'width' => $new_w);
+}
+
+
+/**
+ * Function load materialized view query.
+ *
+ * @param $term_id_location
+ *   Integer, cvterm id of term Location in chado.cvterm.
+ * @param $term_id_year
+ *   Integer, cvterm_id of term Year in chado.cvterm.
+ * 
+ * @return
+ *   String, SQL query.
+ */
+function analyzedphenotypes_mview($property, $parameter = null) {
+  $mview = null;
+  
+  switch($property) {
+    case 'view_phenotypes':
+      // Default terms location and year to 0 when not indicated.
+      $term_id_location = (isset($parameter['term_id_location'])) ? $parameter['term_id_location'] : 0;
+      $term_id_year     = (isset($parameter['term_id_year'])) ? $parameter['term_id_year'] : 0;
+      
+      $mview_query = sprintf("
+        SELECT
+          o.genus as organism_genus,
+          trait.cvterm_id as trait_id,
+          trait.name as trait_name,
+          proj.project_id as project_id,
+          proj.name as project_name,
+          loc.value as location,
+          yr.value as year,
+          s.stock_id as germplasm_id,
+          s.name as germplasm_name,
+          avg( CAST(p.value as FLOAT) ) as mean
+        FROM {phenotype} p
+          LEFT JOIN {cvterm} trait ON trait.cvterm_id=p.attr_id
+          LEFT JOIN {project} proj USING(project_id)
+          LEFT JOIN {stock} s USING(stock_id)
+          LEFT JOIN {organism} o ON o.organism_id=s.organism_id
+          LEFT JOIN {phenotypeprop} loc ON loc.phenotype_id=p.phenotype_id AND loc.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE cvterm_id = %d)
+          LEFT JOIN {phenotypeprop} yr ON yr.phenotype_id=p.phenotype_id AND yr.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE cvterm_id = %d)
+        GROUP BY trait.cvterm_id, trait.name, proj.project_id, proj.name, loc.value, yr.value, s.stock_id, s.name, o.genus
+      ", $term_id_location, $term_id_year);   
+      
+      $mview_schema = array(
+        'description' => 'Caches phenotypic data for easier retrieval of means. Data replicates are combined.',
+        'table' => 'mview_phenotype',
+        'fields' => array (
+          'organism_genus' => array (
+            'type' => 'varchar',
+            'length' => '255',
+            'not null' => TRUE,
+          ),
+          'trait_id' => array (
+            'size' => 'big',
+            'type' => 'int',
+            'not null' => TRUE,
+          ),
+          'trait_name' => array (
+            'type' => 'varchar',
+            'length' => '255',
+            'not null' => TRUE,
+          ),
+          'experiment_id' => array (
+            'size' => 'big',
+            'type' => 'int',
+            'not null' => TRUE,
+          ),
+          'experiment_name' => array (
+            'type' => 'text',
+            'not null' => TRUE,
+          ),
+          'location' => array (
+            'type' => 'text',
+            'not null' => TRUE,
+          ),
+          'year' => array (
+            'type' => 'text',
+            'not null' => TRUE,
+          ),
+          'stock_id' => array (
+            'size' => 'big',
+            'type' => 'int',
+            'not null' => TRUE,
+          ),
+          'stock_name' => array (
+            'type' => 'varchar',
+            'length' => '255',
+            'not null' => TRUE,
+          ),
+          'mean' => array(
+            'type' => 'float',
+          ),
+        ),
+        
+        'indexes' => array(),
+      );      
+      
+      // Return query and SQL.
+      $mview = array(
+        'query' => $mview_query,
+        'schema' => $mview_schema,
+      );
+      
+      break;
+      
+    //
+    // Additional case here. 
+  }
+  
+  
+  return $mview; 
+}
+
+
+/// AP DATA DOWNLOADER.
+
+
+/**
+ * FUNCTION GENERATE FILE.
+ * Create a tsv, csv and xlsx file.
+ * 
+ * @param $filename
+ *   String, destination filename.
+ * @param $data_rows
+ *   An array containing the headers (index 0) and data points to write to a file.
+ * @param $file_type 
+ *   String, indicating the type of file (tsv, csv, xlsx).
+ */
+function analyzedphenotypes_writefile($filename, $data_rows, $file_type) {
+  $filepath = variable_get('trpdownload_fullpath', '') . $filename;
+
+  switch($file_type) {
+    //
+    case 'tsv':
+    //
+    case 'csv':
+      $FILE = fopen($filepath, 'w') or die ('Unable to create file to write to...');
+      
+      foreach($data_rows as $row) {
+        if ($file_type == 'tsv') {
+          fputcsv($FILE, $row, "\t");
+        }
+        else {
+          fputcsv($FILE, $row);
+        }
+      }
+      
+      fclose($FILE);
+      
+      break;
+    
+    //
+    case 'xlsx':
+      // Load spreadsheet writer library.
+      $xlsx_writer = libraries_load('spreadsheet_writer');
+      include_once $xlsx_writer['library path'] . '/'. $xlsx_writer['files'][0];
+      
+      $writer = new XLSXWriter();
+      @$writer->writeSheet($data_rows);
+      $writer->writeToFile($filepath);
+      
+      break;
+  }
+}
+
+
+/**
+ * FUNCTION GLOBAL FIELD NAMES
+ */
+function analyzedphenotypes_fieldnames() {
+  // Field names.
+  $fields = array('experiment', 'genus', 'species', 'traits', 'year', 'location', 'germplasmtype', 'germplasm',
+                  'missingdata', 'filetype', 'averagerep', 'rfriendly', 'columnheaders', 'origin', 'value', 
+                  'replicate', 'collector');
+  // Properties.
+  $prop = array('base', 'field', 'cache', 'field-id', 'field_hidden');
+  
+  $fieldnames = array();
+  
+  foreach($fields as $f) {
+    foreach($prop as $p) {
+      $c = ($p == 'field-id') ? '-' : '_';
+      // ap-fieldname-field-id.
+      $value = ($p == 'base') ? $f : 'ap' . $c . $f . $c . $p;
+      
+      $fieldnames[$f][$p] = $value;
+    }
+  }
+  
+  
+  return $fieldnames;
+}
+
+
+/**
+ * FUNCTION POPULATE DOWNLOAD FORM.
+ */
+function analyzedphenotypes_populatefield($field, $parameter = null) {
+  // Use this character to separate entries in a string.
+  $delimiter = '#';
+  $field_values = null;
+  
+  switch($field) {
+    //
+    case 'file':
+      $fldname = analyzedphenotypes_fieldnames();
+      
+      // Match field to actual chado column names.
+      // Limit rows to project, trait, year, location, germplasm type and germplasm.
+      $column = array(
+        $fldname['experiment']['base']    => 'project_id',
+        $fldname['traits']['base']        => 'cvterm_id',
+        $fldname['germplasmtype']['base'] => 't3.type_id',
+        $fldname['year']['base']          => 't7.value',
+        $fldname['location']['base']      => 't8.value',
+        // As entered in the germplasm field.
+        $fldname['germplasm']['base']     => "CONCAT(t3.name, ' (', t3.uniquename, ')')",
+      );
+      
+      // Processed filter from tripal_download api.
+      $filters = $parameter['filters'];
+
+      $limit = array();
+      foreach($column as $filter => $col) {
+        $filter_value = $filters[$filter];
+        
+        // Convert filter so chado_query arguments (:placeholder = value).
+        // Exclude filter with value = all.
+        if ($filter_value != 'all') {
+          $placeholder = ':' . $filter;
+
+          $limit['limit'] .= ' AND ' . $col . ' IN (' . $placeholder . ')';
+          $limit['args'][$placeholder] = explode($delimiter, $filter_value);
+        }
+      }
+
+      $sql = sprintf("
+        SELECT
+          t2.project_id, t1.phenotype_id, t2.name AS %s, t3.name AS %s,
+          STRING_AGG(t4.value, '') AS %s, t5.name AS %s, t1.value AS %s, t6.value AS %s, 
+          t7.value AS %s, t8.value AS %s, t9.value AS %s
+        FROM 
+          {phenotype}                AS t1
+          INNER JOIN {project}       AS t2 USING(project_id)
+          INNER JOIN {stock}         AS t3 USING(stock_id)
+          LEFT  JOIN {stockprop}     AS t4 ON t3.stock_id = t4.stock_id AND t4.type_id = :term_origin
+          INNER JOIN {cvterm}        AS t5 ON t1.attr_id = t5.cvterm_id
+          INNER JOIN {phenotypeprop} AS t6 USING(phenotype_id)
+          INNER JOIN {phenotypeprop} AS t7 USING(phenotype_id)
+          INNER JOIN {phenotypeprop} AS t8 USING(phenotype_id)  
+          INNER JOIN {phenotypeprop} AS t9 USING(phenotype_id)  
+        WHERE 
+          t6.type_id = :term_replicate AND t7.type_id = :term_year
+          AND t8.type_id = :term_location AND t9.type_id = :term_collector
+          %s
+        GROUP BY
+          t2.project_id, t1.phenotype_id, t2.name, t3.name, t5.name, t1.value, 
+          t6.value, t7.value, t8.value, t9.value
+        ORDER BY t2.name, t3.name, t7.value, t8.value ASC", 
+          $fldname['experiment']['base'], $fldname['germplasm']['base'], 
+          $fldname['origin']['base'],     $fldname['traits']['base'], 
+          $fldname['value']['base'],      $fldname['replicate']['base'], 
+          $fldname['year']['base'],       $fldname['location']['base'],
+          $fldname['collector']['base'],
+          $limit['limit']);
+      
+      
+      // Plant property (replicate, year, location, data collector) cvterms;
+      $plant_property = analyzedphenotypes_systemvars('plant_property');
+
+      $options = chado_query($sql,
+        // project, traits, year, locaiton, germplasm type and germplasm filters.
+        $limit['args'] +
+        array(
+          // Plant property terms.
+          ':term_replicate' => variable_get($plant_property['ap_replicate']),
+          ':term_year'      => variable_get($plant_property['ap_year']),
+          ':term_origin'    => variable_get($plant_property['ap_origin']),
+          ':term_location'  => variable_get($plant_property['ap_location']),
+          ':term_collector' => variable_get($plant_property['ap_collector']),
+        ));
+      
+      // Return result.
+      if (count($options) > 0) {
+        $field_values = ($options->rowCount() > 0) ? $options->fetchAll() : $field_values;      
+      }
+      
+      break;
+    
+    //
+    case 'field_project':
+      $options = chado_query(
+        "SELECT project_id, t1.name FROM {project} AS t1 INNER JOIN {phenotype} USING(project_id) 
+        GROUP BY project_id ORDER BY t1.name ASC"
+      );
+      
+      if (count($options) > 0) {
+        $field_values = ($options->rowCount() > 0) ? $options->fetchAllKeyed() : $field_values;      
+      }
+    
+      break;
+    
+    //
+    case 'field_project_summary':
+      $options = chado_query(
+        "SELECT project_id, CONCAT('*' || COUNT(DISTINCT attr_id) || ' Traits, ' || COUNT(phenotype_id) || ' Data Points ')
+        FROM {phenotype} GROUP BY project_id ORDER BY project_id ASC"
+      );
+      
+      if ($options) {
+        $field_values = ($options->rowCount() > 0) ? $options->fetchAllKeyed() : $field_values;      
+      }
+      
+      break;
+  
+    //
+    case 'field_genus':
+      $options = analyzedphenotypes_genusprop('project_genus', array(
+        'project_id' => $parameter['project_id'],
+      ));
+      
+      if ($options) {
+        $field_values = array($options => $options);
+      }
+
+      break;
+    
+    // 
+    case 'field_species':
+      $options = chado_query(
+        "SELECT species FROM {organism} WHERE genus = :genus AND organism_id 
+        IN (SELECT organism_id FROM {stock} INNER JOIN {phenotype} USING (stock_id) WHERE project_id = :project_id)
+        GROUP BY species ORDER BY species ASC",
+        
+        array(
+          ':genus' => $parameter['genus'],
+          ':project_id' => $parameter['project_id'],
+        )
+      );
+     
+      $field_values = ($options->rowCount() > 0) ? $options->fetchAllKeyed(0, 0) : $field_values;      
+
+      break;
+    
+    //
+    case 'field_traits':
+      if (count($parameter['project_id']) > 1) {
+        $options = chado_query(
+          "SELECT t1.cvterm_id, t1.name FROM {cvterm} AS t1 INNER JOIN {phenotype} ON t1.cvterm_id = attr_id 
+          WHERE project_id IN (:project_id) GROUP BY t1.cvterm_id, t1.name ORDER BY t1.name ASC",
+          array(
+            ':project_id' => $parameter['project_id'],
+          )
+        );
+        
+        $field_values = ($options->rowCount() > 0) ? $options->fetchAllKeyed() : $field_values;
+      }
+      else {
+        $options = chado_query(
+          "SELECT cvterm_id, name FROM {cvterm} WHERE cvterm_id IN (SELECT attr_id FROM {phenotype} 
+          WHERE project_id = :project_id AND stock_id IN 
+            (SELECT stock_id FROM {stock} WHERE organism_id IN (SELECT organism_id from {organism} 
+              WHERE LOWER(genus) = LOWER(:genus) AND LOWER(species) = LOWER(:species))))",
+          array(
+            ':project_id' => $parameter['project_id'],
+            ':genus' => $parameter['genus'],
+            ':species' => $parameter['species'],
+          )
+        );
+  
+        $field_values = ($options->rowCount() > 0) ? $options->fetchAllKeyed() : $field_values;
+      }
+    
+      break;
+    
+    //
+    case 'field_year':
+      $vars = analyzedphenotypes_systemvars('plant_property');
+      $year_property = variable_get($vars['ap_year']);
+      
+      $options = chado_query(
+        "SELECT value FROM {phenotypeprop} WHERE type_id = :year_property
+        AND phenotype_id IN (SELECT phenotype_id FROM {phenotype} WHERE project_id IN (:project_id) AND attr_id IN (:traits))
+        GROUP BY value ORDER BY value DESC",
+        array(
+          ':year_property' => $year_property,
+          ':project_id' => $parameter['project_id'],
+          ':traits' => $parameter['traits'],
+        )
+      );
+      
+      $field_values = ($options->rowCount() > 0) ? $options->fetchAllKeyed(0, 0) : $field_values;
+      
+      break;
+    
+    //
+    case 'field_location':
+      $vars = analyzedphenotypes_systemvars('plant_property');
+      $year_property = variable_get($vars['ap_year']);
+      $location_property = variable_get($vars['ap_location']);
+
+      if (isset($parameter['genus']) && isset($parameter['species'])) {
+        $condition_species = 'AND stock_id IN (SELECT stock_id FROM {organism} WHERE organism_id IN (
+          SELECT organism_id FROM {organism} WHERE LOWER(genus) = LOWER(:genus) AND LOWER(species) = LOWER(:species)
+        ))';
+        
+        $args_species = array(
+          ':genus' => $parameter['genus'],
+          ':species' => $parameter['species'],
+        );
+      }
+      else {
+        $condition_species = '';
+        $args_species = array();
+      }
+
+
+      $sql = sprintf("SELECT t1.value 
+        FROM 
+          {phenotype} 
+          INNER JOIN {phenotypeprop} AS t1 USING (phenotype_id) 
+          INNER JOIN {phenotypeprop} AS t2 USING (phenotype_id)
+        WHERE 
+          project_id IN (:project_id)
+          AND attr_id IN (:traits)
+          AND t1.type_id = :location_property
+          AND t2.type_id = :year_property
+          AND t2.value IN (:year)
+          %s ORDER BY t1.value ASC", $condition_species);
+
+      $options = chado_query($sql,
+        array(
+          ':project_id' => $parameter['project_id'],
+          ':traits'  => $parameter['traits'],
+          ':year' => $parameter['year'],
+          ':location_property' => $location_property,
+          ':year_property' => $year_property,
+        )
+        + $args_species
+      );
+      
+      $field_values = ($options->rowCount() > 0) ? $options->fetchAllKeyed(0, 0) : $field_values;
+
+      break;
+    
+    //
+    case 'field_germplasmtype':
+      $vars = analyzedphenotypes_systemvars('plant_property');
+      $year_property = variable_get($vars['ap_year']);
+      $location_property = variable_get($vars['ap_location']);
+      
+      if (isset($parameter['genus']) && isset($parameter['species'])) {
+        $condition_species = 'AND stock_id IN (SELECT stock_id FROM {organism} WHERE organism_id IN (
+          SELECT organism_id FROM {organism} WHERE LOWER(genus) = LOWER(:genus) AND LOWER(species) = LOWER(:species)
+          ))';
+        
+        $args_species = array(
+          ':genus' => $parameter['genus'],
+          ':species' => $parameter['species'],
+        );
+      }
+      else {
+        $condition_species = '';
+        $args_species = array();
+      }
+      
+      $sql = sprintf("SELECT cvterm_id, t0.name FROM {cvterm} AS t0 INNER JOIN {stock} ON cvterm_id = type_id WHERE stock_id IN (
+        SELECT stock_id
+        FROM 
+          {phenotype} 
+          INNER JOIN {phenotypeprop} AS t1 USING (phenotype_id) 
+          INNER JOIN {phenotypeprop} AS t2 USING (phenotype_id)
+        WHERE 
+          project_id IN (:project_id)
+          AND attr_id IN (:traits)
+          AND t1.type_id = :location_property
+          AND t1.value IN (:location)
+          AND t2.type_id = :year_property
+          AND t2.value IN (:year)
+          %s)", $condition_species);
+      
+      $options = chado_query($sql,
+        array(
+          ':project_id' => $parameter['project_id'],
+          ':traits' => $parameter['traits'],
+          ':year_property' => $year_property,
+          ':year' => $parameter['year'],
+          ':location_property' => $location_property,
+          ':location' => $parameter['location'],
+        )
+        + $args_species
+      );
+
+      $field_values = ($options->rowCount() > 0) ? $options->fetchAllKeyed() : $field_values;
+
+      break;
+    
+    //
+    case 'field_germplasm':
+      if (isset($parameter['genus'])) {
+        $vars = analyzedphenotypes_systemvars('plant_property');
+        
+        $var_value = array(
+          ':year' => variable_get($vars['ap_year']),
+          ':location' => variable_get($vars['ap_location']),
+        );
+        
+        $fields = array(
+          'plantprop' => array(
+            ':project'  => array('operator' => 'IN', 'field' => 'project_id', 'value' => $parameter['project_id'], 'type' => ''),
+            ':traits'   => array('operator' => 'IN', 'field' => 'attr_id',    'value' => $parameter['traits'],     'type' => ''),
+            ':year'     => array('operator' => 'IN', 'field' => 't1.value',   'value' => $parameter['year'],       'type' => 't1.type_id'),
+            ':location' => array('operator' => 'IN', 'field' => 't2.value',   'value' => $parameter['location'],   'type' => 't2.type_id'),
+          ),
+          'organism' => array(
+            ':genus'    => array('operator' => '=',  'field' => 'genus',      'value' => $parameter['genus'],       'type' => ''),
+            ':species'  => array('operator' => '=',  'field' => 'species',    'value' => $parameter['species'],     'type' => ''),
+          ),
+        );
+
+        $condition = array();
+        $where_clause = array();
+        $args = array();
+        
+        foreach($fields as $field => $prop) {
+          foreach($prop as $col => $value) {
+            if (isset($value['value']) && !empty($value['value'])) {
+              if ($value['type']) {
+                $p = $col . '_property';
+                $condition[$field][] = $value['type'] . ' = ' . $p;
+                $args[$p] = $var_value[$col];
+              }
+
+              $v = ($value['operator'] == 'IN') ? ' (' . $col . ')' : $col;
+              $condition[$field][] = $value['field'] . ' ' . $value['operator']  .  $v;
+              
+              $args[$col] = $value['value'];
+            }
+          }
+      
+          $where_clause[$field] = implode(' AND ', $condition[$field]);  
+        }
+        
+        $sql1 = "SELECT stock_id, CONCAT(name, ' (', uniquename, ')') AS germplasm FROM {stock} WHERE ";
+
+        $sql2 = sprintf("
+          stock_id IN (
+            SELECT stock_id FROM {phenotype}
+              INNER JOIN {phenotypeprop} AS t1 USING (phenotype_id)
+              INNER JOIN {phenotypeprop} AS t2 USING (phenotype_id)  
+            WHERE %s
+        ) ", $where_clause['plantprop']);
+
+        $sql3 = sprintf(" AND organism_id IN (SELECT organism_id FROM {organism} WHERE %s) ", $where_clause['organism']);
+        $sql4 = " AND type_id IN (:germplasmtype) ";
+        $sql5 = " GROUP BY stock_id, name, uniquename ORDER BY name ASC";
+
+        $sql = $sql1 . $sql2;
+      
+        if (!empty($where_clause['organism'])) {
+          $sql .= $sql3;
+        }
+        
+        if (!empty($parameter['germplasmtype'])) {
+          $sql .= $sql4;
+          $args[':germplasmtype'] = $parameter['germplasmtype'];
+        }
+      
+        $sql .= $sql5;
+        $options = chado_query($sql, $args);
+      }
+      else {
+        $options = chado_query(
+          "SELECT t1.stock_id, CONCAT(t1.name, ' (', t1.uniquename, ')') AS germplasm
+          FROM {stock} AS t1 INNER JOIN {phenotype} USING(stock_id) WHERE project_id IN (:project_id)
+          GROUP BY t1.stock_id, t1.name, t1.uniquename ORDER BY t1.name ASC",
+          array(
+            ':project_id' => $parameter['project_id'],
+          )
+        );
+      }
+      
+      $field_values = ($options->rowCount() > 0) ? $options->fetchAllKeyed() : $field_values;
+
+      break;
+  }
+
+  return $field_values;
+}
+
+
+/**
+ * FUNCTION CACHE FORM VALUE.
+ */
+function analyzedphenotypes_cachevalue($value) {
+  if (is_array($value)) {
+    $value = implode('_', $value);
+  }
+  
+  return array(
+    '#type' => 'value',
+    '#value' => $value,
+  );
+}
+
+
+/**
+ * FUNCTION CALLBACK: AJAX add and remove form field.
+ */
+function analyzedphenotypes_autofield_callback($command, $element) {
+  // Add or remove autofield command.
+  $cmd = trim($command);
+  $elm = trim($element);
+  
+  if (($cmd == 'add' || $cmd == 'rem') && !empty($elm)) {
+    // Add or remove autofield command.
+    $element_id = '#' . $elm;
+
+    if ($cmd == 'add') {
+      // Create a from field api and append to element wrapper.
+      $field_api = analyzedphenotypes_autofieldprop();
+      $field_htm = drupal_render($field_api);
+
+      $AJAX_cmd = ajax_command_prepend($element_id, $field_htm);
+    }
+    else {
+      // Given a reference id to an element, remove if from DOM.
+      $AJAX_cmd = ajax_command_remove($element_id);  
+    }
+    
+    return array(
+      '#type' => 'ajax',
+      '#commands' => array($AJAX_cmd),
+    );
+  }
+  else {
+    // Not valid command. No element. Do nothing.
+    return FALSE;
+  }
+}
+
+
+
+/**
+ * FUNCTION: Define a autocomplete form field.
+ */ 
+function analyzedphenotypes_autofieldprop($default_value = 'Type Germplasm/Stock Name') {
+  // Menu item that will handle AJAX request.
+  $autofield_menu = 'download/autofield/';
+  // Id each field added. This id will be use to reference an element.
+  $autofield_id = uniqid();
+  // Add and remove command - argument to menu item.
+  $autofield_rem  = 'rem';
+  $autofield_add  = 'add';
+  // Make an AJAX link.
+  $autofield_attr = array(
+    'attributes' => array(
+      'class' => array('use-ajax'),
+      'title' => 'Click to Add (+) or Remove (x) Germplasm',
+    )
+  );
+
+  // l(text, url + element, attributes);
+  // Use id #ap-autofield in the main form where field will be inserted.
+  $autofield_btns = l('Rem', $autofield_menu . $autofield_rem . '/ap-autofield-wrapper-' . $autofield_id, $autofield_attr)
+                  . l('Add', $autofield_menu . $autofield_add . '/ap-autofield'                         , $autofield_attr);
+                  
+  // Define field API.
+  $autofield_fld['ap_autofield_' . $autofield_id] = array(
+    '#type' => 'textfield',
+    '#value' => $default_value,
+    '#theme_wrappers' => array(),
+    // Wrap this field.
+    '#prefix' => '<div id="ap-autofield-wrapper-' . $autofield_id . '" class="ap-autofield-wrapper ap-autofield-AJAX-off">',
+    // Buttons.
+    '#suffix' => '<span>' . $autofield_btns . '</span></div>',
+    //
+    '#attributes' => array('class' => array('ap-autofield-field')),
+    '#id' => 'ap-autofield-' . $autofield_id,
+  );
+  
+  
+  return $autofield_fld;
 }

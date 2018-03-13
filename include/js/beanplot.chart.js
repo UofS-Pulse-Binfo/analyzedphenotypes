@@ -162,6 +162,7 @@
           }
 
           // Add the mean values with decimal places.
+          ticksMajor = ticksAll;
           ticksAll = ticksAll.concat(decimalVal);
           ticksNo = ticksAll.length;
 
@@ -210,7 +211,23 @@
           // Indent such tick marks.
           d3.selectAll('#bp-y-scale line')
             .attr('x2', function(d) {
-              return (d % ticksDiff == 0) ? -12 : -6;
+              //return (d % ticksDiff == 0) ? -12 : -6;
+              
+              var j;
+
+              if (d % ticksDiff == 0) {
+                j = -12;
+              }
+              else {
+                if (Number.isInteger(d)) {
+                  j = -6;
+                }
+                else {
+                  j = 0;
+                }
+              }
+
+              return j;
             });
 
           // X
@@ -357,7 +374,7 @@
             bp.chartAreaWidth  = width  - bpMargin.left - bpMargin.right  - bpMargin.gutter;
             bp.chartAreaHeight = height - bpMargin.top  - bpMargin.bottom - bpMargin.gutter;
             bp.chartEachly     = Math.round(bp.chartAreaWidth/lyCount);
-            bp.chartBarHeight  = bp.chartAreaHeight/ticksAll.length;
+            bp.chartBarHeight  = bp.chartAreaHeight/ticksMajor.length;
 
           // Apply the new dimension to chart elements.
 

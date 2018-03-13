@@ -1,9 +1,9 @@
 <?php
+
 /**
  * Implements hook_install().
  */
-
-
+ 
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
 
 
@@ -77,7 +77,7 @@ function analyzedphenotypes_schema() {
   $phenotypeprop_exists = db_table_exists('chado.phenotypeprop');
 
   if (!$phenotypeprop_exists) {
-  //
+    //
     $schema['chado.phenotypeprop'] = array(
       'description' => t('Analyzed phenotype properties'),
       'fields' => array(
@@ -132,85 +132,16 @@ function analyzedphenotypes_schema() {
 }
 
 
-
 /**
  * Implements hook_enable().
  */
 function analyzedphenotypes_enable() {
-
   // Add a materialized view to calculate the mean for quantitative data.
-  $query = "
-      SELECT
-        o.genus as organism_genus,
-        trait.cvterm_id as trait_id,
-        trait.name as trait_name,
-        proj.project_id as project_id,
-        proj.name as project_name,
-        loc.value as location,
-        yr.value as year,
-        s.stock_id as germplasm_id,
-        s.name as germplasm_name,
-        avg( CAST(p.value as FLOAT) ) as mean
-      FROM {phenotype} p
-      LEFT JOIN {cvterm} trait ON trait.cvterm_id=p.attr_id
-      LEFT JOIN {project} proj USING(project_id)
-      LEFT JOIN {stock} s USING(stock_id)
-      LEFT JOIN {organism} o ON o.organism_id=s.organism_id
-      LEFT JOIN {phenotypeprop} loc ON loc.phenotype_id=p.phenotype_id AND loc.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE name='Location')
-      LEFT JOIN {phenotypeprop} yr ON yr.phenotype_id=p.phenotype_id AND yr.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE name='Year')
-      GROUP BY trait.cvterm_id, trait.name, proj.project_id, proj.name, loc.value, yr.value, s.stock_id, s.name, o.genus";
-  $schema = array(
-    'description' => 'Caches phenotypic data for easier retrieval of means. Data replicates are combined.',
-    'table' => 'mview_phenotype',
-    'fields' => array (
-      'organism_genus' => array (
-        'type' => 'varchar',
-        'length' => '255',
-        'not null' => TRUE,
-      ),
-      'trait_id' => array (
-        'size' => 'big',
-        'type' => 'int',
-        'not null' => TRUE,
-      ),
-      'trait_name' => array (
-        'type' => 'varchar',
-        'length' => '255',
-        'not null' => TRUE,
-      ),
-      'experiment_id' => array (
-        'size' => 'big',
-        'type' => 'int',
-        'not null' => TRUE,
-      ),
-      'experiment_name' => array (
-        'type' => 'text',
-        'not null' => TRUE,
-      ),
-      'location' => array (
-        'type' => 'text',
-        'not null' => TRUE,
-      ),
-      'year' => array (
-        'type' => 'text',
-        'not null' => TRUE,
-      ),
-      'stock_id' => array (
-        'size' => 'big',
-        'type' => 'int',
-        'not null' => TRUE,
-      ),
-      'stock_name' => array (
-        'type' => 'varchar',
-        'length' => '255',
-        'not null' => TRUE,
-      ),
-      'mean' => array(
-        'type' => 'float',
-      ),
-    ),
-    'indexes' => array(),
-  );
+  $mview = analyzedphenotypes_mview('view_phenotypes');
+  
+  $query = $mview['query'];
+  $schema = $mview['schema'];
+  
   tripal_add_mview($schema['table'], 'analyzedphenotypes', $schema, $query, $schema['description']);
 
   // Add a summary materialized view.

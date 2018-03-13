@@ -132,6 +132,36 @@ function analyzedphenotypes_menu() {
   );
   
   
+  // Data Downloader.
+  $items['download'] = array(
+    'title' => 'Download Analyzed Phenotypic Data',
+    'description' => 'Download Analyzed Phenotypic Data.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('analyzedphenotypes_data_download'),
+    'access arguments' => array('access administration pages'),
+    'file' => 'include/analyzedphenotypes.admin.form.inc',
+    'weight' => 2,
+    'type' => MENU_NORMAL_ITEM,
+  );
+  
+    $items['download/autofield/%/%'] = array(
+      'title' => 'link',
+      'page callback' => 'analyzedphenotypes_autofield_callback',
+      'page arguments' => array(2, 3),
+      'access callback' => TRUE,
+      'type' => MENU_CALLBACK,
+      'delivery callback' => 'ajax_deliver',
+    );
+
+  // Tripal Download Implementation.
+  $items['download/analyzed_phenotypic_data'] = array(
+    'title' => 'Analyzed Phenotypic Data Download',
+    'page callback' => 'trpdownload_download_page',
+    'page arguments' => array('analyzedphenotypes_download'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_CALLBACK,
+  );
+
 
   return $items;
 }
@@ -168,6 +198,14 @@ function analyzedphenotypes_theme($existing, $type, $theme, $path) {
     'template' => 'analyzedphenotypes_validators',
     'path' => $path . '/theme',
   );
+  
+  // Data downloader.
+  $items['analyzedphenotypes_data_download'] = array(
+    'template' => 'analyzedphenotypes_pages',
+    'render element' => 'form',
+    'path' => $path . '/theme',
+  );
+
 
   return $items;
 }
@@ -215,6 +253,30 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$va
 
 
   return $variables;
+}
+
+
+
+/**
+ * Implements hook_libraries_info().
+ *
+ * Define external libraries: Spreadsheet Writer.
+ */
+function analyzedphenotypes_libraries_info() {
+  // Spreadsheet writer.
+  // Let Drupal decide where library is.
+  $lib_writer = libraries_get_path('PHP_XLSXWriter_plus');
+
+  $libraries['spreadsheet_writer'] = array(
+    'name' => 'PHP_XLSXWriter_plus Spreadsheet Writer',
+    'vendor url' => 'https://github.com/SystemDevil/PHP_XLSXWriter_plus',
+    'version' => 1,
+    'download url' => 'https://github.com/SystemDevil/PHP_XLSXWriter_plus/archive/master.zip',
+    'library path' => $lib_writer,
+    'files' => array('xlsxwriter.class.php'),
+  );
+
+  return $libraries;
 }
 
 
@@ -314,6 +376,16 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
       break;
 
     //
+    case 'germplasm':
+      $field_values = unserialize($parameter);
+      
+      foreach($field_values as $i => $g) {
+        $data_JSON[$g] = $g;
+      }
+      
+      break;
+
+    //
     // Define additional case here.
 
     // default:
@@ -326,4 +398,374 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
   // This is critical as if anything else is printed to the screen you will see
   // an AJAX error instead of your progress bar ;-).
   exit();
+}
+
+
+// TRIPAL DOWNLOAD API IMPLEMENTATION
+
+/**
+ * Implements hook_register_tripaldownload_type().
+ */
+function analyzedphenotypes_register_trpdownload_type() {
+  $types = array();
+  
+  // The key is the machine name of my download type.
+  $types['analyzedphenotypes_download'] = array(
+    // A human readable name to show in an administrative interface one day.
+    'type_name' => 'Analyzed Phenotypic Data Download',
+    // A human readable description of the format.
+    'format' => '',
+    // An array of functions that the API will use to customize your experience.
+    'functions' => array(
+      // The function that tripal jobs will call to generate the file.
+      'generate_file' => 'analyzedphenotypes_trpdownload_generate_file',
+      // OPTIONAL: provide a summary to the user on the download page.
+      'summarize' => 'analyzedphenotypes_trpdownload_summarize_download',
+      // OPTIONAL: determine your own filename.
+      'get_filename' => 'analyzedphenotypes_trpdownload_get_filename',
+      // OPTIONAL: Change the file suffix (defaults to .txt)
+      'get_file_suffix' => 'analyzedphenotypes_trpdownload_get_suffix',
+      // OPTIONAL: determine the human-readable format based on a function.
+      'get_format' => 'analyzedphenotypes_trpdownload_get_readable_format',
+    ),
+  );
+
+  return $types;
+}
+
+
+/**
+ * Generate a readable and unique filename for the file to be generated.
+ */
+function analyzedphenotypes_trpdownload_get_filename($vars) {
+  // Filename.
+  $filename = 'analyzed_phenotypic_data_download' . date('YMd') .'_'. time();
+  
+  return $filename;
+}
+
+/**
+ * determine the human-readable format based on a function.
+ */
+function analyzedphenotypes_trpdownload_get_readable_format($vars) {
+   // File Extension from file type field options.
+  foreach($vars as $l => $v) {
+    if(is_array($v)) {
+      foreach($v as $j => $m) {
+        if ($j == 'code') {
+          $code = $m;
+        }
+      }
+    }
+  }
+  
+  $v = base64_decode($code);
+
+  if (!empty($v)) {
+    // Field names.
+    $fldname = analyzedphenotypes_fieldnames();
+    $filters = explode('&', $v);
+  
+    foreach($filters as $i) {
+      list($filter, $value) = explode('=', $i);
+    
+      if ($filter == $fldname['filetype']['base']) {
+        $file_type = trim($value);
+        break;
+      }
+    }
+
+    switch($file_type) {
+      case 'tsv':
+        $format = 'Tab Separated Values (.tsv)';
+        break;
+      
+      case 'csv':
+        $format = 'Comma Separated Values (.csv)';
+        break;
+      
+      case 'xlsx':
+        $format = 'Microsoft Excel Spreadsheet (.xlsx)';
+        break;
+    }
+    
+    return $format;
+  }
+}
+
+/**
+ * Determine the file suffix for the file to be generated.
+ */
+function analyzedphenotypes_trpdownload_get_suffix($vars) {
+  // File Extension from file type field options.
+  foreach($vars as $l => $v) {
+    if(is_array($v)) {
+      foreach($v as $j => $m) {
+        if ($j == 'code') {
+          $code = $m;
+        }
+      }
+    }
+  }
+  
+  $v = base64_decode($code);
+
+  if (!empty($v)) {
+    // Field names.
+    $fldname = analyzedphenotypes_fieldnames();
+    $filters = explode('&', $v);
+  
+    foreach($filters as $i) {
+      list($filter, $value) = explode('=', $i);
+    
+      if ($filter == $fldname['filetype']['base']) {
+        $file_type = trim($value);
+        break;
+      }
+    }
+    
+    return $file_type;
+  }
+}
+
+
+/**
+ * Function callback: generate csv file.
+ */
+function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
+  // Use this character to separate entries in a string.
+  $delimiter = '#';
+
+  $code = '';
+  foreach($vars as $l => $v) {
+    if(is_array($v)) {
+      foreach($v as $j => $m) {
+        if ($j == 'code') {
+          $code = $m;
+          break;
+        }
+      }
+    }
+    
+    if ($l == 'filename') {
+      $filename = $v;
+    }
+  }
+  
+  // Start extracting filters.
+  if (empty($code) && empty($filename)) {
+    die('Could not generate file. No filters selected.');
+  }
+  else {
+    // Filters selected.
+    $v = base64_decode($code);
+    
+    if (empty($v)) {
+      die('Could not generate file. No filters selected.');  
+    }
+    else {
+      // Convert the query string to key and value pair.
+      // Key should still match field name returned by _fieldnames().
+      $filters = explode('&', $v);
+      $filter_value = array();
+      
+      foreach($filters as $i) {
+        list($filter, $value) = explode('=', $i);
+        $filter_value[$filter] = $value;
+      }
+      
+      $fldname = analyzedphenotypes_fieldnames();
+      $file_type = $filter_value[ $fldname['filetype']['base'] ];
+      
+      // Fetch all valid file types for download.
+      // Use the result to ensure that only these registered types are allowed.
+      $d = analyzedphenotypes_datafileprop('download_type');
+      $download_type = array_keys($d);
+      
+      if (in_array($file_type, $download_type)) {
+        // File type is valid. Generate file.
+        $to_write = array();
+        
+        // Start by adding the colum headers. Maintain the order user set in the interface.
+        $h = $filter_value[ $fldname['columnheaders']['base'] ];
+        $temp_headers = explode($delimiter, $h);
+        $file_column_headers = array();
+        
+        // Index array of each column header.
+        $header_seq = array();
+        // All traits columns.
+        $trait_headers = array();
+        
+        // Trait names are grouped as one. Need to isolate them as one independent column.
+        $seq = 0;
+        foreach($temp_headers as $col) {
+          // Trait names are comma separated.
+          $col = trim($col);
+          $trait_names = explode(',', $col);
+          
+          if (count($trait_names) > 1) {
+            // List detected.
+            foreach($trait_names as $t) {
+              $t = trim($t);
+              
+              $file_column_headers[] = $t;
+              $header_seq[$t] = $seq;
+              $seq++;
+              
+              $trait_headers[] = $t;
+            }
+          }
+          else {
+            // A column.
+            $file_column_headers[] = $col;
+            $header_seq[$col] = $seq;
+            $seq++;
+          }
+        }
+
+        // WRITE HEADERS.
+        if ($filter_value[ $fldname['rfriendly']['base'] ]) {
+          // User wants RFriednly version of column headers.
+          foreach($file_column_headers as $c) {
+            $file_rfriendly_headers[] =  analyzedphenotypes_columnsprop('rfriendly', array(
+              'column_header' => $c,
+            ));
+          }
+          
+          $to_write[0] = $file_rfriendly_headers;  
+        }
+        else {
+          $to_write[0] = $file_column_headers;  
+        }
+
+        // WRITE ROWS, ROWS and ROWS.
+        // Fetch dataset given a filter set.
+        $dataset = analyzedphenotypes_populatefield('file', array(
+          'filters' => $filter_value,
+        ));
+        
+        // Map column to fieldnames.
+        unset($col);
+        $col_field = analyzedphenotypes_columnsprop('column_to_field');
+        
+        // Find each unique combination of experiment, germplasm, year, location and trait.
+        $keys = array();
+        
+        foreach($dataset as $data) {
+          $data = (array)$data;
+          
+          $file_data_rows = array();
+          foreach($file_column_headers as $col) {
+            if (isset($col_field[$col])) {
+              // Column has an associated fieldname.
+              $file_data_rows[] = (empty($data[$col_field[$col]])) ? 'n/a' : $data[$col_field[$col]];
+            }
+            else {
+              // Trait names.
+              if ($data[ $fldname['traits']['base'] ] == $col) {
+                $data_trait_name = $col;
+                $data_trait_value = $data[ $fldname['value']['base'] ];
+                // Trait name from dataset matched the trait name from column set.
+                // Place the value to the trait name.
+                $file_data_rows[] = $data[ $fldname['value']['base']];
+              }
+              else {
+                // Does not match, not applicable.
+                $file_data_rows[] = 'n/a';
+              }
+            }
+          }
+          
+          // Average or not to average.
+          if ($filter_value[ $fldname['averagerep']['base'] ]) {   
+            // A row processed... write to file.
+            // Group rows by experiment, germplasm, year, location and trait.
+            // Use the group key to average in case user prefers data to be averaged.
+            $key = $file_data_rows[$header_seq['Experiment']] . 
+                   $file_data_rows[$header_seq['Germplasm Name']] . 
+                   $file_data_rows[$header_seq['Location']] . 
+                   $file_data_rows[$header_seq['Year']] . 
+                   $data_trait_name;
+
+            $tmp_to_write[$key][] = array('data' => $file_data_rows, 'value' => $data_trait_value);  
+          }
+          else {
+            $to_write[] = $file_data_rows;
+          }
+        }
+      
+        // Average my data? - do this extra process.
+        if ($filter_value[ $fldname['averagerep']['base'] ]) {
+          $keys = array_keys($tmp_to_write);
+          $unique_keys = array_unique($keys);
+          
+          foreach($unique_keys as $k) {
+            $key_sample_line = current($tmp_to_write[$k]);
+            $all_values = array_column($tmp_to_write[$k], 'value');
+            $average = round(array_sum($all_values) / count($all_values), 2);
+            
+            // From a group of data, get one row and replace value with average value.
+            $i = array_search($key_sample_line['value'], $key_sample_line['data']);
+            $key_sample_line['data'][$i] = $average;
+            
+            $to_write[] = $key_sample_line['data'];
+          }
+        }
+
+        // Process dataset - apply average option, rfriendly etc.
+        if ($filter_value[ $fldname['averagerep']['base'] ] == 10) {
+          $average_dataset = array();
+          
+          unset($to_write[0]); 
+          foreach($to_write as $i => $line) {
+            // For this line, find the trait that has a value.
+            foreach($trait_headers as $t) {
+              $index = array_search($t, $file_column_headers);
+  
+              if ($line[$index] != 'n/a') {
+                $trait_index = $index;
+                break;
+              }
+            }
+              
+            $tmp = $line[$header_seq['Experiment']] . $line[$header_seq['Germplasm Name']] . $line[$header_seq['Location']] . $line[$header_seq['Year']] . $file_column_headers[$trait_index];
+              
+            $average_dataset[$tmp][] = array(
+              'line' => $line,
+              'trait_index' => $trait_index,
+              'trait_value' => $line[$trait_index],
+            );    
+          }
+        
+          // Now lines are sorted by experiment, germplasm name, location, year and trait, average the values.
+          unset($to_write);
+          $to_write[] = $file_column_headers;
+          
+          foreach($average_dataset as $prop => $new_line) {
+            $values = array_column($new_line, 'trait_value');
+            $average = array_sum($values) / count($values);
+            
+            // Compress all similar line and add the average.
+            $line = current($average_dataset[$prop]);
+            $line_data = $line['line'];
+            $line_trait = $line['trait_index'];
+            
+            $line['line'][$line_trait] = round($average, 2);
+            
+            $to_write[] = $line['line'];
+          }
+        }
+
+        // CREATE FILE.
+        if ($to_write) {
+          analyzedphenotypes_writefile($filename, $to_write, $file_type);          
+        }
+      }
+      else {
+        // File type not supported.
+        die('Could not generate file. File type no supported.');  
+      }
+    //   
+    }
+  }
 }
