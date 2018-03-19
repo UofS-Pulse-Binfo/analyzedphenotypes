@@ -13,16 +13,19 @@
   margin-left: 70px;
 }
 .beanplot-nav.condensed fieldset {
-  height: 30px;
+  height: 35px;
   top: 0;
 }
 .beanplot-nav.condensed legend {
   position: absolute;
-  top: 0;
+  top: -1px;
   width: 180px;
-  height: 32px;
-  padding-top: 7px;
+  height: 45px;
   padding-left: 7px;
+}
+.beanplot-nav.condensed span {
+  line-height: 45px;
+  margin: 0 0 0 20px;
 }
 .beanplot-nav.condensed .fieldset-wrapper {
   margin-left: 200px;
@@ -42,4 +45,9 @@
 }
 .legend .description {
   text-align: justify;
+}
+
+/* Select Field */
+.condensed select {
+  width: 160px;
 }
