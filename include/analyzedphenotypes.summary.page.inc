@@ -47,7 +47,7 @@ function analyzed_phenotypes_all_data_summary_page() {
 
   // Add CSS
   $module_path = drupal_get_path('module', 'analyzedphenotypes');
-  drupal_add_css($module_path . '/include/css/summary.css');
+  drupal_add_css($module_path . '/theme/css/beanplot.chart.summary.css');
 
   // User style settings.
   $user_style = array(
@@ -55,14 +55,14 @@ function analyzed_phenotypes_all_data_summary_page() {
       'Tripalus' => '#56AC0D',
     ),
   );
-  
+
   // Add inline styles to colour-code the crops as specified by the user.
   foreach ($user_style['genus colours'] as $genus => $colour) {
     $css = "
       #phenotype-summary-table tbody tr.$genus td {
         color: $colour;
       }
-      
+
       #phenotype-summary-table tbody tr.$genus td.Genus {
         background-color: $colour;
         color: white;
@@ -74,10 +74,10 @@ function analyzed_phenotypes_all_data_summary_page() {
       }
 
       #phenotype-summary-table tbody tr.$genus td.Traits:before {
-        border-left-color: $colour; 
+        border-left-color: $colour;
       }
     ";
-    
+
     drupal_add_css($css, array('type' => 'inline'));
   }
 

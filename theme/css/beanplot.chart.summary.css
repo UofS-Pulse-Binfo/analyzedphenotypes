@@ -5,6 +5,11 @@
 /**
  * Style the table to be cleaner and more info-graphic like.
  */
+
+#phenotype-summary-table {
+  border: none;
+}
+
 #phenotype-summary-table thead tr th {
   background: #FFF;
   color: black;
@@ -32,6 +37,7 @@
   font-size: 2em;
   color: #292929;
   font-weight: bolder;
+  border: none;
 }
 
 /* Arrow for the crop name */
