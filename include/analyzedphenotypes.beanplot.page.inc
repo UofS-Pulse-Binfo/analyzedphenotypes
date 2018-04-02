@@ -57,7 +57,7 @@ function analyzedphenotypes_beanplot_form($form, $form_state) {
 
     // User can access the url containing query filters.
     // In case none is found. send user to stage 1.
-    if (count($experiments) < 0) {
+    if (!$experiments) {
       $stage = 1;
     }
 
@@ -76,8 +76,18 @@ function analyzedphenotypes_beanplot_form($form, $form_state) {
     if (count($traits) < 0) {
       $stage = 1;
     }
+    else {
+      $all_id = array_map(function($e) {
+        return $e->cvterm_id;
+      },$traits);
+
+      if (!in_array($trait_id, $all_id)) {
+        $stage = 1;
+      }
+    }
   }
-  else {
+
+  if ($stage == 1) {
     // Retrieve options for Experiment (Project).
     // Fetch all experiments available in chado.phenotype.
     $experiments = chado_query("
@@ -99,7 +109,6 @@ function analyzedphenotypes_beanplot_form($form, $form_state) {
   foreach($traits as $t) {
     $trait_options[$t->cvterm_id] = $t->name;
   }
-
 
   // Array to hold traits not specific and relevant to an experiment, repectively.
   $not_project_trait = array();
