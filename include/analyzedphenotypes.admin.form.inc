@@ -457,7 +457,7 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
                  ));
 
                  if ($exists) {
-                   $trait_name_value = $exists['name']; 
+                   $trait_name_value = $exists['name'];
                    $name = analyzedphenotypes_traitprop('no_unit', array(
                      'trait_name' => $trait_name_value,
                    ));
@@ -466,7 +466,7 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
                    $traitprop['definition']    = $exists['definition'];
                    $traitprop['scale']         = '';
                    $traitprop['crop_ontology'] = $exists['crop_ontology'];
-                   
+
                    $traitprop['photos'] = analyzedphenotypes_cvprop('cvterm_get_photo', array(
                      'cvterm_id' => $exists['cvterm_id'],
                    ));
@@ -665,13 +665,13 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
                );
              }
            }
-           
+
             $i++;
            ////
           }
         }
       }
-      
+
       $form['#ap_describe_trait'] = $arr_trait_describe;
       $form_state['multistep_values']['traits'] = $form['#ap_describe_trait'];
       $form['#ap_main_fieldset'] = $main_fieldset;
@@ -760,7 +760,7 @@ function analyzedphenotypes_loader_form_save($form, &$form_state) {
       $projectprop = analyzedphenotypes_projectprop('match_name', array(
         'project_name' => $project_name,
       ));
-      
+
       analyzedphenotypes_genusprop('assign_genus', array(
         'project_genus' => $project_genus,
         'project_id' => $projectprop['project_id'],
@@ -902,14 +902,14 @@ function analyzedphenotypes_validate_field_select_trait(&$element, &$form, &$for
 function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_state) {
   if ($element['#disabled'] === FALSE) {
     $error = FALSE;
-    
+
     // Description.
     $description_field_value = $element['#value'];
     if (empty($description_field_value)) {
       $error = TRUE;
       form_set_error($element['#name'], t('Trait description field is empty. Please provide trait description.'));
     }
-    
+
     // Crop ontology.
     $field_name = str_replace('ap_description_text_field', 'ap_crop_ontology_text_field', $element['#name']);
     $field_value = $form['values'][$field_name];
@@ -929,7 +929,7 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
         form_set_error($field_name, t('Crop ontology entered is not recognized. Please enter or select crop ontology.'));
       }
     }
-    
+
     // File.
     $field_name = str_replace('ap_description_text_field', 'ap_photo_1', $element['#name']);
     $field_value = $_FILES['files']['name'][$field_name];
@@ -939,13 +939,13 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
     }
     else {
        $file_extension = pathinfo($field_value, PATHINFO_EXTENSION);
-       
+
        if ($file_extension != 'jpg') {
          $error = TRUE;
          form_set_error($field_name, t('Photo 1 of 2 is not a .jpg file. Please provide a .jpg photo.'));
        }
     }
-  
+
     if ($error) {
       drupal_add_library('system', 'ui.accordion');
     }
@@ -1370,7 +1370,7 @@ function analyzedphenotypes_admin_settings($form, &$form_state, $source = null) 
         $title = trim(str_replace('ap_', '', $i));
         $var_value = variable_get($var['var']);
         $var_value_default = variable_get($var['def']);
-  
+
         if ($var_value == 'not set' || empty($var_value)) {
           $cv_options = array(0 => '- Select -') + $cv_options;
           $default_cv = 0;
@@ -1402,7 +1402,7 @@ function analyzedphenotypes_admin_settings($form, &$form_state, $source = null) 
           '#prefix' => '<div id="ap-AJAX-wrapper-getcvterms' . $title . '">',
           '#suffix' => '</div>',
         );
-        
+
         $cv_field_value = (isset($form_state['values'][$var['var']]))
           ? $form_state['values'][$var['var']] : 0;
 
@@ -1463,39 +1463,14 @@ function analyzedphenotypes_admin_settings($form, &$form_state, $source = null) 
         return $form;
   }
 
-  if (in_array($source, $valid_source)) {
-    // Update materialized view to use terms Location and Year.
-    
-    /*
-    if ($source == 'property_terms' && isset($form_state['triggering_element']) && $form_state['triggering_element'] !=  'select') {
-      // Find the materialized view.
-      $mview_id = tripal_get_mview_id('mview_phenotype');
-      if ($mview_id) {
-        $term_id_location = variable_get($vars['ap_location']);
-        $term_id_year = variable_get($vars['ap_year']);
-      
-        $update_mview = analyzedphenotypes_mview('view_phenotypes', array(
-          'term_id_location' => $term_id_location,
-          'term_id_year' => $term_id_year,
-        ));
-        
-        tripal_edit_mview($mview_id, 'mview_phenotype', 'analyzedphenotypes', null, null, null, $update_mview['query']);
-      }
-    }
-    */
-    
-    //return system_settings_form($form);
-  }
-  
-  
   $form = system_settings_form($form);
   $form['source'] = array(
     '#type' => 'value',
     '#value' => $source,
   );
-  
+
   $form['#submit'][] = 'analyzedphenotypes_updatemview';
-  
+
   return $form;
 }
 
@@ -1506,7 +1481,7 @@ function analyzedphenotypes_admin_settings($form, &$form_state, $source = null) 
  */
 function analyzedphenotypes_updatemview(&$form, &$form_state) {
   $souce = $form_state['values']['source'];
-  
+
   if ($souce == 'property_terms') {
     // Update materialized views to use the terms location and year selected in this form.
     $mview_phenotype = 'mview_phenotype';
@@ -1514,7 +1489,7 @@ function analyzedphenotypes_updatemview(&$form, &$form_state) {
 
     if ($mview_id) {
       $vars = analyzedphenotypes_systemvars('plant_property');
-  
+
       $term_id_location = variable_get($vars['ap_location']);
       $term_id_year = variable_get($vars['ap_year']);
 
@@ -1522,10 +1497,10 @@ function analyzedphenotypes_updatemview(&$form, &$form_state) {
         'term_id_location' => $term_id_location,
         'term_id_year' => $term_id_year,
       ));
-      
+
       // This works but it deletes the schema and brakes the view.
       // tripal_edit_mview($mview_id, $mview_phenotype, 'analyzedphenotypes', '', '', 0, $update_mview['query'], '');
-      
+
       chado_query("UPDATE tripal_mviews SET query = :mview_query  WHERE mview_id = :mview_id", array(
         ':mview_query' => $update_mview['query'],
         ':mview_id' => $mview_id,
@@ -1568,13 +1543,13 @@ function analyzedphenotypes_data_download($form, &$form_state) {
   $path_theme = drupal_get_path('module', 'analyzedphenotypes') . '/theme/';
   $form['#attached']['css'][] = $path_theme . 'css/analyzedphenotypes.downloader.global.css';
   $form['#attached']['js'] [] = $path_theme . 'js/analyzedphenotypes.downloader.script.js';
-  
+
   // Field names.
   // Same name will be used for hooks, js etc.
   $fldname = analyzedphenotypes_fieldnames();
-  
+
   // F. 1.
-  $fld_experiment      = $fldname['experiment']['base']; 
+  $fld_experiment      = $fldname['experiment']['base'];
   $fld_genus           = $fldname['genus']['base'];
   $fld_species         = $fldname['species']['base'];
   $fld_traits          = $fldname['traits']['base'];
@@ -1582,13 +1557,13 @@ function analyzedphenotypes_data_download($form, &$form_state) {
   $fld_year            = $fldname['year']['base'];
   $fld_location        = $fldname['location']['base'];
   $fld_germplasmtype   = $fldname['germplasmtype']['base'];
-  $fld_germplasm       = $fldname['germplasm']['base']; 
-  $fld_missingdata     = $fldname['missingdata']['base']; 
+  $fld_germplasm       = $fldname['germplasm']['base'];
+  $fld_missingdata     = $fldname['missingdata']['base'];
   // F. 3.
   $fld_filetype        = $fldname['filetype']['base'];
   $fld_averagerep      = $fldname['averagerep']['base'];
-  $fld_rfriendly       = $fldname['rfriendly']['base']; 
-  $fld_columnheaders   = $fldname['columnheaders']['base']; 
+  $fld_rfriendly       = $fldname['rfriendly']['base'];
+  $fld_columnheaders   = $fldname['columnheaders']['base'];
 
   // Field form properties.
   $field_prop = array(
@@ -1613,7 +1588,7 @@ function analyzedphenotypes_data_download($form, &$form_state) {
   $AJAX_wrapper_id = 'ap-AJAX-wrapper-main';
   // Use this character to separate entries in a string.
   $delimiter = '#';
-  
+
   // Global AJAX settings.
   // This array element will add AJAX to any field.
   $AJAX_callback['#ajax'] = array(
@@ -1623,7 +1598,7 @@ function analyzedphenotypes_data_download($form, &$form_state) {
     'wrapper' => $AJAX_wrapper_id,
     'progress' => array('type' => 'none', 'message' => ''),
   );
-  
+
   // Main AJAX wrapper. Any field wrapped in this container
   // will be processed by AJAX request.
   $AJAX_wrapper = 'ap_AJAX_wrapper_main';
@@ -1634,39 +1609,39 @@ function analyzedphenotypes_data_download($form, &$form_state) {
 
   // HANDLE AJAX:
   // Initialize form field value and state.
-  
-  
+
+
   // Create list of default and optional column headers.
   // Will return Experiment, Trait Name, Germplasm Name, Year, Location, Replicate, Data Collector, Country of Origin.
   $headers = analyzedphenotypes_columnsprop('downloadable');
   $default_headers = array_combine($headers, $headers);
   $optional_headers = array();
-    
+
   // Move Data Collector and Origin to optional column headers.
   $optional_headers['Data Collector'] = 'Data Collector';
   unset($default_headers['Data Collector']);
-       
+
   $optional_headers['Origin'] = 'Country of Origin';
   unset($default_headers['Country of Origin']);
-    
+
   // By default form averages rep - replicate is not required.
   unset($default_headers['Replicate']);
-  
+
   // Contain all field values.
   $field_values = null;
   // Contain all cache values of fields.
   $cache_values = null;
-  
+
   // Submit button. This ensure the submit button gets enabled
   // when this variable is set to 1.
   $btn_ok = 0;
-  
-  
+
+
   // Handle AJAX. form state values has values.
   if (isset($form_state['values'])) {
     //
     if ($form_state['values'][ $fldname[$fld_experiment]['field'] ] != '') {
-      /// Experiment selected. 
+      /// Experiment selected.
       $e = $form_state['values'][ $fldname[$fld_experiment]['field'] ];
       $field_values[$fld_experiment] = analyzedphenotypes_checkboxesvalue($e);
 
@@ -1676,14 +1651,14 @@ function analyzedphenotypes_data_download($form, &$form_state) {
         $field_prop[$fld_averagerep]['disabled'] = FALSE;
         $field_prop[$fld_rfriendly] ['disabled'] = FALSE;
       }
-      
+
       // Project selected. Test if multiple projects selected.
       if (count($field_values[$fld_experiment]) > 1) {
         // MANY EXPERIMENTS.
-        
+
         // Enable submit button.
         $btn_ok = 1;
-        
+
         // #Genus.
         $field_values[$fld_genus] = 'all';
 
@@ -1709,21 +1684,21 @@ function analyzedphenotypes_data_download($form, &$form_state) {
           $field_prop[$fld_traits]['default'] = $field_values[$fld_traits];
           $field_prop[$fld_traits]['options'] = $options;
           $field_prop[$fld_traits]['disabled'] = FALSE;
-        
+
           // #Year.
           unset($options);
           $options = analyzedphenotypes_populatefield('field_year', array(
             'project_id' => $field_values[$fld_experiment],
             'traits' => $field_values[$fld_traits],
           ));
-          
+
           if ($options) {
             $field_values[$fld_year] = array_keys($options);
-            
+
             $field_prop[$fld_year]['default'] = $field_values[$fld_year];
             $field_prop[$fld_year]['options'] = $options;
             $field_prop[$fld_year]['disabled'] = FALSE;
-            
+
             // #Location.
             unset($options);
             $options = analyzedphenotypes_populatefield('field_location', array(
@@ -1731,14 +1706,14 @@ function analyzedphenotypes_data_download($form, &$form_state) {
               'traits' => $field_prop[$fld_traits]['default'],
               'year' => $field_prop[$fld_year]['default'],
             ));
-            
+
             if ($options) {
               $field_values[$fld_location] = array_keys($options);
-              
+
               $field_prop[$fld_location]['default'] = $field_values[$fld_location];
               $field_prop[$fld_location]['options'] = $options;
               $field_prop[$fld_location]['disabled'] = FALSE;
-            
+
               // #Germplasm Type.
               unset($options);
               $options = analyzedphenotypes_populatefield('field_germplasmtype', array(
@@ -1747,63 +1722,63 @@ function analyzedphenotypes_data_download($form, &$form_state) {
                 'year' => $field_prop[$fld_year]['default'],
                 'location' => $field_prop[$fld_location]['default'],
               ));
-              
+
               if ($options) {
                 $field_values[$fld_germplasmtype] = array_keys($options);
-                
+
                 $field_prop[$fld_germplasmtype]['default'] = $field_values[$fld_germplasmtype];
                 $field_prop[$fld_germplasmtype]['options'] = $options;
                 $field_prop[$fld_germplasmtype]['disabled'] = FALSE;
-                
+
                 // Germplasm.
                 unset($options);
                 $options = analyzedphenotypes_populatefield('field_germplasm', array(
                   'project_id' => $field_values[$fld_experiment],
                 ));
-                
+
                 if ($options) {
                   $field_prop[$fld_germplasm]['default'] = '';
                   $field_prop[$fld_germplasm]['options'] = $options;
                   $field_prop[$fld_germplasm]['disabled'] = TRUE;
-                  
+
                   $field_prop[$fld_missingdata]['default'] = '';
                   $field_prop[$fld_missingdata]['disabled'] = TRUE;
-                // end Germplasm.  
+                // end Germplasm.
                 }
-              // end Germplasm Type.  
+              // end Germplasm Type.
               }
-            // end Location.  
+            // end Location.
             }
-          // end Year.  
+          // end Year.
           }
-        // end Traits.  
+        // end Traits.
         }
-        
+
       // END MANY EXPERIMENTS.
       }
       else {
         // ONE EXPERIMENT.
 
         $field_values[$fld_experiment] = current($field_values[$fld_experiment]);
-        
+
         // Experiment is optional with single project.
         if ($field_values[$fld_experiment] > 0) {
           unset($default_headers['Experiment']);
           $optional_headers['Experiment'] = 'Experiment';
         }
-        
+
         // #Genus.
         $options = analyzedphenotypes_populatefield('field_genus', array(
           'project_id' => $field_values[$fld_experiment],
         ));
-        
-        if ($options) { 
+
+        if ($options) {
           $field_prop[$fld_genus]['options'] = $options;
           $field_prop[$fld_genus]['disabled'] = FALSE;
           $field_prop[$fld_genus]['empty'] = null;
 
           $field_values[$fld_genus] = current($options);
-          
+
           // #Species
           unset($options);
           $options = analyzedphenotypes_populatefield('field_species', array(
@@ -1815,71 +1790,71 @@ function analyzedphenotypes_data_download($form, &$form_state) {
             $field_prop[$fld_species]['disabled'] = FALSE;
             $field_prop[$fld_species]['options'] = $options;
           }
-          
+
           unset($options);
         }
-        
+
         // Cache value selected. This will allow us to compare cache values
         // with current values returned from selecting different filters in the form.
         // NOTE: _cachevalue() function returns string as a result of imploding the array.
         $form['values'][ $fldname[$fld_experiment]['cache'] ] = analyzedphenotypes_cachevalue($field_values[$fld_experiment]);
         $form['values'][ $fldname[$fld_genus]['cache'] ] = analyzedphenotypes_cachevalue($field_values[$fld_genus]);
-        
+
         $cache_values[$fld_experiment] = $form_state['values'][ $fldname[$fld_experiment]['cache'] ];
         $cache_values[$fld_genus] = $form_state['values'][ $fldname[$fld_genus]['cache'] ];
-        
+
         // AJAX - same experiment and genus.
-        if ($cache_values[$fld_experiment] == $field_values[$fld_experiment] && 
+        if ($cache_values[$fld_experiment] == $field_values[$fld_experiment] &&
             $cache_values[$fld_genus] == $field_values[$fld_genus]) {
-          
+
           /// Species selected - Create traits options.
           if ($form_state['values'][ $fldname[$fld_species]['field'] ] != '') {
             $field_values[$fld_species] = $form_state['values'][ $fldname[$fld_species]['field'] ];
-            
+
             $options = analyzedphenotypes_populatefield('field_traits', array(
               'project_id' => $field_values[$fld_experiment],
               'genus' => $field_values[$fld_genus],
               'species' => $field_values[$fld_species],
             ));
-            
+
             // #Traits.
             if ($options) {
               $field_prop[$fld_traits]['options'] = $options;
               $field_prop[$fld_traits]['disabled'] = FALSE;
             }
-            
+
             unset($options);
-            
+
             // Cache value selected.
             $form['values'][ $fldname[$fld_species]['cache'] ] = analyzedphenotypes_cachevalue($field_values[$fld_species]);
             $cache_values[$fld_species] = $form_state['values'][ $fldname[$fld_species]['cache'] ];
-            
+
             // AJAX - same experiment, genus and species.
             if ($cache_values[$fld_species] == $field_values[$fld_species]) {
-              
+
               ///// Traits selected - Create year options.
               if ($form_state['values'][ $fldname[$fld_traits]['field'] ] != '') {
                 $t = $form_state['values'][ $fldname[$fld_traits]['field'] ];
                 $field_values[$fld_traits] = analyzedphenotypes_checkboxesvalue($t);
-                
+
                 if (count($field_values[$fld_traits]) > 0) {
                   // User selected some traits, enable submit button.
                   $btn_ok = 1;
-                  
+
                   $options = analyzedphenotypes_populatefield('field_year', array(
                     'project_id' => $field_values[$fld_experiment],
                     'traits' => $field_values[$fld_traits],
                   ));
-                  
+
                   if ($options) {
                     $field_prop[$fld_year]['options'] = $options;
                     $field_prop[$fld_year]['disabled'] = FALSE;
-                    
+
                     // Year, Location and Germplasm Type.
                     if (count($field_values[$fld_traits]) > 1) {
                       // Many traits selected.
                       $field_values[$fld_year] = array_keys($options);
-                      
+
                       $field_prop[$fld_year]['default'] = $field_values[$fld_year];
                       $options = analyzedphenotypes_populatefield('field_location', array(
                         'project_id' => $field_values[$fld_experiment],
@@ -1888,14 +1863,14 @@ function analyzedphenotypes_data_download($form, &$form_state) {
                         'traits' => $field_values[$fld_traits],
                         'year' => $field_values[$fld_year],
                       ));
-                      
+
                       if ($options) {
                         $field_values[$fld_location] = array_keys($options);
-              
+
                         $field_prop[$fld_location]['default'] = $field_values[$fld_location];
                         $field_prop[$fld_location]['options'] = $options;
                         $field_prop[$fld_location]['disabled'] = FALSE;
-                      
+
                         $options = analyzedphenotypes_populatefield('field_germplasmtype', array(
                           'project_id' => $field_values[$fld_experiment],
                           'genus' => $field_values[$fld_genus],
@@ -1904,10 +1879,10 @@ function analyzedphenotypes_data_download($form, &$form_state) {
                           'year' => $field_values[$fld_year],
                           'location' => $field_values[$fld_location],
                         ));
-                        
+
                         if ($options) {
                           $field_values[$fld_germplasmtype] = array_keys($options);
-                
+
                           $field_prop[$fld_germplasmtype]['default'] = $field_values[$fld_germplasmtype];
                           $field_prop[$fld_germplasmtype]['options'] = $options;
                           $field_prop[$fld_germplasmtype]['disabled'] = FALSE;
@@ -1915,21 +1890,21 @@ function analyzedphenotypes_data_download($form, &$form_state) {
                       }
                     }
                   }
-                  
+
                   unset($options);
-                  
+
                   // Cache value selected.
                   $form['values'][ $fldname[$fld_traits]['cache'] ] = analyzedphenotypes_cachevalue($field_values[$fld_traits]);
                   $cache_values[$fld_traits] = $form_state['values'][ $fldname[$fld_traits]['cache'] ];
-                  
+
                   // AJAX - same experiment, genus, species and traits.
                   if ($cache_values[$fld_traits] == implode('_', $field_values[$fld_traits])) {
-                    
+
                     ////// Year selected - Create location options.
                     if ($form_state['values'][ $fldname[$fld_year]['field'] ] != '') {
                       $y = $form_state['values'][ $fldname[$fld_year]['field'] ];
                       $field_values[$fld_year] = analyzedphenotypes_checkboxesvalue($y);
-                      
+
                       if (count($field_values[$fld_year]) > 0) {
                         $options = analyzedphenotypes_populatefield('field_location', array(
                           'project_id' => $field_values[$fld_experiment],
@@ -1938,16 +1913,16 @@ function analyzedphenotypes_data_download($form, &$form_state) {
                           'traits' => $field_values[$fld_traits],
                           'year' => $field_values[$fld_year],
                         ));
-                        
+
                         if ($options) {
                           $field_prop[$fld_location]['options'] = $options;
                           $field_prop[$fld_location]['disabled'] = FALSE;
-                          
+
                           // Location and Germplasm Type.
                           if (count($field_values[$fld_year]) > 1) {
                             // Many years selected.
                             $field_values[$fld_location] = array_keys($options);
-              
+
                             $field_prop[$fld_location]['default'] = $field_values[$fld_location];
                             $options = analyzedphenotypes_populatefield('field_germplasmtype', array(
                               'project_id' => $field_values[$fld_experiment],
@@ -1957,19 +1932,19 @@ function analyzedphenotypes_data_download($form, &$form_state) {
                               'year' => $field_values[$fld_year],
                               'location' => $field_values[$fld_location],
                             ));
-                            
+
                             if ($options) {
                               $field_values[$fld_germplasmtype] = array_keys($options);
-                
+
                               $field_prop[$fld_germplasmtype]['default'] = $field_values[$fld_germplasmtype];
                               $field_prop[$fld_germplasmtype]['options'] = $options;
                               $field_prop[$fld_germplasmtype]['disabled'] = FALSE;
                             }
                           }
                         }
-                        
+
                         unset($options);
-                        
+
                         // Cache value selected.
                         $form['values'][ $fldname[$fld_year]['cache'] ] = analyzedphenotypes_cachevalue($field_values[$fld_year]);
                         $cache_values[$fld_year] = $form_state['values'][ $fldname[$fld_year]['cache'] ];
@@ -1981,7 +1956,7 @@ function analyzedphenotypes_data_download($form, &$form_state) {
                           if ($form_state['values']['ap_' . $fld_location . '_field'] != '') {
                             $l = $form_state['values']['ap_' . $fld_location . '_field'];
                             $field_values[$fld_location] = analyzedphenotypes_checkboxesvalue($l);
-                            
+
                             if (count($field_values[$fld_location]) > 0) {
                               $options = analyzedphenotypes_populatefield('field_germplasmtype', array(
                                 'project_id' => $field_values[$fld_experiment],
@@ -1995,12 +1970,12 @@ function analyzedphenotypes_data_download($form, &$form_state) {
                               if ($options) {
                                 $field_prop[$fld_germplasmtype]['options'] = $options;
                                 $field_prop[$fld_germplasmtype]['disabled'] = FALSE;
-                              
+
                                 // Germplasm Type.
                                 if (count($field_values[$fld_location]) > 1) {
                                   // Many locations selected.
                                   $field_values[$fld_germplasmtype] = array_keys($options);
-                                  
+
                                   $field_prop[$fld_germplasmtype]['default'] = $field_values[$fld_germplasmtype];
                                   $options = analyzedphenotypes_populatefield('field_germplasmtype', array(
                                     'project_id' => $field_values[$fld_experiment],
@@ -2010,34 +1985,34 @@ function analyzedphenotypes_data_download($form, &$form_state) {
                                     'year' => $field_values[$fld_year],
                                     'location' => $field_values[$fld_location],
                                   ));
-                                  
+
                                   if ($options) {
                                     $field_values[$fld_germplasmtype] = array_keys($options);
-                
+
                                     $field_prop[$fld_germplasmtype]['default'] = $field_values[$fld_germplasmtype];
                                     $field_prop[$fld_germplasmtype]['options'] = $options;
                                     $field_prop[$fld_germplasmtype]['disabled'] = FALSE;
                                   }
                                 }
                               }
-                              
+
                               // Cache value selected.
                               $form['values'][ $fldname[$fld_location]['cache'] ] = analyzedphenotypes_cachevalue($field_values[$fld_location]);
                               $cache_values[$fld_location] = $form_state['values'][ $fldname[$fld_location]['cache'] ];
-                              
+
                               // AJAX - same experiment, genus, species, traits, year and location.
                               if ($cache_values[$fld_location] == implode('_', $field_values[$fld_location])) {
-                                
+
                                 //////// Germplasm type selected - Update germplasm list.
                                 if ($form_state['values'][ $fldname[$fld_germplasmtype]['field'] ] != '') {
                                   $g = $form_state['values'][ $fldname[$fld_germplasmtype]['field'] ];
                                   $field_values[$fld_germplasmtype] = analyzedphenotypes_checkboxesvalue($g);
-                                ////////  
+                                ////////
                                 }
-                              // end AJAX - same experiment, genus, species, traits, year and location.  
+                              // end AJAX - same experiment, genus, species, traits, year and location.
                               }
                               else {
-                                if (isset($form_state['input'][ $fldname[$fld_germplasmtype]['field'] ])) { 
+                                if (isset($form_state['input'][ $fldname[$fld_germplasmtype]['field'] ])) {
                                   $input = $form_state['input'][ $fldname[$fld_germplasmtype]['field'] ];
                                   foreach($input as $i => $v) {
                                     if (!empty($v)) {
@@ -2046,15 +2021,15 @@ function analyzedphenotypes_data_download($form, &$form_state) {
                                     }
                                   }
                                 }
-                              // End else ^  
+                              // End else ^
                               }
                             }
-                          ///////  
+                          ///////
                           }
-                        // end AJAX - same experiment, genus, species, traits and year.  
+                        // end AJAX - same experiment, genus, species, traits and year.
                         }
                         else {
-                          if (isset($form_state['input'][ $fldname[$fld_location]['field'] ])) { 
+                          if (isset($form_state['input'][ $fldname[$fld_location]['field'] ])) {
                             $input = $form_state['input'][ $fldname[$fld_location]['field'] ];
                             foreach($input as $i => $v) {
                               if (!empty($v)) {
@@ -2063,12 +2038,12 @@ function analyzedphenotypes_data_download($form, &$form_state) {
                               }
                             }
                           }
-                        // End else ^  
+                        // End else ^
                         }
                       }
-                    //////  
+                    //////
                     }
-                  // end AJAX - same experiment, genus, species and traits.  
+                  // end AJAX - same experiment, genus, species and traits.
                   }
                   else {
                     if (isset($form_state['input'][ $fldname[$fld_year]['field'] ])) {
@@ -2080,18 +2055,18 @@ function analyzedphenotypes_data_download($form, &$form_state) {
                         }
                       }
                     }
-                  // End else ^  
+                  // End else ^
                   }
                 }
-              /////  
+              /////
               }
-            // end AJAX - same experiment, genus and species.  
+            // end AJAX - same experiment, genus and species.
             }
-          ///  
+          ///
           }
         // end AJAX - same experiment and genus.
         }
-        
+
         // Update germplasm list.
         $values = array(
           'project_id' => $field_values[$fld_experiment],
@@ -2109,7 +2084,7 @@ function analyzedphenotypes_data_download($form, &$form_state) {
           $field_prop[$fld_germplasm]['disabled'] = FALSE;
           $field_prop[$fld_germplasm]['options'] = $options;
           $field_prop[$fld_germplasm]['default'] = '';
-           
+
           $field_prop[$fld_missingdata]['disabled'] = FALSE;
         }
       // END ONE EXPERIMENT.
@@ -2124,50 +2099,50 @@ function analyzedphenotypes_data_download($form, &$form_state) {
             $s[] = $name;
           }
         }
-        
+
         $traits_list = implode(', ', $s);
-        
+
         $default_headers['Trait Name'] = $traits_list;
       }
-      
+
       // Add Replicate to Default headers when user does not want to average data.
       if ($form_state['values'][ $fldname[$fld_averagerep]['field'] ] == 0) {
         $default_headers['Replicate'] = 'Replicate';
       }
-    ///  
+    ///
     }
   //
   }
-  
-  
+
+
   //
   //
   // Fieldset: #1. About the traits.
   $ap_fieldset_1 = 'ap_about_trait_fieldset';
   $form[$AJAX_wrapper][$ap_fieldset_1] = array(
-    '#type' => 'fieldset',   
+    '#type' => 'fieldset',
     '#title' => 'Select Trait.',
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
     '#id' => 'ap-about-traits-fieldset',
   );
-    
+
     $form[$AJAX_wrapper][$ap_fieldset_1]['ap_fieldset1_description'] = array(
       '#type' => 'item',
-      '#description' => t('Indicate the trait you would like phenotypic data for by selecting 
-        experiment and the genus of the crop, as well as the name of the trait below. Field marked with a * means field is required and must have a value before proceeding.<br /><br /><strong>It is highly 
-        recommended</strong> to restrict the dataset to a specific experiment. This can be done by entering the name of 
+      '#description' => t('Indicate the trait you would like phenotypic data for by selecting
+        experiment and the genus of the crop, as well as the name of the trait below. Field marked with a * means field is required and must have a value before proceeding.<br /><br /><strong>It is highly
+        recommended</strong> to restrict the dataset to a specific experiment. This can be done by entering the name of
         the experiment below (the name will autocomplete as you type). You can further filter by year and location if desired.'),
       '#id' => 'ap-fieldset1-description',
     );
-    
-    
+
+
     //
-    // FIELD: EXPERIMENT: 
+    // FIELD: EXPERIMENT:
     $exp = analyzedphenotypes_populatefield('field_project');
     $field_prop[$fld_experiment]['options'] = ($exp) ? $exp : array();
     $experiment_count = count($field_prop[$fld_experiment]['options']);
-    
+
     $form[$AJAX_wrapper][$ap_fieldset_1][$fld_experiment]['title'] = array(
       '#title' => t('Experiment'),
       '#type' => 'item',
@@ -2189,22 +2164,22 @@ function analyzedphenotypes_data_download($form, &$form_state) {
 
     // Count data points, # of traits and # of stocks.
     $summary = analyzedphenotypes_populatefield('field_project_summary');
-    
+
     // Show a short summary (# of data available) on mouse over.
     if ($summary) {
       $markup = '';
-      
+
       foreach($summary as $id => $info) {
         $markup .= '<div id="ap-info-experiment' . $id . '" class="ap-tooltip">' . $info . '</div>';
       }
-      
+
       $form[$AJAX_wrapper][$ap_fieldset_1][$fld_experiment]['tooltip'] = array(
         '#markup' => $markup,
       );
     }
     ///////
-    
-    
+
+
     //
     // FIELD: GENUS AND SPECIES:
     $form[$AJAX_wrapper][$ap_fieldset_1][ $fldname[$fld_genus]['field'] ] = array(
@@ -2215,14 +2190,14 @@ function analyzedphenotypes_data_download($form, &$form_state) {
       '#empty_option'  => $field_prop[$fld_genus]['empty'],
       '#options'       => $field_prop[$fld_genus]['options'],
       '#disabled'      => $field_prop[$fld_genus]['disabled'],
-      
+
       // Class to indicate field aligned next to another.
       '#prefix' => '<div class="ap-field-inline-container">',
       '#suffix' => '</div>',
       '#id' => $fldname[$fld_genus]['field-id'],
-    ) 
+    )
     + $AJAX_callback;
-    
+
     //
     $form[$AJAX_wrapper][$ap_fieldset_1]['ap_' . $fld_species . '_field'] = array(
       '#title' => t('Species'),
@@ -2232,25 +2207,25 @@ function analyzedphenotypes_data_download($form, &$form_state) {
       '#empty_option'  => $field_prop[$fld_species]['empty'],
       '#options'       => $field_prop[$fld_species]['options'],
       '#disabled'      => $field_prop[$fld_species]['disabled'],
-      
+
       // Class to indicate field aligned next to another.
       '#prefix' => '<div class="ap-field-inline-container">',
       '#suffix' => '</div>
                     <div class="ap-clear-float"></div>',
       '#id' => $fldname[$fld_species]['field-id'],
-    ) 
+    )
     + $AJAX_callback;
 
     $form[$AJAX_wrapper][$ap_fieldset_1]['ap_genus_species_description'] = array(
       '#type' => 'item',
-      '#description' => t('Select the genus of the crop you would like phenotypic data for. Additionally, the species 
+      '#description' => t('Select the genus of the crop you would like phenotypic data for. Additionally, the species
         can be indicated to further restrict the germplasm phenotypic data is exported for.'),
-      
+
       '#id' => 'ap-genus-species-description',
     );
     ///////
-    
-    
+
+
     //
     // FIELD: TRAIT NAME.
     $form[$AJAX_wrapper][$ap_fieldset_1][$fld_traits]['title'] = array(
@@ -2258,7 +2233,7 @@ function analyzedphenotypes_data_download($form, &$form_state) {
       '#type' => 'item',
       '#required' => TRUE,
     );
-    
+
     $form[$AJAX_wrapper][$ap_fieldset_1][ $fldname[$fld_traits]['field'] ] = array(
       '#type' => 'checkboxes',
       '#default_value' => $field_prop[$fld_traits]['default'],
@@ -2271,36 +2246,36 @@ function analyzedphenotypes_data_download($form, &$form_state) {
     )
     + $AJAX_callback
     + analyzedphenotypes_wrapcheckbox(115, count($field_prop[$fld_traits]['options']));
-    
+
     // Select all options when many experiments selected.
     if ($field_prop[$fld_traits]['default'][0] > 0 || !empty($field_prop[$fld_traits]['default'][0])) {
       foreach($field_prop[$fld_traits]['default'] as $o) {
-        $form[$AJAX_wrapper][$ap_fieldset_1][ $fldname[$fld_traits]['field'] ][$o]['#attributes'] 
+        $form[$AJAX_wrapper][$ap_fieldset_1][ $fldname[$fld_traits]['field'] ][$o]['#attributes']
           = array('checked' => 'checked');
-      }   
+      }
     }
     ///////
-    
-    
-    
+
+
+
   //
   //
   // Fieldset: #2. Additional filter criteria.
   $ap_fieldset_2 = 'ap_additional_filter_fieldset';
   $form[$AJAX_wrapper][$ap_fieldset_2] = array(
     '#title' => t('Additional filter criteria (Optional).'),
-    '#type' => 'fieldset',   
+    '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
-  );  
-    
+  );
+
     $form[$AJAX_wrapper][$ap_fieldset_2]['ap_fieldset2_description'] = array(
       '#type' => 'item',
       '#description' => t('We recommend you fill out as many of the following filters as possible to narrow the phenotype set to those you are most interested in.'),
       '#id' => 'ap-fieldset2-description',
     );
- 
- 
+
+
     //
     // FIELD: YEAR.
     $form[$AJAX_wrapper][$ap_fieldset_2][$fld_year]['title'] = array(
@@ -2320,17 +2295,17 @@ function analyzedphenotypes_data_download($form, &$form_state) {
     )
     + $AJAX_callback
     + analyzedphenotypes_wrapcheckbox(70, count($field_prop[$fld_year]['options']));
-   
+
     // Select all options when many experiments selected.
     if ($field_prop[$fld_year]['default'][0] > 0 || !empty($field_prop[$fld_year]['default'][0])) {
       foreach($field_prop[$fld_year]['default'] as $o) {
-        $form[$AJAX_wrapper][$ap_fieldset_2][ $fldname[$fld_year]['field'] ][$o]['#attributes'] 
+        $form[$AJAX_wrapper][$ap_fieldset_2][ $fldname[$fld_year]['field'] ][$o]['#attributes']
           = array('checked' => 'checked');
-      }   
+      }
     }
-    
-    
-    // 
+
+
+    //
     // FIELD: LOCATION.
     $form[$AJAX_wrapper][$ap_fieldset_2][$fld_location]['title'] = array(
       '#title' => t('Location'),
@@ -2349,17 +2324,17 @@ function analyzedphenotypes_data_download($form, &$form_state) {
     )
     + $AJAX_callback
     + analyzedphenotypes_wrapcheckbox(70, count($field_prop[$fld_location]['options']));
-   
+
     // Select all options when many experiments selected.
     if ($field_prop[$fld_location]['default'][0] > 0 || !empty($field_prop[$fld_location]['default'][0])) {
       foreach($field_prop[$fld_location]['default'] as $o) {
-        $form[$AJAX_wrapper][$ap_fieldset_2][ $fldname[$fld_location]['field'] ][$o]['#attributes'] 
+        $form[$AJAX_wrapper][$ap_fieldset_2][ $fldname[$fld_location]['field'] ][$o]['#attributes']
           = array('checked' => 'checked');
-      }   
+      }
     }
-    
 
-    // 
+
+    //
     // FIELD: GERMPLASM TYPE.
     $form[$AJAX_wrapper][$ap_fieldset_2][$fld_germplasmtype]['title'] = array(
       '#title' => t('Germplasm Type'),
@@ -2378,57 +2353,57 @@ function analyzedphenotypes_data_download($form, &$form_state) {
     )
     + $AJAX_callback
     + analyzedphenotypes_wrapcheckbox(70, count($field_prop[$fld_germplasmtype]['options']));
-   
+
     // Select all options when many experiments selected.
     if ($field_prop[$fld_germplasmtype]['default'][0] > 0 || !empty($field_prop[$fld_germplasmtype]['default'][0])) {
       foreach($field_prop[$fld_germplasmtype]['default'] as $o) {
-        $form[$AJAX_wrapper][$ap_fieldset_2][ $fldname[$fld_germplasmtype]['field'] ][$o]['#attributes'] 
+        $form[$AJAX_wrapper][$ap_fieldset_2][ $fldname[$fld_germplasmtype]['field'] ][$o]['#attributes']
           = array('checked' => 'checked');
-      }   
+      }
     }
-    
-    
+
+
     //
     // FIELD: GERMPLASM.
     $form[$AJAX_wrapper][$ap_fieldset_2][$fld_germplasm]['title'] = array(
       '#title' => t('Germplasm'),
       '#type' => 'item',
     );
-    
+
     // GERMPLASM BAR
     // Suggest all germplasm found given the combination of fiters above.
     if ($field_prop[$fld_germplasm]['options']) {
       $germplasm_found = $field_prop[$fld_germplasm]['options'];
-      
+
       // Indicate the number of germplasm matched given set of filters. Provide filter option to enter specific germplasm.
       $germplasm_text = '<strong>' . count($germplasm_found)  . ' germplasm</strong> found based on the filters above.';
       $germplasm_class = 'ap-field-enabled';
-    } 
+    }
     else {
       // Nothing found.
       $germplasm_found = array();
       $germplasm_text = '';
       $germplasm_class = 'ap-field-disabled';
     }
-    
+
     // Germplasm/Stock Name control bar.
     $form[$AJAX_wrapper][$ap_fieldset_2]['ap_filter_germplasm_bar'] = array(
       '#markup' => '<div id="ap-filter-germplasm-bar" class="' . $germplasm_class . '">' . $germplasm_text . '</div>',
     );
-    
+
     // Hidden fields required.
     $form[$AJAX_wrapper][$ap_fieldset_2]['ap_field_hidden'] = array(
       '#prefix' => '<div id="ap-field-hidden">',
       '#suffix' => '</div>',
-    ); 
-      
+    );
+
       // A set of germplasm for a given filters.
       $form[$AJAX_wrapper][$ap_fieldset_2]['ap_field_hidden'][ $fldname[$fld_germplasm]['field_hidden'] ] = array(
         '#type' => 'hidden',
         '#value' => implode($delimiter, $germplasm_found),
         '#attributes' => array('id' => 'ap-germplasm-found-cache'),
       );
-      
+
       // Store values enetered in each newly added germplasm field.
       $form[$AJAX_wrapper][$ap_fieldset_2]['ap_field_hidden']['ap_autofield_cache'] = array(
         '#type' => 'hidden',
@@ -2442,13 +2417,13 @@ function analyzedphenotypes_data_download($form, &$form_state) {
       // Matching germplasm based on the filters above.
       if (isset($germplasm_found) && is_array($germplasm_found)) {
         $list = '';
-      
+
         foreach($germplasm_found as $g) {
           $list .= '<li>' . $g . '</li>';
         }
-      
+
         $form[$AJAX_wrapper][$ap_fieldset_2]['ap_filter_germplasm_found'] = array(
-          '#markup' => '<div id="ap-filter-germplasm-found"><ul>' . $list . ' </ul></div> 
+          '#markup' => '<div id="ap-filter-germplasm-found"><ul>' . $list . ' </ul></div>
                         <div id="ap-filter-germplasm-reveal">
                           <div class="ap-filter-germplasm-reveal-on" title="Show/Hide ' . count($germplasm_found) . ' Germplasm/Stock Name">&nbsp;</div>
                         </div>',
@@ -2459,46 +2434,46 @@ function analyzedphenotypes_data_download($form, &$form_state) {
       $form[$AJAX_wrapper][$ap_fieldset_2]['ap_filter_germplasm_by_field'] = array(
         '#prefix' => '<div id="ap-filter-germplasm-by-field">
                         Phenotype for Specific Germplasm<br />
-                        <small>If you are interested in phenotypes for specific germplasm, you can add them individually by clicking add button 
+                        <small>If you are interested in phenotypes for specific germplasm, you can add them individually by clicking add button
                         . To retrive all germplasm based on your other filter criteria, proceed to the next filter.</small>',
         '#suffix' => '</div>',
       );
 
       // Autofield - Filter by specific germplasm name(s).
       $ap_autofield = 'ap_autofield';
-    
+
       // Element wrapper, fields will be inserted to this container.
       $form[$AJAX_wrapper][$ap_fieldset_2]['ap_filter_germplasm_by_field'][$ap_autofield] = array(
         '#prefix' => '<div id="ap-autofield">',
         '#suffix' => '</div>',
       );
-      
+
       // Store values selected.
       $ap_autofield_cache = '';
       if (isset($form_state['values']['ap_autofield_cache'])) {
         $ap_autofield_cache = $form_state['values']['ap_autofield_cache'];
       }
-    
+
       $form[$AJAX_wrapper][$ap_fieldset_2]['ap_field_hidden']['ap_autofield_cache']['#default_value'] = $ap_autofield_cache;
-      
+
       // Since fields are added through AJAX, form has to reconstruct fields using
       // the values in the cache.
       $single_field = 0;
-      
+
       if (isset($form_state['values']) && !empty($ap_autofield_cache)) {
         $stock_names = explode('#', $ap_autofield_cache);
-        
+
         if (count($stock_names) > 0) {
           foreach($stock_names as $name) {
             // Add autofield default to germplasm name.
             if (in_array($name, $germplasm_found)) {
-              $form[$AJAX_wrapper][$ap_fieldset_2]['ap_filter_germplasm_by_field'][$ap_autofield][] 
-                = analyzedphenotypes_autofieldprop($name);   
+              $form[$AJAX_wrapper][$ap_fieldset_2]['ap_filter_germplasm_by_field'][$ap_autofield][]
+                = analyzedphenotypes_autofieldprop($name);
             }
             else {
               $single_field++;
             }
-          }  
+          }
         }
         else {
           $single_field = 1;
@@ -2508,16 +2483,16 @@ function analyzedphenotypes_data_download($form, &$form_state) {
         // Add one.
         $single_field = 1;
       }
-      
+
       if ($single_field) {
         // Add one field.
-        $form[$AJAX_wrapper][$ap_fieldset_2]['ap_filter_germplasm_by_field'][$ap_autofield][] 
-          = analyzedphenotypes_autofieldprop();   
+        $form[$AJAX_wrapper][$ap_fieldset_2]['ap_filter_germplasm_by_field'][$ap_autofield][]
+          = analyzedphenotypes_autofieldprop();
       }
     }
     ///////
-    
-    
+
+
     //
     // FIELD: MAX MISSING DATA.
     $form[$AJAX_wrapper][$ap_fieldset_2][ $fldname[$fld_missingdata]['field'] ] = array(
@@ -2526,31 +2501,31 @@ function analyzedphenotypes_data_download($form, &$form_state) {
       '#default_value' => $field_prop[$fld_missingdata]['default'],
       '#disabled'      => $field_prop[$fld_missingdata]['disabled'],
       '#size' => 10,
-      
+
       '#description' => t('Enter the percent (%) missing data per germplasm that you would like to allow. For example, a value of 20% will ensure that all germplasm exported have values for at least 20% of site-years this trait was observed in. If you further restrict the site-year exported using other filter criteria, this filter will be applied to the restricted dataset.'),
       '#id' => $fldname[$fld_missingdata]['field-id'],
     );
 
 
-  
+
   //
   //
   // Fieldset: #3. Choose your file.
   $ap_fieldset_3 = 'ap_file_type_fieldset';
   $form[$AJAX_wrapper][$ap_fieldset_3] = array(
-    '#type' => 'fieldset',   
+    '#type' => 'fieldset',
     '#title' => 'Choose your output file.',
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
   );
-  
+
     $form[$AJAX_wrapper][$ap_fieldset_3]['ap_fieldset3_description'] = array(
       '#type' => 'item',
       '#description' => t('Select the file format, column headers and summary options you would like the data exported in below.'),
       '#id' => 'ap-fieldset3-description',
     );
 
-    
+
     // FILE TYPE:
     $download_type = analyzedphenotypes_datafileprop('download_type');
     $form[$AJAX_wrapper][$ap_fieldset_3][ $fldname[$fld_filetype]['field'] ] = array(
@@ -2559,12 +2534,12 @@ function analyzedphenotypes_data_download($form, &$form_state) {
       '#disabled' => $field_prop[$fld_filetype]['disabled'],
       '#options'  => $download_type,
       '#description' => t('Select the format you would like the data exported.'),
-      
-      // Class to inidcate the field does not require AJAX.      
+
+      // Class to inidcate the field does not require AJAX.
       '#attributes' => array('class' => array('ap-skip-loading')),
       '#id' => $fldname[$fld_filetype]['field-id'],
     );
-    
+
     $form[$AJAX_wrapper][$ap_fieldset_3]['ap_filetype_warning'] = array(
       '#type' => 'item',
       '#markup' => '<div>Please note that some germplasm names may have converted into dates in Microsoft Excel.</div>',
@@ -2592,8 +2567,8 @@ function analyzedphenotypes_data_download($form, &$form_state) {
       '#disabled' => $field_prop[$fld_rfriendly]['disabled'],
       '#prefix' => '<div id="ap-chk-r">',
       '#suffix' => '</div>',
-      
-      // Class to inidcate the field does not require AJAX.      
+
+      // Class to inidcate the field does not require AJAX.
       '#attributes' => array('class' => array('ap-skip-loading')),
       '#id' => $fldname[$fld_rfriendly]['field-id'],
     );
@@ -2615,12 +2590,12 @@ function analyzedphenotypes_data_download($form, &$form_state) {
     $i = 1;
     foreach($default_headers as $def) {
       $id = 'ap-default-row-' . $i;
-      
-      // Load the RFriendly version of headers. 
+
+      // Load the RFriendly version of headers.
       $rfriendly = analyzedphenotypes_columnsprop('rfriendly', array(
         'column_header' => $def,
       ));
-        
+
       $rfriendly = '<em>' . ucwords(str_replace(',.', ', ', $rfriendly))  . '</em>';
 
       $rows[] = array(
@@ -2629,15 +2604,15 @@ function analyzedphenotypes_data_download($form, &$form_state) {
         'row-up'   => array('title' => t('Click to move one level up...'), 'id' => $id . 'goup', 'class' => array('ap-row-up'), 'data' => '&nbsp;'),
         'row-down' => array('title' => t('Click to move one level down...'), 'id' => $id . 'down', 'class' => array('ap-row-down'), 'data' => '&nbsp;')
       );
-      
+
       $i++;
     }
-    
+
     //
     // DEFAULT COLUMN HEADERS TABLE.
     $tbl1 = theme('table', array(
-      'header' => $header, 
-      'rows'   => $rows, 
+      'header' => $header,
+      'rows'   => $rows,
       'attributes' => array('id' => 'ap-table-default-headers')
     ));
 
@@ -2647,44 +2622,44 @@ function analyzedphenotypes_data_download($form, &$form_state) {
         . l('Preview headers', '#', array('attributes' => array('id' => 'ap-preview-link')))
         . '<div class="ap-clear-float"></div>',
     );
-    
-    
+
+
     //
     // PREIVEW COLUMN HEADERS TABLE.
     $tbl3 = theme('table', array(
-      'header' => array(), 
-      'rows'   => array(), 
+      'header' => array(),
+      'rows'   => array(),
       'attributes' => array('id' => 'ap-table-preview-headers'),
       'sticky' => FALSE,
     ));
-    
+
     $form[$AJAX_wrapper][$ap_fieldset_3]['ap_column_header_picker_container']['ap_table_preview_headers'] = array(
       '#markup' => '<div id="ap-table-preview-headers-container">
-        <br />This is a sample data to show a preview of the otput file based on the column headers chosen above.' 
+        <br />This is a sample data to show a preview of the otput file based on the column headers chosen above.'
         . $tbl3 . '<span>&nbsp;</span></div>',
     );
-  
+
     //
     // OPTIONAL COLUMN HEADERS TABLE.
     $rows = array();
     $i = 1;
-    
+
     foreach($optional_headers as $opt) {
       $id = 'ap-optional-row' . $i;
-      
+
       $rfriendly = analyzedphenotypes_columnsprop('rfriendly', array(
         'column_header' => $opt,
       ));
-        
+
       $rfriendly = '<em>' . $rfriendly  . '</em>';
-      
+
       $rows[] = array(
         'number'   => array('title' => t('Check header to include/exclude in the output file.'), 'id' => $id . 'seqn', 'class' => array(), 'data' => '+'),
         'column'   => array('title' => t('Check header to include/exclude in the output file.'), 'id' => $id . 'cols', 'class' => array(), 'data' => '<input type="checkbox" id="' . $id  . 'checkbox" class="ap-optional-traits ap-skip-loading"> &nbsp;- ' . $opt . $rfriendly),
         'row-up'   => array('title' => t('Check header to include/exclude in the output file.'), 'id' => $id . 'goup', 'class' => array(), 'data' => '&nbsp;'),
         'row-down' => array('title' => t('Check header to include/exclude in the output file.'), 'id' => $id . 'down', 'class' => array(), 'data' => '&nbsp;')
       );
-    
+
       $i++;
     }
 
@@ -2694,8 +2669,8 @@ function analyzedphenotypes_data_download($form, &$form_state) {
     );
 
     $tbl2 = theme('table', array(
-      'header' => $header, 
-      'rows'   => $rows, 
+      'header' => $header,
+      'rows'   => $rows,
       'attributes' => array('id' => 'ap-table-optional-headers')
     ));
 
@@ -2707,8 +2682,8 @@ function analyzedphenotypes_data_download($form, &$form_state) {
       '#type' => 'item',
       '#description' => t('Check the column headers you want to include in the output file. Use the up and down arrow buttons to change the order they appear in the file. Click Preview headers to preview selected column headers.'),
     );
-    
-    
+
+
     //
     // STORE VALUES OF COLUMN HEADERS.
     if (isset($form_state['values'])) {
@@ -2717,7 +2692,7 @@ function analyzedphenotypes_data_download($form, &$form_state) {
     else {
       $headers = implode($delimiter, $default_headers);
     }
-    
+
     $form[$AJAX_wrapper][$ap_fieldset_3]['ap_column_header_picker_container'][ $fldname[$fld_columnheaders]['field'] ] = array(
      '#type' => 'hidden',
      '#default_value' => $headers,
@@ -2733,7 +2708,7 @@ function analyzedphenotypes_data_download($form, &$form_state) {
     '#type' => 'submit',
     '#value' => 'Download',
     '#weight' => 100,
-    
+
     // Disabled by default.
     '#attributes' => array(
       'class' => array('form-button-disabled'),
@@ -2741,8 +2716,8 @@ function analyzedphenotypes_data_download($form, &$form_state) {
     ),
     '#id' => 'ap-download-submit-field',
   );
-  
-  
+
+
   return $form;
 }
 
@@ -2754,32 +2729,32 @@ function analyzedphenotypes_data_download_submit($form, &$form_state) {
   // Use this character to separate entries in a string.
   $delimiter = '#';
   $field_values = array();
-  
+
   // Field names.
   $fldname = analyzedphenotypes_fieldnames();
-  
+
   foreach($fldname as $f) {
     if (isset($form_state['values'][ $f['field'] ])) {
       $val = $form_state['values'][ $f['field'] ];
-      
+
       if (is_array($val)) {
         // Field checkboxes.
         $v = analyzedphenotypes_checkboxesvalue($val);
         $entered_value = ($v) ? implode($delimiter, $v) : 'all';
       }
       else {
-        $entered_value = trim(strip_tags($val));  
+        $entered_value = trim(strip_tags($val));
       }
-      
+
       $field_values[ $f['base'] ] = $f['base'] . '=' . $entered_value;
     }
   }
-  
+
   // Germplasm.
   $autofield = $form_state['values']['ap_autofield_cache'];
   $germplasm = (empty($autofield)) ? 'all' : $autofield;
   $field_values[ $fldname['germplasm']['base'] ] = $fldname['germplasm']['base'] . '=' . $germplasm;
-  
+
   $querystring = implode('&', $field_values);
   $url = base64_encode($querystring);
 
@@ -2796,7 +2771,7 @@ function analyzedphenotypes_data_download_submit($form, &$form_state) {
 
 /**
  * Function wrap a checkbox to a div and stlye it to look like a multi select box.
- * 
+ *
  * @param $height
  *   An integer, height value of the container element.
  * @param $has_options
@@ -2817,24 +2792,24 @@ function analyzedphenotypes_wrapcheckbox($height, $has_options) {
 
 /**
  * Function get checked values from field checkboxes.
- * 
+ *
  * @param $value
  *   An array of values returned when check a checkbox.
  */
 function analyzedphenotypes_checkboxesvalue($value) {
   $checkboxes_value = array();
-  
+
   if ($value) {
     // Sort values selected first to take into account
     // the order options are selected/checked.
     asort($value);
-  
+
     foreach($value as $v) {
       if ($v > 0 || $v != '') {
         $checkboxes_value[] = $v;
       }
     }
   }
-  
+
   return $checkboxes_value;
 }
