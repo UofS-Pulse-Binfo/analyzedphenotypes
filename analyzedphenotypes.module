@@ -130,8 +130,8 @@ function analyzedphenotypes_menu() {
     'access arguments' => array('access administration pages'),
     'type' => MENU_CALLBACK,
   );
-  
-  
+
+
   // Data Downloader.
   $items['download'] = array(
     'title' => 'Download Analyzed Phenotypic Data',
@@ -143,7 +143,7 @@ function analyzedphenotypes_menu() {
     'weight' => 2,
     'type' => MENU_NORMAL_ITEM,
   );
-  
+
     $items['download/autofield/%/%'] = array(
       'title' => 'link',
       'page callback' => 'analyzedphenotypes_autofield_callback',
@@ -198,7 +198,7 @@ function analyzedphenotypes_theme($existing, $type, $theme, $path) {
     'template' => 'analyzedphenotypes_validators',
     'path' => $path . '/theme',
   );
-  
+
   // Data downloader.
   $items['analyzedphenotypes_data_download'] = array(
     'template' => 'analyzedphenotypes_pages',
@@ -378,11 +378,11 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
     //
     case 'germplasm':
       $field_values = unserialize($parameter);
-      
+
       foreach($field_values as $i => $g) {
         $data_JSON[$g] = $g;
       }
-      
+
       break;
 
     //
@@ -408,7 +408,7 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
  */
 function analyzedphenotypes_register_trpdownload_type() {
   $types = array();
-  
+
   // The key is the machine name of my download type.
   $types['analyzedphenotypes_download'] = array(
     // A human readable name to show in an administrative interface one day.
@@ -440,7 +440,7 @@ function analyzedphenotypes_register_trpdownload_type() {
 function analyzedphenotypes_trpdownload_get_filename($vars) {
   // Filename.
   $filename = 'analyzed_phenotypic_data_download' . date('YMd') .'_'. time();
-  
+
   return $filename;
 }
 
@@ -458,17 +458,17 @@ function analyzedphenotypes_trpdownload_get_readable_format($vars) {
       }
     }
   }
-  
+
   $v = base64_decode($code);
 
   if (!empty($v)) {
     // Field names.
     $fldname = analyzedphenotypes_fieldnames();
     $filters = explode('&', $v);
-  
+
     foreach($filters as $i) {
       list($filter, $value) = explode('=', $i);
-    
+
       if ($filter == $fldname['filetype']['base']) {
         $file_type = trim($value);
         break;
@@ -479,16 +479,16 @@ function analyzedphenotypes_trpdownload_get_readable_format($vars) {
       case 'tsv':
         $format = 'Tab Separated Values (.tsv)';
         break;
-      
+
       case 'csv':
         $format = 'Comma Separated Values (.csv)';
         break;
-      
+
       case 'xlsx':
         $format = 'Microsoft Excel Spreadsheet (.xlsx)';
         break;
     }
-    
+
     return $format;
   }
 }
@@ -507,23 +507,23 @@ function analyzedphenotypes_trpdownload_get_suffix($vars) {
       }
     }
   }
-  
+
   $v = base64_decode($code);
 
   if (!empty($v)) {
     // Field names.
     $fldname = analyzedphenotypes_fieldnames();
     $filters = explode('&', $v);
-  
+
     foreach($filters as $i) {
       list($filter, $value) = explode('=', $i);
-    
+
       if ($filter == $fldname['filetype']['base']) {
         $file_type = trim($value);
         break;
       }
     }
-    
+
     return $file_type;
   }
 }
@@ -534,7 +534,7 @@ function analyzedphenotypes_trpdownload_get_suffix($vars) {
  */
 function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
   // Use this character to separate entries in a string.
-  $delimiter = '#';
+  $delimiter = '~';
 
   $code = '';
   foreach($vars as $l => $v) {
@@ -546,12 +546,12 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
         }
       }
     }
-    
+
     if ($l == 'filename') {
       $filename = $v;
     }
   }
-  
+
   // Start extracting filters.
   if (empty($code) && empty($filename)) {
     die('Could not generate file. No filters selected.');
@@ -559,213 +559,209 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
   else {
     // Filters selected.
     $v = base64_decode($code);
-    
+
     if (empty($v)) {
-      die('Could not generate file. No filters selected.');  
+      die('Could not generate file. No filters selected.');
     }
     else {
       // Convert the query string to key and value pair.
       // Key should still match field name returned by _fieldnames().
+      // FILTER or FORM FIELD VALUE.
       $filters = explode('&', $v);
       $filter_value = array();
-      
+
       foreach($filters as $i) {
-        list($filter, $value) = explode('=', $i);
+        @list($filter, $value) = explode('=', $i);
+
+        // Field name = Value selected.
         $filter_value[$filter] = $value;
       }
-      
+
+      // Global/standard field names used in form, submit etc.
+      // experiment, genus, species, traits, year, location, germplasmtype,
+      // missingdata, filetype, averagerep, rfriendly, columnheaders
       $fldname = analyzedphenotypes_fieldnames();
+      // File type field name value.
       $file_type = $filter_value[ $fldname['filetype']['base'] ];
-      
+
       // Fetch all valid file types for download.
       // Use the result to ensure that only these registered types are allowed.
       $d = analyzedphenotypes_datafileprop('download_type');
       $download_type = array_keys($d);
-      
+
       if (in_array($file_type, $download_type)) {
-        // File type is valid. Generate file.
+        // TSV, CSV or XLSX.
+
+        // This array will hold datapoints for write-to-file.
         $to_write = array();
-        
-        // Start by adding the colum headers. Maintain the order user set in the interface.
+
+        // Start by reading the column headers field. This contains the headers
+        // programmatically picked and/or selected by user. In addition, this
+        // contains the set of columns required as well as the order it appears in file.
+
+        // FILTER/FIELD NAME: columnheaders.
         $h = $filter_value[ $fldname['columnheaders']['base'] ];
-        $temp_headers = explode($delimiter, $h);
-        $file_column_headers = array();
-        
-        // Index array of each column header.
-        $header_seq = array();
-        // All traits columns.
-        $trait_headers = array();
-        
-        // Trait names are grouped as one. Need to isolate them as one independent column.
-        $seq = 0;
-        foreach($temp_headers as $col) {
-          // Trait names are comma separated.
-          $col = trim($col);
-          $trait_names = explode(',', $col);
-          
-          if (count($trait_names) > 1) {
-            // List detected.
-            foreach($trait_names as $t) {
-              $t = trim($t);
-              
-              $file_column_headers[] = $t;
-              $header_seq[$t] = $seq;
-              $seq++;
-              
-              $trait_headers[] = $t;
+        // Entries are delimited by $delimeter value, break it to individual unit.
+        $g = explode($delimiter, $h);
+        $column_headers_picked = array_map('trim', $g);
+
+        // Make a clone copy of this array.
+        $tmp_column_headers_picked = $column_headers_picked;
+
+        // Does user want it RFriendly-ied.
+
+        // FILTER/FIELD NAME: rfriendly.
+        if ($filter_value[ $fldname['rfriendly']['base'] ]) {
+          $column_headers_picked_rfriendly = array();
+
+          foreach($column_headers_picked as $col) {
+            $col = trim($col);
+
+            if (!empty($col)) {
+              $column_headers_picked_rfriendly[] = analyzedphenotypes_columnsprop('rfriendly', array(
+                'column_header' => $col,
+              ));
             }
           }
-          else {
-            // A column.
-            $file_column_headers[] = $col;
-            $header_seq[$col] = $seq;
-            $seq++;
-          }
+
+          // Reset the original column headers and use this rfriendly version.
+          unset($column_headers_picked);
+          $column_headers_picked = $column_headers_picked_rfriendly;
         }
 
-        // WRITE HEADERS.
-        if ($filter_value[ $fldname['rfriendly']['base'] ]) {
-          // User wants RFriednly version of column headers.
-          foreach($file_column_headers as $c) {
-            $file_rfriendly_headers[] =  analyzedphenotypes_columnsprop('rfriendly', array(
-              'column_header' => $c,
-            ));
-          }
-          
-          $to_write[0] = $file_rfriendly_headers;  
-        }
-        else {
-          $to_write[0] = $file_column_headers;  
-        }
+        // The first item to write are the column headers.
+        $to_write['header'] = $column_headers_picked;
 
-        // WRITE ROWS, ROWS and ROWS.
-        // Fetch dataset given a filter set.
+        // Next... the Rows and rows and more rows.
+        // Fetch dataset for a given filters.
         $dataset = analyzedphenotypes_populatefield('file', array(
           'filters' => $filter_value,
         ));
-        
-        // Map column to fieldnames.
-        unset($col);
-        $col_field = analyzedphenotypes_columnsprop('column_to_field');
-        
-        // Find each unique combination of experiment, germplasm, year, location and trait.
-        $keys = array();
-        
-        foreach($dataset as $data) {
-          $data = (array)$data;
-          
-          $file_data_rows = array();
-          foreach($file_column_headers as $col) {
-            if (isset($col_field[$col])) {
-              // Column has an associated fieldname.
-              $file_data_rows[] = (empty($data[$col_field[$col]])) ? 'n/a' : $data[$col_field[$col]];
+
+        if ($dataset) {
+          // Have something to write to file.
+
+          // SQL query uses alias to reference field. Use alias to access piece of data.
+          $field_alias = analyzedphenotypes_columnsprop('column_to_field');
+
+          // Compose a key to group data points. This grouping can then be used for
+          // average replicate option.
+          $field_keys = array($fldname['experiment']['base'], );
+
+          // Begin.
+          $column_headers_data = array();
+
+          foreach($dataset as $data) {
+            $data = (array)$data;
+
+            unset($data['project_id'], $data['phenotype_id']);
+
+            // Group dataset by this key. Later, whey user checked off average rep option
+            // values can be averaged easily.
+            $key = $data[ $field_alias['Experiment'] ]     .
+                   $data[ $field_alias['Germplasm Name'] ] .
+                   $data[ $field_alias['Location'] ]       .
+                   $data[ $field_alias['Year'] ]           .
+                   $data[ $fldname['traits']['base'] ];
+
+            $to_write['data'][$key][] = $data;
+          }
+
+          // Need to average?
+          if ($filter_value[ $fldname['averagerep']['base'] ]) {
+            // All keys.
+            $k = array_keys($to_write['data']);
+            $unique_keys = array_unique($k);
+
+            foreach($unique_keys as $u_k) {
+              $all_values = array_column($to_write['data'][$u_k], $fldname['value']['base']);
+              $v_count = count($all_values);
+              $v_sum   = array_sum($all_values);
+              $v_avg   = round($v_sum / $v_count, 2);
+
+              // Collate all data collector into a comma separated value to
+              // account all entries after doing the average.
+              // Only when data collector column was reqested.
+
+              // Summarize all datapoints into one by using the first item and add the
+              // average value and data collectors.
+              $first_item = $to_write['data'][$u_k][0];
+              $first_item[ $fldname['value']['base'] ] = $v_avg;
+
+              // No need to do this to replicate - since rep is omitted when averaged.
+              if (array_search('Data Collector', $tmp_column_headers_picked)) {
+                $all_collector = array_column($to_write['data'][$u_k], $fldname['collector']['base']);
+                $unique_collector = array_unique($all_collector);
+                $csv_collector = implode(',', $unique_collector);
+
+                $first_item[ $fldname['collector']['base'] ] = $csv_collector;
+              }
+
+              // Add this line with key avg.
+              $to_write['data'][$u_k]['avg'] = $first_item;
+            }
+          }
+
+          // Write to file.
+
+          // Start off with the header.
+          $to_file[] = $to_write['header'];
+
+          // Rows.
+          $all_keys = array_keys($to_write['data']);
+          $unique_keys = array_unique($all_keys);
+
+          foreach($unique_keys as $u_key) {
+            $source = array();
+
+            if ($filter_value[ $fldname['averagerep']['base'] ]) {
+              $source['avg'] = $to_write['data'][$u_key]['avg'];
             }
             else {
-              // Trait names.
-              if ($data[ $fldname['traits']['base'] ] == $col) {
-                $data_trait_name = $col;
-                $data_trait_value = $data[ $fldname['value']['base'] ];
-                // Trait name from dataset matched the trait name from column set.
-                // Place the value to the trait name.
-                $file_data_rows[] = $data[ $fldname['value']['base']];
+              unset($to_write['data'][$u_key]['avg']);
+              $source = $to_write['data'][$u_key];
+            }
+
+            // Each line in the dataset.
+            foreach($source as $s_i => $s_data) {
+              $data_row = array();
+
+              // Sort data into the right column header.
+              foreach($tmp_column_headers_picked as $col) {
+                if (isset($field_alias[$col])) {
+                  // Column header has a corresponding field alias.
+                  $data_row[] = ($s_data[ $field_alias[$col] ]) ?
+                    $s_data[ $field_alias[$col] ] : 'n/a';
+                }
+                else {
+                  // Could be the trait measured.
+                  $data_row[] = ($s_data[ $fldname['traits']['base'] ] == $col)
+                    ? $source[$s_i]['value'] : 'n/a';
+                }
               }
-              else {
-                // Does not match, not applicable.
-                $file_data_rows[] = 'n/a';
-              }
+
+              $to_file[] = $data_row;
             }
           }
-          
-          // Average or not to average.
-          if ($filter_value[ $fldname['averagerep']['base'] ]) {   
-            // A row processed... write to file.
-            // Group rows by experiment, germplasm, year, location and trait.
-            // Use the group key to average in case user prefers data to be averaged.
-            $key = $file_data_rows[$header_seq['Experiment']] . 
-                   $file_data_rows[$header_seq['Germplasm Name']] . 
-                   $file_data_rows[$header_seq['Location']] . 
-                   $file_data_rows[$header_seq['Year']] . 
-                   $data_trait_name;
 
-            $tmp_to_write[$key][] = array('data' => $file_data_rows, 'value' => $data_trait_value);  
-          }
-          else {
-            $to_write[] = $file_data_rows;
+          // DEBUG:
+          // dpm($to_file);
+
+          // CREATE FILE.
+          if ($to_file) {
+            analyzedphenotypes_writefile($filename, $to_file, $file_type);
           }
         }
-      
-        // Average my data? - do this extra process.
-        if ($filter_value[ $fldname['averagerep']['base'] ]) {
-          $keys = array_keys($tmp_to_write);
-          $unique_keys = array_unique($keys);
-          
-          foreach($unique_keys as $k) {
-            $key_sample_line = current($tmp_to_write[$k]);
-            $all_values = array_column($tmp_to_write[$k], 'value');
-            $average = round(array_sum($all_values) / count($all_values), 2);
-            
-            // From a group of data, get one row and replace value with average value.
-            $i = array_search($key_sample_line['value'], $key_sample_line['data']);
-            $key_sample_line['data'][$i] = $average;
-            
-            $to_write[] = $key_sample_line['data'];
-          }
-        }
-
-        // Process dataset - apply average option, rfriendly etc.
-        if ($filter_value[ $fldname['averagerep']['base'] ] == 10) {
-          $average_dataset = array();
-          
-          unset($to_write[0]); 
-          foreach($to_write as $i => $line) {
-            // For this line, find the trait that has a value.
-            foreach($trait_headers as $t) {
-              $index = array_search($t, $file_column_headers);
-  
-              if ($line[$index] != 'n/a') {
-                $trait_index = $index;
-                break;
-              }
-            }
-              
-            $tmp = $line[$header_seq['Experiment']] . $line[$header_seq['Germplasm Name']] . $line[$header_seq['Location']] . $line[$header_seq['Year']] . $file_column_headers[$trait_index];
-              
-            $average_dataset[$tmp][] = array(
-              'line' => $line,
-              'trait_index' => $trait_index,
-              'trait_value' => $line[$trait_index],
-            );    
-          }
-        
-          // Now lines are sorted by experiment, germplasm name, location, year and trait, average the values.
-          unset($to_write);
-          $to_write[] = $file_column_headers;
-          
-          foreach($average_dataset as $prop => $new_line) {
-            $values = array_column($new_line, 'trait_value');
-            $average = array_sum($values) / count($values);
-            
-            // Compress all similar line and add the average.
-            $line = current($average_dataset[$prop]);
-            $line_data = $line['line'];
-            $line_trait = $line['trait_index'];
-            
-            $line['line'][$line_trait] = round($average, 2);
-            
-            $to_write[] = $line['line'];
-          }
-        }
-
-        // CREATE FILE.
-        if ($to_write) {
-          analyzedphenotypes_writefile($filename, $to_write, $file_type);          
+        else {
+          // File type not supported.
+          die('Could not generate file. Query returned 0 rows.');
         }
       }
       else {
         // File type not supported.
-        die('Could not generate file. File type no supported.');  
+        die('Could not generate file. File type no supported.');
       }
-    //   
+    //
     }
   }
 }
