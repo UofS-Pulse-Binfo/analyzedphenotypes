@@ -117,33 +117,41 @@ function analyzed_phenotypes_all_data_summary_page() {
     UNION (SELECT organism_genus, ' . $column_num . ' as num, count(1) FROM {mview_phenotype} GROUP BY organism_genus)
     ORDER BY num ASC';
   // Finally build the summary table based on the above query.
+
   $resource = chado_query($query);
-  foreach ($resource as $r) {
-    // Add colour for row if this is the first value for that row.
-    if (!isset($table['rows'][$r->organism_genus])) {
-      $table['rows'][$r->organism_genus] = array(
-        'data' => array(),
-        'class' => array($r->organism_genus),
-      );
-    }
-    // Add current data point to table.
-    if ($r->num == 1) {
-      $table['rows'][$r->organism_genus]['data'][$r->num] = array(
-        'data' => $r->organism_genus,
-        'class' => array($table['header'][$r->num-1]['data']),
-      );
-    }
-    else {
-      $table['rows'][$r->organism_genus]['data'][$r->num] = array(
-        'data' => number_format($r->count),
-        'class' => array($table['header'][$r->num-1]['data']),
-      );
+  $r_count = $resource->rowCount();
+
+  if ($r_count > 0) {
+    foreach ($resource as $r) {
+      // Add colour for row if this is the first value for that row.
+      if (!isset($table['rows'][$r->organism_genus])) {
+        $table['rows'][$r->organism_genus] = array(
+          'data' => array(),
+          'class' => array($r->organism_genus),
+        );
+      }
+      // Add current data point to table.
+      if ($r->num == 1) {
+        $table['rows'][$r->organism_genus]['data'][$r->num] = array(
+          'data' => $r->organism_genus,
+          'class' => array($table['header'][$r->num-1]['data']),
+        );
+      }
+      else {
+        $table['rows'][$r->organism_genus]['data'][$r->num] = array(
+          'data' => number_format($r->count),
+          'class' => array($table['header'][$r->num-1]['data']),
+        );
+      }
     }
   }
 
   $output .= theme('table', $table);
 
-  $output .= '<p class="to-distribution-chart">To visualize the distribution of values for a given trait, see the ' . l('Trait Distribution Chart', 'phenotypes/trait-distribution') . '.</p>';
+  if ($r_count > 0) {
+    $output .= '<p class="to-distribution-chart">To visualize the distribution of values for a given trait, see the ' . l('Trait Distribution Chart', 'phenotypes/trait-distribution') . '.</p>';
+  }
+
 
   return $output;
 }
