@@ -51,6 +51,15 @@
 
           $('#ap-ajax-wait').remove();
           apAutofieldControls();
+
+          // Reset traits - checked by default but
+          // must be unchecked when species changed.
+          var rt = $('#ap-reset-traits').val();
+          if (rt == 1) {
+            $('#ap-traits-field-id input').each(function() {
+              $(this).removeAttr('checked');
+            });
+          }
         });
 
 

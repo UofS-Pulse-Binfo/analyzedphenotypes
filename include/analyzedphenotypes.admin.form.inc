@@ -2108,6 +2108,10 @@ function analyzedphenotypes_data_download($form, &$form_state) {
               }
             // end AJAX - same experiment, genus and species.
             }
+            else {
+              // Reset trait.
+              $reset_traits = 1;
+            }
           ///
           }
         // end AJAX - same experiment and genus.
@@ -2300,6 +2304,12 @@ function analyzedphenotypes_data_download($form, &$form_state) {
           = array('checked' => 'checked');
       }
     }
+
+    $form[$AJAX_wrapper]['reset_traits'] = array(
+      '#type' => 'hidden',
+      '#value' => (isset($reset_traits)) ? 1 : 0,
+      '#attributes' => array('id' => 'ap-reset-traits'),
+    );
     ///////
 
 
