@@ -1928,7 +1928,14 @@ function analyzedphenotypes_data_download($form, &$form_state) {
                     ////// Year selected - Create location options.
                     if ($form_state['values'][ $fldname[$fld_year]['field'] ] != '') {
                       $y = $form_state['values'][ $fldname[$fld_year]['field'] ];
-                      $field_values[$fld_year] = analyzedphenotypes_checkboxesvalue($y);
+
+                      // Many traits, use all year. Otherwise, use what user checked.
+                      if (count($field_values[$fld_traits]) > 1) {
+                        $field_values[$fld_year] = $field_values[$fld_year];
+                      }
+                      else {
+                        $field_values[$fld_year] = analyzedphenotypes_checkboxesvalue($y);
+                      }
 
                       if (count($field_values[$fld_year]) > 0) {
                         $options = analyzedphenotypes_populatefield('field_location', array(
@@ -1980,7 +1987,14 @@ function analyzedphenotypes_data_download($form, &$form_state) {
                           /////// Location selected - Create germplasm type options.
                           if ($form_state['values']['ap_' . $fld_location . '_field'] != '') {
                             $l = $form_state['values']['ap_' . $fld_location . '_field'];
-                            $field_values[$fld_location] = analyzedphenotypes_checkboxesvalue($l);
+
+                            // Many year, use all location. Otherwise, use what user checked.
+                            if (count($field_values[$fld_year]) > 1) {
+                              $field_values[$fld_location] = $field_values[$fld_location];
+                            }
+                            else {
+                              $field_values[$fld_location] = analyzedphenotypes_checkboxesvalue($l);
+                            }
 
                             if (count($field_values[$fld_location]) > 0) {
                               $options = analyzedphenotypes_populatefield('field_germplasmtype', array(
@@ -2031,7 +2045,14 @@ function analyzedphenotypes_data_download($form, &$form_state) {
                                 //////// Germplasm type selected - Update germplasm list.
                                 if ($form_state['values'][ $fldname[$fld_germplasmtype]['field'] ] != '') {
                                   $g = $form_state['values'][ $fldname[$fld_germplasmtype]['field'] ];
-                                  $field_values[$fld_germplasmtype] = analyzedphenotypes_checkboxesvalue($g);
+
+                                  // Many year, use all location. Otherwise, use what user checked.
+                                  if (count($field_values[$fld_location]) > 1) {
+                                    $field_values[$fld_germplasmtype] = $field_values[$fld_germplasmtype];
+                                  }
+                                  else {
+                                    $field_values[$fld_germplasmtype] = analyzedphenotypes_checkboxesvalue($g);
+                                  }
                                 ////////
                                 }
                               // end AJAX - same experiment, genus, species, traits, year and location.
