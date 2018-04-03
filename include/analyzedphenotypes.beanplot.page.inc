@@ -124,7 +124,12 @@ function analyzedphenotypes_beanplot_form($form, $form_state) {
 
     foreach ($traits as $t) {
       if ($t->cvterm_id == $trait_id) {
-        $experiment_id = $t->project_id;
+
+        // Check if user selected a project. This prevents the experiment
+        // field from reseting when trait is shared across experiments.
+        $experiment_id = ($form_state['values']['experiment'])
+          ? $form_state['values']['experiment']
+          :  $t->project_id;
 
         break;
       }

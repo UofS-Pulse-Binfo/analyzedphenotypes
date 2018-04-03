@@ -24,8 +24,18 @@
 
       fldTrait.find('option').each(function() {
         // Trait is not a specific to an experiment.
-        var c = (t.indexOf($(this).attr('value')) > 0) ? '#CCCCCC' : 'black';
+        var c = (t.indexOf($(this).attr('value')) > 0) ? 'gray' : 'black';
         $(this).css('color', c);
+        var txt = $(this).text();
+
+        // Additional markings. In case browser does not support
+        // color rule of option.
+        $(this).once(function() {
+          if ($(this).attr('value') > 0) {
+            var a = (c == 'gray') ? txt : '* ' + txt;
+            $(this).html(a);
+          }
+        });
       });
 
       // Set the default experiment when trait field changed.
