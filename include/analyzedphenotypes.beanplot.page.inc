@@ -41,7 +41,6 @@ function analyzedphenotypes_beanplot_form($form, $form_state) {
 
   $stage = ($experiment_id && $trait_id) ? 2 : 1;
 
-
   // When in select dataset form, load all traits, otherwise (in chart page) load traits per project.
   if ($stage == 2) {
     // Retrieve options for Experiment (Project).
@@ -114,27 +113,41 @@ function analyzedphenotypes_beanplot_form($form, $form_state) {
   $not_project_trait = array();
   $project_trait = array();
 
+
   // TEST Traits field:
   if (isset($form_state['values']['trait']) && $form_state['values']['trait'] > 0) {
-
     // Value set.
     // From the traits query result, find the corresponding project id.
     // Use the project id and default experiment field to this project.
     $trait_id = $form_state['values']['trait'];
+    $fld_experiment = $form_state['values']['experiment'];
 
-    foreach ($traits as $t) {
-      if ($t->cvterm_id == $trait_id) {
+    if ($fld_experiment == $form_state['values']['cache_experiment']) {
+      // Check if user changed the proejct by comparing experiment in cache field.
+      foreach($traits as $t) {
+        if ($t->cvterm_id == $trait_id) {
+          $experiment_id = $t->project_id;
 
-        // Check if user selected a project. This prevents the experiment
-        // field from reseting when trait is shared across experiments.
-        $experiment_id = ($form_state['values']['experiment'])
-          ? $form_state['values']['experiment']
-          :  $t->project_id;
+          if ($fld_experiment == 0) {
+            $experiment_id = $t->project_id;
 
-        break;
+            break;
+          }
+          else {
+            if ($t->project_id == $fld_experiment) {
+              $experiment_id = $fld_experiment;
+
+              break;
+            }
+            else {
+              continue;
+            }
+          }
+        }
       }
     }
   }
+
 
   // TEST Experiment field:
   if ((isset($form_state['values']['experiment']) &&
@@ -159,7 +172,6 @@ function analyzedphenotypes_beanplot_form($form, $form_state) {
     unset($trait_options);
     $trait_options = $project_trait + $not_project_trait;
   }
-
 
   // FORM: MAIN AJAX WRAPPER.
   $AJAX_wrapper = 'nav';
@@ -230,11 +242,16 @@ function analyzedphenotypes_beanplot_form($form, $form_state) {
 
     // Hidden field. Cache.
     // This value will be altered by JS to give user a clue of which
-    // set of traits belong to an experiment.
-    $form[$AJAX_wrapper]['cache_notproject_trait'] = array(
+    // set of traits belong to an experiment by highlighting text.
+    $form[$AJAX_wrapper]['cache_project_trait'] = array(
       '#type' => 'hidden',
-      '#value' => implode('#', array_keys($not_project_trait)),
-      '#attributes' => array('id' => 'cache-notproject_traits'),
+      '#value' => implode('#', array_keys($project_trait)),
+      '#attributes' => array('id' => 'cache-project_traits'),
+    );
+
+    $form['values']['cache_experiment'] = array(
+      '#type' => 'value',
+      '#value' => (isset($experiment_id)) ? $experiment_id : '',
     );
   }
   else {

@@ -1,7 +1,7 @@
 (function($) {
   Drupal.behaviors.analyzedPhenotypesBeanplotSelectField = {
     attach: function (context, settings) {
-    var notProjectTrait = $('#cache-notproject_traits');
+    var projectTrait = $('#cache-project_traits');
     var fldTrait = $('#ap-trait-distribution-trait-field');
     var fldExperiment = $('#ap-trait-distribution-experiment-field');
 
@@ -20,22 +20,33 @@
 
     $(document)
     .ajaxComplete(function() {
-      var t = notProjectTrait.val().split('#');
+      var t = projectTrait.val().split('#');
 
       fldTrait.find('option').each(function() {
         // Trait is not a specific to an experiment.
-        var c = (t.indexOf($(this).attr('value')) > 0) ? 'gray' : 'black';
-        $(this).css('color', c);
-        var txt = $(this).text();
+        var v = $(this).attr('value');
 
-        // Additional markings. In case browser does not support
-        // color rule of option.
-        $(this).once(function() {
-          if ($(this).attr('value') > 0) {
-            var a = (c == 'gray') ? txt : '* ' + txt;
-            $(this).html(a);
+        if (v > 0) {
+          var found = 0;
+          for(var i = 0; i < t.length; i++) {
+            if (t[i] == v) {
+              found = 1;
+
+              break;
+            }
           }
-        });
+
+          var c = (found) ? 'black' : 'gray';
+
+          $(this).once(function() {
+            var txt = $(this).text();
+            var nTxt = (c == 'black') ? '* ' : '';
+
+            $(this)
+              .css('color', c)
+              .prepend(nTxt);
+          });
+        }
       });
 
       // Set the default experiment when trait field changed.
@@ -46,7 +57,12 @@
             var sel = ($(this).attr('value') == fldDefaultExperiment.val())
               ? 'selected' : '';
 
-            $(this).attr('selected', sel);
+            $(this).once(function() {
+              $(this).attr('selected', sel)
+              .prepend(function() {
+                return (sel == 'selected') ? '* ' : '';
+              });
+            });
           }
         });
       }
