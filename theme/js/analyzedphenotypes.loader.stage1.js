@@ -35,13 +35,6 @@
         // Mute unnecessary drupal_set_message().
         $('#ap-AJAX-wrapper-autofillgenus').find('.messages').remove();
 
-        // Reset the select field to always default to the first option.
-        /* $('#ap-genus-select-field')
-          .find('option')
-          .each(function() {
-            $(this).attr('selected', '');
-        }); */
-
         // When DOM has upload success message.
         if ($('#ap-validator-passed').length) {
           // Exclude form fields.
