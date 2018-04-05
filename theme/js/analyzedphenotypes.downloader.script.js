@@ -165,10 +165,12 @@
           $('#ap-preview-link').click(function(e) {
             e.preventDefault();
             var previewTable = $('#ap-table-preview-headers-container');
+            var baseWidth = $('.fieldset-wrapper').width();
 
             if (previewTable.is(':hidden')) {
               $(this).text('Close preview');
-              previewTable.slideDown();
+              previewTable.css('width', baseWidth)
+                .slideDown();
             }
             else {
               $(this).text('Preview headers');
