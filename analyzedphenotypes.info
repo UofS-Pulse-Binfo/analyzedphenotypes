@@ -1,9 +1,8 @@
-name = Analyzed Phenotypes Module
-description = Manage Analyzed Phenotypic Data
-package = DEV
+name = Analyzed Phenotypes
+description = Provides phenotypic trait pages, charts, upload and download for partially filtered (not raw) phenotypic data.
+package = Tripal Extensions
 dependencies[] = dragndrop_upload_element
-dependencies[] = tripal_cv
-version = VERSION
+dependencies[] = tripal
 core = 7.x
 configure = admin/tripal/extension/analyzedphenotypes/settings
 
