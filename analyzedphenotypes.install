@@ -3,140 +3,25 @@
  * Implements hook_install().
  */
 
-
+// Make the API available during install.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
-
-
-function analyzedphenotypes_schema() {
-  $schema = array();
-
-  $phenotype_exists = db_table_exists('chado.phenotype');
-
-  if (!$phenotype_exists) {
-    $schema['chado.phenotypes'] = array(
-      'description' => t('Table for analyzed phenotype.'),
-      'fields' => array(
-        'phenotype_id' => array(
-          'description' => t('A unique id number. Primary key.'),
-          'type' => 'serial',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'uniquename' => array(
-          'description' => t('Unique name.'),
-          'type' => 'text',
-          'not null' => TRUE,
-        ),
-        'observable_id' => array(
-          'description' => t('The entity (anatomy part, biological process).'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'attr_id' => array(
-          'description' => t('Primary key for the trait.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'value' => array(
-          'description' => t('The measured value.'),
-          'type' => 'varchar',
-          'length' => 255,
-          'not null' => TRUE,
-        ),
-        'cvalue_id' => array(
-          'description' => t('Link to the scale value recorded.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'assay_id' => array(
-          'description' => t('The evidence type.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'project_id' => array(
-          'description' => t('Link to the experiment.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'stock_id' => array(
-          'description' => t('Link to the stock the trait was observed/measured on.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-      ),
-      'primary key' => array('phenotype_id'),
-    );
-  }
-
-  $phenotypeprop_exists = db_table_exists('chado.phenotypeprop');
-
-  if (!$phenotypeprop_exists) {
-  //
-    $schema['chado.phenotypeprop'] = array(
-      'description' => t('Analyzed phenotype properties'),
-      'fields' => array(
-        'phenotypeprop_id' => array(
-          'description' => t('A unique id number. Priimary key.'),
-          'type' => 'serial',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'phenotype_id' => array(
-          'description' => t('Foreign key: ap_phenotypes.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'type_id' => array(
-          'description' => t('Property type.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'value' => array(
-          'description' => t('The free-text value of the property.'),
-          'type' => 'text',
-          'not null' => TRUE,
-        ),
-        'cvalue_id' => array(
-          'description' => t('Links to cvterm if property is controlled.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'rank' => array(
-          'description' => t('Property value ordering'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-      ),
-      'primary key' => array('phenotypeprop_id'),
-      'foreign keys' => array(
-        'ap_phenotypes' => array(
-          'table' => 'ap_phenotypes',
-          'columns' => array('phenotype_id' => 'phenotype_id')
-        ),
-      ),
-    );
-  }
-
-
-  return $schema;
-}
-
-
 
 /**
  * Implements hook_enable().
  */
 function analyzedphenotypes_enable() {
+
+  // Check we have the phenotype tables we expect to have.
+  if (!db_table_exists('chado.phenotype')) {
+    tripal_report_error('analyzedpenotypes', TRIPAL_CRITICAL,
+      'Analyzed Phenotypes requires the chado.phenotype table to exists. Make sure you have installed chado v1.2+');
+    return FALSE;
+  }
+  if (!db_table_exists('chado.phenotypeprop')) {
+    tripal_report_error('analyzedpenotypes', TRIPAL_CRITICAL,
+      'Analyzed Phenotypes requires the chado.phenotypeprop table to exists. Make sure you have installed chado v1.2+');
+    return FALSE;
+  }
 
   // Add a materialized view to calculate the mean for quantitative data.
   $query = "
@@ -211,7 +96,7 @@ function analyzedphenotypes_enable() {
     ),
     'indexes' => array(),
   );
-  tripal_add_mview($schema['table'], 'analyzedphenotypes', $schema, $query, $schema['description']);
+  tripal_add_mview($schema['table'], 'analyzedphenotypes', $schema, $query, $schema['description'], FALSE);
 
   // Add a summary materialized view.
   $query = "
@@ -257,14 +142,14 @@ function analyzedphenotypes_enable() {
     ),
   );
 
-  tripal_add_mview($schema['table'], 'analyzedphenotypes', $schema, $query, $schema['description']);
+  tripal_add_mview($schema['table'], 'analyzedphenotypes', $schema, $query, $schema['description'], FALSE);
 
+  // Extend chado phenotype/phenotypeprop.
   $arr_fields = array(
     'project_id' => array('table' => 'phenotype',     'ref' => 'project', 'ref_id' => 'project_id'),
     'stock_id' =>   array('table' => 'phenotype',     'ref' => 'stock',   'ref_id' => 'stock_id'),
     'cvalue_id' =>  array('table' => 'phenotypeprop', 'ref' => 'cvterm',  'ref_id' => 'cvterm_id'),
   );
-
   foreach($arr_fields as $field => $items) {
     $exists = db_field_exists('chado.' . $items['table'], $field);
 
@@ -307,11 +192,11 @@ function analyzedphenotypes_uninstall() {
         variable_del($k);
       }
     }
-    else { 
+    else {
       variable_del($v);
     }
   }
-  
+
   foreach(array('mview_phenotype', 'mview_phenotype_summary') as $mview) {
     $mview_id = tripal_get_mview_id($mview);
 
