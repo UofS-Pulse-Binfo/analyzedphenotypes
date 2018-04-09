@@ -160,6 +160,12 @@ function analyzedphenotypes_enable() {
       chado_query($sql);
     }
   }
+
+  // Helpfull guide the admin.
+  drupal_set_message(t(
+    'Analyzed Phenotypes needs to be configured <a href="@url">here</a> in order to be specific to your system.',
+    array('@url' => url('admin/tripal/extension/analyzedphenotypes/settings'))),
+    'warning');
 }
 
 /**
