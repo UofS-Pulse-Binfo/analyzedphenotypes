@@ -52,18 +52,15 @@ function analyzedphenotypes_menu() {
   // Main administrative pages for analyzed phenotypes.
   $items[$tripal_extension_ap] = array(
     'title' => 'Analyzed Phenotypes',
-    'description' => 'Analyzed Phenotypes Administrative Pages.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('analyzedphenotypes_admin_page_directory'),
-    'access arguments' => array('access administration pages'),
-    'file' => 'include/analyzedphenotypes.admin.form.inc',
-    'type' => MENU_NORMAL_ITEM,
+    'description' => 'Provides phenotypic trait pages, charts, upload and download for partially filtered (not raw) phenotypic data.',
+    'access arguments' => array('administer tripal'),
   );
 
   // Data Loader.
+  // @todo should this be at admin/tripal/loaders?
   $items[$tripal_extension_ap . '/upload'] = array(
-    'title' => 'Upload Analyzed Phenotypic Data',
-    'description' => 'Upload Analyzed Phenotypic Data.',
+    'title' => 'Upload Phenotypic Data',
+    'description' => 'Import a partially filtered (not raw) phenotypic datasets into Chado for display on Trait and Germplasm pages.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_data_loader'),
     'access arguments' => array('access administration pages'),
@@ -74,10 +71,11 @@ function analyzedphenotypes_menu() {
 
   // Settings.
   $items[$tripal_extension_ap . '/settings'] = array(
-    'title' => 'Settings',
+    'title' => 'Configuration',
+    'description' => 'Set the controlled vocabularies to be used by this module, as well, as other options to customize it to your data/organism.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_settings'),
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('administer tripal'),
     'file' => 'include/analyzedphenotypes.admin.form.inc',
     'weight' => 2,
     'type' => MENU_NORMAL_ITEM,
@@ -88,7 +86,7 @@ function analyzedphenotypes_menu() {
     'description' => 'Database and Controlled Vocabulary.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_settings', 5),
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('administer tripal'),
     'file' => 'include/analyzedphenotypes.admin.form.inc',
     'type' => MENU_LOCAL_TASK,
   );
@@ -98,7 +96,7 @@ function analyzedphenotypes_menu() {
     'description' => 'Plant Property Terms.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_settings', 5),
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('administer tripal'),
     'file' => 'include/analyzedphenotypes.admin.form.inc',
     'type' => MENU_LOCAL_TASK,
   );
@@ -108,7 +106,7 @@ function analyzedphenotypes_menu() {
     'description' => 'Crop Ontology Terms.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_settings', 5),
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('administer tripal'),
     'file' => 'include/analyzedphenotypes.admin.form.inc',
     'type' => MENU_LOCAL_TASK,
   );
@@ -130,8 +128,8 @@ function analyzedphenotypes_menu() {
     'access arguments' => array('access administration pages'),
     'type' => MENU_CALLBACK,
   );
-  
-  
+
+
 
   return $items;
 }
