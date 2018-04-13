@@ -81,38 +81,6 @@ function analyzedphenotypes_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
-  $items[$tripal_extension_ap . '/settings/database_cv'] = array(
-    'title' => 'Database & CV Terms',
-    'description' => 'Database and Controlled Vocabulary.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('analyzedphenotypes_admin_settings', 5),
-    'access arguments' => array('administer tripal'),
-    'file' => 'include/analyzedphenotypes.admin.form.inc',
-    'type' => MENU_LOCAL_TASK,
-  );
-
-  $items[$tripal_extension_ap . '/settings/property_terms'] = array(
-    'title' => 'Plant Property Traits',
-    'description' => 'Plant Property Terms.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('analyzedphenotypes_admin_settings', 5),
-    'access arguments' => array('administer tripal'),
-    'file' => 'include/analyzedphenotypes.admin.form.inc',
-    'type' => MENU_LOCAL_TASK,
-  );
-
-  $items[$tripal_extension_ap . '/settings/crop_ontology'] = array(
-    'title' => 'Crop Ontology',
-    'description' => 'Crop Ontology Terms.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('analyzedphenotypes_admin_settings', 5),
-    'access arguments' => array('administer tripal'),
-    'file' => 'include/analyzedphenotypes.admin.form.inc',
-    'type' => MENU_LOCAL_TASK,
-  );
-
-
-
   // Generate data in JSON object.
   $items[$tripal_extension_ap . '/json/%/%'] = array(
     'page callback' => 'analyzedphenotypes_data_json',
@@ -167,7 +135,36 @@ function analyzedphenotypes_theme($existing, $type, $theme, $path) {
     'path' => $path . '/theme',
   );
 
+  // Form table.
+  $items['analyzedphenotypes_form_table'] = array(
+    'render element' => 'form',
+  );
+
   return $items;
+}
+
+
+function theme_analyzedphenotypes_form_table(&$variables) {
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = $form['#header'];
+
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => array(),
+  );
+
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      $row[] = drupal_render($rows[$row_index][$col_index]);
+    }
+    $content['#rows'][] = $row;
+  }
+
+  return drupal_render($content);
 }
 
 
@@ -307,6 +304,20 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
       foreach($ontology_suggestions as $i => $term) {
         $name = $term['name'];
         $data_JSON[$name] = $name;
+      }
+
+      break;
+
+    //
+    case 'cvterms':
+      $cvterms = analyzedphenotypes_cvprop('suggest_term', array(
+        'keyword' => $key,
+      ));
+
+      foreach($cvterms as $term => $cv) {
+        $t = $term . ' (' . $cv . ')';
+
+        $data_JSON[$t] = $t;
       }
 
       break;

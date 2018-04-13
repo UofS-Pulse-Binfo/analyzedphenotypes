@@ -561,7 +561,7 @@ function analyzedphenotypes_datatypeprop($property, $parameter = null) {
       }
 
       break;
-      
+
     //
     case 'number_no_zero':
       // Numbers, no 0.
@@ -791,7 +791,7 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
             ':cvterm_id' => $cvprop['cvterm_id'],
           )
         );
-        
+
         $cvprop['crop_ontology'] = ($result->rowCount() == 1) ? $result->fetchField() : null;
 
         // Scale.
@@ -848,7 +848,7 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
             'scale_to' => 400,
           ));
 
-          $photo_dir = 'public://ap-photo'; 
+          $photo_dir = 'public://ap-photo';
           file_prepare_directory($photo_dir, FILE_CREATE_DIRECTORY);
 
           $new_image = imagecreatetruecolor($scale['width'], $scale['height']);
@@ -894,6 +894,22 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
         else {
           $cvprop[$v] = null;
         }
+      }
+
+      break;
+
+    //
+    case 'suggest_term':
+      $result = chado_query(
+        "SELECT TRIM(t2.name), TRIM(t1.name) AS cv_name FROM {cv} AS t1 INNER JOIN {cvterm} AS t2 USING (cv_id)
+        WHERE LOWER(t2.name) LIKE LOWER(:keyword) ORDER BY t1.name LIMIT 20",
+        array(
+          ':keyword' => '%' . $parameter['keyword'] . '%',
+        )
+      );
+
+      if ($result->rowCount() > 0) {
+        $cvprop = $result->fetchAllKeyed();
       }
 
       break;
@@ -1251,7 +1267,7 @@ function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
       $vars = analyzedphenotypes_systemvars('genus_ontology');
       $var_name = 'ap_' . strtolower(str_replace(' ', '_', $parameter['project_genus']));
       $cv_id = variable_get($vars[$var_name]['var']);
-      
+
       $ontology_terms = analyzedphenotypes_cvprop('terms_in_cv', array(
         'cv_id' => $cv_id,
       ));
@@ -1269,7 +1285,7 @@ function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
         if ($i == $default_ontology['cvterm_id']) {
           continue;
         }
-        
+
         $ontology = strtolower(trim($term['name']));
         $keywords = explode(' ', $ontology);
 
@@ -1282,11 +1298,11 @@ function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
               $ontologyprop[$i] = $term;
 
               $ctr++;
-            }  
+            }
           }
         }
       }
-        
+
       $ontologyprop[$default_ontology['cvterm_id']] = array(
         'name' => $default_ontology['name'],
         'definition' => $default_ontology['definition'],
@@ -1299,18 +1315,18 @@ function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
       $vars = analyzedphenotypes_systemvars('genus_ontology');
       $var_name = 'ap_' . strtolower(str_replace(' ', '_', $parameter['project_genus']));
       $cv_id = variable_get($vars[$var_name]['var']);
-      
+
       $cvtermprop = analyzedphenotypes_cvprop('get_cvterm', array(
         'name' => $parameter['ontology'],
         'cv_id' => $cv_id,
       ));
-      
+
       if ($cvtermprop) {
           $ontologyprop[$cvtermprop['cvterm_id']] = $cvtermprop['name'];
       }
-      
+
       break;
-    
+
     //
     // Additional case here.
 
@@ -1388,13 +1404,13 @@ function analyzedphenotypes_systemvars($property = null) {
       $systemvars = $vars_database;
 
       break;
-    
+
     //
     case 'plant_property':
       $systemvars = $vars_plantprop;
 
       break;
-    
+
     //
     case 'genus_ontology':
       $systemvars = $vars_ontology;
