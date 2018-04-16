@@ -232,11 +232,11 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$va
  *
  * @param $page_argument_5
  *   A string indicating the source of call and what type of data is requested.
- *   5th argument of the menu's page aruguments.
+ *   #5 of the menu's page aruguments.
  *   eg. Projects, ontology etc.
  * @param $page_argument_6
  *   Additional parameter required.
- *   6th argument of the menu's page aruguments.
+ *   #6 of the menu's page aruguments.
  *   eg. Job Id when generating progress report for Job Status source type.
  * @param $key
  *   Default to null, value entered in a field (eg. autocomplete field).
