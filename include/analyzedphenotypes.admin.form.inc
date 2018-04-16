@@ -1061,7 +1061,7 @@ function analyzedphenotypes_dragdrop($form, &$form_state, $source_name) {
  * FUNCTION CALLBACK
  * Construct administrative pages.
  */
-function analyzedphenotypes_admin_settings($form, &$form_state, $source = null) {
+function analyzedphenotypes_admin_settings($form, &$form_state) {
   //
   // #FRAMESET TRAIT ONTOLOGIES.
   $frameset_to = 'ap_frameset_ontology';
@@ -1084,7 +1084,8 @@ function analyzedphenotypes_admin_settings($form, &$form_state, $source = null) 
   );
 
   $form[$frameset_to]['config_instructions'] = array(
-    '#markup' => theme('item_list', array('items' => $items)),
+    '#theme' => 'item_list',
+    '#items' => $items,
   );
 
   // Instructions - select.
@@ -1158,7 +1159,7 @@ function analyzedphenotypes_admin_settings($form, &$form_state, $source = null) 
         $field_name = $basename . $genus_key . '_' . $var_token[$j][0];
       }
 
-      $fields[ 'field_row_' . $i ][$field_name] = $field_prop;
+      $fields[ 'ap_field_row_' . $i ][$field_name] = $field_prop;
 
       $j++;
     }
