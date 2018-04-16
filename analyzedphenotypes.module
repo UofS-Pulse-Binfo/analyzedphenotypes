@@ -244,9 +244,8 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$va
  * @return
  *   A JSON object.
  *
- * @see
- *   hook_menu() implementation - Generate data in JSON object, above that handles all page elements
- *   in this module that requires JSON.
+ * @see hook_menu() implementation - Generate data in JSON object, above that handles all page elements in this
+ *   module that requires JSON.
  */
 function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key = null) {
   $data_JSON = array();
@@ -257,6 +256,13 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
   switch($property) {
     //
     case 'projects':
+      // Fetch project/experiment that matches a keyword in AP data loader
+      // Select experiment autocomplete form field in:
+      //   admin.form.inc - analyzedphenotypes_loader_form_upload() : Stage #1 - Select experiment, genus and upload file.
+      // Parameters:
+      //   $page_argument_5 : projects.
+      //   $page_argument_6 : experiment.
+      //   $key : Keyword enterd in the field.
       $data_JSON = array();
 
       $projectprop = analyzedphenotypes_projectprop('match_key', array(
@@ -273,6 +279,13 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
 
     //
     case 'jobstatus':
+      // Update job status of a Tripal Job request in AP data loader page in:
+      //   admin.form.inc - analyzedphenotypes_loader_form_validates() : Stage #2 - Validate data.
+      //   admin.form.inc - analyzedphenotypes_loader_form_save() : Stage #4 - Save Data.
+      // Parameters:
+      //   $page_argument_5 : jobstatus.
+      //   $page_argument_6 : Tripal Job job id number.
+      //   $key : null.
       $data_JSON = array();
 
       $job = analyzedphenotypes_tripaljobprop('get_job', array(
@@ -283,6 +296,8 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
         $job_status = strtolower(trim($job['status']));
 
         if ($job_status == 'completed') {
+          // Job completed, return completed!
+          // Set job to completed - 100%.
           $progress = 100;
           $message  = 'Completed';
 
@@ -294,6 +309,9 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
           }
         }
         else {
+          // Job not complete. Read progress written by tripaljobprop write_progress function
+          // and convert progress value to JSON for progress bar in
+          // analyzedphenotypes_save_tsv_data() in validators.inc.
           $tripaljobprop = analyzedphenotypes_tripaljobprop('read_progress', array(
             'job_id' => $parameter,
             'source' => 'jobprogress',
@@ -313,18 +331,14 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
       break;
 
     //
-    case 'describe':
-      return 0;
-      break;
-
-    //
-    case 'save_jobstatus':
-      $data_JSON = array();
-
-      break;
-
-    //
     case 'ontology':
+      // Fetch otology terms that matches a keyword in AP data loader
+      // Enter ontology term autocomplete form feild in:
+      //   admin.form.inc - analyzedphenotypes_loader_form_describe() : Stage #3 - Describe Traits.
+      // Parameters:
+      //   $page_argument_5 : ontology.
+      //   $page_argument_6 : a string containing the project genus and trait name delimited by a colon (e.g. lens:plant height (cm)).
+      //   $key : null.
       $data_JSON = array();
 
       list($project_genus, $trait_name) = explode(':', $parameter);
@@ -343,6 +357,13 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
 
     //
     case 'cvterms':
+      // Fetch controlled vocabulary terms that matches a keyword in AP data loader
+      // configuration page term autocomplete form field in:
+      //   admin.form.inc - analyzedphenotypes_admin_settings().
+      // Parameters:
+      //   $page_argument_5 : cvterms.
+      //   $page_argument_6 : cv.
+      //   $key : Keyword entered in the field.
       $data_JSON = array();
 
       $cvterms = analyzedphenotypes_cvprop('suggest_term', array(

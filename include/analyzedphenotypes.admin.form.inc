@@ -1308,7 +1308,7 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
         '#description' => t($prop['description']),
         '#default_value' => (!empty($default_field)) ? $default_field : '',
         //
-        '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/cvterms/',
+        '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/cvterms/cv',
       );
     }
 
