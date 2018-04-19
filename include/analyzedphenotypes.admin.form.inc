@@ -1076,9 +1076,9 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
   // Instructions.
   $items = array(
     '<u>Trait Vocabulary</u>:' .
-      '<br />A container of terms where each term is a phenotypic trait that can be measured in your species of interest. This controlled vocabulary should be specific to a given genus and each term will become a trait page on your Tripal site. If you do not already have a trait vocabulary, you can create it [here] and add terms upfront and/or automatically on upload of phenotypic data.',
+      '<br />A container of terms where each term is a phenotypic trait that can be measured in your species of interest. This controlled vocabulary should be specific to a given genus and each term will become a trait page on your Tripal site. If you do not already have a trait vocabulary, you can create it ' . l('here', 'admin/tripal/loaders/chado_vocabs/chado_cv/add', array('attributes' => array('target'=>'_blank'))) . ' and add terms upfront and/or automatically on upload of phenotypic data.',
     '<u>Associated Database</u>:' .
-      '<br />Chado requires a "database" container to be associated with all controlled vocabularies. Please select the "database" container you would like to be associated with your trait vocabulary. If needed, create one.',
+      '<br />Chado requires a "database" container to be associated with all controlled vocabularies. Please select the "database" container you would like to be associated with your trait vocabulary. If needed, create one '. l('here', 'http://knowpulse.usask.ca/dev/fresh/admin/tripal/loaders/chado_db/add', array('attributes' => array('target'=>'_blank'))).'.',
     '<u>Crop Ontology</u>:' .
       '<br />Our experience with breeders has led us to recommend using the trait names your breeder(s) already use in the Trait Vocabulary and then linking them to a more generic crop ontology such as those provided by <u><em>' . l('cropontology.org', 'http://cropontology.org') . '</em></u> to facilitate sharing. If you decide to go this route, you can set the species specific crop ontology here and on upload suitable terms will be suggested based on pattern matching.',
   );
