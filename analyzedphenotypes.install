@@ -173,6 +173,7 @@ function analyzedphenotypes_enable() {
     'warning');
 
 
+  // Initialize Variables:
   // Load default ontology terms for method, location, replicate, collector, genus, related and year
   // in AP configuration page.
   $default_ontology = analyzedphenotypes_defaultontologyload();
@@ -186,6 +187,24 @@ function analyzedphenotypes_enable() {
     $v = str_replace('', 'ap_', $v);
 
     variable_set($var, $default_ontology[$v]);
+  }
+
+  // Other system variables.
+  // Genus - cv, db and ontology.
+  unset($system_vars);
+  $system_vars = analyzedphenotypes_systemvariables('cvdbon');
+
+  foreach($system_vars as $v => $var) {
+    foreach($var as $h) {
+      variable_set($h, 'not set');
+    }
+  }
+
+  // Allow new traits.
+  unset($system_vars);
+  $system_vars = analyzedphenotypes_systemvariables('options');
+  foreach($system_vars as $v => $var) {
+    variable_set($var, 1);
   }
 }
 
