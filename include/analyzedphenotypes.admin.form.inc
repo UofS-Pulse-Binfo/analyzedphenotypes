@@ -1198,6 +1198,7 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
   $form[$frameset_to]['ap_saveontology_submit_button'] = array(
     '#type' => 'submit',
     '#value' => 'Save Ontology Configuration',
+    '#validate' => array('system_settings_form_validate'),
     '#submit' => array('system_settings_form_submit'),
   );
 
@@ -1222,16 +1223,16 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
       </div>',
   );
 
-
   // Array for property terms.
-  $prop_term_vars = analyzedphenotypes_systemvars('dv_cv');
+  $term_vars = analyzedphenotypes_systemvariables('terms');
 
+  // Property terms.
   $terms_prop = array(
     'Title' => 'Please indicate the term we should use to indicate the property/relationship types specified below.',
     'Genus' => array(
       'title' => 'Genus',
       'default' => '',
-      'field_name' => $prop_term_vars['ap_genus'],
+      'field_name' => $term_vars['ap_genus'],
       'description'  => t('This term indicates that a given property is the associated "genus". For example, this module
         saves experiments producing phenotypic data as projects and the organism that experiment assays is indicated by
         adding a "genus" property to it.'),
@@ -1239,44 +1240,42 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
     'Method' => array(
       'title' => 'Method',
       'default' => '',
-      'field_name' => $prop_term_vars['ap_method'],
+      'field_name' => $term_vars['ap_method'],
       'description'  => t('This term indicates that a given trait propery describes the method with which the data was taken.'),
     ),
     'Related' => array(
       'title' => 'Related',
       'default' => '',
-      'field_name' => $prop_term_vars['ap_related'],
+      'field_name' => $term_vars['ap_related'],
       'description'  => t('This term describes the relationship between your trait vocabulary term and the chosen equivalent crop ontolog term.'),
     ),
   );
 
-  // Array for meta terms.
-  $meta_term_vars = analyzedphenotypes_systemvars('plant_property');
-
+  // Meta data terms.
   $terms_meta = array(
     'Title' => 'Please indicate the terms we should use for the metadata of each phenotypic measurement.',
     'Year' => array(
       'title' => 'Year',
       'default' => '',
-      'field_name' => $meta_term_vars['ap_year'],
+      'field_name' => $term_vars['ap_year'],
       'description'  => t('Metadata tagged with this term indicates the year in which a phenotypic datapoint was collected'),
     ),
     'Location' => array(
       'title' => 'Location',
       'default' => '',
-      'field_name' => $meta_term_vars['ap_location'],
+      'field_name' => $term_vars['ap_location'],
       'description'  => t('Metadata tagged with this term indicates the physical location of the environment giving rise to the phenotype.'),
     ),
     'Replicate' => array(
       'title' => 'Replicate',
       'default' => '',
-      'field_name' => $meta_term_vars['ap_replicate'],
+      'field_name' => $term_vars['ap_replicate'],
       'description'  => t('Metadata tagged with this term indicates the unique identifier for the replicate the current datapoint is part of.'),
     ),
     'Data Collector' => array(
       'title' => 'Data Collector',
       'default' => '',
-      'field_name' => $meta_term_vars['ap_collector'],
+      'field_name' => $term_vars['ap_collected_by'],
       'description'  => t('Metadata tagged with this term indicates the name of the person who collected the phenotypic measurement.'),
     ),
   );
@@ -1328,9 +1327,82 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
   $form[$frameset_cv]['ap_savevc_submit_button'] = array(
     '#type' => 'submit',
     '#value' => 'Save Term Configuration',
+    '#validate' => array('system_settings_form_validate'),
     '#submit' => array('system_settings_form_submit'),
   );
 
 
   return $form;
+}
+
+
+/**
+ * FUNCTION CALLBACK:
+ * Validate configuration page.
+ */
+function system_settings_form_validate($form, &$form_state) {
+  // CHECK GENUS CV, DB AND ONTOLOGY:
+  // For a give genus, if one field was altered then user is trying
+  // to set a value and this validate should ensure that both
+  // controlled vocabulary and database configuration must have a value selected.
+  $cvdbon = analyzedphenotypes_systemvariables('cvdbon');
+
+  foreach($cvdbon as $i => $vars) {
+    $var_ctr = 0;
+
+    // Inspect cv, db and ontology field for each genus and see
+    // if a field has been selected. If a field has been altered
+    // check cv and databse field and ensure both are set.
+    foreach($vars as $type => $v) {
+      if ((int)$form_state['values'][$v] > 0) {
+        $var_ctr++;
+      }
+    }
+
+    if ($var_ctr > 0) {
+      // Field set.
+      if ($form_state['values'][$vars['cv']] <= 0) {
+        // Controlled vocabulary.
+        form_set_error($vars['cv'], 'Please select Controlled Vocabulary.');
+      }
+
+      if ($form_state['values'][$vars['db']] <= 0) {
+        // Associated databse.
+        form_set_error($vars['db'], 'Please select Associated Database.');
+      }
+    }
+  }
+
+  // CHECK CONTROLLED VOCABULARY TERMS:
+  $terms = analyzedphenotypes_systemvariables('terms');
+
+  $failed_ctr = 0;
+
+  // Test if value entered (field for terms are autocomplete).
+  foreach($terms as $term => $t) {
+    $field_term = $form_state['values'][$t];
+
+    if (empty($field_term)) {
+      // Field is empty. Mark field.
+      form_set_error($t, '');
+      $failed_ctr++;
+    }
+    else {
+      // Check if term in cvterm table.
+      $is_term = analyzedphenotypes_cvprop('term_cv', array(
+        'term_cv' => $field_term,
+      ));
+
+      if (is_null($is_term)) {
+        // Invalid term. Mark field.
+        form_set_error($t, '');
+        $failed_ctr++;
+      }
+    }
+  }
+
+  if ($failed_ctr > 0) {
+    // Tell user of the marked field(s).
+    drupal_set_message('Invalid controlled vocabulary or associated database in highlighed fields.', 'error');
+  }
 }
