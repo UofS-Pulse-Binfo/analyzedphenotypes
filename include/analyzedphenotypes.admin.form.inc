@@ -1275,7 +1275,7 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
     'Data Collector' => array(
       'title' => 'Data Collector',
       'default' => '',
-      'field_name' => $term_vars['ap_collected_by'],
+      'field_name' => $term_vars['ap_collector'],
       'description'  => t('Metadata tagged with this term indicates the name of the person who collected the phenotypic measurement.'),
     ),
   );
@@ -1300,7 +1300,7 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
       // Get default.
       $default_field = variable_get($prop['field_name']);
 
-      // Otherwise a select field.
+      // Otherwise a autocomplete field.
       $form[$frameset_cv][ $prop['field_name'] ] = array(
         '#type' => 'textfield',
         '#title' => t($term),
