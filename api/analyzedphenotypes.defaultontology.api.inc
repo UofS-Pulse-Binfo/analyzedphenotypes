@@ -14,10 +14,22 @@
  *   definition and subsequent controlled vocabulary terms.
  *
  * @see analyzedphenotypes_defaultontologyload() in file.
- * @see analyzedphenotypes_defaultontologynames() in file.
  */
 function analyzedphenotypes_defaultontologydefine() {
   $ontology = array();
+
+  // Array to associate each term to predefine terms.
+  // Predefined Terms => Matching name in terms array definition below (case-sensitive).
+  $map_term = array(
+    'genus'     => 'genus',
+    'year'      => 'Year',
+    'method'    => 'method',
+    'related'   => 'related',
+    'location'  => 'location',
+    'replicate' => 'replicate',
+    'collector' => 'Collected By',
+  );
+
 
   // YEAR - TRIPAL PUB, TRIPAL CORE:
   $ontology['tripal_pub'] = array(
@@ -110,7 +122,10 @@ function analyzedphenotypes_defaultontologydefine() {
   );
 
 
-  return $ontology;
+  return array(
+    'terms' => $ontology,
+    'map_term' => $map_term,
+  );
 }
 
 
@@ -133,7 +148,7 @@ function analyzedphenotypes_defaultontologyload() {
   $ontology_load = array();
 
   // Each controlled vocabulary - cv.
-  foreach($ontology as $abbrev => $details) {
+  foreach($ontology['terms'] as $abbrev => $details) {
     // Each term in a Controlled Vocabulary cv.
     foreach($details['terms'] as $term) {
       // Fetch the term, see if previously added.
@@ -154,44 +169,15 @@ function analyzedphenotypes_defaultontologyload() {
 
       // CV TERM NAME.
       $name = ($t) ? $t->name : $ins_cvterm->name;
-      // Match to system variable base name by adding prefix ap_.
-      $base = strtolower(str_replace(' ', '_', $name));
+      // Match predefined variable to cvterm saved.
+      $map_term = array_search($name, $ontology['map_term']);
 
-      // Save term to used as configuration page default settings.
-      $ontology_load[$base] = ($t) ? $t->cvterm_id : $ins_cvterm->cvterm_id;
+      // Save term to be used as configuration page default settings.
+      // eg. ap_location = 1231.
+      $ontology_load[$map_term] = ($t) ? $t->cvterm_id : $ins_cvterm->cvterm_id;
     }
   }
 
 
   return $ontology_load;
-}
-
-
-/**
- * FUNCTION: Fetch ontology terms name convert to single string value
- * and use as system variable names.
- *
- * Dependencies: analyzedphenotypes_defaultontologydefine().
- *
- * @return
- *   An array, all ontology term names converted to a single string value,
- *   in lowercase letters and all spaces converted to underscore character _.
- *
- * @see analyzedphenotypes_systemvariables() in api.inc.
- */
-function analyzedphenotypes_defaultontologynames() {
-  $ontology = analyzedphenotypes_defaultontologydefine();
-
-  // This array will hold all base names.
-  $ontology_names = array();
-
-  foreach($ontology as $abbrev => $details) {
-    foreach($details['terms'] as $term) {
-      // lowecase and spaces to _
-      $ontology_names[] = strtolower(str_replace(' ', '_', $term['name']));
-    }
-  }
-
-
-  return $ontology_names;
 }

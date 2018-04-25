@@ -184,7 +184,8 @@ function analyzedphenotypes_enable() {
   // Set default.
   foreach($system_vars as $v => $var) {
     // Set the variable to default ontology term.
-    $v = str_replace('', 'ap_', $v);
+    // base terms: location, replicate, year ...
+    $v = trim(str_replace('ap_', '', $v));
 
     variable_set($var, $default_ontology[$v]);
   }

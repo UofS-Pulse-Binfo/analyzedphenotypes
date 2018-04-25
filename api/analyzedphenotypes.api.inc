@@ -1436,7 +1436,6 @@ function analyzedphenotypes_systemvars($property = null) {
  * @see analyzedphenotypes_ap_validators() in validators.inc.
  * @see analyzedphenotypes_save_tsv_data() in admin.form.inc.
  * @see analyzedphenotypes_cvprop() in api.inc.
- * @see analyzedphenotypes_defaultontologynames() in defaultontology.inc.
  * @see hook_install() implementation in install.inc.
  */
 function analyzedphenotypes_systemvariables($property = null) {
@@ -1453,16 +1452,13 @@ function analyzedphenotypes_systemvariables($property = null) {
     'terms'   => 'terms',
   );
 
-  // All base names of ontology terms as part of the variable name.
-  $base_names = analyzedphenotypes_defaultontologynames();
-
   // System variable names.
   $var_name = array(
     // To register additional system variable, add here.
 
     $var_type['options'] => array('allownew'),
     $var_type['cvdbon']  => array('cv', 'db', 'ontology'),
-    $var_type['terms']   => $base_names,
+    $var_type['terms']   => array('genus', 'year', 'method', 'related', 'location', 'replicate', 'collector')
   );
 
   // Array to hold all system variables.
