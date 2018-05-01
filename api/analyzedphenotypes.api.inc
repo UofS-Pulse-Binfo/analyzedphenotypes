@@ -650,6 +650,8 @@ function analyzedphenotypes_datatypeprop($property, $parameter = null) {
  *   - insert_cvterm     : Insert a record into chado.cvterm.
  *   - cvterm_save_photo : Handle saving of photo to a trait/cvterm.
  *   - cvterm_get_photo  : Get photo information.
+ *   - suggest_term      : Suggest cvterm name with the cv name it is in.
+ *   - term_cv           : Given a string containing cvterm name and cv name (eg. Genus (taxonomic_rank)) in fields, return the cvterm id.
  *   - default           : All records in chado.cv.
  * @param Array $parameter
  *   An associtive array that forms as arguments to an operation.
@@ -659,6 +661,7 @@ function analyzedphenotypes_datatypeprop($property, $parameter = null) {
  *   - cvterm_id
  *   - name
  *   - photo
+ *   - term_cv
  *
  * @return $cvprop
  *   Array of term properties.
@@ -894,6 +897,38 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
         else {
           $cvprop[$v] = null;
         }
+      }
+
+      break;
+
+    //
+    case 'suggest_term':
+      $result = chado_query(
+        "SELECT TRIM(t2.name), TRIM(t1.name) AS cv_name FROM {cv} AS t1 INNER JOIN {cvterm} AS t2 USING (cv_id)
+        WHERE LOWER(t2.name) LIKE LOWER(:keyword) ORDER BY t1.name LIMIT 20",
+        array(
+          ':keyword' => '%' . $parameter['keyword'] . '%',
+        )
+      );
+
+      if ($result->rowCount() > 0) {
+        $cvprop = $result->fetchAllKeyed();
+      }
+
+      break;
+
+    //
+    case 'term_cv':
+      $result = chado_query(
+        "SELECT cvterm_id FROM {cvterm} AS t1 INNER JOIN {cv} AS t2 USING(cv_id)
+        WHERE CONCAT(t1.name, ' (' , t2.name , ')') = :term_cv LIMIT 1",
+        array(
+          ':term_cv' => $parameter['term_cv']
+        )
+      );
+
+      if ($result->rowCount() > 0) {
+        $cvprop = $result->fetchField();
       }
 
       break;

@@ -1061,410 +1061,341 @@ function analyzedphenotypes_dragdrop($form, &$form_state, $source_name) {
  * FUNCTION CALLBACK
  * Construct administrative pages.
  */
-function analyzedphenotypes_admin_settings($form, &$form_state, $source = null) {
-  $vars = analyzedphenotypes_systemvars();
-  $valid_source = array('crop_ontology', 'property_terms', 'database_cv');
+function analyzedphenotypes_admin_settings($form, &$form_state) {
+  //
+  // #FRAMESET TRAIT ONTOLOGIES.
+  $frameset_to = 'ap_frameset_ontology';
 
-  if (!isset($source)) {
-    $source = null;
+  // Title.
+  $form[$frameset_to] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Trait Ontologies'),
+    '#description' => t('This module requires that phenotypic traits be part of a controlled vocabulary.'),
+  );
+
+  // Instructions.
+  $items = array(
+    '<u>Trait Vocabulary</u>:' .
+      '<br />A container of terms where each term is a phenotypic trait that can be measured in your species of interest. This controlled vocabulary should be specific to a given genus and each term will become a trait page on your Tripal site. If you do not already have a trait vocabulary, you can create it ' . l('here', 'admin/tripal/loaders/chado_vocabs/chado_cv/add', array('attributes' => array('target'=>'_blank'))) . ' and add terms upfront and/or automatically on upload of phenotypic data.',
+    '<u>Associated Database</u>:' .
+      '<br />Chado requires a "database" container to be associated with all controlled vocabularies. Please select the "database" container you would like to be associated with your trait vocabulary. If needed, create one '. l('here', 'http://knowpulse.usask.ca/dev/fresh/admin/tripal/loaders/chado_db/add', array('attributes' => array('target'=>'_blank'))).'.',
+    '<u>Crop Ontology</u>:' .
+      '<br />Our experience with breeders has led us to recommend using the trait names your breeder(s) already use in the Trait Vocabulary and then linking them to a more generic crop ontology such as those provided by <u><em>' . l('cropontology.org', 'http://cropontology.org') . '</em></u> to facilitate sharing. If you decide to go this route, you can set the species specific crop ontology here and on upload suitable terms will be suggested based on pattern matching.',
+  );
+
+  $form[$frameset_to]['config_instructions'] = array(
+    '#theme' => 'item_list',
+    '#items' => $items,
+  );
+
+  // Instructions - select.
+  $form[$frameset_to]['config_select'] = array(
+    '#type' => 'item',
+    '#title' => t('Please select the appropriate vocabulary for each genus you intend to support phenotypic data for.'),
+  );
+
+  // Table Field.
+  // Fetch all available genus.
+  $genus = analyzedphenotypes_genusprop();
+
+  // Create fields.
+  $fields = array();
+  // System vars basename.
+  $basename = 'analyzedphenotypes_systemvar_';
+  $var_token = array(
+    1 => array('cv', 'Select Vocabulary'),
+    2 => array('db', 'Select Database'),
+    3 => array('ontology', 'Select Crop Ontology'),
+  );
+
+  // Fetch all Controlled Vocabulary.
+  $cvs = analyzedphenotypes_cvprop();
+  $cv_options = array_map(function($c) {
+    return $c['name'];
+  }, $cvs);
+
+  // Fetch all Database.
+  $dbs = analyzedphenotypes_dbprop();
+  $db_options = array_map(function($d) {
+    return $d['name'];
+  }, $dbs);
+
+  // Construct table form field.
+  foreach($genus as $i => $g) {
+    $fields[ 'ap_field_row_' . $i ] = array();
+    $genus_key = strtolower(str_replace(' ', '_', $g));
+
+    // Each genus requires 4 columns - genus title, cv, db and ontology.
+    $j = 0;
+    while ($j < 4) {
+      if ($j == 0) {
+        // If 0 or column genus of the table - print the genus text.
+        $field_prop = array(
+          '#type' => 'item',
+          '#title' => t(ucfirst($g)),
+        );
+
+        $field_name = $genus_key . '_title';
+      }
+      else {
+        // Else, construct a select box.
+        $field_options = ($j == 2) ? $db_options : $cv_options;
+
+        // Find if a config has been set.
+
+        $var_value = variable_get($basename . $genus_key . '_' . $var_token[$j][0]);
+        if (isset($var_value)) {
+          $field_default = $var_value;
+        }
+
+        $field_prop = array(
+          '#type' => 'select',
+          '#title' => '',
+          '#options' => array(0 => $var_token[$j][1]) + $field_options,
+          '#attributes' => array('class' => array('ap-table-select-field')),
+          '#default_value' => $field_default,
+        );
+
+        $field_name = $basename . $genus_key . '_' . $var_token[$j][0];
+      }
+
+      $fields[ 'ap_field_row_' . $i ][$field_name] = $field_prop;
+
+      $j++;
+    }
   }
 
-  switch($source) {
-    //
-    case 'database_cv':
-      // Database.
-      $var_db = $vars['ap_database'];
-      $var_db_value = variable_get($var_db);
+  // This will flex select fields.
+  drupal_add_css('.ap-table-select-field { width: 100%; }', 'inline');
 
-      $dbs = analyzedphenotypes_dbprop();
-      $db_options = array_map(function($d) {
-        return $d['name'];
-      }, $dbs);
+  $form[$frameset_to]['ap_formfield_table'] = array(
+    '#theme' => 'analyzedphenotypes_form_table',
+    '#header' => array(t('<b>Genus</b>'), t('Trait Vocabulary'), t('Associated Database'), t('Crop Ontology')),
+    'rows' => array(
+      '#tree' => FALSE,
+    ) + $fields,
+  );
 
-      // AJAX callback wrapper.
-      $form['ap_AJAX_wrapper_dbinfo'] = array(
-        '#prefix' => '<div id="ap-AJAX-wrapper-dbinfo">',
-        '#suffix' => '</div>',
-      );
+  // Allow add new traits.
+  $field_default = variable_get($basename . 'allownew');
+  $form[$frameset_to][ $basename . 'allownew' ] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow new terms to be added to the Controlled Vocabulary during upload.'),
+    '#description' => t('This applies to all organism listed above.'),
+    '#default_value' => ($field_default == 1) ? 1 : FALSE,
+  );
 
-      $db_field_value = (isset($form_state['values'][$var_db]))
-        ? $form_state['values'][$var_db] : 0;
+  // Warning.
+  $form[$frameset_to]['ap_warning_text'] = array(
+    '#markup' => '<div class="messages  status">
+      Once phenotypic data has been uploaded for a genus, these vocabularies cannot be changed!
+      Please take the time to read the description above and if you have questions,
+      submit a ticket to <u>' . l('Github: UofS-Pulse-Binfo', 'https://github.com/UofS-Pulse-Binfo/analyzedphenotypes/issues') . '</u>.
+      </div> <br />',
+  );
 
-      if ($db_field_value > 0) {
-        $default_db = $db_field_value;
+  // Submit.
+  $form[$frameset_to]['ap_saveontology_submit_button'] = array(
+    '#type' => 'submit',
+    '#value' => 'Save Ontology Configuration',
+    '#validate' => array('system_settings_form_validate'),
+    '#submit' => array('system_settings_form_submit'),
+  );
+
+
+  //
+  // #FRAMESET CONTROLLED VOCABULARY TERMS.
+  $frameset_cv = 'ap_frameset_cv';
+
+  // Title.
+  $form[$frameset_cv] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Controlled Vocabulary Terms'),
+    '#description' => t('Chado uses controlled vocabularies extensively to allow for flexible storing of data.
+      As such, this module supports that flexibility to ensure that you have the ability to choose the terms that best support your data.'),
+  );
+
+  // Warning.
+  $form[$frameset_cv]['ap_warning_text'] = array(
+    '#markup' => '<div class="messages  status">
+      We have helpfully selected what we think are the best ontology terms below.
+      Thus the following configuration is completely optional, although I do recommend you review our choices.
+      </div>',
+  );
+
+  // Array for property terms.
+  $term_vars = analyzedphenotypes_systemvariables('terms');
+
+  // Property terms.
+  $terms_prop = array(
+    'Title' => 'Please indicate the term we should use to indicate the property/relationship types specified below.',
+    'Genus' => array(
+      'title' => 'Genus',
+      'default' => '',
+      'field_name' => $term_vars['ap_genus'],
+      'description'  => t('This term indicates that a given property is the associated "genus". For example, this module
+        saves experiments producing phenotypic data as projects and the organism that experiment assays is indicated by
+        adding a "genus" property to it.'),
+    ),
+    'Method' => array(
+      'title' => 'Method',
+      'default' => '',
+      'field_name' => $term_vars['ap_method'],
+      'description'  => t('This term indicates that a given trait propery describes the method with which the data was taken.'),
+    ),
+    'Related' => array(
+      'title' => 'Related',
+      'default' => '',
+      'field_name' => $term_vars['ap_related'],
+      'description'  => t('This term describes the relationship between your trait vocabulary term and the chosen equivalent crop ontolog term.'),
+    ),
+  );
+
+  // Meta data terms.
+  $terms_meta = array(
+    'Title' => 'Please indicate the terms we should use for the metadata of each phenotypic measurement.',
+    'Year' => array(
+      'title' => 'Year',
+      'default' => '',
+      'field_name' => $term_vars['ap_year'],
+      'description'  => t('Metadata tagged with this term indicates the year in which a phenotypic datapoint was collected'),
+    ),
+    'Location' => array(
+      'title' => 'Location',
+      'default' => '',
+      'field_name' => $term_vars['ap_location'],
+      'description'  => t('Metadata tagged with this term indicates the physical location of the environment giving rise to the phenotype.'),
+    ),
+    'Replicate' => array(
+      'title' => 'Replicate',
+      'default' => '',
+      'field_name' => $term_vars['ap_replicate'],
+      'description'  => t('Metadata tagged with this term indicates the unique identifier for the replicate the current datapoint is part of.'),
+    ),
+    'Data Collector' => array(
+      'title' => 'Data Collector',
+      'default' => '',
+      'field_name' => $term_vars['ap_collector'],
+      'description'  => t('Metadata tagged with this term indicates the name of the person who collected the phenotypic measurement.'),
+    ),
+  );
+
+  $i = 0;
+  while($i < 2) {
+    // Which array to process.
+    $all_terms = ($i == 0) ? $terms_prop : $terms_meta;
+
+    // Write the render array.
+    foreach($all_terms as $term => $prop) {
+      if ($term == 'Title') {
+        // Title - show as item and title.
+        $form[$frameset_cv]['title_' . $i] = array(
+          '#type' => 'item',
+          '#title' => t($prop),
+        );
+
+        continue;
       }
-      else {
-        if ($var_db_value == 'not set' || $var_db_value == 0) {
-          $default_db = 0;
-          $db_options = array(0 => '- Select -') + $db_options;
-        }
-        else {
-          $default_db = $var_db_value;
-        }
-      }
 
-      $description_db = ($default_db == 0 || empty($dbs[$default_db]['description']))
-       ? 'Description not available'
-       : $dbs[$default_db]['description'];
+      // Get default.
+      $default_field = variable_get($prop['field_name']);
 
-      $form['ap_AJAX_wrapper_dbinfo'][$var_db] = array(
-        '#type' => 'select',
-        '#title' => t('Database'),
-        '#required' => TRUE,
-        '#options' => $db_options,
-        '#default_value' => $default_db,
-        '#description' => $description_db,
-
-        // Load database description.
-        '#ajax' => array(
-          'event' => 'change',
-          'callback' => 'analyzedphenotypes_AJAX_callback',
-          'case' => 'dbinfo',
-          'wrapper' => 'ap-AJAX-wrapper-dbinfo',
-          'progress' => array('type' => 'throbber', 'message' => 'Loading Database description...'),
-        ),
-        '#id' => $var_db,
-      );
-
-      // CV and Genus, related (ontology).
-      $var_cv = $vars['ap_cv'];
-      $var_cv_value = variable_get($var_cv);
-
-      $cvs = analyzedphenotypes_cvprop();
-      $options = array_map(function($c) {
-        return $c['name'];
-      }, $cvs);
-
-      $cv_options = $options;
-      // AJAX callback wrapper.
-      $form['ap_AJAX_wrapper_cvinfo'] = array(
-        '#prefix' => '<div id="ap-AJAX-wrapper-cvinfo">',
-        '#suffix' => '</div>',
-      );
-
-      $cv_field_value = (isset($form_state['values'][$var_cv]))
-        ? $form_state['values'][$var_cv] : 0;
-
-      if ($cv_field_value > 0) {
-        $default_cv = $cv_field_value;
-      }
-      else {
-        if ($var_cv_value == 'not set' || $var_cv_value == 0) {
-          $default_cv = 0;
-          $cv_options = array(0 => '- Select -') + $options;
-        }
-        else {
-          $default_cv = $var_cv_value;
-        }
-      }
-
-      $description_cv = ($default_cv == 0 || empty($cvs[$default_cv]['definition']))
-        ? 'Description not available'
-        : $cvs[$default_cv]['definition'];
-
-      $form['ap_AJAX_wrapper_cvinfo'][$var_cv] = array(
-        '#type' => 'select',
-        '#title' => t('Controlled Vocabulary'),
-        '#required' => TRUE,
-        '#options' => $cv_options,
-        '#default_value' => $default_cv,
-        '#description' => $description_cv,
+      // Otherwise a autocomplete field.
+      $form[$frameset_cv][ $prop['field_name'] ] = array(
+        '#type' => 'textfield',
+        '#title' => t($term),
+        '#description' => t($prop['description']),
+        '#default_value' => (!empty($default_field)) ? $default_field : '',
         //
-        '#ajax' => array(
-          'event' => 'change',
-          'callback' => 'analyzedphenotypes_AJAX_callback',
-          'case' => 'cvinfo',
-          'wrapper' => 'ap-AJAX-wrapper-cvinfo',
-          'progress' => array('type' => 'throbber', 'message' => 'Loading CV description...'),
-        ),
-        '#id' => $var_cv,
+        '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/cvterms/cv',
       );
+    }
 
-      unset($cv_options);
-      $cv_options = $options;
-
-      $arr_cvterms = array(
-        'ap_genus',
-        'ap_related',
-        'ap_method',
-      );
-
-      foreach($arr_cvterms as $k => $term) {
-        $var = $vars[$term];
-        $var_value = variable_get($var);
-        $title = trim(str_replace('ap_', '', $term));
-
-        if ($var_value == 'not set' || $var_value == 0) {
-          $default_var_cv = 0;
-          $cv_options = array(0 => '- Select -') + $options;
-        }
-        else {
-          $varprop = analyzedphenotypes_cvprop('get_cvterm', array(
-            'cvterm_id' => $var_value,
-          ));
-
-          $default_var_cv = $varprop['cv_id'];
-        }
-
-        $form['ap_cv_select_field' . $k] = array(
-          '#type' => 'select',
-          '#title' => t('Locate ' . $title . ' cvterm: Controlled Vocabulary'),
-          '#required' => TRUE,
-          '#options' => $cv_options,
-          '#default_value' => $default_var_cv,
-          //
-          '#ajax' => array(
-            'event' => 'change',
-            'callback' => 'analyzedphenotypes_AJAX_callback',
-            'case' => 'varcvterm' . $title,
-            'wrapper' => 'ap-AJAX-wrapper-varcvterm' . $title,
-            'progress' => array('type' => 'throbber', 'message' => 'Loading cvterms...'),
-          ),
-          '#id' => 'ap-cv-select-field' . $k,
-        );
-
-        $cvvar_field_value = (isset($form_state['values']['ap_cv_select_field' . $k]))
-          ? $form_state['values']['ap_cv_select_field' . $k] : 0;
-
-        if ($cvvar_field_value > 0) {
-          $default_var_cv = $cvvar_field_value;
-        }
-
-        if ($default_var_cv > 0) {
-          $default_cvterm = $var_value;
-          $cvterms = analyzedphenotypes_cvprop('terms_in_cv', array(
-            'cv_id' => $default_var_cv,
-          ));
-
-          $cvterm_options = array_map(function($t) {
-            return $t['name'];
-          }, $cvterms);
-        }
-        else {
-          $default_cvterm = 0;
-          $cvterm_options = array();
-        }
-
-        // AJAX callback wrapper.
-        $form['ap_AJAX_wrapper_varcvterm' . $title] = array(
-          '#prefix' => '<div id="ap-AJAX-wrapper-varcvterm' . $title . '">',
-          '#suffix' => '</div>',
-        );
-
-        $form['ap_AJAX_wrapper_varcvterm' . $title][$var] = array(
-          '#type' => 'select',
-          '#title' => '',
-          '#options' => $cvterm_options,
-          '#default_value' => $default_cvterm,
-          '#description' => t('Select ' . $title . ' cvterm.'),
-          '#id' => $term,
-        );
-      }
-
-      // Allow new traits?
-      $var_allow_new = $vars['ap_allow_new'];
-      $var_allow_new_value = variable_get($var_allow_new);
-      $default_allow_new = ($var_allow_new_value == 'not set') ? 0 : $var_allow_new_value;
-
-      $form[$var_allow_new] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Allow new term to be added to the Controlled Vocabulary'),
-        '#default_value' => $default_allow_new,
-        '#id' => $var_allow_new,
-      );
-
-      break;
-
-    //
-    case 'property_terms':
-      $vars = analyzedphenotypes_systemvars('plant_property');
-      $cvs = analyzedphenotypes_cvprop();
-      $cv_options = array_map(function($c) {
-        return $c['name'];
-      }, $cvs);
-
-      foreach($vars as $i => $var) {
-        $title = trim(str_replace('ap_', '', $i));
-        $var_value = variable_get($var);
-
-        if ($var_value == 'not set' || empty($var_value)) {
-          $default_cv = 0;
-          $cv_options = array(0 => '- Select- ') + $cv_options;
-        }
-        else {
-          $cvtermprop = analyzedphenotypes_cvprop('get_cvterm', array(
-            'cvterm_id' => $var_value,
-          ));
-
-          $default_cv = $cvtermprop['cv_id'];
-        }
-
-        $form[$i . '_cv_select_field'] = array(
-          '#type' => 'select',
-          '#title' => 'CV & CV term: ' . ucfirst($title),
-          '#required' => TRUE,
-          '#options' => $cv_options,
-          '#default_value' => $default_cv,
-
-          // Load cvterms.
-          '#ajax' => array(
-            'event' => 'change',
-            'callback' => 'analyzedphenotypes_AJAX_callback',
-            'case' => 'getcvterms' . $title,
-            'wrapper' => 'ap-AJAX-wrapper-getcvterms' . $title,
-            'progress' => array('type' => 'throbber', 'message' => 'Loading CV Terms...'),
-          ),
-          '#id' => $i . '_cv_select_field',
-        );
-
-        // AJAX callback wrapper.
-        $form['ap_AJAX_wrapper_getcvterms'. $title] = array(
-          '#prefix' => '<div id="ap-AJAX-wrapper-getcvterms' . $title . '">',
-          '#suffix' => '</div>',
-        );
-
-        $cv_field_value = (isset($form_state['values'][$i . '_cv_select_field']))
-          ? $form_state['values'][$i . '_cv_select_field'] : 0;
-
-        if ($cv_field_value > 0) {
-          $default_cv = $cv_field_value;
-        }
-
-        if ($default_cv > 0) {
-          $default_cvterm = $var_value;
-          $cvterms = analyzedphenotypes_cvprop('terms_in_cv', array(
-            'cv_id' => $default_cv,
-          ));
-
-          $cvterm_options = array_map(function($t) {
-            return $t['name'];
-          }, $cvterms);
-        }
-        else {
-          $default_cvterm = 0;
-          $cvterm_options = array();
-        }
-
-        $form['ap_AJAX_wrapper_getcvterms' . $title][$var] = array(
-          '#type' => 'select',
-          '#title' => '',
-          '#options' => $cvterm_options,
-          '#default_value' => $default_cvterm,
-          '#description' => t('Select Controlled Vocabulary (CV) and CV Term.'),
-          '#id' => $i . '_term_select_field',
-        );
-      }
-
-      break;
-
-    //
-    case 'crop_ontology':
-      $vars = analyzedphenotypes_systemvars('genus_ontology');
-
-      $cvs = analyzedphenotypes_cvprop();
-      $cv_options = array_map(function($c) {
-        return $c['name'];
-      }, $cvs);
-
-      foreach($vars as $i => $var) {
-        $title = trim(str_replace('ap_', '', $i));
-        $var_value = variable_get($var['var']);
-        $var_value_default = variable_get($var['def']);
-
-        if ($var_value == 'not set' || empty($var_value)) {
-          $cv_options = array(0 => '- Select -') + $cv_options;
-          $default_cv = 0;
-        }
-        else {
-          $default_cv = $var_value;
-        }
-
-        $form[$var['var']] = array(
-          '#type' => 'select',
-          '#title' => 'Select ontology controlled vocabulary for genus ' . ucfirst($title),
-          '#required' => TRUE,
-          '#options' => $cv_options,
-          '#default_value' => $default_cv,
-          '#id' => $var,
-          // Load cvterms.
-          '#ajax' => array(
-            'event' => 'change',
-            'callback' => 'analyzedphenotypes_AJAX_callback',
-            'case' => 'getcvterms' . $title,
-            'wrapper' => 'ap-AJAX-wrapper-getcvterms' . $title,
-            'progress' => array('type' => 'throbber', 'message' => 'Loading CV Terms...'),
-          ),
-          '#id' => $i . '_cv_select_field',
-        );
-
-        // AJAX callback wrapper.
-        $form['ap_AJAX_wrapper_getcvterms'. $title] = array(
-          '#prefix' => '<div id="ap-AJAX-wrapper-getcvterms' . $title . '">',
-          '#suffix' => '</div>',
-        );
-
-        $cv_field_value = (isset($form_state['values'][$var['var']]))
-          ? $form_state['values'][$var['var']] : 0;
-
-        if ($cv_field_value > 0) {
-          $default_cv = $cv_field_value;
-        }
-
-        if ($default_cv > 0) {
-          $default_cvterm = $var_value_default;
-          $cvterms = analyzedphenotypes_cvprop('terms_in_cv', array(
-            'cv_id' => $default_cv,
-          ));
-
-          $cvterm_options = array_map(function($t) {
-            return $t['name'];
-          }, $cvterms);
-        }
-        else {
-          $default_cvterm = 0;
-          $cvterm_options = array();
-        }
-
-        $form['ap_AJAX_wrapper_getcvterms' . $title][$var['def']] = array(
-          '#type' => 'select',
-          '#title' => 'Select default term',
-          '#options' => $cvterm_options,
-          '#default_value' => $default_cvterm,
-          '#description' => t('Select Controlled Vocabulary (CV) and CV Term.'),
-          '#id' => $i . '_term_select_field',
-        );
-      }
-
-      break;
-
-      //
-      // Define additional case here.
-
-      //
-      default:
-        $base_admin = 'admin/tripal/extension/analyzedphenotypes';
-
-        $header = array('Section', 'Information', 'View');
-        $rows[] = array('Crop Ontology', 'Map a Genus to a Crop Ontology Vocabularies.', l('view', $base_admin . '/settings/crop_ontology'));
-        $rows[] = array('Database and CV Terms', 'Set the default Database and Controlled Vocabulary.', l('view', $base_admin . '/settings/database_cv'));
-        $rows[] = array('Plant Property Traits', 'Define Controlled Vocabulary for Plant Property Traits location, Replicate, Year and Data Collector.', l('view', $base_admin . '/settings/property_terms'));
-
-        $form['ap_table'] = array(
-          '#markup' => theme('table', array(
-            'header' => $header,
-            'rows' => $rows,
-            'attributes' => array(
-              'id' => 'ap-settings-info-table',
-              'sticky' => FALSE,
-            ),
-          )),
-        );
-
-        return $form;
+    $i++;
   }
 
+  // Warning.
+  $form[$frameset_cv]['warning'] = array(
+    '#markup' => '<div class="messages  status">
+      Once phenotypic data has been uploaded for a genus, these vocabularies cannot be changed!
+      Please take the time to read the description above and if you have questions,
+      submit a ticket to <u>' . l('Github: UofS-Pulse-Binfo', 'https://github.com/UofS-Pulse-Binfo/analyzedphenotypes/issues') . '</u>.
+      </div> <br />',
+  );
 
-  if (in_array($source, $valid_source)) {
-    return system_settings_form($form);
+  // Submit
+  $form[$frameset_cv]['ap_savevc_submit_button'] = array(
+    '#type' => 'submit',
+    '#value' => 'Save Term Configuration',
+    '#validate' => array('system_settings_form_validate'),
+    '#submit' => array('system_settings_form_submit'),
+  );
+
+
+  return $form;
+}
+
+
+/**
+ * FUNCTION CALLBACK:
+ * Validate configuration page.
+ */
+function system_settings_form_validate($form, &$form_state) {
+  // CHECK GENUS CV, DB AND ONTOLOGY:
+  // For a give genus, if one field was altered then user is trying
+  // to set a value and this validate should ensure that both
+  // controlled vocabulary and database configuration must have a value selected.
+  $cvdbon = analyzedphenotypes_systemvariables('cvdbon');
+
+  foreach($cvdbon as $i => $vars) {
+    $var_ctr = 0;
+    $var_key = str_replace('ap_', '', $i);
+
+    // Inspect cv, db and ontology field for each genus and see
+    // if a field has been selected. If a field has been altered
+    // check cv and databse field and ensure both are set.
+    foreach($vars as $type => $v) {
+      if ((int)$form_state['values'][$v] > 0) {
+        $var_ctr++;
+      }
+    }
+
+    if ($var_ctr > 0) {
+      // Field set.
+      if ($form_state['values'][$vars['cv']] <= 0) {
+        // Controlled vocabulary.
+        form_set_error($vars['cv'], 'Please select Controlled Vocabulary for ' . $var_key . ' genus.');
+      }
+
+      if ($form_state['values'][$vars['db']] <= 0) {
+        // Associated databse.
+        form_set_error($vars['db'], 'Please select Associated Database for ' . $var_key . ' genus.');
+      }
+    }
+  }
+
+  // CHECK CONTROLLED VOCABULARY TERMS:
+  $terms = analyzedphenotypes_systemvariables('terms');
+
+  // Test if value entered (field for terms are autocomplete).
+  foreach($terms as $term => $t) {
+    $field_term = $form_state['values'][$t];
+    $var_key = str_replace('ap_', '', $term);
+
+    if (empty($field_term)) {
+      // Field is empty. Mark field.
+      form_set_error($t, 'You must set the controlled vocabulary term for ' . $var_key . '.');
+    }
+    else {
+      // Check if term in cvterm table.
+      $is_term = analyzedphenotypes_cvprop('term_cv', array(
+        'term_cv' => $field_term,
+      ));
+
+      if (is_null($is_term)) {
+        // Invalid term. Mark field.
+        form_set_error($t, $field_term . ' is not a valid controlled vocabulary term for term ' . $var_key . '. Please confirm that it already exists keeping in mind that case and whitespace are important.');
+      }
+    }
   }
 }
