@@ -6,7 +6,11 @@
  */
 
 
+// AP API.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
+// Default Ontology Terms API.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.defaultontology.api.inc');
+// Validators.
 module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.validators');
 
 
@@ -21,7 +25,7 @@ function analyzedphenotypes_menu() {
     'title' => 'Phenotypes',
     'description' => 'Summarizes phenotypic data available.',
     'page callback' => 'analyzed_phenotypes_all_data_summary_page',
-    'access arguments' => array(TRUE),
+    'access arguments' => array('access analyzed phenotypes'),
     'file' => 'include/analyzedphenotypes.summary.page.inc',
     'type' => MENU_NORMAL_ITEM,
   );
@@ -32,7 +36,7 @@ function analyzedphenotypes_menu() {
     'description' => 'Summarizes phenotypic data for a given trait and project.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_beanplot_form'),
-    'access arguments' => array(TRUE),
+    'access arguments' => array('access analyzed phenotypes'),
     'file' => 'include/analyzedphenotypes.beanplot.page.inc',
     'type' => MENU_NORMAL_ITEM,
   );
@@ -41,7 +45,7 @@ function analyzedphenotypes_menu() {
   $items['json/phenotypes/beanplot/%/%'] = array(
     'page callback' => 'analyzedphenotypes_beanplot_json',
     'page arguments' => array(3, 4),
-    'access arguments' => array(TRUE),
+    'access arguments' => array('access analyzed phenotypes'),
     'file' => 'include/analyzedphenotypes.beanplot.page.inc',
     'type' => MENU_CALLBACK,
   );
@@ -63,7 +67,7 @@ function analyzedphenotypes_menu() {
     'description' => 'Import a partially filtered (not raw) phenotypic datasets into Chado for display on Trait and Germplasm pages.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_data_loader'),
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('upload analyzed phenotypes'),
     'file' => 'include/analyzedphenotypes.admin.form.inc',
     'weight' => 1,
     'type' => MENU_NORMAL_ITEM,
@@ -85,7 +89,7 @@ function analyzedphenotypes_menu() {
   $items[$tripal_extension_ap . '/json/%/%'] = array(
     'page callback' => 'analyzedphenotypes_data_json',
     'page arguments' => array(5, 6),
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('upload analyzed phenotypes'),
     'type' => MENU_CALLBACK,
   );
 
@@ -93,13 +97,39 @@ function analyzedphenotypes_menu() {
   $items[$tripal_extension_ap . '/validation_result/%/%'] = array(
     'page callback' => 'analyzedphenotypes_validationresult',
     'page arguments' => array(5, 6),
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('upload analyzed phenotypes'),
     'type' => MENU_CALLBACK,
   );
 
 
   return $items;
 }
+
+
+/**
+ * Implements hook_permission().
+ */
+function analyzedphenotypes_permission() {
+  return array(
+    // Administer Tripal.
+    'administer tripal' => array(
+      'title' => t('Administer Tripal'),
+    ),
+    // Upload Analyzed Phenotypes.
+    'upload analyzed phenotypes' => array(
+      'title' => t('Upload Analyzed Phenotypic Data'),
+    ),
+    // Download Analyzed Phenotypes.
+    'download analyzed phenotypes' => array(
+      'title' => t('Download Analyzed Phenotypic Data'),
+    ),
+    // Access Analyzed Phenotypes.
+    'access analyzed phenotypes' => array(
+      'title' => t('Access Analyzed Phenotypic Data'),
+    ),
+  );
+}
+
 
 /**
  * Implements hook_theme().
