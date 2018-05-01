@@ -1394,7 +1394,7 @@ function system_settings_form_validate($form, &$form_state) {
 
       if (is_null($is_term)) {
         // Invalid term. Mark field.
-        form_set_error($t, 'The term entered does not exist for term ' . $var_key . '.');
+        form_set_error($t, $field_term . ' is not a valid controlled vocabulary term for term ' . $var_key . '. Please confirm that it already exists keeping in mind that case and whitespace are important.');
       }
     }
   }
