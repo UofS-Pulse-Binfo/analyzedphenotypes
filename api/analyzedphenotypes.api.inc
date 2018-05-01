@@ -561,7 +561,7 @@ function analyzedphenotypes_datatypeprop($property, $parameter = null) {
       }
 
       break;
-      
+
     //
     case 'number_no_zero':
       // Numbers, no 0.
@@ -791,7 +791,7 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
             ':cvterm_id' => $cvprop['cvterm_id'],
           )
         );
-        
+
         $cvprop['crop_ontology'] = ($result->rowCount() == 1) ? $result->fetchField() : null;
 
         // Scale.
@@ -848,7 +848,7 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
             'scale_to' => 400,
           ));
 
-          $photo_dir = 'public://ap-photo'; 
+          $photo_dir = 'public://ap-photo';
           file_prepare_directory($photo_dir, FILE_CREATE_DIRECTORY);
 
           $new_image = imagecreatetruecolor($scale['width'], $scale['height']);
@@ -1251,7 +1251,7 @@ function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
       $vars = analyzedphenotypes_systemvars('genus_ontology');
       $var_name = 'ap_' . strtolower(str_replace(' ', '_', $parameter['project_genus']));
       $cv_id = variable_get($vars[$var_name]['var']);
-      
+
       $ontology_terms = analyzedphenotypes_cvprop('terms_in_cv', array(
         'cv_id' => $cv_id,
       ));
@@ -1269,7 +1269,7 @@ function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
         if ($i == $default_ontology['cvterm_id']) {
           continue;
         }
-        
+
         $ontology = strtolower(trim($term['name']));
         $keywords = explode(' ', $ontology);
 
@@ -1282,11 +1282,11 @@ function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
               $ontologyprop[$i] = $term;
 
               $ctr++;
-            }  
+            }
           }
         }
       }
-        
+
       $ontologyprop[$default_ontology['cvterm_id']] = array(
         'name' => $default_ontology['name'],
         'definition' => $default_ontology['definition'],
@@ -1299,18 +1299,18 @@ function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
       $vars = analyzedphenotypes_systemvars('genus_ontology');
       $var_name = 'ap_' . strtolower(str_replace(' ', '_', $parameter['project_genus']));
       $cv_id = variable_get($vars[$var_name]['var']);
-      
+
       $cvtermprop = analyzedphenotypes_cvprop('get_cvterm', array(
         'name' => $parameter['ontology'],
         'cv_id' => $cv_id,
       ));
-      
+
       if ($cvtermprop) {
           $ontologyprop[$cvtermprop['cvterm_id']] = $cvtermprop['name'];
       }
-      
+
       break;
-    
+
     //
     // Additional case here.
 
@@ -1388,13 +1388,13 @@ function analyzedphenotypes_systemvars($property = null) {
       $systemvars = $vars_database;
 
       break;
-    
+
     //
     case 'plant_property':
       $systemvars = $vars_plantprop;
 
       break;
-    
+
     //
     case 'genus_ontology':
       $systemvars = $vars_ontology;
@@ -1406,6 +1406,126 @@ function analyzedphenotypes_systemvars($property = null) {
 
     default:
       $systemvars = $vars_database + $vars_plantprop + $vars_ontology;
+  }
+
+
+  return $systemvars;
+}
+
+
+/**
+ * API: SYSTEM VARIABLE
+ * Manage property and operation pertaining to system variable.
+ * Default to: Return variables.
+ * Dependencies: analyzedphenotypes_genusprop().
+ *               analyzedphenotypes default ontology API.
+ *
+ * @param String $property
+ *   A value representing a property/operation requested (each property represents a case in the switch implementation):
+ *   Default to null.
+ *   - options  : Variables for system options (eg. allow new term).
+ *   - cvdbon   : Controlled vocabulary, database and otology settings per genus.
+ *   - terms    : CV/ontology terms location, replicate, method and etc.
+ *   - default  : All variables defined.
+ *
+ * @return Array $systemvars
+ *   Array of variables names.
+ *
+ * @see analyzedphenotypes_admin_settings() in admin.form.inc.
+ * @see analyzedphenotypes_loader_form_save() in admin.form.inc.
+ * @see analyzedphenotypes_ap_validators() in validators.inc.
+ * @see analyzedphenotypes_save_tsv_data() in admin.form.inc.
+ * @see analyzedphenotypes_cvprop() in api.inc.
+ * @see hook_install() implementation in install.inc.
+ */
+function analyzedphenotypes_systemvariables($property = null) {
+  $systemvars = null;
+  $basename = 'analyzedphenotypes_systemvar_';
+
+  // System variable types.
+  $var_type = array(
+    // Allow new header to be added during upload.
+    'options' => 'options',
+    // Controlled vocabulary (cv), database (db) etc.
+    'cvdbon'  => 'cvdbon',
+    // Controlled vocabulary terms etc.
+    'terms'   => 'terms',
+  );
+
+  // System variable names.
+  $var_name = array(
+    // To register additional system variable, add here.
+
+    $var_type['options'] => array('allownew'),
+    $var_type['cvdbon']  => array('cv', 'db', 'ontology'),
+    $var_type['terms']   => array('genus', 'year', 'method', 'related', 'location', 'replicate', 'collector')
+  );
+
+  // Array to hold all system variables.
+  $system_variables = array();
+
+  // Construct system variables.
+  // Variables are reference using ap_ . name combination.
+  // eg. ap_genus, ap_method etc.
+  foreach($var_name as $i => $var) {
+    if ($i == $var_type['cvdbon']) {
+      // Per genus : controlled vocabulary, database and ontology variables.
+      $genus = analyzedphenotypes_genusprop();
+
+      // Construct variables.
+      // eg. LENS: cv - analyzedphenotypes_systemvar_lens_cv.
+      //           db - analyzedphenotypes_systemvar_lens_db.
+      //           ontology - analyzedphenotypes_systemvar_lens_ontology.
+      foreach($genus as $g) {
+        $g = strtolower(str_replace(' ', '_', $g));
+
+        foreach($var as $v) {
+          $system_variables[$i]['ap_' . $g][$v] = $basename . $g . '_' . $v;
+        }
+      }
+    }
+    else {
+      // Other terms.
+      // eg. TERM METHOD: analyzedphenotypes_systemvar_method.
+      foreach($var as $v) {
+        $system_variables[$i]['ap_' . $v] = $basename . $v;
+      }
+    }
+  }
+
+  // Handle system variables request.
+  switch($property) {
+    //
+    case 'options':
+      // Return variables in options category.
+      // Allow new ...
+      $systemvars = $system_variables[ $var_type['options'] ];
+
+      break;
+
+    //
+    case 'cvdbon':
+      // Return variables in cv, db and ontology category per genus.
+      // lens_cv, lens_db ...
+      $systemvars = $system_variables[ $var_type['cvdbon'] ];
+
+      break;
+
+    //
+    case 'terms':
+      // Return variables in terms category.
+      // methods, related, genus ...
+      $systemvars = $system_variables[ $var_type['terms'] ];
+
+      break;
+
+    //
+    // Define additional case here.
+
+    //
+    default:
+      // All variables.
+      $systemvars = $system_variables;
   }
 
 

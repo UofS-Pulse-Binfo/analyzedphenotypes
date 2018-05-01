@@ -4,7 +4,12 @@
  */
 
 // Make the API available during install.
+
+// AP API.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
+// Default Ontology Terms API.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.defaultontology.api');
+
 
 /**
  * Implements hook_enable().
@@ -166,7 +171,44 @@ function analyzedphenotypes_enable() {
     'Analyzed Phenotypes needs to be configured <a href="@url">here</a> in order to be specific to your system.',
     array('@url' => url('admin/tripal/extension/analyzedphenotypes/settings'))),
     'warning');
+
+
+  // Initialize Variables:
+  // Load default ontology terms for method, location, replicate, collector, genus, related and year
+  // in AP configuration page.
+  $default_ontology = analyzedphenotypes_defaultontologyload();
+
+  // System variable for all controlled vocabulary terms.
+  $system_vars = analyzedphenotypes_systemvariables('terms');
+
+  // Set default.
+  foreach($system_vars as $v => $var) {
+    // Set the variable to default ontology term.
+    // base terms: location, replicate, year ...
+    $v = trim(str_replace('ap_', '', $v));
+
+    variable_set($var, $default_ontology[$v]);
+  }
+
+  // Other system variables.
+  // Genus - cv, db and ontology.
+  unset($system_vars);
+  $system_vars = analyzedphenotypes_systemvariables('cvdbon');
+
+  foreach($system_vars as $v => $var) {
+    foreach($var as $h) {
+      variable_set($h, 'not set');
+    }
+  }
+
+  // Allow new traits.
+  unset($system_vars);
+  $system_vars = analyzedphenotypes_systemvariables('options');
+  foreach($system_vars as $v => $var) {
+    variable_set($var, 1);
+  }
 }
+
 
 /**
  * Implements hook_install().
@@ -185,6 +227,7 @@ function analyzedphenotypes_install() {
     }
   }
 }
+
 
 /**
  * Implements hook_uninstall().
