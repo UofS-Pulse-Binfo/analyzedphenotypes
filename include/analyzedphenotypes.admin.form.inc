@@ -1199,7 +1199,7 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
     '#type' => 'submit',
     '#value' => 'Save Ontology Configuration',
     '#validate' => array('system_settings_form_validate'),
-    '#submit' => array('system_settings_form_submit'),
+    '#submit' => array('system_settings_form_config_submit'),
   );
 
 
@@ -1298,14 +1298,23 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
       }
 
       // Get default.
-      $default_field = variable_get($prop['field_name']);
+      // Since what is saved is cvterm_id into the variable, we need to convert the id
+      // to something human readbale.
+      $var_id = variable_get($prop['field_name']);
+      $default_field = analyzedphenotypes_cvprop('term_id', array(
+        'term_id' => $var_id,
+      ));
+
+      $default_value = (empty($default_field)) ? '' : $default_field;
 
       // Otherwise a autocomplete field.
       $form[$frameset_cv][ $prop['field_name'] ] = array(
         '#type' => 'textfield',
         '#title' => t($term),
         '#description' => t($prop['description']),
-        '#default_value' => (!empty($default_field)) ? $default_field : '',
+        '#default_value' => $default_value,
+        '#attributes' => array('class' => array('ap-autocomplete-field-terms'),
+          'title' => array($default_value)),
         //
         '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/cvterms/cv',
       );
@@ -1313,6 +1322,13 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
 
     $i++;
   }
+
+  // Select field value when clicked to ease typing in new value.
+  drupal_add_js('jQuery(document).ready(function() {
+    jQuery(".ap-autocomplete-field-terms").focusin(function(){
+      jQuery(this).select();
+    });
+  })', 'inline');
 
   // Warning.
   $form[$frameset_cv]['warning'] = array(
@@ -1328,7 +1344,7 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
     '#type' => 'submit',
     '#value' => 'Save Term Configuration',
     '#validate' => array('system_settings_form_validate'),
-    '#submit' => array('system_settings_form_submit'),
+    '#submit' => array('system_settings_form_config_submit'),
   );
 
 
@@ -1398,4 +1414,51 @@ function system_settings_form_validate($form, &$form_state) {
       }
     }
   }
+}
+
+
+/**
+ * FUNCTION CALLBACK:
+ * Save congfiguration variables.
+ */
+function system_settings_form_config_submit($form, &$form_state) {
+  $vars = analyzedphenotypes_systemvariables();
+
+  foreach($vars as $i => $var) {
+    // Convert the values selected from the interface to id number (cvterm or cv id number).
+    if ($i == 'cvdbon') {
+      // Genus cv, db and ontology.
+      // Select field returns the id number, no processing required.
+      foreach ($var as $v) {
+        foreach($v as $k) {
+          $fld_value = $form_state['values'][$k];
+          variable_set($k, $fld_value);
+        }
+      }
+    }
+    elseif ($i == 'options') {
+      // Options. Allow new traits added to upload.
+      // 1 or 0 value. No processing required,
+      foreach ($var as $v) {
+        $fld_value = $form_state['values'][$v];
+
+        variable_set($v, $fld_value);
+      }
+    }
+    elseif ($i == 'terms') {
+      // Controlled vocabulary term.
+      // Autocomplete returns cvterm name (cv term) format, requires cvterm_id number.
+      foreach ($var as $v) {
+        $fld_value = $form_state['values'][$v];
+
+        $fld_value_id = analyzedphenotypes_cvprop('term_cv', array(
+          'term_cv' => $fld_value,
+        ));
+
+        variable_set($v, $fld_value_id);
+      }
+    }
+  }
+
+  drupal_set_message('Configuration saved.', 'status');
 }
