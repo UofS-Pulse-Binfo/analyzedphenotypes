@@ -1349,6 +1349,7 @@ function system_settings_form_validate($form, &$form_state) {
 
   foreach($cvdbon as $i => $vars) {
     $var_ctr = 0;
+    $var_key = str_replace('ap_', '', $i);
 
     // Inspect cv, db and ontology field for each genus and see
     // if a field has been selected. If a field has been altered
@@ -1363,12 +1364,12 @@ function system_settings_form_validate($form, &$form_state) {
       // Field set.
       if ($form_state['values'][$vars['cv']] <= 0) {
         // Controlled vocabulary.
-        form_set_error($vars['cv'], 'Please select Controlled Vocabulary.');
+        form_set_error($vars['cv'], 'Please select Controlled Vocabulary for ' . $var_key . ' genus.');
       }
 
       if ($form_state['values'][$vars['db']] <= 0) {
         // Associated databse.
-        form_set_error($vars['db'], 'Please select Associated Database.');
+        form_set_error($vars['db'], 'Please select Associated Database for ' . $var_key . ' genus.');
       }
     }
   }
@@ -1376,16 +1377,14 @@ function system_settings_form_validate($form, &$form_state) {
   // CHECK CONTROLLED VOCABULARY TERMS:
   $terms = analyzedphenotypes_systemvariables('terms');
 
-  $failed_ctr = 0;
-
   // Test if value entered (field for terms are autocomplete).
   foreach($terms as $term => $t) {
     $field_term = $form_state['values'][$t];
+    $var_key = str_replace('ap_', '', $term);
 
     if (empty($field_term)) {
       // Field is empty. Mark field.
-      form_set_error($t, '');
-      $failed_ctr++;
+      form_set_error($t, 'You must set the controlled vocabulary term for ' . $var_key . '.');
     }
     else {
       // Check if term in cvterm table.
@@ -1395,14 +1394,8 @@ function system_settings_form_validate($form, &$form_state) {
 
       if (is_null($is_term)) {
         // Invalid term. Mark field.
-        form_set_error($t, '');
-        $failed_ctr++;
+        form_set_error($t, 'The term entered does not exist for term ' . $var_key . '.');
       }
     }
-  }
-
-  if ($failed_ctr > 0) {
-    // Tell user of the marked field(s).
-    drupal_set_message('Invalid controlled vocabulary or associated database in highlighed fields.', 'error');
   }
 }
