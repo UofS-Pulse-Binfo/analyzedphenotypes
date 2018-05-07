@@ -225,7 +225,8 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&
  * Implements hook_preprocess().
  */
 function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$variables, $hook) {
-  $notset = '';
+  // Default system to not properly set, then prove otherwise.
+  $notset = 'not set';
   $allow_new = 0;
 
   // All genus.
@@ -242,16 +243,17 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$va
     $sysvar_genus_cv = variable_get($sysvar_genus['cv']);
     $sysvar_genus_db = variable_get($sysvar_genus['db']);
 
-    if ($sysvar_genus_cv != 'not set' && $sysvar_genus_db != 'not set') {
+    if ($sysvar_genus_cv > 0 && $sysvar_genus_db > 0) {
+      // Found at least 1 genus with cv and db set.
       $sysvar_genus_set = 1;
 
       break;
     }
   }
 
-  if (!$sysvar_genus_set) {
+  if ($sysvar_genus_set > 0) {
     // Did no find a genus with cv and db set.
-    $notset = 'not set';
+    $notset = 'set';
   }
 
   // Test if terms (location, replicate etc.) were set.
@@ -260,7 +262,7 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$va
   foreach($sysvars as $var) {
     $sysvar_term = variable_get($var);
 
-    if ($sysvar_term == 'not set') {
+    if ($sysvar_term <= 0) {
       // If any one failed, then module is not ready.
       $notset = 'not set';
 

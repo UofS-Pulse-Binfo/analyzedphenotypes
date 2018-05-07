@@ -1692,7 +1692,7 @@ function analyzedphenotypes_systemvars($property = null) {
  * @see analyzedphenotypes_cvprop() in api.inc.
  * @see hook_install() implementation in install.inc.
  */
-function analyzedphenotypes_systemvariables($property = null) {
+function analyzedphenotypes_systemvariables($property = null, $parameter = null) {
   $systemvars = null;
   $basename = 'analyzedphenotypes_systemvar_';
 
