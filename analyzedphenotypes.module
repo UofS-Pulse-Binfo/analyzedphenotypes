@@ -254,8 +254,6 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$va
     $notset = 'not set';
   }
 
-  unset($sysvars);
-
   // Test if terms (location, replicate etc.) were set.
   $sysvars = analyzedphenotypes_systemvariables('terms');
 
@@ -279,9 +277,11 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$va
   foreach($sysvars as $i => $var) {
     $sysvar_options = variable_get($var);
 
-    if ($i == 'allownew' && $sysvar_options == 0) {
-      $allow_new = $sysvar_options;
+    if ($i == 'ap_allownew' && $sysvar_options == 1) {
+      $allow_new = 1;
     }
+
+    // Other optional settings.
   }
 
   unset($sysvars);
