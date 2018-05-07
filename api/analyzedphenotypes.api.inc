@@ -1774,6 +1774,16 @@ function analyzedphenotypes_systemvariables($property = null) {
       break;
 
     //
+    case 'genus_vars':
+      // Fetch system configuration for a genus.
+      $sysvars = $system_variables[ $var_type['cvdbon'] ];
+      // Prepare genus term: remove whitespaces and case.
+      $sysvar_key = 'ap_' . trim(strtolower(str_replace(' ', '_', $parameter['genus'])));
+      $systemvars = $sysvars[$sysvar_key];
+
+      break;
+
+    //
     // Define additional case here.
 
     //
