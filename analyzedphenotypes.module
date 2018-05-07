@@ -226,23 +226,67 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&
  */
 function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$variables, $hook) {
   $notset = '';
-  $vars = analyzedphenotypes_systemvars('db_cv');
-  $allow_new = '';
+  $allow_new = 0;
 
-  foreach($vars as $i => $var) {
-    $system_var = variable_get($var);
+  // All genus.
+  $genus = analyzedphenotypes_genusprop();
 
-    if ($i == 'ap_allow_new') {
-      $allow_new = $system_var;
-      continue;
-    }
+  $sysvar_genus_set = 0;
 
-    if ($system_var == 'not set') {
-      $notset = 'not set';
+  // Test genus cv and db. System only requires a genus to have a cv and db set.
+  foreach($genus as $g) {
+    $sysvar_genus = analyzedphenotypes_systemvariables('genus_vars', array(
+      'genus' => $g,
+    ));
+
+    $sysvar_genus_cv = variable_get($sysvar_genus['cv']);
+    $sysvar_genus_db = variable_get($sysvar_genus['db']);
+
+    if ($sysvar_genus_cv != 'not set' && $sysvar_genus_db != 'not set') {
+      $sysvar_genus_set = 1;
+
       break;
     }
   }
 
+  if (!$sysvar_genus_set) {
+    // Did no find a genus with cv and db set.
+    $notset = 'not set';
+  }
+
+  unset($sysvars);
+
+  // Test if terms (location, replicate etc.) were set.
+  $sysvars = analyzedphenotypes_systemvariables('terms');
+
+  foreach($sysvars as $var) {
+    $sysvar_term = variable_get($var);
+
+    if ($sysvar_term == 'not set') {
+      // If any one failed, then module is not ready.
+      $notset = 'not set';
+
+      break;
+    }
+  }
+
+  unset($sysvars);
+
+  // Allow new terms to be upload. Warn admin that the module is set to not allow
+  // new trait be uploaded.
+  $sysvars = analyzedphenotypes_systemvariables('options');
+
+  foreach($sysvars as $i => $var) {
+    $sysvar_options = variable_get($var);
+
+    if ($i == 'allownew' && $sysvar_options == 0) {
+      $allow_new = $sysvar_options;
+    }
+  }
+
+  unset($sysvars);
+
+  // Make configuration value available to theme.
   $variables['system_set'] = $notset;
   $variables['allow_new']  = $allow_new;
 
