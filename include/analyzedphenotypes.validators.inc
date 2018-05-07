@@ -158,10 +158,10 @@ function analyzedphenotypes_ap_validators($all_scope = NULL) {
  *
  * @param Array $dataset
  *  An associative array containing user provide values:
- *  - project_name  : Project/experiment selected. 
+ *  - project_name  : Project/experiment selected.
  *  - project_genus : Project/experiment genus selected.
  *  - data_file     : tsv or txt data file containing analyzed phenotypic data.
- * 
+ *
  * @return Array
  *   An associative array, indicating if a validator passed or failed the requirements.
  *
@@ -220,7 +220,7 @@ function analyzedphenotypes_validate_tsv_file($dataset) {
 /**
  * PROJECT VALIDATOR
  * Perform validation to project/experiment.
- * Default to: 
+ * Default to:
  * Dependencies: analyzedphenotypes_projectprop().
  *
  * @param String $case
@@ -228,10 +228,10 @@ function analyzedphenotypes_validate_tsv_file($dataset) {
  *  - exists : Check to see if project exists in chado.projects table.
  * @param Array $dataset
  *  An associative array containing user provide values:
- *  - project_name  : Project/experiment selected. 
+ *  - project_name  : Project/experiment selected.
  *  - project_genus : Project/experiment genus selected.
  *  - data_file     : tsv or txt data file containing analyzed phenotypic data.
- * 
+ *
  * @return Array
  *   An associative array, indicating if a validator passed or failed the requirements.
  */
@@ -271,7 +271,7 @@ function analyzedphenotypes_validator_project($case, $dataset) {
 /**
  * GENUS VALIDATOR
  * Perform validation to project/experiment genus.
- * Default to: 
+ * Default to:
  * Dependencies: analyzedphenotypes_genusprop().
  *
  * @param String $case
@@ -279,10 +279,10 @@ function analyzedphenotypes_validator_project($case, $dataset) {
  *  - exists : Check to see if genus exits in the system and see if it matches the Experiment/project.
  * @param Array $dataset
  *  An associative array containing user provide values:
- *  - project_name  : Project/experiment selected. 
+ *  - project_name  : Project/experiment selected.
  *  - project_genus : Project/experiment genus selected.
  *  - data_file     : tsv or txt data file containing analyzed phenotypic data.
- * 
+ *
  * @return Array
  *   An associative array, indicating if a validator passed or failed the requirements.
  */
@@ -323,7 +323,7 @@ function analyzedphenotypes_validator_genus($case, $dataset) {
 /**
  * GENUS VALIDATOR
  * Perform validation to project/experiment genus.
- * Default to: 
+ * Default to:
  * Dependencies: analyzedphenotypes_datafileprop(), analyzedphenotypes_columnsprop(), analyzedphenotypes_cvprop().
  *
  * @param String $case
@@ -333,10 +333,10 @@ function analyzedphenotypes_validator_genus($case, $dataset) {
  *  - allow_new : When set to not allow new trait to be added, this check will test if all traits are existing trait.
  * @param Array $dataset
  *  An associative array containing user provide values:
- *  - project_name  : Project/experiment selected. 
+ *  - project_name  : Project/experiment selected.
  *  - project_genus : Project/experiment genus selected.
  *  - data_file     : tsv or txt data file containing analyzed phenotypic data.
- * 
+ *
  * @return Array
  *   An associative array, indicating if a validator passed or failed the requirements.
  */
@@ -419,6 +419,7 @@ function analyzedphenotypes_validator_datafile($case, $dataset) {
             else {
               $exists = analyzedphenotypes_cvprop('get_cvterm', array(
                 'name' => $file_traitname_value,
+                'genus' => $dataset['project_genus'],
               ));
 
               if (empty($exists)) {
@@ -460,12 +461,12 @@ function analyzedphenotypes_validator_datafile($case, $dataset) {
  *
  * @param Array $dataset
  *  An associative array containing user provide values:
- *  - project_name  : Project/experiment selected. 
+ *  - project_name  : Project/experiment selected.
  *  - project_genus : Project/experiment genus selected.
  *  - data_file     : Standard Drupal File Id Number (FID).
  * @param Integer $job_id
  *  - Registered Tripal Job Id number.
- * 
+ *
  * @return Array
  *   An associative array, indicating if a validator passed or failed the requirements.
  *
@@ -525,7 +526,7 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
 
     $prev_percent = 0;
     $line_number = 1;
-    
+
     // BEGIN TRIPAL VALIDATION.
     foreach($rows as $i => $line) {
       if (empty($line)) {
@@ -539,7 +540,7 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
       $data = array_map('trim', $d);
 
       $trait_name = $data[$trait_name_index];
-      
+
       foreach($validator as $key => $item) {
         $case = $item['case'];
         $callback = $item['validation callback'];
@@ -656,7 +657,7 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
  *  The current row number.
  * @param String $trait_name
  *  A value representing the trait name in a given row.
- * 
+ *
  * @return Array
  *   An associative array, indicating if a validator passed or failed the requirements.
  */
@@ -772,7 +773,7 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
  *
  * @param Array $dataset
  *  An associative array containing user provide values:
- *  - project_name  : Project/experiment selected. 
+ *  - project_name  : Project/experiment selected.
  *  - project_genus : Project/experiment genus selected.
  *  - data_file     : Standard Drupal File Id Number (FID).
  * @param Integer $job_id
@@ -860,20 +861,17 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
     $col_index[$col] = $j;
   }
   unset($columnsprop);
-  
-  $vars = analyzedphenotypes_systemvars('db_cv');
+
+  $sysvars = analyzedphenotypes_systemvariables('term');
   // Assay id : method/taken by eye.
-  $method = variable_get($vars['ap_method']);
-  unset($vars);
-    
-  // Get plantprop (year, location, replicate, collector) system vars.
-  $vars = analyzedphenotypes_systemvars('plant_property');
+  $sysvar_method = variable_get($sysvars['ap_method']);
+  unset($sysvars);
 
   $plantprop = array();
-  $plantprop['Year'] = variable_get($vars['ap_year']);
-  $plantprop['Location'] = variable_get($vars['ap_location']);
-  $plantprop['Replicate'] = variable_get($vars['ap_replicate']);
-  $plantprop['Data Collector'] = variable_get($vars['ap_collector']);
+  $plantprop['Year'] = variable_get($sysvars['ap_year']);
+  $plantprop['Location'] = variable_get($sysvars['ap_location']);
+  $plantprop['Replicate'] = variable_get($sysvars['ap_replicate']);
+  $plantprop['Data Collector'] = variable_get($sysvars['ap_collector']);
 
   print '0% Complete...' . "\n";
 
@@ -893,6 +891,7 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
 
         $trait_property = analyzedphenotypes_cvprop('get_cvterm', array(
           'cvterm_id' => $cvterm_id,
+          'genus' => $genus,
         ));
 
         if (!$trait_property) {
@@ -1025,7 +1024,7 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
       'data_file' => $data_file,
     ));
   }
-  
+
   // Update materialized views.
   foreach(array('mview_phenotype', 'mview_phenotype_summary') as $mview) {
     $mview_id = tripal_get_mview_id($mview);
