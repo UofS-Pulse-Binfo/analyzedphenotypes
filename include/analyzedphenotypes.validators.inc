@@ -69,8 +69,8 @@ function analyzedphenotypes_ap_validators($all_scope = NULL) {
   );
 
   // Optional, only when allow new trait is set to not allow.
-  $vars = analyzedphenotypes_systemvars('db_cv');
-  $allow_new = variable_get($vars['ap_allow_new']);
+  $vars = analyzedphenotypes_systemvariables('options');
+  $allow_new = variable_get($vars['ap_allownew']);
 
   if (!$allow_new) {
     $validators['FILE_allow_new'] = array(
@@ -769,7 +769,7 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
  * SAVE ANALYZED PHENOTYPES.
  * Save project, genus and analyzed phenotypic data.
  * Default to:
- * Dependencies: analyzedphenotypes_tripaljobpro(), analyzedphenotypes_projectprop(), analyzedphenotypes_systemvars().
+ * Dependencies: analyzedphenotypes_tripaljobpro(), analyzedphenotypes_projectprop(), analyzedphenotypes_systemvariables().
  *
  * @param Array $dataset
  *  An associative array containing user provide values:
