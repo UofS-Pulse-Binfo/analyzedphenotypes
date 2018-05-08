@@ -862,16 +862,16 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
   }
   unset($columnsprop);
 
-  $sysvars = analyzedphenotypes_systemvariables('term');
+  $sysvars = analyzedphenotypes_systemvariables('terms');
   // Assay id : method/taken by eye.
   $sysvar_method = variable_get($sysvars['ap_method']);
-  unset($sysvars);
 
   $plantprop = array();
   $plantprop['Year'] = variable_get($sysvars['ap_year']);
   $plantprop['Location'] = variable_get($sysvars['ap_location']);
   $plantprop['Replicate'] = variable_get($sysvars['ap_replicate']);
   $plantprop['Data Collector'] = variable_get($sysvars['ap_collector']);
+  unset($sysvars);
 
   print '0% Complete...' . "\n";
 
@@ -891,7 +891,6 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
 
         $trait_property = analyzedphenotypes_cvprop('get_cvterm', array(
           'cvterm_id' => $cvterm_id,
-          'genus' => $genus,
         ));
 
         if (!$trait_property) {

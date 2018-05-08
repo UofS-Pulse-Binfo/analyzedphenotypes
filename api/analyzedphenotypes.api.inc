@@ -596,7 +596,7 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
     case 'terms_in_cv':
       // Fetch all cvterms in a controlled vocabulary (cv).
       // In:
-      //
+      //   .module - analyzedphenotypes_data_json() : Create list of terms in JSON format.
       // Parameters:
       //  $property : term_in_cv.
       //  $parameter['cv_id'] : controlled vocabulary id number.
@@ -1959,4 +1959,109 @@ function analyzedphenotypes_scale_photo($parameter) {
   $new_h = round($h * $ratio);
 
   return array('height' => $new_h, 'width' => $new_w);
+}
+
+
+/**
+ * FUNCTION LOAD MATERIALIZED VIEW.
+ */
+function analyzedphenotypes_mview($property, $parameter = null) {
+  $mview = null;
+
+  switch($property) {
+    case 'view_phenotypes':
+      // Default terms location and year to 0 when not indicated.
+      $term_id_location = (isset($parameter['term_id_location'])) ? $parameter['term_id_location'] : 0;
+      $term_id_year     = (isset($parameter['term_id_year'])) ? $parameter['term_id_year'] : 0;
+
+      $mview_query = sprintf("
+        SELECT
+          o.genus as organism_genus,
+          trait.cvterm_id as trait_id,
+          trait.name as trait_name,
+          proj.project_id as project_id,
+          proj.name as project_name,
+          loc.value as location,
+          yr.value as year,
+          s.stock_id as germplasm_id,
+          s.name as germplasm_name,
+          avg( CAST(p.value as FLOAT) ) as mean
+        FROM {phenotype} p
+          LEFT JOIN {cvterm} trait ON trait.cvterm_id=p.attr_id
+          LEFT JOIN {project} proj USING(project_id)
+          LEFT JOIN {stock} s USING(stock_id)
+          LEFT JOIN {organism} o ON o.organism_id=s.organism_id
+          LEFT JOIN {phenotypeprop} loc ON loc.phenotype_id=p.phenotype_id AND loc.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE cvterm_id = %d)
+          LEFT JOIN {phenotypeprop} yr ON yr.phenotype_id=p.phenotype_id AND yr.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE cvterm_id = %d)
+        GROUP BY trait.cvterm_id, trait.name, proj.project_id, proj.name, loc.value, yr.value, s.stock_id, s.name, o.genus
+      ", $term_id_location, $term_id_year);
+
+      $mview_schema = array(
+        'description' => 'Caches phenotypic data for easier retrieval of means. Data replicates are combined.',
+        'table' => 'mview_phenotype',
+        'fields' => array (
+          'organism_genus' => array (
+            'type' => 'varchar',
+            'length' => '255',
+            'not null' => TRUE,
+          ),
+          'trait_id' => array (
+            'size' => 'big',
+            'type' => 'int',
+            'not null' => TRUE,
+          ),
+          'trait_name' => array (
+            'type' => 'varchar',
+            'length' => '255',
+            'not null' => TRUE,
+          ),
+          'experiment_id' => array (
+            'size' => 'big',
+            'type' => 'int',
+            'not null' => TRUE,
+          ),
+          'experiment_name' => array (
+            'type' => 'text',
+            'not null' => TRUE,
+          ),
+          'location' => array (
+            'type' => 'text',
+            'not null' => TRUE,
+          ),
+          'year' => array (
+            'type' => 'text',
+            'not null' => TRUE,
+          ),
+          'stock_id' => array (
+            'size' => 'big',
+            'type' => 'int',
+            'not null' => TRUE,
+          ),
+          'stock_name' => array (
+            'type' => 'varchar',
+            'length' => '255',
+            'not null' => TRUE,
+          ),
+          'mean' => array(
+            'type' => 'float',
+          ),
+        ),
+
+        'indexes' => array(),
+      );
+
+      // Return query and SQL.
+      $mview = array(
+        'query' => $mview_query,
+        'schema' => $mview_schema,
+      );
+
+      break;
+
+    //
+    // Additional case here.
+  }
+
+
+  return $mview;
 }

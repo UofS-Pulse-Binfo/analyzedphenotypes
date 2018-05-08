@@ -595,7 +595,7 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
                '#disabled' => (isset($ontology_disable)) ? $ontology_disable : $disabled,
                '#default_value' => $traitprop['crop_ontology'],
                '#description' => t('Type in crop ontology or click one from suggestions below.'),
-               '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/ontology/' . $project_genus,
+               '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/ontology/' . $sysvar_genus_ontology,
                '#attributes' => array('class' => array('ap-crop-ontology', $class)),
                '#id' => drupal_html_id('ap-crop-ontology-text-field' . $i),
              );
@@ -639,6 +639,7 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
                      '#type' => 'file',
                      '#title' => t('Image ' . $g . ' of 2'),
                      '#name' => 'files[' . $seq . $i . ']',
+                     '#description' => t('JPG file type only.'),
                      '#attributes' => ($g == 1) ? array('class' => array('ap-required')) : array(),
                      '#id' => 'ap-photo-'. $g .'-file-field' . $i,
                    );
@@ -750,22 +751,26 @@ function analyzedphenotypes_loader_form_save($form, &$form_state) {
         if ($cvterm) {
           $cvterm_id = $cvterm;
 
-          // Unit.
-          // Scale.
-          // Ontology.
-          $ontology_value = $form_state['values']['ap_crop_ontology_text_field' . $i];
+          if ($sysvar_genus_ontology > 0) {
+            // Create plant ontology relationship only when genus ontology (on)
+            // is set in congiguration file.
+            // Unit.
+            // Scale.
+            // Ontology.
+            $ontology_value = $form_state['values']['ap_crop_ontology_text_field' . $i];
 
-          $ontologyprop = analyzedphenotypes_cvprop('get_cvterm', array(
-            'name' => $ontology_value,
-            'cv_id' => $sysvar_genus_ontology,
-          ));
-
-          if ($ontologyprop) {
-            // Create relationship.
-            analyzedphenotypes_ontologyprop('map_ontology_trait', array(
-              'ontology_cvterm_id' => $ontologyprop['cvterm_id'],
-              'trait_cvterm_id' => $cvterm_id,
+            $ontologyprop = analyzedphenotypes_cvprop('get_cvterm', array(
+              'name' => $ontology_value,
+              'cv_id' => $sysvar_genus_ontology,
             ));
+
+            if ($ontologyprop) {
+              // Create relationship.
+              analyzedphenotypes_ontologyprop('map_ontology_trait', array(
+                'ontology_cvterm_id' => $ontologyprop['cvterm_id'],
+                'trait_cvterm_id' => $cvterm_id,
+              ));
+            }
           }
 
           // Photo.
@@ -952,7 +957,7 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
     else {
       $project_genus = $form['values']['ap_genus_select_field'];
       $exists = analyzedphenotypes_ontologyprop('match_ontology', array(
-        'project_genus' => $project_genus,
+        'genus' => $project_genus,
         'ontology' => $field_value,
       ));
 
@@ -1490,8 +1495,41 @@ function system_settings_form_config_submit($form, &$form_state) {
 
         variable_set($v, $fld_value_id);
       }
+
+      analyzedphenotypes_updatemview();
     }
   }
 
   drupal_set_message('Configuration saved.', 'status');
+}
+
+
+/**
+ * FUNCTION CALLBACK
+ * Update materialized view used in Phenotype Visualizer.
+ */
+function analyzedphenotypes_updatemview() {
+  // Update materialized views to use the terms location and year selected in this form.
+  $mview_phenotype = 'mview_phenotype';
+  $mview_id = tripal_get_mview_id($mview_phenotype);
+
+  if ($mview_id) {
+    $sysvars = analyzedphenotypes_systemvariables('terms');
+
+    $sysvar_location = variable_get($sysvars['ap_location']);
+    $sysvar_year = variable_get($sysvars['ap_year']);
+
+    $update_mview = analyzedphenotypes_mview('view_phenotypes', array(
+      'term_id_location' => $sysvar_location,
+      'term_id_year' => $sysvar_year,
+    ));
+
+    // This works but it deletes the schema and brakes the view.
+    // tripal_edit_mview($mview_id, $mview_phenotype, 'analyzedphenotypes', '', '', 0, $update_mview['query'], '');
+
+    chado_query("UPDATE tripal_mviews SET query = :mview_query WHERE mview_id = :mview_id", array(
+      ':mview_query' => $update_mview['query'],
+      ':mview_id' => $mview_id,
+    ));
+  }
 }

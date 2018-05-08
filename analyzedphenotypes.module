@@ -413,20 +413,16 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
       //   admin.form.inc - analyzedphenotypes_loader_form_describe() : Stage #3 - Describe Traits.
       // Parameters:
       //   $page_argument_5 : ontology.
-      //   $page_argument_6 : a string containing the project genus and trait name delimited by a colon (e.g. lens:plant height (cm)).
+      //   $page_argument_6 : genus ontology (on) configuration settings.
       //   $key : null.
       $data_JSON = array();
 
-      list($project_genus, $trait_name) = explode(':', $parameter);
-
-      $ontology_suggestions = analyzedphenotypes_ontologyprop('suggest', array(
-        'project_genus' => $project_genus,
-        'trait_name' => $trait_name,
+      $ontology_suggestions = analyzedphenotypes_cvprop('terms_in_cv', array(
+        'cv_id' => $parameter,
       ));
 
       foreach($ontology_suggestions as $i => $term) {
-        $name = $term['name'];
-        $data_JSON[$name] = $name;
+        $data_JSON[ $term['name'] ] = $term['name'];
       }
 
       break;
