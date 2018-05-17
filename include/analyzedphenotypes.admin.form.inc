@@ -950,11 +950,7 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
     // Crop ontology.
     $field_name = str_replace('ap_description_text_field', 'ap_crop_ontology_text_field', $element['#name']);
     $field_value = $form['values'][$field_name];
-    if (empty($field_value)) {
-      $error = TRUE;
-      form_set_error($field_name, t('Crop ontology field is empty. Please enter or select crop ontology.'));
-    }
-    else {
+    if (!empty($field_value)) {
       $project_genus = $form['values']['ap_genus_select_field'];
       $exists = analyzedphenotypes_ontologyprop('match_ontology', array(
         'genus' => $project_genus,
