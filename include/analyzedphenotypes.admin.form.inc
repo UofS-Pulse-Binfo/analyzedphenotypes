@@ -949,9 +949,11 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
 
     // Crop ontology.
     $field_name = str_replace('ap_description_text_field', 'ap_crop_ontology_text_field', $element['#name']);
-    $field_value = $form['values'][$field_name];
+    $field_value = $form_state['values'][$field_name];
     if (!empty($field_value)) {
-      $project_genus = $form['values']['ap_genus_select_field'];
+      $project_genus = $form_state['values']['ap_genus_select_field'];
+      dpm($project_genus);
+      dpm($field_value);
       $exists = analyzedphenotypes_ontologyprop('match_ontology', array(
         'genus' => $project_genus,
         'ontology' => $field_value,
@@ -964,6 +966,7 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
     }
 
     // File.
+    // @TODO: this image field should be optinal in any case.
     $field_name = str_replace('ap_description_text_field', 'ap_photo_1', $element['#name']);
     $field_value = $_FILES['files']['name'][$field_name];
     if (empty($field_value)) {
