@@ -416,7 +416,7 @@ function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
       //   .admin.form.inc - analyzedphenotypes_loader_form_describe() : Stage #3 - Describe trait names.
       // Parameters:
       //  $property : suggest.
-      //  $paramter['trait_name'] : trait name.
+      //  $parameter['trait_name'] : trait name.
 
       // To ensure list will not grow longer, limit the result to x.
       $ontologyprop_limitrows = 10;
@@ -467,8 +467,8 @@ function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
       //   .admin.form.inc - analyzedphenotypes_validate_field_required() : hook_validate().
       // Parameters:
       //  $property : match_ontology.
-      //  $paramter['genus'] : project genus.
-      //  $paramter['ontology'] : cv name (ontology).
+      //  $parameter['genus'] : project genus.
+      //  $parameter['ontology'] : cv name (ontology).
 
       // System variables: Genus ontology.
       $sysvars = analyzedphenotypes_systemvariables('genus_vars', array(
@@ -654,7 +654,12 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
       }
 
       $term[$index] = $parameter[$index];
-      $cvterm = tripal_get_cvterm($term);
+      if (function_exists('chado_get_cvterm')) {
+        $cvterm = chado_get_cvterm($term);
+      }
+      else {
+        $cvterm = tripal_get_cvterm($term);
+      }
 
       if ($cvterm) {
         // Term found. Get other info.
@@ -721,7 +726,7 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
 
       // System variable: Genus db.
       $sysvars = analyzedphenotypes_systemvariables('genus_vars', array(
-        'genus' => $paramter['genus'],
+        'genus' => $parameter['genus'],
       ));
 
       $sysvar_genus_db = variable_get($sysvars['db']);

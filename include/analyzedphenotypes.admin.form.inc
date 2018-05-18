@@ -746,6 +746,7 @@ function analyzedphenotypes_loader_form_save($form, &$form_state) {
         $cvterm = analyzedphenotypes_cvprop('insert_cvterm', array(
           'name' => $trait,
           'definition' => $description,
+          'genus' => $project_genus,
         ));
 
         if ($cvterm) {
@@ -759,17 +760,19 @@ function analyzedphenotypes_loader_form_save($form, &$form_state) {
             // Ontology.
             $ontology_value = $form_state['values']['ap_crop_ontology_text_field' . $i];
 
-            $ontologyprop = analyzedphenotypes_cvprop('get_cvterm', array(
-              'name' => $ontology_value,
-              'cv_id' => $sysvar_genus_ontology,
-            ));
-
-            if ($ontologyprop) {
-              // Create relationship.
-              analyzedphenotypes_ontologyprop('map_ontology_trait', array(
-                'ontology_cvterm_id' => $ontologyprop['cvterm_id'],
-                'trait_cvterm_id' => $cvterm_id,
+            if (!empty($ontology_value)) {
+              $ontologyprop = analyzedphenotypes_cvprop('get_cvterm', array(
+                'name' => $ontology_value,
+                'cv_id' => $sysvar_genus_ontology,
               ));
+
+              if ($ontologyprop) {
+                // Create relationship.
+                analyzedphenotypes_ontologyprop('map_ontology_trait', array(
+                  'ontology_cvterm_id' => $ontologyprop['cvterm_id'],
+                  'trait_cvterm_id' => $cvterm_id,
+                ));
+              }
             }
           }
 
@@ -952,8 +955,6 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
     $field_value = $form_state['values'][$field_name];
     if (!empty($field_value)) {
       $project_genus = $form_state['values']['ap_genus_select_field'];
-      dpm($project_genus);
-      dpm($field_value);
       $exists = analyzedphenotypes_ontologyprop('match_ontology', array(
         'genus' => $project_genus,
         'ontology' => $field_value,

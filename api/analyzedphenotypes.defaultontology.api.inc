@@ -152,10 +152,17 @@ function analyzedphenotypes_defaultontologyload() {
     // Each term in a Controlled Vocabulary cv.
     foreach($details['terms'] as $term) {
       // Fetch the term, see if previously added.
-      $t = tripal_get_cvterm(array(
+      $a = array(
         'name' => $term['name'],
         'cv_id' => array('name' => $details['name']),
-      ));
+      );
+
+      if (function_exists('chado_get_cvterm')) {
+        $t = chado_get_cvterm($a);
+      }
+      else {
+        $t = tripal_get_cvterm($a);
+      }
 
       if (!$t) {
         // Term not in chado.cvterm. Insert!
