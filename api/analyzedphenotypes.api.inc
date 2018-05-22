@@ -1996,8 +1996,8 @@ function analyzedphenotypes_mview($property, $parameter = null) {
           LEFT JOIN {project} proj USING(project_id)
           LEFT JOIN {stock} s USING(stock_id)
           LEFT JOIN {organism} o ON o.organism_id=s.organism_id
-          LEFT JOIN {phenotypeprop} loc ON loc.phenotype_id=p.phenotype_id AND loc.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE cvterm_id = %d)
-          LEFT JOIN {phenotypeprop} yr ON yr.phenotype_id=p.phenotype_id AND yr.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE cvterm_id = %d)
+          LEFT JOIN {phenotypeprop} loc ON loc.phenotype_id=p.phenotype_id AND loc.type_id = %d
+          LEFT JOIN {phenotypeprop} yr ON yr.phenotype_id=p.phenotype_id AND yr.type_id = %d
         GROUP BY trait.cvterm_id, trait.name, proj.project_id, proj.name, loc.value, yr.value, s.stock_id, s.name, o.genus
       ", $term_id_location, $term_id_year);
 
