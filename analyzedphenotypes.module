@@ -198,6 +198,7 @@ function analyzedphenotypes_theme($existing, $type, $theme, $path) {
     'template' => 'analyzedphenotypes_pages',
     'render element' => 'form',
     'path' => $path . '/theme',
+  );
 
   // Form table.
   $items['analyzedphenotypes_form_table'] = array(
