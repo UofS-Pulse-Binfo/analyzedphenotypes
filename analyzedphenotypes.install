@@ -211,29 +211,10 @@ function analyzedphenotypes_enable() {
 
 
 /**
- * Implements hook_install().
- */
-function analyzedphenotypes_install() {
-  $vars = analyzedphenotypes_systemvars();
-
-  foreach($vars as $i => $v) {
-    if (is_array($v)) {
-      foreach($v as $j => $k) {
-        variable_set($k, 'not set');
-      }
-    }
-    else {
-      variable_set($v, 'not set');
-    }
-  }
-}
-
-
-/**
  * Implements hook_uninstall().
  */
 function analyzedphenotypes_uninstall() {
-  $vars = analyzedphenotypes_systemvars();
+  $vars = analyzedphenotypes_systemvariables();
 
   foreach($vars as $i => $v) {
     if (is_array($v)) {

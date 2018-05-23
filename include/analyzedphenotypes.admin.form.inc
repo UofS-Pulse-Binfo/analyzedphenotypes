@@ -183,7 +183,7 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
 
   // All genus.
   $arr_all_genus = array(0 => '- Select -');
-  $genusprop = analyzedphenotypes_genusprop();
+  $genusprop = analyzedphenotypes_genusprop('sysvar_genus_set');
 
   foreach($genusprop as $g) {
     $arr_all_genus[$g] = $g;
@@ -415,6 +415,7 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
            // Match cvterm key.
            $similar_cvterm = analyzedphenotypes_cvprop('match_key', array(
              'cvterm_keyword' => $name,
+             'genus' => $project_genus,
            ));
 
            if ($similar_cvterm) {
@@ -539,44 +540,71 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
              );
 
              // Text field: Crop ontology.
+             // When genus ontology set:
+             //   Use the words in the trait name and attempt to match term(s) in the ontology system variable.
+             //   When no terms matched, let user search for terms in all ontology terms.
+             // When genus ontology not set:
+             //  This field should not be available.
+             if (!$disabled) {
+               // When field is enabled. Disabled might mean the field is used to load previously added record.
+               $sysvar_genus = analyzedphenotypes_systemvariables('genus_vars', array(
+                 'genus' => $project_genus,
+               ));
+
+               $sysvar_genus_ontology = variable_get($sysvar_genus['ontology']);
+
+               if ($sysvar_genus_ontology) {
+                 // Attempt suggest term.
+                 $ontology_suggestions = analyzedphenotypes_ontologyprop('suggest', array(
+                   'trait_name' => $traitprop['name'],
+                   'genus' => $project_genus,
+                 ));
+
+                 if ($ontology_suggestions) {
+                   // Found term to suggest.
+                   $a = array();
+
+                   foreach($ontology_suggestions as $k => $term) {
+                     $definition = empty($term['definition']) ? $term['name'] : $term['definition'];
+
+                     $a[] = l($term['name'], '#', array('attributes' => array(
+                       'alt' => $definition,
+                       'title' => $definition,
+                     )));
+                   }
+
+                   $list = theme('item_list', array(
+                     'items' => $a,
+                     'title' => '',
+                     'attributes' => array('id' => 'ap-ontology-suggest-' . $i, 'class' => 'ap-item-list'),
+                   ));
+                 }
+
+                 // Else.
+                 // Nope. Let user find the term but limit within the ontology system variable.
+               }
+               else {
+                 // Disable the field.
+                 $ontology_disable = TRUE;
+               }
+             }
+
              $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_crop_ontology_text_field' . $i] = array(
                '#title' => 'Crop Ontology',
                '#type' => 'textfield',
-               '#disabled' => $disabled,
+               '#disabled' => (isset($ontology_disable)) ? $ontology_disable : $disabled,
                '#default_value' => $traitprop['crop_ontology'],
                '#description' => t('Type in crop ontology or click one from suggestions below.'),
-               '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/ontology/' . $project_genus . ':' . $traitprop['name'],
+               '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/ontology/' . $sysvar_genus_ontology,
                '#attributes' => array('class' => array('ap-crop-ontology', $class)),
                '#id' => drupal_html_id('ap-crop-ontology-text-field' . $i),
              );
 
-             if (!$disabled) {
-               $ontology_suggestions = analyzedphenotypes_ontologyprop('suggest', array(
-                 'trait_name' => $traitprop['name'],
-                 'project_genus' => $project_genus,
-               ));
-
-               if ($ontology_suggestions) {
-                 $a = array();
-                 foreach($ontology_suggestions as $k => $term) {
-                   $definition = empty($term['definition']) ? $term['name'] : $term['definition'];
-
-                   $a[] = l($term['name'], '#', array('attributes' => array(
-                     'alt' => $definition,
-                     'title' => $definition,
-                   )));
-                 }
-
-                 $list = theme('item_list', array(
-                   'items' => $a,
-                   'title' => '',
-                   'attributes' => array('id' => 'ap-ontology-suggest-' . $i, 'class' => 'ap-item-list'),
-                 ));
-
-                 $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_ontology_suggestion_markup_field' . $i] = array(
-                   '#markup' => $list,
-                 );
-               }
+             // Suggest ontology.
+             if (isset($list) && !$disabled) {
+               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_ontology_suggestion_markup_field' . $i] = array(
+                 '#markup' => $list,
+               );
              }
 
              // Field group title:
@@ -611,6 +639,7 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
                      '#type' => 'file',
                      '#title' => t('Image ' . $g . ' of 2'),
                      '#name' => 'files[' . $seq . $i . ']',
+                     '#description' => t('JPG file type only.'),
                      '#attributes' => ($g == 1) ? array('class' => array('ap-required')) : array(),
                      '#id' => 'ap-photo-'. $g .'-file-field' . $i,
                    );
@@ -696,9 +725,13 @@ function analyzedphenotypes_loader_form_save($form, &$form_state) {
     $project_genus = $form_state['values']['ap_genus_select_field'];
     $data_file = $form_state['values']['ap_file_fid_field'];
 
-    $vars = analyzedphenotypes_systemvars('genus_ontology');
-    $var_name = 'ap_' . strtolower(str_replace(' ', '_', $project_genus));
-    $cv_id = variable_get($vars[$var_name]['var']);
+    // System variables: Genus ontology.
+    $sysvars = analyzedphenotypes_systemvariables('genus_vars', array(
+      'genus' => $project_genus,
+    ));
+
+    $sysvar_genus_ontology = variable_get($sysvars['ontology']);
+    unset($sysvars);
 
     foreach($traits as $i => $trait) {
       // Check the select similar trait value.
@@ -713,27 +746,34 @@ function analyzedphenotypes_loader_form_save($form, &$form_state) {
         $cvterm = analyzedphenotypes_cvprop('insert_cvterm', array(
           'name' => $trait,
           'definition' => $description,
+          'genus' => $project_genus,
         ));
 
         if ($cvterm) {
           $cvterm_id = $cvterm;
 
-          // Unit.
-          // Scale.
-          // Ontology.
-          $ontology_value = $form_state['values']['ap_crop_ontology_text_field' . $i];
+          if ($sysvar_genus_ontology > 0) {
+            // Create plant ontology relationship only when genus ontology (on)
+            // is set in congiguration file.
+            // Unit.
+            // Scale.
+            // Ontology.
+            $ontology_value = $form_state['values']['ap_crop_ontology_text_field' . $i];
 
-          $ontologyprop = analyzedphenotypes_cvprop('get_cvterm', array(
-            'name' => $ontology_value,
-            'cv_id' => $cv_id,
-          ));
+            if (!empty($ontology_value)) {
+              $ontologyprop = analyzedphenotypes_cvprop('get_cvterm', array(
+                'name' => $ontology_value,
+                'cv_id' => $sysvar_genus_ontology,
+              ));
 
-          if ($ontologyprop) {
-            // Create relationship.
-            analyzedphenotypes_ontologyprop('map_ontology_trait', array(
-              'ontology_cvterm_id' => $ontologyprop['cvterm_id'],
-              'trait_cvterm_id' => $cvterm_id,
-            ));
+              if ($ontologyprop) {
+                // Create relationship.
+                analyzedphenotypes_ontologyprop('map_ontology_trait', array(
+                  'ontology_cvterm_id' => $ontologyprop['cvterm_id'],
+                  'trait_cvterm_id' => $cvterm_id,
+                ));
+              }
+            }
           }
 
           // Photo.
@@ -912,15 +952,11 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
 
     // Crop ontology.
     $field_name = str_replace('ap_description_text_field', 'ap_crop_ontology_text_field', $element['#name']);
-    $field_value = $form['values'][$field_name];
-    if (empty($field_value)) {
-      $error = TRUE;
-      form_set_error($field_name, t('Crop ontology field is empty. Please enter or select crop ontology.'));
-    }
-    else {
-      $project_genus = $form['values']['ap_genus_select_field'];
+    $field_value = $form_state['values'][$field_name];
+    if (!empty($field_value)) {
+      $project_genus = $form_state['values']['ap_genus_select_field'];
       $exists = analyzedphenotypes_ontologyprop('match_ontology', array(
-        'project_genus' => $project_genus,
+        'genus' => $project_genus,
         'ontology' => $field_value,
       ));
 
@@ -931,6 +967,7 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
     }
 
     // File.
+    // @TODO: this image field should be optinal in any case.
     $field_name = str_replace('ap_description_text_field', 'ap_photo_1', $element['#name']);
     $field_value = $_FILES['files']['name'][$field_name];
     if (empty($field_value)) {
@@ -1114,6 +1151,7 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
     return $c['name'];
   }, $cvs);
 
+  $field_default = 0;
   // Fetch all Database.
   $dbs = analyzedphenotypes_dbprop();
   $db_options = array_map(function($d) {
@@ -1457,8 +1495,41 @@ function system_settings_form_config_submit($form, &$form_state) {
 
         variable_set($v, $fld_value_id);
       }
+
+      analyzedphenotypes_updatemview();
     }
   }
 
   drupal_set_message('Configuration saved.', 'status');
+}
+
+
+/**
+ * FUNCTION CALLBACK
+ * Update materialized view used in Phenotype Visualizer.
+ */
+function analyzedphenotypes_updatemview() {
+  // Update materialized views to use the terms location and year selected in this form.
+  $mview_phenotype = 'mview_phenotype';
+  $mview_id = tripal_get_mview_id($mview_phenotype);
+
+  if ($mview_id) {
+    $sysvars = analyzedphenotypes_systemvariables('terms');
+
+    $sysvar_location = variable_get($sysvars['ap_location']);
+    $sysvar_year = variable_get($sysvars['ap_year']);
+
+    $update_mview = analyzedphenotypes_mview('view_phenotypes', array(
+      'term_id_location' => $sysvar_location,
+      'term_id_year' => $sysvar_year,
+    ));
+
+    // This works but it deletes the schema and brakes the view.
+    // tripal_edit_mview($mview_id, $mview_phenotype, 'analyzedphenotypes', '', '', 0, $update_mview['query'], '');
+
+    chado_query("UPDATE tripal_mviews SET query = :mview_query WHERE mview_id = :mview_id", array(
+      ':mview_query' => $update_mview['query'],
+      ':mview_id' => $mview_id,
+    ));
+  }
 }

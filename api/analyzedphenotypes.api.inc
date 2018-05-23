@@ -14,15 +14,15 @@
  * @param String $property
  *   A value representing a property/operation requested (each property represents a case in the switch implementation):
  *   Default to null.
- *   - match_key  : fetch all project records that matches a keyword.
- *   - match_name : fetch project record that matches a project name.
- *   - match_id   : fetch project record that matches a project id.
- *   - default    : fetch all project records.
+ *   - match_key  : Fetch all project records that match a keyword.
+ *   - match_name : Fetch project record that matches a project name.
+ *   - match_id   : Fetch project record that matches a project id.
+ *   - default    : Fetch all project records.
  * @param Array $parameter
  *   An associtive array that forms as arguments to an operation.
  *   Default to null. Array keys:
- *   - project_keyword
- *   - project_name
+ *   - project_keyword : keywords that form project title or name.
+ *   - project_name    : project title or name.
  *
  * @return Array $projectprop
  *   An associative array where the key is project_id and value is project_name;
@@ -40,13 +40,21 @@ function analyzedphenotypes_projectprop($property = null, $parameter = null) {
   );
 
   if ($result->rowCount() <= 0) {
+    // 0 project in the system.
     return $projectprop;
   }
+
 
   switch($property) {
     //
     case 'match_key':
-      $keyword = trim($parameter['project_keyword']);
+      // Fetch all records in chado.project that match a keyword.
+      // In:
+      //   .module - analyzedphenotypes_data_json() : create project list in JSON.
+      // Parameters:
+      //   $property : match_key.
+      //   $parameter['project_keyword'] : a string, keyword entered.
+
       // To ensure list will not grow longer, limit the result to x.
       $projectprop_limitrows = 10;
 
@@ -55,10 +63,10 @@ function analyzedphenotypes_projectprop($property = null, $parameter = null) {
           break;
         }
 
-        $project_name = $project->name;
-
-        if (stripos($project_name, $keyword) !== FALSE) {
-          $projectprop[$project->project_id] = $project_name;
+        if (stripos($project->name, trim($parameter['project_keyword'])) !== FALSE) {
+          // Match found.
+          // Project has the keyword, save it.
+          $projectprop[$project->project_id] = $project->name;
         }
       }
 
@@ -66,15 +74,20 @@ function analyzedphenotypes_projectprop($property = null, $parameter = null) {
 
     //
     case 'match_name':
-      $name = trim($parameter['project_name']);
+      // Fetch record in chado.project that matches experiment name or title.
+      // In:
+      //   .admin.form.inc - analyzedphenotypes_loader_form_save() : Stage #4 - Save Data.
+      //   .validators.inc - analyzedphenotypes_validator_project() : Validate project exists.
+      // Parameters:
+      //   $property : match_name.
+      //   $parameter['project_name'] : a string, project name or title.
 
       foreach($result as $project) {
-        $project_name = $project->name;
-
-        if (strtolower($project_name) == strtolower($name)) {
+        if (strtolower($project->name) == strtolower(trim($parameter['project_name']))) {
+          // Match found.
           $projectprop = array(
             'project_id' => $project->project_id,
-            'project_name' => $project_name,
+            'project_name' => $project->name,
           );
 
           break;
@@ -85,15 +98,19 @@ function analyzedphenotypes_projectprop($property = null, $parameter = null) {
 
     //
     case 'match_id':
-      $id = trim($parameter['project_id']);
+      // Fetch record in chado.project that matches experiment name or title.
+      // In:
+      //
+      // Parameters:
+      //   $property : match_id.
+      //   $parameter['project_id'] : integer, project id number.
 
       foreach($result as $project) {
-        $project_id = $project->project_id;
-
-        if ($project_id == $id) {
+        if ($project->project_id == trim($parameter['project_id'])) {
+          // Match found
           $projectprop = array(
             'project_id' => $project->project_id,
-            'project_name' => $project_name,
+            'project_name' => $project->name,
           );
 
           break;
@@ -107,7 +124,13 @@ function analyzedphenotypes_projectprop($property = null, $parameter = null) {
 
     //
     default:
-      $projectprop = $result->fetchAllKeyed(0, 1);
+      // Fetch all project records in chado.project table.
+      // In:
+      //
+      // Parameters:
+      //   $property : null.
+      //   $parameter : null.
+      $projectprop = $result->fetchAllKeyed();
   }
 
 
@@ -119,7 +142,7 @@ function analyzedphenotypes_projectprop($property = null, $parameter = null) {
  * API: GENUS PROPERTY
  * Manage property and operation pertaining to Genus in chado.organism.
  * Default to: return all genus as an array.
- * Dependencies: analyzedphenotypes_systemvars().
+ * Dependencies: analyzedphenotypes_systemvariables().
  *
  * @param String $property
  *   A value representing a property/operation requested (each property represents a case in the switch implementation):
@@ -130,8 +153,9 @@ function analyzedphenotypes_projectprop($property = null, $parameter = null) {
  * @param Array $parameter
  *   An associtive array that forms as arguments to an operation.
  *   Default to null. Array keys:
- *   - project_id
- *   - project_name
+ *   - project_id     : project id number
+ *   - project_name   : project title or name.
+ *   - project_genus  : genus associated to a project.
  *
  * @return $genusprop
  *   Genus as string or list of genus as an array.
@@ -143,12 +167,22 @@ function analyzedphenotypes_projectprop($property = null, $parameter = null) {
 function analyzedphenotypes_genusprop($property = null, $parameter = null) {
   $genusprop = null;
 
+
   switch($property) {
     //
     case 'project_genus':
-      $vars = analyzedphenotypes_systemvars('db_cv');
-      $var_genus = $vars['ap_genus'];
-      $var_genus_value = variable_get($var_genus);
+      // Fetch associated genus of a project.
+      // In:
+      //   .admin.form.inc - analyzedphenotypes_loader_form_upload() : Stage #1 - Select file and upload file.
+      // Parameters:
+      //  $property : project_genus.
+      //  $parameter['project_id'] : project id number.
+      //  $parameter['project_name'] : project name or title.
+
+      // System variable: genus.
+      $sysvars = analyzedphenotypes_systemvariables('terms');
+      $sysvar_genus = variable_get($sysvars['ap_genus']);
+      unset($sysvars);
 
       if (isset($parameter['project_id'])) {
         $field = 't1.project_id';
@@ -160,12 +194,14 @@ function analyzedphenotypes_genusprop($property = null, $parameter = null) {
       }
 
       // Fetch projectprop.value of type (type_id) Genus for a project id or project name.
-      $sql = sprintf("SELECT t2.value FROM {project} AS t1 INNER JOIN {projectprop} AS t2 USING (project_id)
-      WHERE t2.type_id = :type_id AND %s = :value LIMIT 1", $field);
+      $sql = sprintf(
+        "SELECT t2.value FROM {project} AS t1 INNER JOIN {projectprop} AS t2 USING (project_id)
+        WHERE t2.type_id = :type_id AND %s = :value LIMIT 1", $field
+      );
 
       $result = chado_query($sql,
         array(
-          ':type_id' => $var_genus_value,
+          ':type_id' => $sysvar_genus,
           ':value' => $parameter[$value],
         )
       );
@@ -174,18 +210,66 @@ function analyzedphenotypes_genusprop($property = null, $parameter = null) {
 
       break;
 
+    //
     case 'assign_genus':
-      $vars = analyzedphenotypes_systemvars('db_cv');
-      $var_genus = $vars['ap_genus'];
-      $var_genus_value = variable_get($var_genus);
+      // Assign a genus to project.
+      // In:
+      //   .admin.form.inc - analyzedphenotypes_loader_form_save() : Stage #4 - Save data.
+      // Parameters:
+      //  $property : assign_genus.
+      //  $parameter['project_id'] : project id number.
+      //  $parameter['project_genus'] : genus selected.
+
+      // System variable: genus.
+      $sysvars = analyzedphenotypes_systemvariables('terms');
+      $sysvar_genus = variable_get($sysvars['ap_genus']);
+      unset($sysvars);
 
       $values = array(
-        'type_id' => $var_genus_value,
         'project_id' => $parameter['project_id'],
+        'type_id' => $sysvar_genus,
         'value' => $parameter['project_genus'],
       );
 
       chado_insert_record('projectprop', $values);
+
+      break;
+
+    //
+    case 'sysvar_genus_set':
+      // Fetch all genus with controlled vocabulary (cv) and database (db) configuration
+      // variables set. This will limit genus suggested in select genus field to only
+      // genus properly configured.
+      // In:
+      //   .admin.form.inc -analyzedphenotypes_loader_form_upload() : Stage #1 - Select project and upload file.
+      // Parameters:
+      //  $property : sysvar_genus_set.
+      //  $parameter : null.
+
+      // System variable: Genus cv, db and ontology.
+      $sysvars = analyzedphenotypes_systemvariables('cvdbon');
+
+      $result = chado_query(
+        "SELECT LOWER(genus) FROM {organism} GROUP BY genus ORDER BY genus ASC"
+      )
+      ->fetchCol();
+
+      $genus_set = array();
+
+      foreach($result as $g) {
+        $sysvar_key = 'ap_' . str_replace(' ', '_', $g);
+
+        // Genus cv and db settings.
+        $sysvar_genus_cv = variable_get($sysvars[$sysvar_key]['cv']);
+        $sysvar_genus_db = variable_get($sysvars[$sysvar_key]['db']);
+
+        if ($sysvar_genus_cv > 0 && $sysvar_genus_db > 0) {
+          // Save those with cv and db set.
+          $genus_set[] = ucfirst($g);
+        }
+      }
+
+      $genusprop = (count($genus_set)) ? $genus_set : 0;
 
       break;
 
@@ -195,6 +279,12 @@ function analyzedphenotypes_genusprop($property = null, $parameter = null) {
     //
     default:
       // Fetch all unique genus in chado.organism table.
+      // In:
+      //
+      // Parameters:
+      //  $property : null.
+      //  $parameter : null.
+
       $result = chado_query(
         "SELECT genus FROM {organism} GROUP BY genus ORDER BY genus ASC"
       );
@@ -233,7 +323,13 @@ function analyzedphenotypes_stockprop($property, $parameter = null) {
   switch($property) {
     //
     case 'match_name':
-      // Match a given stock/germplasm name and accession.
+      // Match a stock/germplasm given name and accession combination.
+      // In:
+      //   .validators.inc - analyzedphenotypes_validator_value() : validate data cell value.
+      // Parameters:
+      //  $property : match_name.
+      //  $parameter['name'] : stock name.
+      //  $parameter['uniquename'] : stock unique name.
       $result = chado_query(
         "SELECT stock_id FROM {stock} WHERE name = :name AND uniquename = :uniquename LIMIT 1",
         array(
@@ -258,78 +354,556 @@ function analyzedphenotypes_stockprop($property, $parameter = null) {
 
 
 /**
- * API: USER DATA FILE
- * Manage property and operation pertaining to user data file (tsv or txt).
- * Default to: Return valid file extensions.
- * Dependencies:
+ * API: ONTOLOGY PROPERTY
+ * Manage property and operation pertaining to ontology.
+ * Default to:
+ * Dependencies: analyzedphenotypes_systemvariables().
  *
  * @param String $property
  *   A value representing a property/operation requested (each property represents a case in the switch implementation):
  *   Default to null.
- *   - get_contents : Get the tab-delimeted contents of file.
- *   - get_columns  : Return row # 0 or the columns row of file.
- *   - default      : Valid file extensions.
+ *   - map_ontology_trait : Map the ontology to trait in describe trait form (stage 3).
+ *   - suggest            : Suggest ontology in ontology field in describe trait form (stage 3) based on project genus and keywords in the trait.
  * @param Array $parameter
  *   An associtive array that forms as arguments to an operation.
  *   Default to null. Array keys:
- *   - data_file
+ *   - ontology_cvterm_id : Cvterm id number as ontology term.
+ *   - trait_cvterm_id    : Cvterm id number as trait term.
+ *   - project_genus      : Project genus.
+ *   - trait_name         : Human-readable trait name.
+ *   - ontology           : Ontology/cvterm name.
+ *   - genus              : Project genus.
  *
- * @return $datafileprop
- *   Contents fo file as Text stream or Array of file extensions/columns.
+ * @return Array $ontologyprop
+ *   Array of ontology properties.
  *
- * @see analyzedphenotypes_dragdrop() in admin.form.inc.
  * @see analyzedphenotypes_loader_form_describe() in admin.form.inc.
- * @see analyzedphenotypes_validator_datafile() in validators.inc.
- * @see analyzedphenotypes_validator_tsv_data() in validators.inc.
  */
-function analyzedphenotypes_datafileprop($property = null, $parameter = null) {
-  $datafileprop = null;
+function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
+  $ontologyprop = null;
+
 
   switch($property) {
     //
-    case 'get_contents':
-      $data_file = $parameter['data_file'];
+    case 'map_ontology_trait':
+      // Relate a trait to an ontology in cvterm_relationship table.
+      // In:
+      //   .admin.form.inc - analyzedphenotypes_loader_form_save() : Stage #4 - Save data.
+      // Parameters:
+      //  $property : map_ontology_trait.
+      //  $parameter['trait_cvterm_id'] : trait cvterm_id from chado.cvterm.
+      //  $parameter['ontology_cvterm_id'] : ontology term cvterm_id.
 
-      $source = drupal_realpath($data_file->uri);
-      $datafile_contents = file_get_contents($source);
+      // System variables: related.
+      $sysvars = analyzedphenotypes_systemvariables('terms');
+      $sysvar_related = variable_get($sysvars['ap_related']);
+      unset($sysvars);
 
-      if ($datafile_contents) {
-        $datafileprop = $datafile_contents;
-      }
+      $values = array(
+        'type_id' => $sysvar_related,
+        'object_id' => $parameter['trait_cvterm_id'],
+        'subject_id' => $parameter['ontology_cvterm_id'],
+      );
+
+      chado_insert_record('cvterm_relationship', $values);
 
       break;
 
     //
-    case 'get_columns':
-      $data_file = $parameter['data_file'];
+    case 'suggest':
+      // Suggest ontology terms that relates to a trait name (using words in the trait as keywords).
+      // In:
+      //   .admin.form.inc - analyzedphenotypes_loader_form_describe() : Stage #3 - Describe trait names.
+      // Parameters:
+      //  $property : suggest.
+      //  $parameter['trait_name'] : trait name.
 
-      $source = drupal_realpath($data_file->uri);
-      $datafile_contents = file_get_contents($source);
+      // To ensure list will not grow longer, limit the result to x.
+      $ontologyprop_limitrows = 10;
 
-      if ($datafile_contents) {
-        $rows = explode("\n", $datafile_contents);
-        $columns_row = $rows[0];
-        unset($rows);
+      // System variables: Genus ontology.
+      $sysvars = analyzedphenotypes_systemvariables('genus_vars', array(
+        'genus' => $parameter['genus'],
+      ));
 
-        if (!empty($columns_row)) {
-          $datafileprop = str_getcsv($columns_row, "\t");
+      $sysvar_genus_ontology = variable_get($sysvars['ontology']);
+      unset($sysvars);
+
+      if ($sysvar_genus_ontology) {
+        // The trait. No unit pls.
+        $trait_name = strtolower(trim($parameter['trait_name']));
+
+        $ontology_terms = analyzedphenotypes_cvprop('terms_in_cv', array(
+          'cv_id' => $sysvar_genus_ontology,
+        ));
+
+        $ctr = 0;
+        foreach($ontology_terms as $i => $term) {
+          // Use each word in the trait name as keyword to search for ontology terms.
+          $ontology = strtolower(trim($term['name']));
+          $keywords = explode(' ', $ontology);
+
+          foreach($keywords as $key) {
+            if ($ctr >= $ontologyprop_limitrows) {
+              break;
+            }
+            else {
+              if (strlen($key) > 2 && stristr($trait_name, $key)) {
+                $ontologyprop[$i] = $term;
+
+                $ctr++;
+              }
+            }
+          }
         }
       }
 
       break;
 
-    case 'make_permanent':
-      $data_file = $parameter['data_file'];
+    //
+    case 'match_ontology':
+      // Fetch ontology information from chado.cvterm.
+      // In:
+      //   .admin.form.inc - analyzedphenotypes_validate_field_required() : hook_validate().
+      // Parameters:
+      //  $property : match_ontology.
+      //  $parameter['genus'] : project genus.
+      //  $parameter['ontology'] : cv name (ontology).
 
-      if ($data_file) {
-        $data_file->status = FILE_STATUS_PERMANENT;
-        file_save($data_file);
+      // System variables: Genus ontology.
+      $sysvars = analyzedphenotypes_systemvariables('genus_vars', array(
+        'genus' => $parameter['genus'],
+      ));
+      $sysvar_genus_ontology = variable_get($sysvars['ontology']);
+      unset($sysvars);
 
-        // Also, point out that we are using it ;-)
-        // Note, the file_usage_add() function expects a numerical unique id which we don't have.
-        // We have gotten around this by using the uid concatenated with the timestamp using
-        // the assumption that a single user cannot upload more than one phenotype file within a second.
-        file_usage_add($data_file, 'analyzedphenotypes', 'analyzedphenotypes-file', $data_file->uid . $data_file->timestamp);
+      $cvtermprop = analyzedphenotypes_cvprop('get_cvterm', array(
+        'name' => $parameter['ontology'],
+        'cv_id' => $sysvar_genus_ontology,
+      ));
+
+      if ($cvtermprop) {
+        $ontologyprop[$cvtermprop['cvterm_id']] = $cvtermprop['name'];
+      }
+
+      break;
+
+    //
+    // Define additional case here.
+
+    // Default:
+  }
+
+
+  return $ontologyprop;
+}
+
+
+/**
+ * API: CONTROLLED VOCABULARIES
+ * Manage property and operation pertaining to controlled vocabularies in chado.cv and chado.cvterm.
+ * Default to: Return all controlled vocabularies in chado.cv.
+ * Dependencies: analyzedphenotypes_systemvariables(), analyzedphenotypes_scale_photo(), analyzedphenotypes_dbprop().
+ *
+ * @param String $property
+ *   A value representing a property/operation requested (each property represents a case in the switch implementation):
+ *   - match_key         : Match a record in chado.cvterm given a keyword.
+ *   - match_cvid        : Match a record in chado.cv given a cv_id.
+ *   - terms_in_cv       : Fetch all records in chado.cvterm given a cv_id.
+ *   - get_cvterm        : Fetch records in chado.cvterm, chado.dbxref and chado.cvterm_relationship (term properties) given a trait.
+ *   - insert_cvterm     : Insert a record into chado.cvterm.
+ *   - cvterm_save_photo : Handle saving of photo to a trait/cvterm.
+ *   - cvterm_get_photo  : Get photo information.
+ *   - suggest_term      : Suggest cvterm name with the cv name it is in.
+ *   - term_cv           : Given a string containing cvterm name and cv name (eg. Genus (taxonomic_rank)) in fields, return the cvterm id.
+ *   - term_id           : Given a cvterm id number return a string value containing the cvterm name and cv name in cvterm name (cv name) format.
+ *   - default           : All records in chado.cv.
+ * @param Array $parameter
+ *   An associtive array that forms as arguments to an operation.
+ *   Default to null. Array keys:
+ *   - cvterm_keyword
+ *   - cv_id
+ *   - cvterm_id
+ *   - name
+ *   - photo
+ *   - term_cv
+ *   - project_genus
+ *
+ * @return $cvprop
+ *   Array of term properties.
+ *
+ * @see analyzedphenotypes_validator_value() in validators.inc.
+ */
+function analyzedphenotypes_cvprop($property = null, $parameter = null) {
+  $cvprop = null;
+
+  switch($property) {
+    //
+    case 'match_key':
+      // Fetch terms that match keywords.
+      // In:
+      //   .admin.form.inc - analyzedphenotypes_loader_form_describe() : Stage #3 - Describe trait.
+      // Parameters:
+      //  $property : match_key.
+      //  $parameter['cvterm_keyword'] : string, cvterm name keyword.
+
+      // System variables: Genus cv.
+      $sysvars = analyzedphenotypes_systemvariables('genus_vars', array(
+        'genus' => $parameter['genus'],
+      ));
+      $sysvar_genus_cv = variable_get($sysvars['cv']);
+      unset($sysvars);
+
+      // Find a cvterm that matches a keyword.
+      $result = chado_query(
+        "SELECT cvterm_id, name FROM {cvterm} WHERE cv_id = :cv_id AND LOWER(name) LIKE :cvterm_key ORDER BY name ASC",
+        array(
+          'cv_id' => $sysvar_genus_cv,
+          'cvterm_key' => '%' . strtolower(trim($parameter['cvterm_keyword'])) . '%',
+        )
+      );
+
+      if ($result->rowCount() > 0) {
+        $cvprop = $result->fetchAllKeyed();
+      }
+
+      break;
+
+    //
+    case 'match_cvid':
+      // Match cv term given an cv id number from chado.cv table.
+      // In:
+      //
+      // Parameters:
+      //  $property : match_cvid.
+      //  $parameter['cv_id'] : controlled vocabulary id number.
+
+      $cv = tripal_get_cv(array(
+        'cv_id' => $parameter['cv_id'],
+      ));
+
+      if ($cv) {
+        $cvprop = array(
+          'cv_id' => $cv->cv_id,
+          'name' => $cv->name,
+          'definition' => $cv->definition,
+        );
+      }
+
+      break;
+
+    //
+    case 'terms_in_cv':
+      // Fetch all cvterms in a controlled vocabulary (cv).
+      // In:
+      //   .module - analyzedphenotypes_data_json() : Create list of terms in JSON format.
+      // Parameters:
+      //  $property : term_in_cv.
+      //  $parameter['cv_id'] : controlled vocabulary id number.
+
+      $terms = chado_query(
+        "SELECT cvterm_id, name, definition FROM {cvterm} WHERE cv_id = :cv_id ORDER BY name ASC",
+        array(':cv_id' => $parameter['cv_id'])
+      );
+
+      if ($terms->rowCount() > 0) {
+        foreach($terms as $term) {
+          $cvprop[$term->cvterm_id] = array(
+            'name' => $term->name,
+            'definition' => $term->definition,
+          );
+        }
+      }
+
+      break;
+
+    //
+    case 'get_cvterm':
+      // Fetch a term given a cvterm id number.
+      // In:
+      //
+      // Parameters:
+      //  $property : get_cvterm.
+      //  $parameter['genus'] : project genus.
+      //  $parameter['cv_id'] : controlled vocabulary id number.
+
+      $term = array();
+
+      if (isset($parameter['cvterm_id'])) {
+        // Global serach.
+        $index = 'cvterm_id';
+      }
+      else {
+        // Term in controlled vocabulary.
+        if (isset($parameter['cv_id'])) {
+          $term['cv_id'] = $parameter['cv_id'];
+        }
+        else {
+          // System variables: Genus cv.
+          $sysvars = analyzedphenotypes_systemvariables('genus_vars', array(
+            'genus' => $parameter['genus'],
+          ));
+
+          $sysvar_genus_cv = variable_get($sysvars['cv']);
+          unset($sysvars);
+
+          $term['cv_id'] = $sysvar_genus_cv;
+        }
+
+        $index = 'name';
+      }
+
+      $term[$index] = $parameter[$index];
+      if (function_exists('chado_get_cvterm')) {
+        $cvterm = chado_get_cvterm($term);
+      }
+      else {
+        $cvterm = tripal_get_cvterm($term);
+      }
+
+      if ($cvterm) {
+        // Term found. Get other info.
+        $cvprop = array(
+          'cvterm_id'  => $cvterm->cvterm_id,
+          'dbxref_id'  => $cvterm->dbxref_id,
+          // An object.
+          'cv_id'      => $cvterm->cv_id->cv_id,
+          'cv_name'    => $cvterm->cv_id->name,
+          'name'       => $cvterm->name,
+          'definition' => $cvterm->definition,
+          'photo_1'    => $cvterm->cvterm_id . '_1.jpg',
+          'photo_2'    => $cvterm->cvterm_id . '_2.jpg',
+        );
+
+        // Databse.
+        $result = chado_query(
+          "SELECT db_id FROM {dbxref} WHERE dbxref_id = :dbxref_id LIMIT 1",
+          array(':dbxref_id' => $cvprop['dbxref_id'])
+        );
+
+        if ($result->rowCount() == 1) {
+          $db_id = $result->fetchField();
+          $cvprop['db_id'] = $db_id;
+        }
+        else {
+          $cvprop['db_id'] = null;
+        }
+
+        // Crop ontology.
+        unset($result);
+        // System variables: related.
+        $sysvars = analyzedphenotypes_systemvariables('terms');
+        $sysvar_related = variable_get($sysvars['ap_related']);
+        unset($sysvars);
+
+        // Fetch crop ontology of trait in chado.cvterm_relationship.
+        $result = chado_query(
+          "SELECT name FROM {cvterm} WHERE cvterm_id = (SELECT subject_id FROM {cvterm_relationship} WHERE type_id = :related AND object_id = :cvterm_id LIMIT 1)",
+          array(
+            ':related' => $sysvar_related,
+            ':cvterm_id' => $cvprop['cvterm_id'],
+          )
+        );
+
+        $cvprop['crop_ontology'] = ($result->rowCount() == 1) ? $result->fetchField() : null;
+
+        // Scale.
+        $cvprop['scale'] = null;
+      }
+
+      break;
+
+    //
+    case 'insert_cvterm':
+      // Insert/add controlled vocabulary term.
+      // In:
+      //   admin.form.inc - analyzedphenotypes_loader_fom_save() : Stage #4 - Save data.
+      // Parameters:
+      //  $property : insert_cvterm.
+      //  $parameter['genus'] : project genus.
+      //  $parameter['name'] : cvterm term name/title.
+      //  $parameter['definition'] : cvterm name definition.
+
+      // System variable: Genus db.
+      $sysvars = analyzedphenotypes_systemvariables('genus_vars', array(
+        'genus' => $parameter['genus'],
+      ));
+
+      $sysvar_genus_db = variable_get($sysvars['db']);
+      $dbprop = analyzedphenotypes_dbprop('match_db', array(
+        'db_id' => $sysvar_genus_db,
+      ));
+      $db_name = $dbprop['name'];
+
+      // System variable: Genus cv.
+      $sysvar_genus_cv = variable_get($sysvars['cv']);
+      $cvprop = analyzedphenotypes_cvprop('match_cvid', array(
+        'cv_id' => $sysvar_genus_cv,
+      ));
+      $cv_name = $cvprop['name'];
+
+      $cvterm = tripal_insert_cvterm(array(
+        'id' => trim($db_name) . ':' . $parameter['name'],
+        'name' => $parameter['name'],
+        'cv_name'  => $cv_name,
+        'definition' => $parameter['definition'],
+      ));
+
+      if ($cvterm) {
+        $cvprop = $cvterm->cvterm_id;
+      }
+
+      break;
+
+    //
+    case 'cvterm_save_photo':
+      // Save photo/image of controlled vocabulary term.
+      // In:
+      //   .admin.form.inc - analyzedphenotypes_loader_form_save() : Stage #4 - Save data.
+      // Parameters:
+      //  $property : cvterm_save_photo.
+      //  $parameter['cvterm_id'] : controlled vocabulary cvterm id number.
+
+      $cvterm_id = $parameter['cvterm_id'];
+
+      foreach($parameter['photo'] as $i => $photo) {
+        $tmp_file = file_save_upload($photo, array(), FALSE, FILE_EXISTS_REPLACE);
+
+        if ($tmp_file) {
+          $file_obj = file_load($tmp_file->fid);
+
+          $source_file = drupal_realpath($file_obj->uri);
+          $info = image_get_info($source_file);
+
+          $scale = analyzedphenotypes_scale_photo(array(
+            'height' => $info['height'],
+            'width' => $info['width'],
+            'scale_to' => 400,
+          ));
+
+          $photo_dir = 'public://ap-photo';
+          file_prepare_directory($photo_dir, FILE_CREATE_DIRECTORY);
+
+          $new_image = imagecreatetruecolor($scale['width'], $scale['height']);
+          $img_file  = imagecreatefromjpeg($source_file);
+          imagecopyresampled($new_image, $img_file, 0, 0, 0, 0, $scale['width'], $scale['height'], $info['width'], $info['height']);
+
+          $new_filename = $cvterm_id . '_' . ($i + 1) . '.jpg';
+          imagejpeg($new_image, drupal_realpath('public://ap-photo') . '/' . $new_filename, 100);
+
+          imagedestroy($img_file);
+          imagedestroy($new_image);
+
+          $tmp_file->filename = $new_filename;
+          $tmp_file->uri = 'public://ap-photo/' . $new_filename;
+          $tmp_file->status = FILE_STATUS_PERMANENT;
+          file_save($tmp_file);
+          file_usage_add($tmp_file, 'analyzedphenotypes', 'file', 1);
+        }
+      }
+
+      break;
+
+    //
+    case 'cvterm_get_photo':
+      // Get photo saved for a controlled vocabulary term.
+      // In:
+      //   .admin.form.inc - analyzedphenotypes_loader_form_describe() : Stage #3 - Describe trait.
+      // Parameters:
+      //  $property : cvterm_get_photo.
+      //  $parameter['cvterm_id'] : controlled vocabulary term.
+
+      $photo = array('ap_photo_1', 'ap_photo_2');
+
+      foreach($photo as $i => $v) {
+        $filename = $parameter['cvterm_id'] . '_' . ($i + 1) . '.jpg';
+        $filedir = 'public://ap-photo';
+
+        $fileuri = drupal_realpath($filedir) . '/' . $filename;
+
+        if (file_exists($fileuri)) {
+          $info = image_get_info($fileuri);
+
+          $cvprop[$v] = array(
+            'filename' => $filename,
+            'uri' => $filedir . '/' . $filename,
+            'height' => $info['height'],
+            'width' => $info['width'],
+          );
+        }
+        else {
+          $cvprop[$v] = null;
+        }
+      }
+
+      break;
+
+    //
+    case 'suggest_term':
+      // Suggest a cvterm in cvterm term name (cv name) format.
+      // In:
+      //   .module - analyzedphenotypes_data_json()
+      // Parameters:
+      //  $property : suggest_term.
+      //  $parameter['keyword'] : string, keyword.
+
+      $result = chado_query(
+        "SELECT TRIM(t2.name), TRIM(t1.name) AS cv_name FROM {cv} AS t1 INNER JOIN {cvterm} AS t2 USING (cv_id)
+        WHERE LOWER(t2.name) LIKE LOWER(:keyword) ORDER BY t1.name LIMIT 20",
+        array(
+          ':keyword' => '%' . $parameter['keyword'] . '%',
+        )
+      );
+
+      if ($result->rowCount() > 0) {
+        $cvprop = $result->fetchAllKeyed();
+      }
+
+      break;
+
+    //
+    case 'term_cv':
+      // Fetch cvterm_id of controlled vocabulary term in cvterm name (cv name) format.
+      // In:
+      //   .admin.form.inc - system_settings_form_validate() : check to see if term exists.
+      //   .admin.form.inc - system_settings_form_config_submit() : fetch cvterm id of cvterm name.
+      // Parameters:
+      //  $property : term_cv.
+      //  $parameter['term_cv'] : term name in term name (cv name) format.
+
+      $result = chado_query(
+        "SELECT cvterm_id FROM {cvterm} AS t1 INNER JOIN {cv} AS t2 USING(cv_id)
+        WHERE CONCAT(t1.name, ' (' , t2.name , ')') = :term_cv LIMIT 1",
+        array(
+          ':term_cv' => $parameter['term_cv']
+        )
+      );
+
+      if ($result->rowCount() > 0) {
+        $cvprop = $result->fetchField();
+      }
+
+      break;
+
+    //
+    case 'term_id':
+      // Fetch cvterm name and cv name given a cvterm_id number.
+      // Im:
+      //   .admin.form.inc - analyzedphenotypes_admin_settings() : configuration page.
+      // Parameters:
+      //  $property : term_id.
+      //  $parameter['term_id'] : cvterm id number.
+
+      $result = chado_query(
+        "SELECT t1.name || ' (' || t2.name || ')' AS term FROM {cvterm} AS t1 INNER JOIN {cv} AS t2
+        USING(cv_id) WHERE t1.cvterm_id = :term_id LIMIT 1",
+        array(
+          ':term_id' => $parameter['term_id'],
+        )
+      );
+
+      if ($result->rowCount() > 0) {
+        $cvprop = $result->fetchField();
       }
 
       break;
@@ -339,14 +913,113 @@ function analyzedphenotypes_datafileprop($property = null, $parameter = null) {
 
     //
     default:
-      $datafileprop = array(
-        'tsv' => 'Tab Separated Values',
-        'txt' => 'Text File',
+      // Return all cvs in chado.cv table.
+      // In:
+      //
+      // Parameters:
+      //  $property : null.
+      //  $parameter: null.
+      $cvs = chado_query(
+        "SELECT cv_id, name, definition FROM {cv} ORDER BY name ASC"
       );
+
+      if ($cvs->rowCount() > 0) {
+        foreach($cvs as $cv) {
+          $cvprop[$cv->cv_id] = array(
+            'name' => $cv->name,
+            'definition' => $cv->definition,
+          );
+        }
+      }
   }
 
 
-  return $datafileprop;
+  return $cvprop;
+}
+
+
+///////
+
+
+/**
+ * API: DATABASE PROPERTY
+ * Manage property and operation pertaining to database in chado.db table.
+ * Default to: Return all databases in chado.db table.
+ * Dependencies:
+ *
+ * @param String $property
+ *   A value representing a property/operation requested (each property represents a case in the switch implementation):
+ *   Default to null.
+ *   - match_db  : Match a record in chado.db given a database id.
+ *   - default   : All records in chado.db table.
+ * @param Array $parameter
+ *   An associtive array that forms as arguments to an operation.
+ *   Default to null. Array keys:
+ *   - db_id
+ *
+ * @return Array $dbprop
+ *   Array of database properties.
+ *
+ * @see analyzedphenotypes_admin_settings() in admin.form.inc.
+ */
+function analyzedphenotypes_dbprop($property = null, $parameter = null) {
+  $dbprop = null;
+
+  // Fetch all databases in chado.db table.
+  $dbs = chado_query(
+    "SELECT db_id, name, description FROM {db} ORDER BY name ASC"
+  );
+
+  if ($dbs->rowCount() <= 0) {
+    // 0 Database in the system.
+    return $dbprop;
+  }
+
+  switch($property) {
+    //
+    case 'match_db':
+      // Fetch database information given a database id.
+      // In:
+      //   .api.inc - analyzedphenotypes_cvprop() : fetch database id.
+      // Parameters:
+      //  $property : match_db.
+      //  $parameter['db_id'] : database id number in chado.db.
+
+      foreach($dbs as $db) {
+        if ($db->db_id == $parameter['db_id']) {
+          $dbprop = array(
+            'db_id' => $db->db_id,
+            'name' => $db->name,
+            'description' => $db->description,
+          );
+
+          break;
+        }
+      }
+
+      break;
+
+    //
+    // Define additional case here.
+
+    //
+    default:
+      // Fetach all databse information in chado.db.
+      // In:
+      //   admin.form.inc - analyzedphenotypes_admin_settings() : configuration page.
+      // Parameters:
+      //   $property : null.
+      //   $parameter : null.
+
+      foreach($dbs as $db) {
+        $dbprop[$db->db_id] = array(
+          'name' => $db->name,
+          'description' => $db->description,
+        );
+      }
+  }
+
+  return $dbprop;
 }
 
 
@@ -354,7 +1027,7 @@ function analyzedphenotypes_datafileprop($property = null, $parameter = null) {
  * API: COLUMN HEADERS
  * Manage property and operation pertaining to column headers.
  * Default to: Return expected column headers.
- * Dependencies: analyzedphenotypes_systemvars().
+ * Dependencies: analyzedphenotypes_systemvariables().
  *
  * @param String $property
  *   A value representing a property/operation requested (each property represents a case in the switch implementation):
@@ -409,12 +1082,15 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
     case 'match_combination':
       $cols = array_keys($columnsprop_expectedcols);
 
-      $vars = analyzedphenotypes_systemvars('plant_property');
+      // All system variables term.
+      $vars = analyzedphenotypes_systemvariables('terms');
       $arr_plantprop = array();
 
       foreach($vars as $i => $var) {
         $property = trim(str_replace('ap_', '', $i));
         $var_value = variable_get($var);
+
+        // term (eg. location, replicate) = variable value.
         $arr_plantprop[$property] = $var_value;
       }
 
@@ -456,6 +1132,52 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
 
 
   return $columnsprop;
+}
+
+
+/**
+ * API: TRAIT NAME
+ * Manage property and operation pertaining to trait name.
+ * Default to:
+ * Dependencies:
+ *
+ * @param String $property
+ *   A value representing a property/operation requested (each property represents a case in the switch implementation):
+ *   - no_unit : Exclude unit from a trait name.
+ *   - unit    : Extract the unit part from a trait name.
+ * @param Array $parameter
+ *   An associtive array that forms as arguments to an operation.
+ *   Array keys:
+ *   - trait_name
+ *
+ * @return String $traitprop
+ *   Unit or trait name.
+ *
+ * @see analyzedphenotypes_loader_form_describe() in admin.form.inc.
+ * @see analyzedphenotypes_validator_value() in validators.inc.
+ */
+function analyzedphenotypes_traitprop($property, $parameter) {
+  $traitprop = null;
+
+  switch($property) {
+    //
+    case 'no_unit':
+      $traitprop = preg_replace("/\(.+\)/", '', $parameter['trait_name']);
+
+      break;
+
+    //
+    case 'unit':
+      preg_match("/.*\(([^)]*)\)/", $parameter['trait_name'], $match);
+      $traitprop = (isset($match[1])) ? $match[1] : 'text';
+
+      break;
+
+    //
+  }
+
+
+  return $traitprop;
 }
 
 
@@ -635,439 +1357,82 @@ function analyzedphenotypes_datatypeprop($property, $parameter = null) {
 }
 
 
-/**
- * API: CONTROLLED VOCABULARIES
- * Manage property and operation pertaining to controlled vocabularies in chado.cv and chado.cvterm.
- * Default to: Return all controlled vocabularies in chado.cv.
- * Dependencies: analyzedphenotypes_systemvars(), analyzedphenotypes_scale_photo(), analyzedphenotypes_dbprop().
- *
- * @param String $property
- *   A value representing a property/operation requested (each property represents a case in the switch implementation):
- *   - match_key         : Match a record in chado.cvterm given a keyword.
- *   - match_cvid        : Match a record in chado.cv given a cv_id.
- *   - terms_in_cv       : Fetch all records in chado.cvterm given a cv_id.
- *   - get_cvterm        : Fetch records in chado.cvterm, chado.dbxref and chado.cvterm_relationship (term properties) given a trait.
- *   - insert_cvterm     : Insert a record into chado.cvterm.
- *   - cvterm_save_photo : Handle saving of photo to a trait/cvterm.
- *   - cvterm_get_photo  : Get photo information.
- *   - suggest_term      : Suggest cvterm name with the cv name it is in.
- *   - term_cv           : Given a string containing cvterm name and cv name (eg. Genus (taxonomic_rank)) in fields, return the cvterm id.
- *   - term_id           : Given a cvterm id number return a string value containing the cvterm name and cv name in cvterm name (cv name) format.
- *   - default           : All records in chado.cv.
- * @param Array $parameter
- *   An associtive array that forms as arguments to an operation.
- *   Default to null. Array keys:
- *   - cvterm_keyword
- *   - cv_id
- *   - cvterm_id
- *   - name
- *   - photo
- *   - term_cv
- *   - project_genus
- *
- * @return $cvprop
- *   Array of term properties.
- *
- * @see analyzedphenotypes_validator_value() in validators.inc.
- */
-function analyzedphenotypes_cvprop($property = null, $parameter = null) {
-  $cvprop = null;
-
-  switch($property) {
-    //
-    case 'match_key':
-      $vars = analyzedphenotypes_systemvars('dv_cv');
-      $cv_id = variable_get($vars['ap_cv']);
-      unset($vars);
-
-      // Find a cvterm that matches a keyword.
-      $result = chado_query(
-        "SELECT cvterm_id, name FROM {cvterm} WHERE cv_id = :cv_id AND LOWER(name) LIKE :cvterm_key ORDER BY name ASC",
-        array(
-          'cv_id' => $cv_id,
-          'cvterm_key' => '%' . strtolower(trim($parameter['cvterm_keyword'])) . '%',
-        )
-      );
-
-      if ($result->rowCount() > 0) {
-        $cvprop = $result->fetchAllKeyed();
-      }
-
-      break;
-
-    //
-    case 'match_cvid':
-      $cv = tripal_get_cv(array(
-        'cv_id' => $parameter['cv_id'],
-      ));
-
-      if ($cv) {
-        $cvprop = array(
-          'cv_id' => $cv->cv_id,
-          'name' => $cv->name,
-          'definition' => $cv->definition,
-        );
-      }
-
-      break;
-
-    //
-    case 'terms_in_cv':
-      // Fetch all cvterms in a cv.
-      $terms = chado_query(
-        "SELECT cvterm_id, name, definition FROM {cvterm} WHERE cv_id = :cv_id ORDER BY name ASC",
-        array(':cv_id' => $parameter['cv_id'])
-      );
-
-      if ($terms->rowCount() > 0) {
-        foreach($terms as $term) {
-          $cvprop[$term->cvterm_id] = array(
-            'name' => $term->name,
-            'definition' => $term->definition,
-          );
-        }
-      }
-
-      break;
-
-    //
-    case 'get_cvterm':
-      $term = array();
-      $vars = analyzedphenotypes_systemvars('db_cv');
-
-      if (isset($parameter['cvterm_id'])) {
-        // Global search.
-        $index = 'cvterm_id';
-      }
-      else {
-        // Term in cv.
-        if (isset($parameter['cv_id'])) {
-          $term['cv_id'] = array('cv_id' => $parameter['cv_id']);
-        }
-        else {
-          $cv_id = variable_get($vars['ap_cv']);
-          $term['cv_id'] = array('cv_id' => $cv_id);
-        }
-
-        $index = 'name';
-      }
-
-      $term[$index] = $parameter[$index];
-
-      $cvterm = tripal_get_cvterm($term);
-
-      if ($cvterm) {
-        $cvprop = array(
-          'cvterm_id'  => $cvterm->cvterm_id,
-          'dbxref_id'  => $cvterm->dbxref_id,
-          // An object.
-          'cv_id'      => $cvterm->cv_id->cv_id,
-          'cv_name'    => $cvterm->cv_id->name,
-          'name'       => $cvterm->name,
-          'definition' => $cvterm->definition,
-          'photo_1'    => $cvterm->cvterm_id . '_1.jpg',
-          'photo_2'    => $cvterm->cvterm_id . '_2.jpg',
-        );
-
-        // Databse.
-        $result = chado_query(
-          "SELECT db_id FROM {dbxref} WHERE dbxref_id = :dbxref_id LIMIT 1",
-          array(':dbxref_id' => $cvprop['dbxref_id'])
-        );
-
-        if ($result->rowCount() == 1) {
-          $db_id = $result->fetchField();
-
-          $cvprop['db_id'] = $db_id;
-        }
-        else {
-          $cvprop['db_id'] = null;
-        }
-
-        // Crop ontology.
-        unset($result);
-        $related_cvterm = variable_get($vars['ap_related']);
-
-        // Fetch crop ontology of trait in chado.cvterm_relationship.
-        $result = chado_query(
-          "SELECT name FROM {cvterm} WHERE cvterm_id = (SELECT subject_id FROM {cvterm_relationship} WHERE type_id = :related AND object_id = :cvterm_id LIMIT 1)",
-          array(
-            ':related' => $related_cvterm,
-            ':cvterm_id' => $cvprop['cvterm_id'],
-          )
-        );
-
-        $cvprop['crop_ontology'] = ($result->rowCount() == 1) ? $result->fetchField() : null;
-
-        // Scale.
-        $cvprop['scale'] = null;
-      }
-
-      break;
-
-    //
-    case 'insert_cvterm':
-      $vars = analyzedphenotypes_systemvars('db_cv');
-
-      $var_db_value = variable_get($vars['ap_database']);
-      $dbprop = analyzedphenotypes_dbprop('match_db', array(
-        'db_id' => $var_db_value,
-      ));
-      $db_name = $dbprop['name'];
-
-      $var_cv_value = variable_get($vars['ap_cv']);
-      $cvprop = analyzedphenotypes_cvprop('match_cvid', array(
-        'cv_id' => $var_cv_value,
-      ));
-      $cv_name = $cvprop['name'];
-
-      $cvterm = tripal_insert_cvterm(array(
-        'id' => trim($db_name) . ':' . $parameter['name'],
-        'name' => $parameter['name'],
-        'cv_name'  => $cv_name,
-        'definition' => $parameter['definition'],
-      ));
-
-      if ($cvterm) {
-        $cvprop = $cvterm->cvterm_id;
-      }
-
-      break;
-
-    //
-    case 'cvterm_save_photo':
-      $cvterm_id = $parameter['cvterm_id'];
-
-      foreach($parameter['photo'] as $i => $photo) {
-        $tmp_file = file_save_upload($photo, array(), FALSE, FILE_EXISTS_REPLACE);
-
-        if ($tmp_file) {
-          $file_obj = file_load($tmp_file->fid);
-
-          $source_file = drupal_realpath($file_obj->uri);
-          $info = image_get_info($source_file);
-
-          $scale = analyzedphenotypes_scale_photo(array(
-            'height' => $info['height'],
-            'width' => $info['width'],
-            'scale_to' => 400,
-          ));
-
-          $photo_dir = 'public://ap-photo';
-          file_prepare_directory($photo_dir, FILE_CREATE_DIRECTORY);
-
-          $new_image = imagecreatetruecolor($scale['width'], $scale['height']);
-          $img_file  = imagecreatefromjpeg($source_file);
-          imagecopyresampled($new_image, $img_file, 0, 0, 0, 0, $scale['width'], $scale['height'], $info['width'], $info['height']);
-
-          $new_filename = $cvterm_id . '_' . ($i + 1) . '.jpg';
-          imagejpeg($new_image, drupal_realpath('public://ap-photo') . '/' . $new_filename, 100);
-
-          imagedestroy($img_file);
-          imagedestroy($new_image);
-
-          $tmp_file->filename = $new_filename;
-          $tmp_file->uri = 'public://ap-photo/' . $new_filename;
-          $tmp_file->status = FILE_STATUS_PERMANENT;
-          file_save($tmp_file);
-          file_usage_add($tmp_file, 'analyzedphenotypes', 'file', 1);
-        }
-      }
-
-      break;
-
-    //
-    case 'cvterm_get_photo':
-      $photo = array('ap_photo_1', 'ap_photo_2');
-
-      foreach($photo as $i => $v) {
-        $filename = $parameter['cvterm_id'] . '_' . ($i + 1) . '.jpg';
-        $filedir = 'public://ap-photo';
-
-        $fileuri = drupal_realpath($filedir) . '/' . $filename;
-
-        if (file_exists($fileuri)) {
-          $info = image_get_info($fileuri);
-
-          $cvprop[$v] = array(
-            'filename' => $filename,
-            'uri' => $filedir . '/' . $filename,
-            'height' => $info['height'],
-            'width' => $info['width'],
-          );
-        }
-        else {
-          $cvprop[$v] = null;
-        }
-      }
-
-      break;
-
-    //
-    case 'suggest_term':
-      $result = chado_query(
-        "SELECT TRIM(t2.name), TRIM(t1.name) AS cv_name FROM {cv} AS t1 INNER JOIN {cvterm} AS t2 USING (cv_id)
-        WHERE LOWER(t2.name) LIKE LOWER(:keyword) ORDER BY t1.name LIMIT 20",
-        array(
-          ':keyword' => '%' . $parameter['keyword'] . '%',
-        )
-      );
-
-      if ($result->rowCount() > 0) {
-        $cvprop = $result->fetchAllKeyed();
-      }
-
-      break;
-
-    //
-    case 'term_cv':
-      $result = chado_query(
-        "SELECT cvterm_id FROM {cvterm} AS t1 INNER JOIN {cv} AS t2 USING(cv_id)
-        WHERE CONCAT(t1.name, ' (' , t2.name , ')') = :term_cv LIMIT 1",
-        array(
-          ':term_cv' => $parameter['term_cv']
-        )
-      );
-
-      if ($result->rowCount() > 0) {
-        $cvprop = $result->fetchField();
-      }
-
-      break;
-
-    //
-    case 'term_id':
-      $result = chado_query(
-        "SELECT t1.name || ' (' || t2.name || ')' AS term FROM {cvterm} AS t1 INNER JOIN {cv} AS t2
-        USING(cv_id) WHERE t1.cvterm_id = :term_id LIMIT 1",
-        array(
-          ':term_id' => $parameter['term_id'],
-        )
-      );
-
-      if ($result->rowCount() > 0) {
-        $cvprop = $result->fetchField();
-      }
-
-      break;
-
-    //
-    // Define additional case here.
-
-    //
-    default:
-      // Return all cvs in chado.cv table.
-      $cvs = chado_query(
-        "SELECT cv_id, name, definition FROM {cv} ORDER BY name ASC"
-      );
-
-      if ($cvs->rowCount() > 0) {
-        foreach($cvs as $cv) {
-          $cvprop[$cv->cv_id] = array(
-            'name' => $cv->name,
-            'definition' => $cv->definition,
-          );
-        }
-      }
-  }
-
-
-  return $cvprop;
-}
+///////
 
 
 /**
- * API: TRAIT NAME
- * Manage property and operation pertaining to trait name.
- * Default to:
- * Dependencies:
- *
- * @param String $property
- *   A value representing a property/operation requested (each property represents a case in the switch implementation):
- *   - no_unit : Exclude unit from a trait name.
- *   - unit    : Extract the unit part from a trait name.
- * @param Array $parameter
- *   An associtive array that forms as arguments to an operation.
- *   Array keys:
- *   - trait_name
- *
- * @return String $traitprop
- *   Unit or trait name.
- *
- * @see analyzedphenotypes_loader_form_describe() in admin.form.inc.
- * @see analyzedphenotypes_validator_value() in validators.inc.
- */
-function analyzedphenotypes_traitprop($property, $parameter) {
-  $traitprop = null;
-
-  switch($property) {
-    //
-    case 'no_unit':
-      $traitprop = preg_replace("/\(.+\)/", '', $parameter['trait_name']);
-
-      break;
-
-    //
-    case 'unit':
-      preg_match("/.*\(([^)]*)\)/", $parameter['trait_name'], $match);
-      $traitprop = (isset($match[1])) ? $match[1] : 'text';
-
-      break;
-
-    //
-  }
-
-
-  return $traitprop;
-}
-
-
-/**
- * API: DATABASE PROPERTY
- * Manage property and operation pertaining to database in chado.db table.
- * Default to: Return all databases in chado.db table.
+ * API: USER DATA FILE
+ * Manage property and operation pertaining to user data file (tsv or txt).
+ * Default to: Return valid file extensions.
  * Dependencies:
  *
  * @param String $property
  *   A value representing a property/operation requested (each property represents a case in the switch implementation):
  *   Default to null.
- *   - match_db  : Match a record in chado.db given a database id.
- *   - default   : All records in chado.db table.
+ *   - get_contents : Get the tab-delimeted contents of file.
+ *   - get_columns  : Return row # 0 or the columns row of file.
+ *   - default      : Valid file extensions.
  * @param Array $parameter
  *   An associtive array that forms as arguments to an operation.
  *   Default to null. Array keys:
- *   - db_id
+ *   - data_file
  *
- * @return Array $dbprop
- *   Array of database properties.
+ * @return $datafileprop
+ *   Contents fo file as Text stream or Array of file extensions/columns.
  *
- * @see analyzedphenotypes_admin_settings() in admin.form.inc.
+ * @see analyzedphenotypes_dragdrop() in admin.form.inc.
+ * @see analyzedphenotypes_loader_form_describe() in admin.form.inc.
+ * @see analyzedphenotypes_validator_datafile() in validators.inc.
+ * @see analyzedphenotypes_validator_tsv_data() in validators.inc.
  */
-function analyzedphenotypes_dbprop($property = null, $parameter = null) {
-  $dbprop = null;
-
-  // Fetch all databases in chado.db table.
-  $dbs = chado_query(
-    "SELECT db_id, name, description FROM {db} ORDER BY name ASC"
-  );
-
-  if ($dbs->rowCount() <= 0) {
-    return $dbprop;
-  }
+function analyzedphenotypes_datafileprop($property = null, $parameter = null) {
+  $datafileprop = null;
 
   switch($property) {
     //
-    case 'match_db':
-      foreach($dbs as $db) {
-        if ($db->db_id == $parameter['db_id']) {
-          $dbprop = array(
-            'db_id' => $db->db_id,
-            'name' => $db->name,
-            'description' => $db->description,
-          );
+    case 'get_contents':
+      $data_file = $parameter['data_file'];
 
-          break;
+      $source = drupal_realpath($data_file->uri);
+      $datafile_contents = file_get_contents($source);
+
+      if ($datafile_contents) {
+        $datafileprop = $datafile_contents;
+      }
+
+      break;
+
+    //
+    case 'get_columns':
+      $data_file = $parameter['data_file'];
+
+      $source = drupal_realpath($data_file->uri);
+      $datafile_contents = file_get_contents($source);
+
+      if ($datafile_contents) {
+        $rows = explode("\n", $datafile_contents);
+        $columns_row = $rows[0];
+        unset($rows);
+
+        if (!empty($columns_row)) {
+          $datafileprop = str_getcsv($columns_row, "\t");
         }
+      }
+
+      break;
+
+    case 'make_permanent':
+      $data_file = $parameter['data_file'];
+
+      if ($data_file) {
+        $data_file->status = FILE_STATUS_PERMANENT;
+        file_save($data_file);
+
+        // Also, point out that we are using it ;-)
+        // Note, the file_usage_add() function expects a numerical unique id which we don't have.
+        // We have gotten around this by using the uid concatenated with the timestamp using
+        // the assumption that a single user cannot upload more than one phenotype file within a second.
+        file_usage_add($data_file, 'analyzedphenotypes', 'analyzedphenotypes-file', $data_file->uid . $data_file->timestamp);
       }
 
       break;
@@ -1077,51 +1442,14 @@ function analyzedphenotypes_dbprop($property = null, $parameter = null) {
 
     //
     default:
-      foreach($dbs as $db) {
-        $dbprop[$db->db_id] = array(
-          'name' => $db->name,
-          'description' => $db->description,
-        );
-      }
+      $datafileprop = array(
+        'tsv' => 'Tab Separated Values',
+        'txt' => 'Text File',
+      );
   }
 
-  return $dbprop;
-}
 
-
-/**
- * FUNCTION CALLBACK: VALIDATION RESULT
- * Manage validation result window.
- */
-function analyzedphenotypes_validationresult($property, $parameter) {
-  switch($property) {
-    //
-    case 'data':
-      $job_id = $parameter;
-
-      $result = analyzedphenotypes_tripaljobprop('read_progress', array(
-        'job_id' => $job_id,
-        'source' => 'validateresult',
-      ));
-
-      $status = json_decode($result, TRUE);
-      print theme('analyzedphenotypes_validator_report', array('status' => $status, 'scope' => 'ap-data-scope'));
-
-      break;
-
-    //
-    case 'file':
-      $status = $parameter;
-
-      return theme('analyzedphenotypes_validator_report', array('status' => $status, 'scope' => 'ap-file-scope'));
-
-      break;
-
-    //
-    // Define additional case here.
-
-    // default:
-  }
+  return $datafileprop;
 }
 
 
@@ -1254,128 +1582,6 @@ function analyzedphenotypes_tripaljobprop($property = null, $parameter = null) {
 
 
 /**
- * API: ONTOLOGY PROPERTY
- * Manage property and operation pertaining to ontology.
- * Default to:
- * Dependencies: analyzedphenotypes_systemvars().
- *
- * @param String $property
- *   A value representing a property/operation requested (each property represents a case in the switch implementation):
- *   Default to null.
- *   - map_ontology_trait : Map the ontology to trait in describe trait form (stage 3).
- *   - suggest            : Suggest ontology in ontology field in describe trait form (stage 3) based on project genus and keywords in the trait.
- * @param Array $parameter
- *   An associtive array that forms as arguments to an operation.
- *   Default to null. Array keys:
- *   - ontology_cvterm_id
- *   - trait_cvterm_id
- *   - project_genus
- *   - trait_name
- *   - ontology
- *
- * @return Array $ontologyprop
- *   Array of ontology properties.
- *
- * @see analyzedphenotypes_loader_form_describe() in admin.form.inc.
- */
-function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
-  $ontologyprop = null;
-
-  switch($property) {
-    //
-    case 'map_ontology_trait':
-      $vars = analyzedphenotypes_systemvars('db_cv');
-      $related_cv_id = variable_get($vars['ap_related']);
-
-      $values = array(
-        'type_id' => $related_cv_id,
-        'subject_id' => $parameter['ontology_cvterm_id'],
-        'object_id'  => $parameter['trait_cvterm_id'],
-      );
-
-      chado_insert_record('cvterm_relationship', $values);
-
-      break;
-
-    //
-    case 'suggest':
-      $suggest_limit = 10;
-
-      $vars = analyzedphenotypes_systemvars('genus_ontology');
-      $var_name = 'ap_' . strtolower(str_replace(' ', '_', $parameter['project_genus']));
-      $cv_id = variable_get($vars[$var_name]['var']);
-
-      $ontology_terms = analyzedphenotypes_cvprop('terms_in_cv', array(
-        'cv_id' => $cv_id,
-      ));
-
-      $var_default = variable_get($vars[$var_name]['def']);
-      $default_ontology = analyzedphenotypes_cvprop('get_cvterm', array(
-        'cvterm_id' => $var_default,
-      ));
-
-      // No unit.
-      $trait_name = strtolower(trim($parameter['trait_name']));
-
-      $ctr = 0;
-      foreach($ontology_terms as $i => $term) {
-        if ($i == $default_ontology['cvterm_id']) {
-          continue;
-        }
-
-        $ontology = strtolower(trim($term['name']));
-        $keywords = explode(' ', $ontology);
-
-        foreach($keywords as $key){
-          if ($ctr >= $suggest_limit) {
-            break;
-          }
-          else {
-            if (strlen($key) > 2 && stristr($trait_name, $key)) {
-              $ontologyprop[$i] = $term;
-
-              $ctr++;
-            }
-          }
-        }
-      }
-
-      $ontologyprop[$default_ontology['cvterm_id']] = array(
-        'name' => $default_ontology['name'],
-        'definition' => $default_ontology['definition'],
-      );
-
-      break;
-
-    //
-    case 'match_ontology':
-      $vars = analyzedphenotypes_systemvars('genus_ontology');
-      $var_name = 'ap_' . strtolower(str_replace(' ', '_', $parameter['project_genus']));
-      $cv_id = variable_get($vars[$var_name]['var']);
-
-      $cvtermprop = analyzedphenotypes_cvprop('get_cvterm', array(
-        'name' => $parameter['ontology'],
-        'cv_id' => $cv_id,
-      ));
-
-      if ($cvtermprop) {
-          $ontologyprop[$cvtermprop['cvterm_id']] = $cvtermprop['name'];
-      }
-
-      break;
-
-    //
-    // Additional case here.
-
-    // default:
-  }
-
-
-  return $ontologyprop;
-}
-
-
-/**
  * API: SYSTEM VARIABLE
  * Manage property and operation pertaining to system variable.
  * Default to: Return variables.
@@ -1491,7 +1697,7 @@ function analyzedphenotypes_systemvars($property = null) {
  * @see analyzedphenotypes_cvprop() in api.inc.
  * @see hook_install() implementation in install.inc.
  */
-function analyzedphenotypes_systemvariables($property = null) {
+function analyzedphenotypes_systemvariables($property = null, $parameter = null) {
   $systemvars = null;
   $basename = 'analyzedphenotypes_systemvar_';
 
@@ -1573,6 +1779,16 @@ function analyzedphenotypes_systemvariables($property = null) {
       break;
 
     //
+    case 'genus_vars':
+      // Fetch system configuration for a genus.
+      $sysvars = $system_variables[ $var_type['cvdbon'] ];
+      // Prepare genus term: remove whitespaces and case.
+      $sysvar_key = 'ap_' . trim(strtolower(str_replace(' ', '_', $parameter['genus'])));
+      $systemvars = $sysvars[$sysvar_key];
+
+      break;
+
+    //
     // Define additional case here.
 
     //
@@ -1583,6 +1799,45 @@ function analyzedphenotypes_systemvariables($property = null) {
 
 
   return $systemvars;
+}
+
+
+///////
+
+
+/**
+ * FUNCTION CALLBACK: VALIDATION RESULT
+ * Manage validation result window.
+ */
+function analyzedphenotypes_validationresult($property, $parameter) {
+  switch($property) {
+    //
+    case 'data':
+      $job_id = $parameter;
+
+      $result = analyzedphenotypes_tripaljobprop('read_progress', array(
+        'job_id' => $job_id,
+        'source' => 'validateresult',
+      ));
+
+      $status = json_decode($result, TRUE);
+      print theme('analyzedphenotypes_validator_report', array('status' => $status, 'scope' => 'ap-data-scope'));
+
+      break;
+
+    //
+    case 'file':
+      $status = $parameter;
+
+      return theme('analyzedphenotypes_validator_report', array('status' => $status, 'scope' => 'ap-file-scope'));
+
+      break;
+
+    //
+    // Define additional case here.
+
+    // default:
+  }
 }
 
 
@@ -1709,4 +1964,109 @@ function analyzedphenotypes_scale_photo($parameter) {
   $new_h = round($h * $ratio);
 
   return array('height' => $new_h, 'width' => $new_w);
+}
+
+
+/**
+ * FUNCTION LOAD MATERIALIZED VIEW.
+ */
+function analyzedphenotypes_mview($property, $parameter = null) {
+  $mview = null;
+
+  switch($property) {
+    case 'view_phenotypes':
+      // Default terms location and year to 0 when not indicated.
+      $term_id_location = (isset($parameter['term_id_location'])) ? $parameter['term_id_location'] : 0;
+      $term_id_year     = (isset($parameter['term_id_year'])) ? $parameter['term_id_year'] : 0;
+
+      $mview_query = sprintf("
+        SELECT
+          o.genus as organism_genus,
+          trait.cvterm_id as trait_id,
+          trait.name as trait_name,
+          proj.project_id as project_id,
+          proj.name as project_name,
+          loc.value as location,
+          yr.value as year,
+          s.stock_id as germplasm_id,
+          s.name as germplasm_name,
+          avg( CAST(p.value as FLOAT) ) as mean
+        FROM {phenotype} p
+          LEFT JOIN {cvterm} trait ON trait.cvterm_id=p.attr_id
+          LEFT JOIN {project} proj USING(project_id)
+          LEFT JOIN {stock} s USING(stock_id)
+          LEFT JOIN {organism} o ON o.organism_id=s.organism_id
+          LEFT JOIN {phenotypeprop} loc ON loc.phenotype_id=p.phenotype_id AND loc.type_id = %d
+          LEFT JOIN {phenotypeprop} yr ON yr.phenotype_id=p.phenotype_id AND yr.type_id = %d
+        GROUP BY trait.cvterm_id, trait.name, proj.project_id, proj.name, loc.value, yr.value, s.stock_id, s.name, o.genus
+      ", $term_id_location, $term_id_year);
+
+      $mview_schema = array(
+        'description' => 'Caches phenotypic data for easier retrieval of means. Data replicates are combined.',
+        'table' => 'mview_phenotype',
+        'fields' => array (
+          'organism_genus' => array (
+            'type' => 'varchar',
+            'length' => '255',
+            'not null' => TRUE,
+          ),
+          'trait_id' => array (
+            'size' => 'big',
+            'type' => 'int',
+            'not null' => TRUE,
+          ),
+          'trait_name' => array (
+            'type' => 'varchar',
+            'length' => '255',
+            'not null' => TRUE,
+          ),
+          'experiment_id' => array (
+            'size' => 'big',
+            'type' => 'int',
+            'not null' => TRUE,
+          ),
+          'experiment_name' => array (
+            'type' => 'text',
+            'not null' => TRUE,
+          ),
+          'location' => array (
+            'type' => 'text',
+            'not null' => TRUE,
+          ),
+          'year' => array (
+            'type' => 'text',
+            'not null' => TRUE,
+          ),
+          'stock_id' => array (
+            'size' => 'big',
+            'type' => 'int',
+            'not null' => TRUE,
+          ),
+          'stock_name' => array (
+            'type' => 'varchar',
+            'length' => '255',
+            'not null' => TRUE,
+          ),
+          'mean' => array(
+            'type' => 'float',
+          ),
+        ),
+
+        'indexes' => array(),
+      );
+
+      // Return query and SQL.
+      $mview = array(
+        'query' => $mview_query,
+        'schema' => $mview_schema,
+      );
+
+      break;
+
+    //
+    // Additional case here.
+  }
+
+
+  return $mview;
 }

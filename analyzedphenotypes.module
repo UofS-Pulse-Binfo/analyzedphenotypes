@@ -225,24 +225,70 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&
  * Implements hook_preprocess().
  */
 function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$variables, $hook) {
-  $notset = '';
-  $vars = analyzedphenotypes_systemvars('db_cv');
-  $allow_new = '';
+  // Default system to not properly set, then prove otherwise.
+  $notset = 'not set';
+  $allow_new = 0;
 
-  foreach($vars as $i => $var) {
-    $system_var = variable_get($var);
+  // All genus.
+  $genus = analyzedphenotypes_genusprop();
 
-    if ($i == 'ap_allow_new') {
-      $allow_new = $system_var;
-      continue;
-    }
+  $sysvar_genus_set = 0;
 
-    if ($system_var == 'not set') {
-      $notset = 'not set';
+  // Test genus cv and db. System only requires a genus to have a cv and db set.
+  foreach($genus as $g) {
+    $sysvar_genus = analyzedphenotypes_systemvariables('genus_vars', array(
+      'genus' => $g,
+    ));
+
+    $sysvar_genus_cv = variable_get($sysvar_genus['cv']);
+    $sysvar_genus_db = variable_get($sysvar_genus['db']);
+
+    if ($sysvar_genus_cv > 0 && $sysvar_genus_db > 0) {
+      // Found at least 1 genus with cv and db set.
+      $sysvar_genus_set = 1;
+
       break;
     }
   }
 
+  if ($sysvar_genus_set > 0) {
+    // Did no find a genus with cv and db set.
+    $notset = 'set';
+  }
+
+  // Test if terms (location, replicate etc.) were set.
+  $sysvars = analyzedphenotypes_systemvariables('terms');
+
+  foreach($sysvars as $var) {
+    $sysvar_term = variable_get($var);
+
+    if ($sysvar_term <= 0) {
+      // If any one failed, then module is not ready.
+      $notset = 'not set';
+
+      break;
+    }
+  }
+
+  unset($sysvars);
+
+  // Allow new terms to be upload. Warn admin that the module is set to not allow
+  // new trait be uploaded.
+  $sysvars = analyzedphenotypes_systemvariables('options');
+
+  foreach($sysvars as $i => $var) {
+    $sysvar_options = variable_get($var);
+
+    if ($i == 'ap_allownew' && $sysvar_options == 1) {
+      $allow_new = 1;
+    }
+
+    // Other optional settings.
+  }
+
+  unset($sysvars);
+
+  // Make configuration value available to theme.
   $variables['system_set'] = $notset;
   $variables['allow_new']  = $allow_new;
 
@@ -367,20 +413,16 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
       //   admin.form.inc - analyzedphenotypes_loader_form_describe() : Stage #3 - Describe Traits.
       // Parameters:
       //   $page_argument_5 : ontology.
-      //   $page_argument_6 : a string containing the project genus and trait name delimited by a colon (e.g. lens:plant height (cm)).
+      //   $page_argument_6 : genus ontology (on) configuration settings.
       //   $key : null.
       $data_JSON = array();
 
-      list($project_genus, $trait_name) = explode(':', $parameter);
-
-      $ontology_suggestions = analyzedphenotypes_ontologyprop('suggest', array(
-        'project_genus' => $project_genus,
-        'trait_name' => $trait_name,
+      $ontology_suggestions = analyzedphenotypes_cvprop('terms_in_cv', array(
+        'cv_id' => $parameter,
       ));
 
       foreach($ontology_suggestions as $i => $term) {
-        $name = $term['name'];
-        $data_JSON[$name] = $name;
+        $data_JSON[ $term['name'] ] = $term['name'];
       }
 
       break;
