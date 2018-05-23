@@ -6,7 +6,11 @@
  */
 
 
+// AP API.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
+// Default Ontology Terms API.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.defaultontology.api.inc');
+// Validators.
 module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.validators');
 
 
@@ -21,7 +25,7 @@ function analyzedphenotypes_menu() {
     'title' => 'Phenotypes',
     'description' => 'Summarizes phenotypic data available.',
     'page callback' => 'analyzed_phenotypes_all_data_summary_page',
-    'access arguments' => array(TRUE),
+    'access arguments' => array('access analyzed phenotypes'),
     'file' => 'include/analyzedphenotypes.summary.page.inc',
     'type' => MENU_NORMAL_ITEM,
   );
@@ -32,7 +36,7 @@ function analyzedphenotypes_menu() {
     'description' => 'Summarizes phenotypic data for a given trait and project.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_beanplot_form'),
-    'access arguments' => array(TRUE),
+    'access arguments' => array('access analyzed phenotypes'),
     'file' => 'include/analyzedphenotypes.beanplot.page.inc',
     'type' => MENU_NORMAL_ITEM,
   );
@@ -41,7 +45,7 @@ function analyzedphenotypes_menu() {
   $items['json/phenotypes/beanplot/%/%'] = array(
     'page callback' => 'analyzedphenotypes_beanplot_json',
     'page arguments' => array(3, 4),
-    'access arguments' => array(TRUE),
+    'access arguments' => array('access analyzed phenotypes'),
     'file' => 'include/analyzedphenotypes.beanplot.page.inc',
     'type' => MENU_CALLBACK,
   );
@@ -52,21 +56,18 @@ function analyzedphenotypes_menu() {
   // Main administrative pages for analyzed phenotypes.
   $items[$tripal_extension_ap] = array(
     'title' => 'Analyzed Phenotypes',
-    'description' => 'Analyzed Phenotypes Administrative Pages.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('analyzedphenotypes_admin_page_directory'),
-    'access arguments' => array('access administration pages'),
-    'file' => 'include/analyzedphenotypes.admin.form.inc',
-    'type' => MENU_NORMAL_ITEM,
+    'description' => 'Provides phenotypic trait pages, charts, upload and download for partially filtered (not raw) phenotypic data.',
+    'access arguments' => array('administer tripal'),
   );
 
   // Data Loader.
+  // @todo should this be at admin/tripal/loaders?
   $items[$tripal_extension_ap . '/upload'] = array(
-    'title' => 'Upload Analyzed Phenotypic Data',
-    'description' => 'Upload Analyzed Phenotypic Data.',
+    'title' => 'Upload Phenotypic Data',
+    'description' => 'Import a partially filtered (not raw) phenotypic datasets into Chado for display on Trait and Germplasm pages.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_data_loader'),
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('upload analyzed phenotypes'),
     'file' => 'include/analyzedphenotypes.admin.form.inc',
     'weight' => 1,
     'type' => MENU_NORMAL_ITEM,
@@ -74,52 +75,21 @@ function analyzedphenotypes_menu() {
 
   // Settings.
   $items[$tripal_extension_ap . '/settings'] = array(
-    'title' => 'Settings',
+    'title' => 'Configuration',
+    'description' => 'Set the controlled vocabularies to be used by this module, as well, as other options to customize it to your data/organism.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_admin_settings'),
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('administer tripal'),
     'file' => 'include/analyzedphenotypes.admin.form.inc',
     'weight' => 2,
     'type' => MENU_NORMAL_ITEM,
   );
 
-  $items[$tripal_extension_ap . '/settings/database_cv'] = array(
-    'title' => 'Database & CV Terms',
-    'description' => 'Database and Controlled Vocabulary.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('analyzedphenotypes_admin_settings', 5),
-    'access arguments' => array('access administration pages'),
-    'file' => 'include/analyzedphenotypes.admin.form.inc',
-    'type' => MENU_LOCAL_TASK,
-  );
-
-  $items[$tripal_extension_ap . '/settings/property_terms'] = array(
-    'title' => 'Plant Property Traits',
-    'description' => 'Plant Property Terms.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('analyzedphenotypes_admin_settings', 5),
-    'access arguments' => array('access administration pages'),
-    'file' => 'include/analyzedphenotypes.admin.form.inc',
-    'type' => MENU_LOCAL_TASK,
-  );
-
-  $items[$tripal_extension_ap . '/settings/crop_ontology'] = array(
-    'title' => 'Crop Ontology',
-    'description' => 'Crop Ontology Terms.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('analyzedphenotypes_admin_settings', 5),
-    'access arguments' => array('access administration pages'),
-    'file' => 'include/analyzedphenotypes.admin.form.inc',
-    'type' => MENU_LOCAL_TASK,
-  );
-
-
-
   // Generate data in JSON object.
   $items[$tripal_extension_ap . '/json/%/%'] = array(
     'page callback' => 'analyzedphenotypes_data_json',
     'page arguments' => array(5, 6),
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('upload analyzed phenotypes'),
     'type' => MENU_CALLBACK,
   );
 
@@ -127,10 +97,9 @@ function analyzedphenotypes_menu() {
   $items[$tripal_extension_ap . '/validation_result/%/%'] = array(
     'page callback' => 'analyzedphenotypes_validationresult',
     'page arguments' => array(5, 6),
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('upload analyzed phenotypes'),
     'type' => MENU_CALLBACK,
   );
-
 
   // Data Downloader.
   $items['download'] = array(
@@ -162,9 +131,34 @@ function analyzedphenotypes_menu() {
     'type' => MENU_CALLBACK,
   );
 
-
   return $items;
 }
+
+
+/**
+ * Implements hook_permission().
+ */
+function analyzedphenotypes_permission() {
+  return array(
+    // Administer Tripal.
+    'administer tripal' => array(
+      'title' => t('Administer Tripal'),
+    ),
+    // Upload Analyzed Phenotypes.
+    'upload analyzed phenotypes' => array(
+      'title' => t('Upload Analyzed Phenotypic Data'),
+    ),
+    // Download Analyzed Phenotypes.
+    'download analyzed phenotypes' => array(
+      'title' => t('Download Analyzed Phenotypic Data'),
+    ),
+    // Access Analyzed Phenotypes.
+    'access analyzed phenotypes' => array(
+      'title' => t('Access Analyzed Phenotypic Data'),
+    ),
+  );
+}
+
 
 /**
  * Implements hook_theme().
@@ -204,6 +198,10 @@ function analyzedphenotypes_theme($existing, $type, $theme, $path) {
     'template' => 'analyzedphenotypes_pages',
     'render element' => 'form',
     'path' => $path . '/theme',
+
+  // Form table.
+  $items['analyzedphenotypes_form_table'] = array(
+    'render element' => 'form',
   );
 
 
@@ -212,7 +210,42 @@ function analyzedphenotypes_theme($existing, $type, $theme, $path) {
 
 
 /**
- * Implements hook_theme().
+ * Theme callback to render analyzedphenotypes_form_table field type.
+ *
+ * Credits to : Electronic Press
+ * @link http://e9p.net/theming-drupal-7-form-elements-table. @endlink
+ */
+function theme_analyzedphenotypes_form_table(&$variables) {
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = $form['#header'];
+
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => array(),
+  );
+
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      $row[] = drupal_render($rows[$row_index][$col_index]);
+    }
+
+    // A row in the table.
+    $content['#rows'][] = $row;
+  }
+
+
+  // Render the table and return.
+  return drupal_render($content);
+}
+
+
+/**
+ * Implements hook_preprocess().
  */
 function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&$variables, $hook) {
   $variables['path_extension'] = 'admin/tripal/extension/analyzedphenotypes';
@@ -222,28 +255,75 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&
   return $variables;
 }
 
+
 /**
- * Implements hook_theme().
+ * Implements hook_preprocess().
  */
 function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$variables, $hook) {
-  $notset = '';
-  $vars = analyzedphenotypes_systemvars('db_cv');
-  $allow_new = '';
+  // Default system to not properly set, then prove otherwise.
+  $notset = 'not set';
+  $allow_new = 0;
 
-  foreach($vars as $i => $var) {
-    $system_var = variable_get($var);
+  // All genus.
+  $genus = analyzedphenotypes_genusprop();
 
-    if ($i == 'ap_allow_new') {
-      $allow_new = $system_var;
-      continue;
-    }
+  $sysvar_genus_set = 0;
 
-    if ($system_var == 'not set') {
-      $notset = 'not set';
+  // Test genus cv and db. System only requires a genus to have a cv and db set.
+  foreach($genus as $g) {
+    $sysvar_genus = analyzedphenotypes_systemvariables('genus_vars', array(
+      'genus' => $g,
+    ));
+
+    $sysvar_genus_cv = variable_get($sysvar_genus['cv']);
+    $sysvar_genus_db = variable_get($sysvar_genus['db']);
+
+    if ($sysvar_genus_cv > 0 && $sysvar_genus_db > 0) {
+      // Found at least 1 genus with cv and db set.
+      $sysvar_genus_set = 1;
+
       break;
     }
   }
 
+  if ($sysvar_genus_set > 0) {
+    // Did no find a genus with cv and db set.
+    $notset = 'set';
+  }
+
+  // Test if terms (location, replicate etc.) were set.
+  $sysvars = analyzedphenotypes_systemvariables('terms');
+
+  foreach($sysvars as $var) {
+    $sysvar_term = variable_get($var);
+
+    if ($sysvar_term <= 0) {
+      // If any one failed, then module is not ready.
+      $notset = 'not set';
+
+      break;
+    }
+  }
+
+  unset($sysvars);
+
+  // Allow new terms to be upload. Warn admin that the module is set to not allow
+  // new trait be uploaded.
+  $sysvars = analyzedphenotypes_systemvariables('options');
+
+  foreach($sysvars as $i => $var) {
+    $sysvar_options = variable_get($var);
+
+    if ($i == 'ap_allownew' && $sysvar_options == 1) {
+      $allow_new = 1;
+    }
+
+    // Other optional settings.
+  }
+
+  unset($sysvars);
+
+  // Make configuration value available to theme.
   $variables['system_set'] = $notset;
   $variables['allow_new']  = $allow_new;
 
@@ -281,14 +361,26 @@ function analyzedphenotypes_libraries_info() {
 
 
 /**
- * Function callback: Fetch records and populate to autocomplete search fields.
+ * Function callback: Convert query results or parameters suplied to an array of JSON object
+ * and supply the result to field or form elements (ie. autocomplete form field, validation
+ * progress etc.) that requires data in this notation.
  *
- * @param $data_type
+ * @param $page_argument_5
  *   A string indicating the source of call and what type of data is requested.
+ *   #5 of the menu's page aruguments.
  *   eg. Projects, ontology etc.
+ * @param $page_argument_6
+ *   Additional parameter required.
+ *   #6 of the menu's page aruguments.
+ *   eg. Job Id when generating progress report for Job Status source type.
+ * @param $key
+ *   Default to null, value entered in a field (eg. autocomplete field).
  *
  * @return
  *   A JSON object.
+ *
+ * @see hook_menu() implementation - Generate data in JSON object, above that handles all page elements in this
+ *   module that requires JSON.
  */
 function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key = null) {
   $data_JSON = array();
@@ -299,6 +391,15 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
   switch($property) {
     //
     case 'projects':
+      // Fetch project/experiment that matches a keyword in AP data loader
+      // Select experiment autocomplete form field in:
+      //   admin.form.inc - analyzedphenotypes_loader_form_upload() : Stage #1 - Select experiment, genus and upload file.
+      // Parameters:
+      //   $page_argument_5 : projects.
+      //   $page_argument_6 : experiment.
+      //   $key : Keyword enterd in the field.
+      $data_JSON = array();
+
       $projectprop = analyzedphenotypes_projectprop('match_key', array(
         'project_keyword' => $key,
       ));
@@ -313,6 +414,15 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
 
     //
     case 'jobstatus':
+      // Update job status of a Tripal Job request in AP data loader page in:
+      //   admin.form.inc - analyzedphenotypes_loader_form_validates() : Stage #2 - Validate data.
+      //   admin.form.inc - analyzedphenotypes_loader_form_save() : Stage #4 - Save Data.
+      // Parameters:
+      //   $page_argument_5 : jobstatus.
+      //   $page_argument_6 : Tripal Job job id number.
+      //   $key : null.
+      $data_JSON = array();
+
       $job = analyzedphenotypes_tripaljobprop('get_job', array(
         'job_id' => $parameter,
       ));
@@ -321,6 +431,8 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
         $job_status = strtolower(trim($job['status']));
 
         if ($job_status == 'completed') {
+          // Job completed, return completed!
+          // Set job to completed - 100%.
           $progress = 100;
           $message  = 'Completed';
 
@@ -332,6 +444,9 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
           }
         }
         else {
+          // Job not complete. Read progress written by tripaljobprop write_progress function
+          // and convert progress value to JSON for progress bar in
+          // analyzedphenotypes_save_tsv_data() in validators.inc.
           $tripaljobprop = analyzedphenotypes_tripaljobprop('read_progress', array(
             'job_id' => $parameter,
             'source' => 'jobprogress',
@@ -351,26 +466,45 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
       break;
 
     //
-    case 'describe':
-      return 0;
-      break;
-
-    //
-    case 'save_jobstatus':
-      break;
-
-    //
     case 'ontology':
-      list($project_genus, $trait_name) = explode(':', $parameter);
+      // Fetch otology terms that matches a keyword in AP data loader
+      // Enter ontology term autocomplete form feild in:
+      //   admin.form.inc - analyzedphenotypes_loader_form_describe() : Stage #3 - Describe Traits.
+      // Parameters:
+      //   $page_argument_5 : ontology.
+      //   $page_argument_6 : genus ontology (on) configuration settings.
+      //   $key : null.
+      $data_JSON = array();
 
-      $ontology_suggestions = analyzedphenotypes_ontologyprop('suggest', array(
-        'project_genus' => $project_genus,
-        'trait_name' => $trait_name,
+      $ontology_suggestions = analyzedphenotypes_cvprop('terms_in_cv', array(
+        'cv_id' => $parameter,
       ));
 
       foreach($ontology_suggestions as $i => $term) {
-        $name = $term['name'];
-        $data_JSON[$name] = $name;
+        $data_JSON[ $term['name'] ] = $term['name'];
+      }
+
+      break;
+
+    //
+    case 'cvterms':
+      // Fetch controlled vocabulary terms that matches a keyword in AP data loader
+      // configuration page term autocomplete form field in:
+      //   admin.form.inc - analyzedphenotypes_admin_settings().
+      // Parameters:
+      //   $page_argument_5 : cvterms.
+      //   $page_argument_6 : cv.
+      //   $key : Keyword entered in the field.
+      $data_JSON = array();
+
+      $cvterms = analyzedphenotypes_cvprop('suggest_term', array(
+        'keyword' => $key,
+      ));
+
+      foreach($cvterms as $term => $cv) {
+        $t = $term . ' (' . $cv . ')';
+
+        $data_JSON[$t] = $t;
       }
 
       break;
