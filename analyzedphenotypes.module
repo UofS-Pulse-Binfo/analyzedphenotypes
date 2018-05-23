@@ -144,10 +144,10 @@ function analyzedphenotypes_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
-    $items['download/autofield/%/%'] = array(
+    $items['download/autofield/%/%/%'] = array(
       'title' => 'link',
       'page callback' => 'analyzedphenotypes_autofield_callback',
-      'page arguments' => array(2, 3),
+      'page arguments' => array(2, 3, 4),
       'access callback' => TRUE,
       'type' => MENU_CALLBACK,
       'delivery callback' => 'ajax_deliver',

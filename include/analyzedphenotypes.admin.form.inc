@@ -1715,6 +1715,8 @@ function analyzedphenotypes_data_download($form, &$form_state) {
           $options = analyzedphenotypes_populatefield('field_year', array(
             'project_id' => $field_values[$fld_experiment],
             'traits' => $field_values[$fld_traits],
+            'genus' => $field_values[$fld_genus],
+            'species' => $field_values[$fld_species],
           ));
 
           if ($options) {
@@ -1869,6 +1871,8 @@ function analyzedphenotypes_data_download($form, &$form_state) {
                   $options = analyzedphenotypes_populatefield('field_year', array(
                     'project_id' => $field_values[$fld_experiment],
                     'traits' => $field_values[$fld_traits],
+                    'genus' => $field_values[$fld_genus],
+                    'species' => $field_values[$fld_species],
                   ));
 
                   if ($options) {
@@ -2475,7 +2479,11 @@ function analyzedphenotypes_data_download($form, &$form_state) {
         $list = '';
 
         foreach($germplasm_found as $g) {
-          $list .= '<li>' . $g . '</li>';
+          // Use name as class by removing all whitespaces.
+          // eg. ap-autofield-germplasm-KP123-(ABCD:123).
+          $s = preg_replace('/\s+/', '', $g);
+          $ap_germplasm_class = 'ap-autofield-germplasm-' . $s;
+          $list .= '<li id="' . $ap_germplasm_class . '"><a href="download/autofield/add/ap-autofield/'. base64_encode($g) .'" class="use-ajax ap-autofield-germplasm-add">' . $g . '</a></li>';
         }
 
         $form[$AJAX_wrapper][$ap_fieldset_2]['ap_filter_germplasm_found'] = array(

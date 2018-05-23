@@ -60,6 +60,9 @@
               $(this).removeAttr('checked');
             });
           }
+
+          // Update germplasm filter selection.
+          apAutofieldCache();
         });
 
 
@@ -203,6 +206,37 @@
                 apPreviewCols();
               }
             });
+
+            // # Autofield: Add event listener to germplasm name that when clicked disable hyperlink.
+            $('li .ap-autofield-germplasm-add').click(function(e) {
+              var germName = $(this).text();
+              apAutofieldGermplasmNameLinks(germName, true);
+
+              var fld = $('.ap-autofield-field');
+
+              // Clean up the list and remove any unused field.
+              fld.each(function(i, element) {
+                fldVal = $(this).val();
+                if (fldVal == 'Type Germplasm/Stock Name') {
+                  $(this).parent().fadeOut().remove();
+                }
+              });
+            });
+        });
+
+        // Add event listener to germplasm name links.
+        $('a').click(function(e) {
+          var c = e.target.className;
+
+          if (c.indexOf('ap-autofield-germplasm-control') >= 0) {
+            var i = $(this).index();
+
+            if (i == 0) {
+              // li/ span/ a
+              var n = $(this).parent().parent().find('input').val();
+              apAutofieldGermplasmNameLinks(n, false);
+            }
+          }
         });
 
         //
@@ -285,6 +319,10 @@
                           apAutofieldControls();
                           apAutofieldCache();
 
+                          if (v != 'Not found') {
+                            apAutofieldGermplasmNameLinks(v, true);
+                          }
+
                           $(this).closest('div').fadeOut(300, function() {
                             $(this).remove();
                           });
@@ -296,7 +334,7 @@
           });
 
 
-          // Select the content of field when field gets selected.
+         // Select the content of field when field gets selected.
          $('.' + autofield)
             // Field selected.
             .focusin(function() {
@@ -309,6 +347,15 @@
               if (fld.val() == '') {
                 fld.val('Type Germplasm/Stock Name');
               }
+
+              // Update.
+              $('.ap-autofield-germplasm-add').removeClass('ap-autofield-germplasm-name-disabled');
+              $('.ap-autofield-field').each(function() {
+                var germName = $(this).val();
+                apAutofieldGermplasmNameLinks(germName, true);
+              });
+
+              apAutofieldCache();
             });
         }
 
@@ -387,6 +434,48 @@
                 return v;
               }
             }).get().join('~');
+          });
+        }
+
+        /**
+         * Manage germplasm name link.
+         * Disable - when germplasm clicked to add as a filter.
+         * Enable - when removing a germplasm name filter (remove (x) button from field control button set).
+         *          when setting the field value to empty.
+         * Ref: #ap-filter-germplasm-found - container of all germplasm name link.
+         *
+         * @param germplasmName
+         *   String, germplasm name to enable or disable.
+         * @param disable
+         *   Boolean true - disabled or false - enabled.
+         */
+        function apAutofieldGermplasmNameLinks(germplasmName, disable) {
+          // css rule to disable link.
+          // @see theme/css/download.global.css.
+          var apDisableClass = 'ap-autofield-germplasm-name-disabled';
+
+          // li/ a - li container of germplasm link.
+          $('#ap-filter-germplasm-found li').each(function() {
+            var liA = $(this).find('a');
+            var liATxt = liA.text();
+
+            if (liATxt == germplasmName) {
+              if (disable) {
+                liA.addClass(apDisableClass);
+                liA.blur();
+              }
+              else {
+                // To disable, double check that element has the disable class
+                // before re-enabling field.
+                var aDisabled = liA.hasClass(apDisableClass);
+
+                if (aDisabled) {
+                  liA.removeClass(apDisableClass);
+                }
+              }
+
+              return false;
+            }
           });
         }
 
@@ -483,7 +572,7 @@
               // R Friendly.
               $(this).find('em').css('display', r);
               // Sequence Number.
-              $(this).find('.ap-seq-no').text('#' + (i +1));
+              $(this).find('.ap-seq-no').text('#' + (i + 1));
               // Manage control buttons.
               if (i == 0) {
                 findClass = 'ap-row-up';
@@ -568,8 +657,8 @@
 
               for (var m = 0; m < 4; m++) {
                 content = (m == 0)
-                  ?  content = '<th class="ap-header">' + header[l] + '</th>'
-                  :  content = '<td class="ap-sample-data">data' + String.fromCharCode(Math.floor(Math.random() * 26) + 97) + '</td>';
+                  ?  content = '<th class="ap-header" title="Column Header #' + (l + 1) + '">' + header[l] + '</th>'
+                  :  content = '<td class="ap-sample-data">data.' + String.fromCharCode(Math.floor(Math.random() * 26) + 97) + '</td>';
 
                 $('#' + id + '-' + (m + 1)).append(content);
               }
