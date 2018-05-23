@@ -1149,7 +1149,50 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
       );
 
       break;
+      
+    // 
+    case 'downloadable':
+      // Columns used when downloading data.
+      // In order: Experiment*, Trait Name, Germplasm Name, Year
+      //           Location, Replicate, Data Collector, Country of Origin*.
+      // * - additional.
+      $cols = array_keys($columnsprop_expectedcols);
+      $cols[8] = 'Trait Name'; // By default, select all trait names
+      
+      $columnsprop = array(
+        'Experiment',
+        $cols[2], // Germplasm Name
+        $cols[3], // Year
+        $cols[4], // Location
+        $cols[5], // Replicate
+        $cols[7], // Data Collector
+        $cols[8], // Trait Name
+        'Country of Origin',
+        
+        // Additional columns here.
+      );
+      
+      break;
+    
+    //
+    case 'column_to_field':
+      $fldname = analyzedphenotypes_fieldnames();
+      $cols = array_keys($columnsprop_expectedcols);
 
+      $columnsprop = array(
+        'Experiment' => $fldname['experiment']['base'],
+        $cols[2] => $fldname['germplasm']['base'], 
+        $cols[3] => $fldname['year']['base'], 
+        $cols[4] => $fldname['location']['base'], 
+        $cols[5] => $fldname['replicate']['base'], 
+        $cols[7] => $fldname['collector']['base'], 
+        'Country of Origin' => $fldname['origin']['base'],
+        
+        // Additional column to field here.
+      );
+      
+      break;
+      
     //
     case 'match_combination':
       $cols = array_keys($columnsprop_expectedcols);
@@ -1193,6 +1236,63 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
       $columnsprop = ($result->rowCount() > 0) ? $result->fetchField() : $columnsprop;
 
       break;
+      
+    //
+    case 'rfriendly':
+      // These rules/pattern are from rawphenotypes.
+      $word_rules = 'of,to,have,on,at';
+      $char_rules = '(,),/,-,:,;,%';
+      $replace_rules = '# = num,/ = div,? = unsure,- = to';
+
+      $arr_match = array();
+      $arr_replace = array();
+      $r = explode(',', $replace_rules);
+
+      // Convert the rule to key and value pair. The key is the matching character/word and
+      // the values is the replacement value when key is found in a string.
+      foreach($r as $g) {
+        list($match, $replace) = explode('=', $g);
+        $arr_match[] = trim($match);
+        $arr_replace[] = trim($replace);
+      }
+
+      // Convert special characters transformation rules in string to array.
+      $char_rules = explode(',', $char_rules);
+
+      // Convert words transformation rules in string to array.
+      $word_rules = explode(',', $word_rules);
+
+      // Remove leading and trailing spaces from the selected trait.
+      // Convert string to lowercase.
+      $selected_trait = trim(strtolower($parameter['column_header']));
+      // 1. Break the column header in string to individual words,
+      //    and remove all words that matches an entry in the words transfomation rules.
+      $w = explode(' ', $selected_trait);
+      foreach($w as $c) {
+        $c = trim($c);
+
+        // Skip the words in the traits that are present in the
+        // words transformation rules.
+        if (!in_array($c, $word_rules)) {
+          // Do match and replace, as well as, removal of special characters
+          // only when the current word is not in the words transformation rules.
+          // 2. Match and replace based on match and replace rule.
+          $c = str_replace($arr_match, $arr_replace, $c);
+          // 3. Remove all special characters listed in remove chars rule.
+          $c = str_replace($char_rules, '', $c);
+
+          // All transformation rules applied, make sure that
+          // the result is not a blank space.
+          if (!empty($c)) {
+            $rfriendly[] = trim($c);
+          }
+        }
+      }
+
+      // Final transformation is replacing all spaces to dots/period (.)
+      $columnsprop = ucfirst(implode('.', $rfriendly));
+
+      break;  
 
     //
     // Define additional case here.
