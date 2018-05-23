@@ -408,3 +408,7 @@ th.ap-header {
   pointer-events: none;
   text-decoration: none;
 }
+
+.ap-no-mouse-event {
+  pointer-events: none;
+}

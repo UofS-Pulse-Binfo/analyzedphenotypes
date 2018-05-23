@@ -2342,6 +2342,8 @@ function analyzedphenotypes_data_download($form, &$form_state) {
         $form[$AJAX_wrapper][$ap_fieldset_2][ $fldname[$fld_year]['field'] ][$o]['#attributes']
           = array('checked' => 'checked');
       }
+
+      $form[$AJAX_wrapper][$ap_fieldset_2][ $fldname[$fld_year]['field'] ]['#attributes']['class'][] = 'ap-no-mouse-event';
     }
 
 
@@ -2371,6 +2373,8 @@ function analyzedphenotypes_data_download($form, &$form_state) {
         $form[$AJAX_wrapper][$ap_fieldset_2][ $fldname[$fld_location]['field'] ][$o]['#attributes']
           = array('checked' => 'checked');
       }
+
+      $form[$AJAX_wrapper][$ap_fieldset_2][ $fldname[$fld_location]['field'] ]['#attributes']['class'][] = 'ap-no-mouse-event';
     }
 
 
@@ -2400,6 +2404,8 @@ function analyzedphenotypes_data_download($form, &$form_state) {
         $form[$AJAX_wrapper][$ap_fieldset_2][ $fldname[$fld_germplasmtype]['field'] ][$o]['#attributes']
           = array('checked' => 'checked');
       }
+
+      $form[$AJAX_wrapper][$ap_fieldset_2][ $fldname[$fld_germplasmtype]['field'] ]['#attributes']['class'][] = 'ap-no-mouse-event';
     }
 
 
@@ -2803,7 +2809,7 @@ function analyzedphenotypes_data_download_submit($form, &$form_state) {
   $url = base64_encode($querystring);
 
   $form_state['redirect'] = array(
-    '/download/analyzed_phenotypic_data',
+    '/phenotype/download/analyzed_phenotypic_data',
     array(
       'query' => array('code' => $url),
     ),

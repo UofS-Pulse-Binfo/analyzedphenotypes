@@ -102,7 +102,7 @@ function analyzedphenotypes_menu() {
   );
 
   // Data Downloader.
-  $items['download'] = array(
+  $items['phenotype/download'] = array(
     'title' => 'Download Analyzed Phenotypic Data',
     'description' => 'Download Analyzed Phenotypic Data.',
     'page callback' => 'drupal_get_form',
@@ -113,17 +113,17 @@ function analyzedphenotypes_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
-    $items['download/autofield/%/%/%'] = array(
+    $items['phenotype/download/autofield/%/%/%'] = array(
       'title' => 'link',
       'page callback' => 'analyzedphenotypes_autofield_callback',
-      'page arguments' => array(2, 3, 4),
+      'page arguments' => array(3, 4, 5),
       'access callback' => TRUE,
       'type' => MENU_CALLBACK,
       'delivery callback' => 'ajax_deliver',
     );
 
   // Tripal Download Implementation.
-  $items['download/analyzed_phenotypic_data'] = array(
+  $items['phenotype/download/analyzed_phenotypic_data'] = array(
     'title' => 'Analyzed Phenotypic Data Download',
     'page callback' => 'trpdownload_download_page',
     'page arguments' => array('analyzedphenotypes_download'),
