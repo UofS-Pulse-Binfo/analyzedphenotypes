@@ -4,7 +4,7 @@
  * Contains administrative interfaces of this module.
  */
 
-
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.projects.api');
 module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.validators');
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
 
@@ -1384,7 +1384,7 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
     '#submit' => array('system_settings_form_config_submit'),
   );
 
-  
+
   return $form;
 }
 
