@@ -1149,8 +1149,8 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
       );
 
       break;
-      
-    // 
+
+    //
     case 'downloadable':
       // Columns used when downloading data.
       // In order: Experiment*, Trait Name, Germplasm Name, Year
@@ -1158,7 +1158,7 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
       // * - additional.
       $cols = array_keys($columnsprop_expectedcols);
       $cols[8] = 'Trait Name'; // By default, select all trait names
-      
+
       $columnsprop = array(
         'Experiment',
         $cols[2], // Germplasm Name
@@ -1168,12 +1168,12 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
         $cols[7], // Data Collector
         $cols[8], // Trait Name
         'Country of Origin',
-        
+
         // Additional columns here.
       );
-      
+
       break;
-    
+
     //
     case 'column_to_field':
       $fldname = analyzedphenotypes_fieldnames();
@@ -1181,18 +1181,18 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
 
       $columnsprop = array(
         'Experiment' => $fldname['experiment']['base'],
-        $cols[2] => $fldname['germplasm']['base'], 
-        $cols[3] => $fldname['year']['base'], 
-        $cols[4] => $fldname['location']['base'], 
-        $cols[5] => $fldname['replicate']['base'], 
-        $cols[7] => $fldname['collector']['base'], 
+        $cols[2] => $fldname['germplasm']['base'],
+        $cols[3] => $fldname['year']['base'],
+        $cols[4] => $fldname['location']['base'],
+        $cols[5] => $fldname['replicate']['base'],
+        $cols[7] => $fldname['collector']['base'],
         'Country of Origin' => $fldname['origin']['base'],
-        
+
         // Additional column to field here.
       );
-      
+
       break;
-      
+
     //
     case 'match_combination':
       $cols = array_keys($columnsprop_expectedcols);
@@ -1236,7 +1236,7 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
       $columnsprop = ($result->rowCount() > 0) ? $result->fetchField() : $columnsprop;
 
       break;
-      
+
     //
     case 'rfriendly':
       // These rules/pattern are from rawphenotypes.
@@ -1292,7 +1292,7 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
       // Final transformation is replacing all spaces to dots/period (.)
       $columnsprop = ucfirst(implode('.', $rfriendly));
 
-      break;  
+      break;
 
     //
     // Define additional case here.
@@ -1596,6 +1596,7 @@ function analyzedphenotypes_datafileprop($property = null, $parameter = null) {
 
       break;
 
+    //
     case 'make_permanent':
       $data_file = $parameter['data_file'];
 
@@ -1609,6 +1610,16 @@ function analyzedphenotypes_datafileprop($property = null, $parameter = null) {
         // the assumption that a single user cannot upload more than one phenotype file within a second.
         file_usage_add($data_file, 'analyzedphenotypes', 'analyzedphenotypes-file', $data_file->uid . $data_file->timestamp);
       }
+
+      break;
+
+    //
+    case 'download_type':
+      $datafileprop = array(
+        'tsv' => '.TSV - Tab Separated Values',
+        'csv' => '.CSV - Comma Separated Values',
+        'xlsx'=> '.XLSX -Microsoft Excel Spreadsheet File',
+      );
 
       break;
 
