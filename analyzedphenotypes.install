@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Implements hook_install().
  */
@@ -10,12 +11,10 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
 // Default Ontology Terms API.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.defaultontology.api');
 
-
 /**
  * Implements hook_enable().
  */
 function analyzedphenotypes_enable() {
-
   // Check we have the phenotype tables we expect to have.
   if (!db_table_exists('chado.phenotype')) {
     tripal_report_error('analyzedpenotypes', TRIPAL_CRITICAL,

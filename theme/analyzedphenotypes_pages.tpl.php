@@ -165,6 +165,10 @@ if ($form_id == $ap_admin . 'data_loader') {
   //////////////////////////////
   }
 }
+// # DOWNLOADER
+elseif ($form_id == 'analyzedphenotypes_data_download') {
+  print drupal_render_children($form);
+}
 // # SETTINGS.
 elseif ($form_id == $ap_admin . 'settings') {
   // Settings form are rendered by system_settings_form()

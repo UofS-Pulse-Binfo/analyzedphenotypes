@@ -287,7 +287,7 @@ function analyzedphenotypes_beanplot_json($project_id, $trait_id) {
         'location' => $r->location,
         'year' => $r->year,
         'germ' => 0,
-        'mean' => $mean,
+        'mean' => floor($mean),
         'no' => 1,
       );
     }

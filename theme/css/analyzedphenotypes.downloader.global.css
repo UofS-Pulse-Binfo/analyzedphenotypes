@@ -1,0 +1,414 @@
+/**
+ * @file
+ * Contains styles used in data downloader.
+ */
+
+/* Global */
+#ap-AJAX-wrapper-main .form-disabled label {
+  color: #000000;
+}
+
+#ap-experiment-field-id div,
+#ap-traits-field-id div,
+#ap-year-field-id div,
+#ap-location-field-id div,
+#ap-germplasmtype-field-id div {
+  margin: 0;
+  padding: 0;
+}
+
+.ap-field-disabled {
+  background: #EDEDED url('../../theme/img/ap-select-option.gif') no-repeat center !important;
+  border: 1px solid #BBBBBB;
+}
+
+.ap-checkbox-wrapper {
+  background-color: #FFFFFF;
+  margin: 5px 7px;
+}
+
+#ap-ajax-wait {
+  background-color: #FFFFFF;
+  border: 1px solid #666666;
+  color: red;
+  display: block;
+  font-family: sans-serif;
+  font-size: 0.8em;
+  height: 20px;
+  line-height: 20px;
+  padding: 7px;
+  position: absolute;
+  right: 0;
+  text-align: center;
+  top: 0;
+  width: 160px;
+  z-index: 1000;
+
+  -webkit-box-shadow: 1px 1px 10px 1px rgba(0,0,0,0.5);
+  -moz-box-shadow: 1px 1px 10px 1px rgba(0,0,0,0.5);
+  box-shadow: 1px 1px 10px 1px rgba(0,0,0,0.5);
+}
+
+.ap-clear-float {
+  clear: both;
+  height: 0;
+}
+
+#ap-AJAX-wrapper-main .description {
+  margin: 5px 0 20px 0;
+}
+
+
+/* Fieldset 1 */
+#ap-experiment-field-id label {
+  cursor: pointer;
+}
+
+#ap-experiment-field-id label:hover {
+  text-decoration: underline;
+}
+
+.ap-tooltip {
+  background-color: rgba(248, 240, 177, 0.9);
+  border: 1px solid #CBCf54;
+  display: none;
+  font-family: sans-serif;
+  font-size: 1.1em;
+  padding: 7px;
+  line-height: 20px;
+  margin: 0;
+  min-width: 200px;
+  position: absolute;
+}
+
+.ap-field-inline-container {
+  float: left;
+}
+
+.ap-field-inline-container div {
+  padding: 0;
+  margin: 0 20px 0 0;
+}
+
+.ap-field-inline-container select {
+  width: 200px;
+}
+
+
+/* Fieldset 2 */
+
+/* Germplasm filter bar */
+#ap-filter-germplasm-bar {
+  background: #F0F0F0;
+  border: 1px solid #CCCCCC;
+  color: #333333;
+  font-family: sans-serif;
+  font-weight: normal;
+  font-size: 0.9em;
+  height: 40px;
+  line-height: 39px;
+  margin: 0 0 20px 0;
+  padding: 0 0 0 10px;
+}
+
+/* Matching Germplasm. */
+#ap-filter-germplasm-found {
+  min-height: 20px;
+  max-height: 40px;
+  margin: 10px 0 12px 0;
+  overflow: hidden;
+  padding: 0 0 20px 0;
+
+  -webkit-transition: max-height 0.5s ease-in-out;
+  -moz-transition: max-height 0.5s ease-in-out;
+  -ms-transition: max-height 0.5s ease-in-out;
+  -o-transition: max-height 0.5s ease-in-out;
+  transition: max-height 0.5s ease-in-out;
+}
+
+#ap-filter-germplasm-found ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+#ap-filter-germplasm-found ul li {
+  border-right: 1px solid #CCCCCC;
+  display: inline-block;
+  margin: 0 6px 0 0;
+  padding: 0 7px 0 3px;
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+#ap-filter-germplasm-found ul li:last-child {
+  border: none;
+}
+
+#ap-filter-germplasm-reveal {
+  border-top: 1px solid #CCCCCC;
+  width: 100%;
+}
+
+#ap-filter-germplasm-reveal div {
+  cursor: pointer;
+  color: #CCCCCC;
+  border: 1px solid #CCCCCC;
+  border-radius: 50%;
+  margin: -12px auto 0 auto;
+  text-align: center;
+  width: 20px;
+}
+
+.ap-filter-germplasm-reveal-off {
+  background: #F0F0F0 no-repeat url('../../theme/img/arrow-sprite.gif') 2px 2px;
+}
+
+.ap-filter-germplasm-reveal-on {
+  background: #F0F0F0 no-repeat url('../../theme/img/arrow-sprite.gif') 2px -12px;
+}
+
+/* Germplasm field (autofield) below */
+
+
+/* Fieldset 3 */
+#ap-filetype-warning div {
+  display: none;
+  margin: 0 0 10px 0; color: red;
+}
+
+#ap-table-default-headers {
+  border: 1px solid #D5D5D5;
+  border-bottom: 6px solid #D5D5D5;
+}
+
+#ap-table-default-headers em,
+#ap-table-optional-headers em {
+  color: #2165bb;
+  display: none;
+  margin-left: 20px;
+  pointer-events: none;
+}
+
+
+/* Column headers */
+#ap-table-default-headers td,
+#ap-table-optional-headers td {
+  border: none;
+  font-family: serif;
+}
+
+#ap-table-default-headers td:first-child,
+#ap-table-optional-headers td:first-child {
+  width: 5px;
+}
+
+#ap-table-default-headers td:nth-child(2),
+#ap-table-optional-headers td:nth-child(2) {
+  width: 85%;
+}
+
+.ap-row-up {
+  background: url('../../theme/img/arrow-up.gif') no-repeat center;
+  cursor: pointer;
+}
+
+.ap-row-down {
+  background: url('../../theme/img/arrow-down.gif') no-repeat center;
+  cursor: pointer;
+}
+
+.odd, .even {
+  background-color: #FFFFFF !important;
+}
+
+tr:nth-child(even) td {
+  background-color: #F7F7F7;
+}
+
+.ap-column {
+  cursor: pointer;
+  font-size: 1.3em;
+}
+
+.ap-column small {
+  color: red;
+  font-size: 0.8em;
+}
+
+th.ap-header {
+  background-color: #FFFFFF;
+  color: black;
+  font-size: 0.9em;
+}
+
+/* Preview window */
+#ap-table-preview-headers-container {
+  border-top: 1px solid #EAEAEA;
+  border-bottom: 1px solid #FFFFFF;
+  clear: both;
+  display: none;
+  position: relative;
+  overflow-x: scroll;
+  width: 660px;
+}
+
+#ap-table-preview-headers-container span{
+  background-image: linear-gradient(to bottom, rgba(213, 213, 213, 0), rgba(213, 213, 213, 0.6) 70%);
+  bottom: 5px;
+  left: 0;
+  position: absolute;
+  pointer-events: none;
+  height: 1.5em;
+  width: 100%;
+}
+
+#ap-table-preview-headers th {
+  cursor: pointer;
+  font-size: 1em;
+  font-family: "Courier";
+  font-weight: 300;
+}
+
+#ap-table-preview-headers td {
+  font-size: 0.8em;
+  font-family: "Courier";
+}
+
+.ap-sample-data {
+  background-color: #FFFFFF !important;
+}
+
+#ap-preview-link {
+  margin: 0;
+  float: right;
+}
+
+
+/* checkbox window */
+.ap-checkboxes-container {
+  border: 1px solid #CCCCCC;
+  margin: 0 0 15px 0;
+  overflow-y: scroll;
+}
+
+#ap-AJAX-wrapper-main .form-type-item {
+  margin: 0 !important;
+}
+
+/* Optional controls */
+#ap-chk-r {
+  background: url('../../theme/img/r.gif') no-repeat;
+  background-position: 20px 0;
+}
+
+#ap-chk-r label {
+  padding: 0 0 0 35px;
+}
+
+
+
+/* Autofield */
+#ap-autofield {
+  max-height: 300px;
+  margin: 10px 0 20px 0;
+  overflow-y: scroll;
+  overflow-x: none;
+}
+
+#ap-autofield input {
+  font-size: 0.889em;
+  font-weight: 300;
+  width: 84%;
+}
+
+.ap-autofield-AJAX-on input {
+  background: url(../img/throbber-active.gif) right no-repeat;
+}
+
+.ap-autofield-AJAX-off input {
+  background: url(../img/throbber-inactive.png) right no-repeat;
+}
+
+/* No AJAX animation on field controls. */
+#ap-filter-germplasm-found .ajax-progress-throbber,
+#ap-autofield .ajax-progress-throbber {
+  display: none;
+}
+
+/* Suggestion container */
+.ap-autofield-AJAX-off div {
+  border: 1px solid #EAEAEA;
+  max-height: 100px;
+  overflow-y: scroll;
+  position: absolute;
+  width: 90% ;
+
+  -webkit-box-shadow: 10px 10px 15px -10px rgba(0,0,0,0.75);
+  -moz-box-shadow: 10px 10px 15px -10px rgba(0,0,0,0.75);
+  box-shadow: 10px 10px 15px -10px rgba(0,0,0,0.75);
+}
+
+.ap-autofield-AJAX-off div ul {
+  background-color: #FFFFFF;
+  list-style-type: none;
+  margin: -1px 0 0 0 !important;
+  padding: 0 !important;
+  z-index: 1000;
+}
+
+.ap-autofield-AJAX-off div ul li {
+  font-style: italic;
+  cursor: pointer;
+  margin: 0;
+  padding: 5px 0 5px 5px;
+}
+
+.ap-autofield-AJAX-off div ul li:hover {
+  background-color: #EAEAEA;
+}
+
+/* Add and delete button */
+.ap-autofield-wrapper span {
+  margin: 0 0 0 5px;
+  padding: 3px 0;
+}
+
+.ap-autofield-wrapper span a {
+  background-size: 45%;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: 2px solid #FFFFFF;
+  border-radius: 60%;
+  color: transparent;
+  font-size: 9px;
+  overflow: hidden;
+  padding: 6px 4px;
+  text-decoration: none;
+}
+
+.ap-autofield-wrapper span a:first-child {
+  background-image: url('../../theme/img/remove-button.png');
+  background-color: #EAEAEA;
+}
+
+.ap-autofield-wrapper span a:last-child {
+  background-image: url('../../theme/img/add-button.png');
+  background-color: #4E9537;
+  margin: 0 0 0 5px;
+}
+
+.ap-autofield-germplasm-name-disabled {
+  background-image: url('../../theme/img/icon-success.jpg');
+  background-position: left center;
+  background-repeat: no-repeat;
+  background-size: 15px 15px;
+  color: black;
+  padding-left: 17px;
+  pointer-events: none;
+  text-decoration: none;
+}
+
+.ap-no-mouse-event {
+  pointer-events: none;
+}
