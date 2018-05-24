@@ -47,6 +47,11 @@
           .insertAfter('#ap-next-stage-submit-field');
       });
 
+      // Select field when clicked to ease entry of new value.
+      $('.ap-crop-ontology').focusin(function() {
+        $(this).select();
+      });
+
       /**
        * Function: check if forms were filled out.
        */

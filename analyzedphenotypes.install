@@ -3,146 +3,104 @@
 /**
  * Implements hook_install().
  */
- 
+
+// Make the API available during install.
+
+// AP API.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
-
-
-function analyzedphenotypes_schema() {
-  $schema = array();
-
-  $phenotype_exists = db_table_exists('chado.phenotype');
-
-  if (!$phenotype_exists) {
-    $schema['chado.phenotypes'] = array(
-      'description' => t('Table for analyzed phenotype.'),
-      'fields' => array(
-        'phenotype_id' => array(
-          'description' => t('A unique id number. Primary key.'),
-          'type' => 'serial',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'uniquename' => array(
-          'description' => t('Unique name.'),
-          'type' => 'text',
-          'not null' => TRUE,
-        ),
-        'observable_id' => array(
-          'description' => t('The entity (anatomy part, biological process).'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'attr_id' => array(
-          'description' => t('Primary key for the trait.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'value' => array(
-          'description' => t('The measured value.'),
-          'type' => 'varchar',
-          'length' => 255,
-          'not null' => TRUE,
-        ),
-        'cvalue_id' => array(
-          'description' => t('Link to the scale value recorded.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'assay_id' => array(
-          'description' => t('The evidence type.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'project_id' => array(
-          'description' => t('Link to the experiment.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'stock_id' => array(
-          'description' => t('Link to the stock the trait was observed/measured on.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-      ),
-      'primary key' => array('phenotype_id'),
-    );
-  }
-
-  $phenotypeprop_exists = db_table_exists('chado.phenotypeprop');
-
-  if (!$phenotypeprop_exists) {
-    //
-    $schema['chado.phenotypeprop'] = array(
-      'description' => t('Analyzed phenotype properties'),
-      'fields' => array(
-        'phenotypeprop_id' => array(
-          'description' => t('A unique id number. Priimary key.'),
-          'type' => 'serial',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'phenotype_id' => array(
-          'description' => t('Foreign key: ap_phenotypes.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'type_id' => array(
-          'description' => t('Property type.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'value' => array(
-          'description' => t('The free-text value of the property.'),
-          'type' => 'text',
-          'not null' => TRUE,
-        ),
-        'cvalue_id' => array(
-          'description' => t('Links to cvterm if property is controlled.'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'rank' => array(
-          'description' => t('Property value ordering'),
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-      ),
-      'primary key' => array('phenotypeprop_id'),
-      'foreign keys' => array(
-        'ap_phenotypes' => array(
-          'table' => 'ap_phenotypes',
-          'columns' => array('phenotype_id' => 'phenotype_id')
-        ),
-      ),
-    );
-  }
-
-
-  return $schema;
-}
-
+// Default Ontology Terms API.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.defaultontology.api');
 
 /**
  * Implements hook_enable().
  */
 function analyzedphenotypes_enable() {
+  // Check we have the phenotype tables we expect to have.
+  if (!db_table_exists('chado.phenotype')) {
+    tripal_report_error('analyzedpenotypes', TRIPAL_CRITICAL,
+      'Analyzed Phenotypes requires the chado.phenotype table to exists. Make sure you have installed chado v1.2+');
+    return FALSE;
+  }
+  if (!db_table_exists('chado.phenotypeprop')) {
+    tripal_report_error('analyzedpenotypes', TRIPAL_CRITICAL,
+      'Analyzed Phenotypes requires the chado.phenotypeprop table to exists. Make sure you have installed chado v1.2+');
+    return FALSE;
+  }
+
   // Add a materialized view to calculate the mean for quantitative data.
-  $mview = analyzedphenotypes_mview('view_phenotypes');
-  
-  $query = $mview['query'];
-  $schema = $mview['schema'];
-  
-  tripal_add_mview($schema['table'], 'analyzedphenotypes', $schema, $query, $schema['description']);
+  $query = "
+      SELECT
+        o.genus as organism_genus,
+        trait.cvterm_id as trait_id,
+        trait.name as trait_name,
+        proj.project_id as project_id,
+        proj.name as project_name,
+        loc.value as location,
+        yr.value as year,
+        s.stock_id as germplasm_id,
+        s.name as germplasm_name,
+        avg( CAST(p.value as FLOAT) ) as mean
+      FROM {phenotype} p
+      LEFT JOIN {cvterm} trait ON trait.cvterm_id=p.attr_id
+      LEFT JOIN {project} proj USING(project_id)
+      LEFT JOIN {stock} s USING(stock_id)
+      LEFT JOIN {organism} o ON o.organism_id=s.organism_id
+      LEFT JOIN {phenotypeprop} loc ON loc.phenotype_id=p.phenotype_id AND loc.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE name='Location')
+      LEFT JOIN {phenotypeprop} yr ON yr.phenotype_id=p.phenotype_id AND yr.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE name='Year')
+      GROUP BY trait.cvterm_id, trait.name, proj.project_id, proj.name, loc.value, yr.value, s.stock_id, s.name, o.genus";
+  $schema = array(
+    'description' => 'Caches phenotypic data for easier retrieval of means. Data replicates are combined.',
+    'table' => 'mview_phenotype',
+    'fields' => array (
+      'organism_genus' => array (
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+      ),
+      'trait_id' => array (
+        'size' => 'big',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'trait_name' => array (
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+      ),
+      'experiment_id' => array (
+        'size' => 'big',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'experiment_name' => array (
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+      'location' => array (
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+      'year' => array (
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+      'stock_id' => array (
+        'size' => 'big',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'stock_name' => array (
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+      ),
+      'mean' => array(
+        'type' => 'float',
+      ),
+    ),
+    'indexes' => array(),
+  );
+  tripal_add_mview($schema['table'], 'analyzedphenotypes', $schema, $query, $schema['description'], FALSE);
 
   // Add a summary materialized view.
   $query = "
@@ -188,14 +146,14 @@ function analyzedphenotypes_enable() {
     ),
   );
 
-  tripal_add_mview($schema['table'], 'analyzedphenotypes', $schema, $query, $schema['description']);
+  tripal_add_mview($schema['table'], 'analyzedphenotypes', $schema, $query, $schema['description'], FALSE);
 
+  // Extend chado phenotype/phenotypeprop.
   $arr_fields = array(
     'project_id' => array('table' => 'phenotype',     'ref' => 'project', 'ref_id' => 'project_id'),
     'stock_id' =>   array('table' => 'phenotype',     'ref' => 'stock',   'ref_id' => 'stock_id'),
     'cvalue_id' =>  array('table' => 'phenotypeprop', 'ref' => 'cvterm',  'ref_id' => 'cvterm_id'),
   );
-
   foreach($arr_fields as $field => $items) {
     $exists = db_field_exists('chado.' . $items['table'], $field);
 
@@ -206,31 +164,56 @@ function analyzedphenotypes_enable() {
       chado_query($sql);
     }
   }
-}
 
-/**
- * Implements hook_install().
- */
-function analyzedphenotypes_install() {
-  $vars = analyzedphenotypes_systemvars();
+  // Helpfull guide the admin.
+  drupal_set_message(t(
+    'Analyzed Phenotypes needs to be configured <a href="@url">here</a> in order to be specific to your system.',
+    array('@url' => url('admin/tripal/extension/analyzedphenotypes/settings'))),
+    'warning');
 
-  foreach($vars as $i => $v) {
-    if (is_array($v)) {
-      foreach($v as $j => $k) {
-        variable_set($k, 'not set');
-      }
-    }
-    else {
-      variable_set($v, 'not set');
+
+  // Initialize Variables:
+  // Load default ontology terms for method, location, replicate, collector, genus, related and year
+  // in AP configuration page.
+  $default_ontology = analyzedphenotypes_defaultontologyload();
+
+  // System variable for all controlled vocabulary terms.
+  $system_vars = analyzedphenotypes_systemvariables('terms');
+
+  // Set default.
+  foreach($system_vars as $v => $var) {
+    // Set the variable to default ontology term.
+    // base terms: location, replicate, year ...
+    $v = trim(str_replace('ap_', '', $v));
+
+    variable_set($var, $default_ontology[$v]);
+  }
+
+  // Other system variables.
+  // Genus - cv, db and ontology.
+  unset($system_vars);
+  $system_vars = analyzedphenotypes_systemvariables('cvdbon');
+
+  foreach($system_vars as $v => $var) {
+    foreach($var as $h) {
+      variable_set($h, 'not set');
     }
   }
+
+  // Allow new traits.
+  unset($system_vars);
+  $system_vars = analyzedphenotypes_systemvariables('options');
+  foreach($system_vars as $v => $var) {
+    variable_set($var, 1);
+  }
 }
+
 
 /**
  * Implements hook_uninstall().
  */
 function analyzedphenotypes_uninstall() {
-  $vars = analyzedphenotypes_systemvars();
+  $vars = analyzedphenotypes_systemvariables();
 
   foreach($vars as $i => $v) {
     if (is_array($v)) {
@@ -238,11 +221,11 @@ function analyzedphenotypes_uninstall() {
         variable_del($k);
       }
     }
-    else { 
+    else {
       variable_del($v);
     }
   }
-  
+
   foreach(array('mview_phenotype', 'mview_phenotype_summary') as $mview) {
     $mview_id = tripal_get_mview_id($mview);
 
