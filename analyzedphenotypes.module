@@ -729,7 +729,7 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
 
         // This array will hold datapoints for write-to-file.
         $to_write = array();
-
+        
         // Start by reading the column headers field. This contains the headers
         // programmatically picked and/or selected by user. In addition, this
         // contains the set of columns required as well as the order it appears in file.
@@ -836,7 +836,7 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
               $to_write['data'][$u_k]['avg'] = $first_item;
             }
           }
-
+          
           // Write to file.
 
           // Start off with the header.

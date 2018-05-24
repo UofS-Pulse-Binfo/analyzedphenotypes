@@ -1384,7 +1384,7 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
     '#submit' => array('system_settings_form_config_submit'),
   );
 
-
+  
   return $form;
 }
 
