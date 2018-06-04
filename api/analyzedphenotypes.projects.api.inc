@@ -44,13 +44,36 @@ function analyzedphenotypes_projectprop($property = null, $parameter = null) {
   // Process request.
   // Default to all projects.
   $command = array(
-    'default' => 'ap_get_projects',
-    'match_id' => 'ap_match_projectid',
-    'match_key' => 'ap_match_projectnamekey',
-    'match_name' => 'ap_match_projectname',
+    'default' => array(
+      'func'  => 'ap_get_projects',
+      'param' => null,
+      'opts'  => null,
+    ),
+    'match_id' => array(
+      'func'  => 'ap_match_projectid',
+      'param' => array('project_id' => $parameter['project_id']),
+      'opts'  => null,
+    ),
+    'match_key' => array(
+      'func'  => 'ap_match_projectname',
+      'param' => array('key' => $parameter['project_keyword']),
+      'opts'  => array(
+        'fullmatch' => FALSE,
+        'limitrows' => 10,
+      ),
+    ),
+    'match_name' => array(
+      'func'  => 'ap_match_projectname',
+      'param' => array('name' => $parameter['project_name']),
+      'opts'  => array(
+        'fullmatch' => TRUE,
+        'limitrows' => 1,
+      ),
+    ),
   );
 
-  return call_user_func($command[$property], $parameter);
+  // Function name, parameter (project name key or name), additional options.
+  return call_user_func($command[$property]['func'], $command[$property]['param'], $command[$property]['opts']);
 }
 
 
@@ -77,6 +100,7 @@ function ap_match_projectid($identifiers, $options = array()) {
   $projectprop = null;
 
   if (!is_array($all_projects)) {
+    // No project records.
     return $projectprop;
   }
 
@@ -97,78 +121,60 @@ function ap_match_projectid($identifiers, $options = array()) {
 
 /**
  * FUNCTION:
- * Fetch all records in chado.project that match a keyword.
+ * Fetch all records in chado.project that match a keyword (pattern search) or project name (full search).
  * Dependencies: ap_get_projects().
  *
  * @param $identifiers
  *   An array with the following keys:
- *    - project_keyword : a string, keyword entered.
+ *    - key  : a string, keyword or project name entered.
+ *    - name : project name/title.
  * @param $options
  *   An array to be used as additional options to be performed to
  *   returned result.
- *   - limitrows : limit the number of rows returned. Default to 10.
+ *   - fullmatch : flag if search is a pattern or full search. Defaul to TRUE - a fullmatch.
+ *   - limitrows : limit the number of rows returned. Default to 1.
  *
  * @return
  *   An array with project_id number as the key and project name as value.
  */
-function ap_match_projectnamekey($identifiers, $options = array('limitrows' => 10)) {
+function ap_match_projectname($identifiers, $options = array('fullmatch' => TRUE, 'limitrows' => 1)) {
   $all_projects = ap_get_projects();
   $projectprop = null;
 
   if (!is_array($all_projects)) {
+    // No project records.
     return $projectprop;
   }
 
   $i = 0;
-  foreach($all_projects as $id => $name) {
-    if (($i + 1) > $options['limitrows']) {
-      // Limit rows so it does not suggest a lengthy list.
-      break;
-    }
-
-    if (stripos($name, trim($identifiers['project_keyword'])) !== FALSE) {
-      // Match found.
-      // Project has the keyword, save it.
-      $projectprop[$id] = $name;
-    }
-
-    $i++;
-  }
-
-  return $projectprop;
-}
-
-/**
- * FUNCTION:
- * Fetch record in chado.project that matches experiment name or title.
- * Dependencies: ap_get_projects().
- *
- * @param $identifiers
- *   An array with the following keys:
- *    - project_name : a string, project name or title.
- * @param $options
- *   An array to be used as additional options to be performed to
- *   returned result.
- *
- * @return
- *   An array containing the project id number and project name.
- */
-function ap_match_projectname($identifiers, $options = array()) {
-  $all_projects = ap_get_projects();
-  $projectprop = null;
-
-  if (!is_array($all_projects)) {
-    return $projectprop;
-  }
 
   foreach($all_projects as $id => $name) {
-    if (strtolower($name) == strtolower(trim($identifiers['project_name']))) {
-      // Match found.
-      $projectprop = array(
-        'project_id' => $id,
-        'project_name' => $name,
-      );
+    if ($options['fullmatch']) {
+      // Fullmatch search.
+      if (strtolower($name) == strtolower(trim($identifiers['name']))) {
+        // Match found.
+        // Return record.
+        $projectprop = array(
+          'project_id' => $id,
+          'project_name' => $name,
+        );
 
+        $i++;
+      }
+    }
+    else {
+      // Pattern match search.
+      if (stripos($name, trim($identifiers['key'])) !== FALSE) {
+        // Match found.
+        // Project has the keyword, save it.
+        $projectprop[$id] = $name;
+
+        $i++;
+      }
+    }
+
+    // Compare limit rows if search had to stop.
+    if ($i >= $options['limitrows']) {
       break;
     }
   }
