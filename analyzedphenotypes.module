@@ -8,6 +8,8 @@
 
 // AP API.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.systemvars.api');
+
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.projects.api');
 // Default Ontology Terms API.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.defaultontology.api.inc');
