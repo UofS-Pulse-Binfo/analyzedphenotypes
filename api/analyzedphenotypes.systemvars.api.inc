@@ -14,7 +14,7 @@
  * @return
  *   An array of strings, constructed variable names grouped by variable type (set).
  */
-function ap_define_variablenames() {
+function ap_construct_variablenames() {
   // Group variable names (types/set).
   $var_set = array(
     // Allow new header to be added during upload.
@@ -107,27 +107,27 @@ function analyzedphenotypes_systemvariables($property = null, $parameter = null)
   // Default to all system variables.
   $command = array(
     'default' => array(
-      'func'  => 'ap_define_variablenames',
+      'func'  => 'ap_construct_variablenames',
       'param' => null,
       'opts'  => null,
     ),
     'options' => array(
-      'func'  => 'ap_get_systemvariable',
-      'param' => array('variablename' => 'allvars'),
+      'func'  => 'ap_get_variablenames',
+      'param' => array('variablename' => 'varset'),
       'opts'  => array('set' => 'options'),
     ),
     'cvdbon' => array(
-      'func'  => 'ap_get_systemvariable',
-      'param' => array('variablename' => 'allvars'),
+      'func'  => 'ap_get_variablenames',
+      'param' => array('variablename' => 'varset'),
       'opts'  => array('set' => 'cvdbon'),
     ),
     'terms' => array(
-      'func'  => 'ap_get_systemvariable',
-      'param' => array('variablename' => 'allvars'),
+      'func'  => 'ap_get_variablenames',
+      'param' => array('variablename' => 'varset'),
       'opts'  => array('set' => 'terms'),
     ),
     'genus_vars' => array(
-      'func'  => 'ap_get_systemvariable',
+      'func'  => 'ap_get_variablenames',
       'param' => array('variablename' => $parameter['genus']),
       'opts'  => array('set' => 'cvdbon', 'suffix' => 'allsuffix'),
     ),
@@ -152,7 +152,7 @@ function analyzedphenotypes_systemvariables($property = null, $parameter = null)
  * @param $options
  *   An array to be used as additional options to be performed to returned result.
  *     - set : the set a term belongs to. Default to CV, DB and ON (ontology) set.
- *       allvars - all variables in a set.
+ *       varset - group of variables in a set.
  *       terms - controlled vocabulary terms method, year etc.
  *       cvdbon - for controlled vocabulary, database and ontology configuration.
  *       options - module options such as allow new traits to be added.
@@ -165,7 +165,7 @@ function analyzedphenotypes_systemvariables($property = null, $parameter = null)
  * @return
  *   A String, variable name or an array a set of variable names.
  */
-function ap_get_systemvariable($identifiers, $options = array('set' => 'cvdbon', 'suffix' => 'cv')) {
+function ap_get_variablenames($identifiers, $options = array('set' => 'cvdbon', 'suffix' => 'cv')) {
   $systemvars = null;
 
   // Sanitize variable name requested.
@@ -173,9 +173,9 @@ function ap_get_systemvariable($identifiers, $options = array('set' => 'cvdbon',
   $variablename = strtolower(preg_replace('/\s+/', '_', $identifiers['variablename']));
 
   // All defined system variable names.
-  $all_vars = ap_define_variablenames();
+  $all_vars = ap_construct_variablenames();
 
-  if ($variablename == 'allvars') {
+  if ($variablename == 'varset') {
     // All system variables in a set requested.
     $systemvars = $all_vars[ $options['set'] ];
   }
