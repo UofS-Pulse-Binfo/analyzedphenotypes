@@ -50,8 +50,8 @@ function analyzedphenotypes_genusprop($property = null, $parameter = null) {
     ),
     'project_genus' => array(
       'func'  => 'ap_get_projectgenus',
-      'param' => array('value' => (isset($parameter['project_id'])) ? $parameter['project_id'] : $parameter['project_name']),
-      'opts'  => array('is_id' => (isset($parameter['project_id'])) ? TRUE : FALSE),
+      'param' => $parameter,
+      'opts'  => null,
     ),
     'assign_genus' => array(
       'func'  => 'ap_set_projectgenus',
@@ -76,14 +76,18 @@ function analyzedphenotypes_genusprop($property = null, $parameter = null) {
 /**
  * FUNCTION:
  * Assign a genus to an experiment/project in chado.projectprop table.
- * Dependencies: ap_get_variablenames() - systemvars.api.
+ * Dependencies: ap_get_projectgenus(), ap_get_variablenames() - systemvars.api.
  *
  * @param $identifiers
  *   An array with the following keys:
  *   - project_id : project id number, to which the genus will be linked to.
  *   - genus : genus.
+ * @param $options
+ *   An array to be used as additional options to be performed to
+ *   returned result. Keys:
+ *   - replace : Flag request to replace/overwrite existing project genus. Default to FALSE.
  */
-function ap_set_projectgenus($identifiers) {
+function ap_set_projectgenus($identifiers, $options = array('replace' => FALSE)) {
   // Fetch the configuration for the term Genus from terms system variable set.
   $sysvar = ap_get_variablenames(
     array('variablename' => 'genus'),
@@ -93,23 +97,32 @@ function ap_set_projectgenus($identifiers) {
   $sysvar_genus = variable_get($sysvar);
 
   // Before relating genus to a project, test for any previous correlations.
-  $is_rel = chado_query(
-    "SELECT projectprop_id FROM {projectprop} WHERE value = :genus AND project_id = :project_id AND type_id = :sysvar_genus",
-    array(
-      ':genus'   => $identifiers['genus'],
-      ':project_id' => $identifiers['project_id'],
-      ':sysvar_genus' => $sysvar_genus,
-    )
-  )
-  ->fetchCol();
+  $projectgenus = ap_get_projectgenus(
+    array('project_id' => $identifiers['project_id'])
+  );
 
-  if (!$is_rel) {
-    // Is clear, no past relations made.
-    chado_insert_record('projectprop', array(
-      'project_id' => $identifiers['project_id'],
-      'type_id' => $sysvar_genus,
-      'value' => $identifiers['genus']
-    ));
+  $values = array(
+    'project_id' => $identifiers['project_id'],
+    'type_id' => $sysvar_genus,
+    'value' => $identifiers['genus']
+  );
+
+  if ($projectgenus && $options['replace']) {
+    // Has genus, replace current project genus when implied in the options.
+    // No value key.
+    $umatch = array_slice($values, 0, 2);
+    // Just value key.
+    $uvalue = array_slice($values, 2, 1);
+    chado_update_record('projectprop', $umatch, $uvalue);
+  }
+  else {
+    // When project genus matches, do nothing. Only when 0 record found we create a relationship.
+    // Regardless of replace option.
+
+    if (!$projectgenus) {
+      // No past relations made. Set genus to project.
+      chado_insert_record('projectprop', $values);
+    }
   }
 }
 
@@ -119,18 +132,14 @@ function ap_set_projectgenus($identifiers) {
  * Dependencies: ap_get_variablenames() - systemvars.api.
  *
  * @param $identifiers
- *   An array, with the following keys:
- *     - value : project id number or project name.
- *
- * @param $options
- *   An array to be used as additional options to be performed to
- *   returned result.
- *   - is_id : boolean, to flag if supplied value is a project id or not. Default to TRUE.
+ *   An array, with either one of the following keys:
+ *     - project_id : project id number
+ *     - project name : project name/title.
  *
  *  @return
  *    A string, genus of an experiment/project.
  */
-function ap_get_projectgenus($identifiers, $options = array('is_id' => TRUE)) {
+function ap_get_projectgenus($identifiers) {
   // Fetch the configuration for the term Genus from terms system variable set.
   $sysvar = ap_get_variablenames(
     array('variablename' => 'genus'),
@@ -140,18 +149,20 @@ function ap_get_projectgenus($identifiers, $options = array('is_id' => TRUE)) {
   $sysvar_genus = variable_get($sysvar);
 
   // What is provided? project id or project name?
-  $field = ($options['is_id']) ? 'project.project_id' : 'project.name';
-
-  // Fetch projectprop.value of type (type_id) Genus for a project id or project name.
-  $sql = sprintf(
-    "SELECT projectprop.value FROM {project} INNER JOIN {projectprop} USING (project_id)
-    WHERE projectprop.type_id = :type_id AND %s = :value LIMIT 1", $field
-  );
+  if (isset($identifiers['project_id'])) {
+    $sql = "SELECT value FROM {projectprop} WHERE type_id = :type_id AND project_id = :value LIMIT 1";
+    $field = 'project_id';
+  }
+  else {
+    $sql = "SELECT projectprop.value FROM {projectprop} INNER JOIN {project} USING (project_id)
+      WHERE projectprop.type_id = :type_id AND project.name = :value LIMIT 1";
+    $field = 'project_name';
+  }
 
   $result = chado_query($sql,
     array(
       ':type_id' => $sysvar_genus,
-      ':value' => $identifiers['value'],
+      ':value' => $identifiers[$field],
     )
   );
 
