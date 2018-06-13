@@ -11,6 +11,10 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.systemvars.api');
 
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.projects.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.genus.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.cv.api');
+
+
 // Default Ontology Terms API.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.defaultontology.api.inc');
 // Validators.

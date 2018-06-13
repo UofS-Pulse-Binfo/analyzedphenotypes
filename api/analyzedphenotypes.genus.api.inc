@@ -55,7 +55,7 @@ function analyzedphenotypes_genusprop($property = null, $parameter = null) {
     ),
     'assign_genus' => array(
       'func'  => 'ap_set_projectgenus',
-      'param' => array('project_id' => $parameter['project_id'], 'genus' => $parameter['genus']),
+      'param' => array('project_id' => $parameter['project_id'], 'genus' => $parameter['project_genus']),
       'opts'  => null,
     ),
     'sysvar_genus_set' => array(
