@@ -46,7 +46,8 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
     'get_cvterm' => array(
       'func'  => 'ap_get_cvterm',
       'param' => array('cvterm_id' => $parameter['cvterm_id'], 'genus' => $parameter['genus']),
-      'opts'  => array('resultset' => 'full'),
+      'opts'  => array('resultset' => 'fullset'),
+      'result' => 1,
     ),
     'insert_cvterm' => array(
       'func'  => 'ap_insert_cvterm',
@@ -81,7 +82,13 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
   );
 
   // Function name, parameter (project name key or name), additional options.
-  return call_user_func($command[$property]['func'], $command[$property]['param'], $command[$property]['opts']);
+  $cvterm = call_user_func($command[$property]['func'], $command[$property]['param'], $command[$property]['opts']);
+
+  if ($command[$property]['result'] == 1) {
+    $cvterm = reset($cvterm);
+  }
+
+  return $cvterm;
 }
 
 
@@ -95,196 +102,180 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
  *
  * @param $identifiers
  *   An array with the following keys:
- *   - keyword : match a cvterm record given a name keyword.
- *   or - cvtermcv : match cvterm record given a pre-formatted [cvterm name (cv name)] combination.
- *   or - cv_id : search term(s) in/given a cv id number.
- *   or - name : match a cvterm record given a cvterm name.
- *   or - cvterm_id : match a cvterm record given a cvterm_id number.
- *   - genus : genus.
+ *   - keyword : fetch terms that match a name keyword.
+ *   or - cvtermcv : fetch terms that match a pre-formatted name and cv name combination.
+ *   or - cv_id : fetch terms that match a controlled vocabulary (cv) id number.
+ *   or - name : fetch terms that match name.
+ *   or - cvterm_id : fetch term that matches a cvterm id number.
+ *   - genus : genus, optional, when provided will restrict/limit search to cv configuration of a genus.
  * @param $options
  *   An array to be used as additional options to be performed to
  *   returned result. Keys:
- *   - resultset : when set to full, additional information such as db, cv, ontology and photo info will be added.
- *     A cvtermcv, will return cvterm and cv information in cvterm name (cv name) format.
- *     Default to idname, which will return only the name and cvterm_id number.
+ *   - dataset : Option to format and limit fields in returned value. Default to cvtermid.
+ *     cvtermid - return cvterm id numbers.
+ *    or cvtermidname - return cvterm id and cvterm name.
+ *    or namecvname - return cvterm name and cv name.
+ *    or namecvname_format - return cvterm name and cv name in name (cv name) format.
+ *    or fullset - include additional cvterm properties cv, ontology and database.
  *
  * @return
- *   An array, information about controlled vocabulary term.
+ *   An array, information or properties about controlled vocabulary term.
  */
-function ap_get_cvterm($identifiers, $options = array('resultset' => 'idname')) {
+function ap_get_cvterm($identifiers, $options = array('dataset' => 'cvtermid')) {
   // Inspect what is provided:
   $value = reset(array_keys($identifiers));
 
-  // Require genus cv configuration.
-  // Prepare system variables:
+  // Build Query: Fill in the blanks.
+  // SELECT __ FROM __ WHERE __ AND __ ORDER BY __
+  // EXECUTE...
+  // RESULT ...
 
+  // SELECT.
+  $sql = 'SELECT ';
+  $sql_fld = 'cvterm.cvterm_id, cvterm.name, cvterm.definition, cvterm.cv_id, cvterm.dbxref_id';
+  if ($value == 'cvtermcv') {
+    $sql_fld .= ', cv.name AS cv_name';
+  }
 
-  if (in_array($value, array('cvterm_id', 'name', 'keyword'))) {
+  $sql .= $sql_fld . ' ';
+
+  // FROM.
+  $sql .= 'FROM';
+  $sql_tbl = '{cvterm}';
+  if ($value == 'cvtermcv') {
+    $sql_tbl .= ' INNER JOIN {cv} USING(cv_id)';
+  }
+
+  $sql .= ' ' . $sql_tbl . ' ';
+
+  // WHERE.
+  $sql .= 'WHERE';
+  $sql_where = array('field', 'match' => '=', 'value', 'args' => ':value');
+
+  if ($value == 'cvterm_id') {
+    // BY CVTERM ID NUMBER.
+    $sql_where['field'] = 'cvterm.cvterm_id';
+    $sql_where['value'] = $identifiers[$value];
+  }
+  elseif ($value == 'name') {
+    // BY CVTERM NAME.
+    $sql_where['field'] = 'cvterm.name';
+    $sql_where['value'] = $identifiers[$value];
+  }
+  elseif ($value == 'keyword') {
+    // BY CVTERM NAME KEYWORD.
+    $sql_where['field'] = 'LOWER(cvterm.name)';
+    $sql_where['match'] = 'LIKE';
+    $sql_where['value'] = '%' . strtolower($identifiers[$value]) . '%';
+  }
+  elseif ($value == 'cvtermcv') {
+    // BY CVTERM NAME AND CV NAME COMBINATION.
+    $sql_where['field'] = 'CONCAT(cvterm.name, \' (\', cv.name, \')\')';
+    $sql_where['value'] = $identifiers[$value];
+  }
+  elseif ($value == 'cv_id') {
+    // BY CV ID NUMBER.
+    $sql_where['field'] = 'cvterm.cv_id';
+    $sql_where['value'] = $identifiers[$value];
+  }
+
+  // field = :value
+  $sql .= ' ' . $sql_where['field'] . ' ' . $sql_where['match'] . ' ' . $sql_where['args'] . ' ';
+
+  // WHERE AND.
+  if (isset($identifiers['genus'])) {
+    // Restrict dataset to the cv configuration for a genus.
     $sysvar = ap_get_variablenames(
       array('variablename' => $identifiers['genus']),
       array('set' => 'cvdbon', 'suffix' => 'cv')
     );
 
     $sysvar_genus_cv = variable_get($sysvar);
-
-    if ($value == 'cvterm_id' && $options['resultset'] == 'full') {
-      // When searching by cvterm_id and requiring detailed properties.
-      // Get cv term related, to be used to fetch ontology information.
-      unset($sysvar);
-      $sysvar = ap_get_variablenames(
-        array('variablename' => 'related'),
-        array('set' => 'terms')
-      );
-
-      $sysvar_related = variable_get($sysvar);
-    }
+    $sql .= 'AND cvterm.cv_id = ' . $sysvar_genus_cv . ' ';
   }
 
+  // ORDER.
+  $sql .= 'ORDER BY cvterm.name ASC';
 
-  // Process search.
+  //
+  // EXECUTE.
+  $result = chado_query($sql, array($sql_where['args'] => $sql_where['value']));
 
+  // RESULT.
   $cvterm = null;
 
-  // # SEARCH BY NAME KEYWORD.
-  // search is limited to the genus cv configuration.
-  if ($value == 'keyword') {
-    $cvterm = chado_query(
-      "SELECT cvterm_id, name FROM {cvterm}
-      WHERE cv_id = :cv_id AND name LIKE :value ORDER BY name ASC",
-      array(
-        ':cv_id' => $sysvar_genus_cv,
-        ':value' => '%' . $identifiers['keyword'] . '%'
-      )
-    );
+  if ($result->rowCount()) {
+    if ($options['dataset'] == 'cvtermid' || $options['dataset'] == 'cvtermidname' ) {
+      // Return cvterm_id number.
+      // Return cvterm_id and name.
+      foreach($result as $term) {
+        $d = ($options['dataset'] == 'cvtermid')
+          ? array('cvterm_id' => $term->cvterm_id)
+          : array('cvterm_id' => $term->cvterm_id, 'name' => $term->name);
 
-    return ($cvterm->rowCount()) ? $cvterm->fetchAllKeyed() : null;
-  }
+        $cvterm[] = $d;
+      }
+    }
+    elseif ($options['dataset'] == 'namecvname' || $options['dataset'] == 'namecvname_format') {
+      // Return name and cv name - no formatting.
+      // Return name and cv name - with formatting.
+      foreach($result as $term) {
+        $cv = chado_get_cv(array('cv_id' => $term->cv_id));
 
-  // # SEARCH BY CVTERM NAME (CV NAME) COMBINATION.
-  // search is not limited to an controlled vocabulary (cv).
-  if ($value == 'cvtermcv') {
-    $cvterm = chado_query(
-      "SELECT cvterm_id FROM {cvterm} AS t1 INNER JOIN {cv} AS t2 USING(cv_id)
-      WHERE CONCAT(t1.name, ' (' , t2.name , ')') = :value LIMIT 1",
-      array(':value' => $identifiers['cvtermcv'])
-    );
+        if ($cv) {
+          $d = ($options['dataset'] == 'namecvname')
+            ? array('name' => $term->name, 'cv_name' => $cv->name)
+            : array('namecvname' => $term->name . ' (' . $cv->name . ')');
 
-    return ($cvterm->rowCount()) ? $cvterm->fetchField() : null;
-  }
+          $cvterm[] = $d;
+        }
+      }
+    }
+    elseif ($options['dataset'] = 'fullset') {
+      // Include other term properties (cv, db, ontology etc.).
+      foreach($result as $term) {
+        // CV info.
+        $cv = chado_get_cv(array('cv_id' => $term->cv_id));
 
-  // # SEARCH BY CV ID.
-  // search is limited to controlled vocabulary (cv) provided.
-  if ($value == 'cv_id') {
-    $cvterm = chado_query(
-      "SELECT cvterm_id, name, definition FROM {cvterm}
-      WHERE cv_id = :value ORDER BY name ASC",
-      array(':value' => $identifiers['cv_id'])
-    );
+        // DB info.
+        $db = chado_generate_var('dbxref',
+          array('dbxref_id' => $term->dbxref_id)
+        );
 
-    if ($cvterm) {
-      $term = array();
+        // ON ontology info.
+        $sysvar = ap_get_variablenames(
+          array('variablename' => 'related'),
+          array('set' => 'terms')
+        );
 
-      foreach($cvterm as $c) {
-        $term[$c->cvterm_id] = array(
-          'name' => $c->name,
-          'definition' => $c->definition,
+        $sysvar_related = variable_get($sysvar);
+        $on = chado_generate_var('cvterm_relationship',
+          array('object_id' => $term->cvterm_id, 'type_id' => $sysvar_related)
+        );
+
+        // Construct full, additional properties of term.
+        $cvterm[] = array(
+          // cvterm.
+          'name'    => $term->name,
+          'cvterm_id' => $term->cvterm_id,
+          'definition' => $term->definition,
+
+          // cv.
+          'cv_id' => $term->cv_id,
+          'cv_name' => ($cv) ? $cv->name : null,
+
+          // db.
+          'dbxref_id' => $term->dbxref_id,
+          'db_id'   => ($db) ? $db->db_id->db_id : null,
+
+          // on.
+          'crop_ontology' => ($on) ? $on->subject_id->name : null
         );
       }
-
-      return $term;
     }
   }
 
-  // May request detailed cvterm properties when implied in $options parameter.
-
-  // # SEARCH BY NAME.
-  // search is limited to the genus cv configuration.
-  if ($value == 'name') {
-    $args = array(
-      'cv_id' => $sysvar_genus_cv,
-      'name' => $identifiers['name']
-    );
-
-    $cvterm = (function_exists('chado_get_cvterm')) ? chado_get_cvterm($args) : tripal_get_cvterm($args);
-  }
-
-
-  // # SEARCH BY CVTERM ID NUMBER.
-  // search is limited to the genus cv configuration.
-  if ($value == 'cvterm_id') {
-    $args = array(
-      'cv_id' => $sysvar_genus_cv,
-      'cvterm_id' => $identifiers['cvterm_id']
-    );
-
-    $cvterm = (function_exists('chado_get_cvterm')) ? chado_get_cvterm($args) : tripal_get_cvterm($args);
-  }
-
-
-  // Result options.
-
-
-  if ($cvterm) {
-    $term = array();
-
-    if ($options['resultset'] == 'full') {
-      // Full set.
-
-      // Database info.
-      $database = chado_generate_var('dbxref',
-        array('dbxref_id' => $cvterm->dbxref_id)
-      );
-
-      // Ontology info.
-      $ontology = chado_query(
-        "SELECT name FROM {cvterm} WHERE cvterm_id =
-          (SELECT subject_id FROM {cvterm_relationship}
-            WHERE type_id = :related AND object_id = :value LIMIT 1)",
-        array(
-          ':related' => $sysvar_related,
-          ':value' => $cvterm->cvterm_id,
-        )
-      )
-      ->fetchField();
-
-      // Construct info array.
-      $term = array(
-        // cvterm.
-        'cvterm_id' => $cvterm->cvterm_id,
-        'name' => $cvterm->name,
-        'definition' => $cvterm->definition,
-
-        // cv.
-        'cv_id' => $cvterm->cv_id->cv_id,
-        'cv_name' => $cvterm->cv_id->name,
-
-        // photo.
-        'photo_1' => $cvterm->cvterm_id . '_1.jpg',
-        'photo_2' => $cvterm->cvterm_id . '_2.jpg',
-
-        // database.
-        'dbxref_id' => $cvterm->dbxref_id,
-        'db_id' => ($database) ? $database->db_id->db_id : 0,
-
-        // ontology
-        'crop_ontology' => ($ontology) ? $ontology : null
-      );
-    }
-    elseif ($options['resultset'] == 'cvtermcv') {
-      // cvterm name (cv name) format.
-      $term = $cvterm->name . ' (' . $cvterm->cv_id->name . ')';
-    }
-    else {
-      // Id and name - default:
-      $term[ $cvterm->cvterm_id ] = $cvterm->name;
-    }
-
-    return $term;
-  }
-  else {
-    // null.
-    return $cvterm;
-  }
+  return $cvterm;
 }
 
 /**
@@ -462,37 +453,51 @@ function ap_download_cvtermphoto($cvterm_id) {
  */
 function ap_autocomplete_cvtermfields($identifiers) {
   $value = reset(array_keys($identifiers));
+  $cvterm = null;
 
-  // Generate suggestions.
   if ($value == 'keyword') {
-    $cvterm = chado_query(
-      "SELECT TRIM(t2.name), TRIM(t1.name) AS cv_name FROM {cv} AS t1 INNER JOIN {cvterm} AS t2 USING (cv_id)
-      WHERE LOWER(t2.name) LIKE LOWER(:value) ORDER BY t1.name LIMIT 20",
-      array(':value' => '%' . $identifiers['keyword'] . '%')
+    // Keyword entered in a field.
+    $term = ap_get_cvterm(
+      array('keyword' => $identifiers['keyword']),
+      array('dataset' => 'namecvname')
     );
 
-    return ($cvterm->rowCount()) ? $cvterm->fetchAllKeyed() : null;
-  }
+    if ($term) {
+      foreach($term as $i => $t) {
+        $cvterm[ $t['name'] ] = $t['cv_name'];
 
-  // Entered value cvterm name (cv name) return cvterm id.
-  if ($value == 'cvtermcv_cvtermid') {
-    $cvterm = ap_get_cvterm(
-      array('cvtermcv' => $identifiers['cvtermcv_cvtermid'])
+        if ($i >= 20) {
+          break;
+        }
+      }
+    }
+  }
+  elseif ($value == 'cvtermcv_cvtermid') {
+    // Cvterm name (cv name) entered in a field and expect cvterm_id number.
+    $term = ap_get_cvterm(
+      array('cvtermcv' => $identifiers['cvtermcv_cvtermid']),
+      array('dataset' => 'cvtermid')
     );
 
-    return ($cvterm) ? $cvterm : null;
+    if ($term) {
+      $term = reset($term);
+      $cvterm = $term['cvterm_id'];
+    }
   }
-
-  // Entered value cvterm id return cvterm name (cv name).
-  if ($value == 'cvtermid_cvtermcv') {
-    $args = array(
-      'cvterm_id' => $identifiers['cvtermid_cvtermcv']
+  elseif ($value == 'cvtermid_cvtermcv') {
+    // Cvterm id number entered in a field and expect cvterm name (cv name).
+    $term = ap_get_cvterm(
+      array('cvterm_id' => $identifiers['cvtermid_cvtermcv']),
+      array('dataset' => 'namecvname_format')
     );
 
-    $cvterm = (function_exists('chado_get_cvterm')) ? chado_get_cvterm($args) : tripal_get_cvterm($args);
-
-    return ($cvterm) ? $cvterm->name . ' (' . $cvterm->cv_id->name . ')' : null;
+    if ($term) {
+      $term = reset($term);
+      $cvterm = $term['namecvname'];
+    }
   }
+
+  return $cvterm;
 }
 
 /**
@@ -545,7 +550,6 @@ function ap_get_cv($identifiers = null) {
 
 /**
  * FUNCTION SCALE PHOTO.
- * @TODO: move to file management api.
  */
 function analyzedphenotypes_scale_photo($parameter) {
   $h = $parameter['height'];
