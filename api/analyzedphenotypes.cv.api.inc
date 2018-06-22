@@ -46,7 +46,7 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
     'get_cvterm' => array(
       'func'  => 'ap_get_cvterm',
       'param' => array('cvterm_id' => $parameter['cvterm_id'], 'genus' => $parameter['genus']),
-      'opts'  => array('resultset' => 'fullset'),
+      'opts'  => array('dataset' => 'fullset'),
       'result' => 1,
     ),
     'insert_cvterm' => array(
@@ -133,7 +133,7 @@ function ap_get_cvterm($identifiers, $options = array('dataset' => 'cvtermid')) 
   // SELECT.
   $sql = 'SELECT ';
   $sql_fld = 'cvterm.cvterm_id, cvterm.name, cvterm.definition, cvterm.cv_id, cvterm.dbxref_id';
-  if ($value == 'cvtermcv') {
+  if ($options['dataset'] != 'cvtermid' || $options['dataset'] != 'cvtermidname') {
     $sql_fld .= ', cv.name AS cv_name';
   }
 
@@ -142,7 +142,7 @@ function ap_get_cvterm($identifiers, $options = array('dataset' => 'cvtermid')) 
   // FROM.
   $sql .= 'FROM';
   $sql_tbl = '{cvterm}';
-  if ($value == 'cvtermcv') {
+  if ($options['dataset'] != 'cvtermid' || $options['dataset'] != 'cvtermidname') {
     $sql_tbl .= ' INNER JOIN {cv} USING(cv_id)';
   }
 
@@ -181,17 +181,22 @@ function ap_get_cvterm($identifiers, $options = array('dataset' => 'cvtermid')) 
 
   // field = :value
   $sql .= ' ' . $sql_where['field'] . ' ' . $sql_where['match'] . ' ' . $sql_where['args'] . ' ';
+  $args = array($sql_where['args'] => $sql_where['value']);
 
   // WHERE AND.
-  if (isset($identifiers['genus'])) {
+  if (isset($identifiers['genus']) && $value != 'cv_id') {
     // Restrict dataset to the cv configuration for a genus.
+    // If both cv_id (search by cv_id) and genus were provided,
+    // ignore this block and prioritize cv_id over genus.
     $sysvar = ap_get_variablenames(
       array('variablename' => $identifiers['genus']),
       array('set' => 'cvdbon', 'suffix' => 'cv')
     );
 
     $sysvar_genus_cv = variable_get($sysvar);
-    $sql .= 'AND cvterm.cv_id = ' . $sysvar_genus_cv . ' ';
+    $sql .= 'AND cvterm.cv_id = :config_cvid ';
+
+    $args[':config_cvid'] = $sysvar_genus_cv;
   }
 
   // ORDER.
@@ -199,13 +204,13 @@ function ap_get_cvterm($identifiers, $options = array('dataset' => 'cvtermid')) 
 
   //
   // EXECUTE.
-  $result = chado_query($sql, array($sql_where['args'] => $sql_where['value']));
+  $result = chado_query($sql, $args);
 
   // RESULT.
   $cvterm = null;
 
   if ($result->rowCount()) {
-    if ($options['dataset'] == 'cvtermid' || $options['dataset'] == 'cvtermidname' ) {
+    if ($options['dataset'] == 'cvtermid' || $options['dataset'] == 'cvtermidname') {
       // Return cvterm_id number.
       // Return cvterm_id and name.
       foreach($result as $term) {
@@ -220,23 +225,16 @@ function ap_get_cvterm($identifiers, $options = array('dataset' => 'cvtermid')) 
       // Return name and cv name - no formatting.
       // Return name and cv name - with formatting.
       foreach($result as $term) {
-        $cv = chado_get_cv(array('cv_id' => $term->cv_id));
+        $d = ($options['dataset'] == 'namecvname')
+          ? array('name' => $term->name, 'cv_name' => $term->cv_name)
+          : array('namecvname' => $term->name . ' (' . $term->cv_name . ')');
 
-        if ($cv) {
-          $d = ($options['dataset'] == 'namecvname')
-            ? array('name' => $term->name, 'cv_name' => $cv->name)
-            : array('namecvname' => $term->name . ' (' . $cv->name . ')');
-
-          $cvterm[] = $d;
-        }
+        $cvterm[] = $d;
       }
     }
     elseif ($options['dataset'] = 'fullset') {
       // Include other term properties (cv, db, ontology etc.).
       foreach($result as $term) {
-        // CV info.
-        $cv = chado_get_cv(array('cv_id' => $term->cv_id));
-
         // DB info.
         $db = chado_generate_var('dbxref',
           array('dbxref_id' => $term->dbxref_id)
@@ -262,7 +260,7 @@ function ap_get_cvterm($identifiers, $options = array('dataset' => 'cvtermid')) 
 
           // cv.
           'cv_id' => $term->cv_id,
-          'cv_name' => ($cv) ? $cv->name : null,
+          'cv_name' => $term->name,
 
           // db.
           'dbxref_id' => $term->dbxref_id,
