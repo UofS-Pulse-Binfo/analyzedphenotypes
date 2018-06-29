@@ -21,7 +21,7 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.databas
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.materializedview.api');
 
 // Default Ontology Terms API.
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontology.api.inc');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontology.api');
 // Validators.
 module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.validators');
 
