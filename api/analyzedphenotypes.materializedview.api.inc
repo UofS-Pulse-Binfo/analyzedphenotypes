@@ -79,7 +79,7 @@ function ap_construct_mviewquery() {
       s.stock_id,
       s.name,
       o.genus
-    ", $term_id_location, $sysvar_year
+    ", $sysvar_location, $sysvar_year
   );
 
   return $mviewquery;
