@@ -599,7 +599,7 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
       }
 
 
-      if ($error_counter >= $tripaljob_settings['error_limit']) {
+      if ($error_counter >= $tripaljob_settings['TRIPALJOB_error_limit']) {
         print 'Error limit reached. Job terminated.' . "\n";
         break;
       }
@@ -607,7 +607,7 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
       //
       $percent = round((($i + 1) / $rows_count) * 100);
 
-      if ($percent % $tripaljob_settings['report_frequency'] == 0) {
+      if ($percent % $tripaljob_settings['TRIPALJOB_report_frequency'] == 0) {
         if ($percent != $prev_percent) {
           print $percent . '% Complete...' . "\n";
           $prev_percent = $percent;
