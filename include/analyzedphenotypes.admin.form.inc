@@ -1502,37 +1502,6 @@ function system_settings_form_config_submit($form, &$form_state) {
 }
 
 
-/**
- * FUNCTION CALLBACK
- * Update materialized view used in Phenotype Visualizer.
- */
-function analyzedphenotypes_updatemview() {
-  // Update materialized views to use the terms location and year selected in this form.
-  $mview_phenotype = 'mview_phenotype';
-  $mview_id = tripal_get_mview_id($mview_phenotype);
-
-  if ($mview_id) {
-    $sysvars = analyzedphenotypes_systemvariables('terms');
-
-    $sysvar_location = variable_get($sysvars['ap_location']);
-    $sysvar_year = variable_get($sysvars['ap_year']);
-
-    $update_mview = analyzedphenotypes_mview('view_phenotypes', array(
-      'term_id_location' => $sysvar_location,
-      'term_id_year' => $sysvar_year,
-    ));
-
-    // This works but it deletes the schema and brakes the view.
-    // tripal_edit_mview($mview_id, $mview_phenotype, 'analyzedphenotypes', '', '', 0, $update_mview['query'], '');
-
-    chado_query("UPDATE tripal_mviews SET query = :mview_query WHERE mview_id = :mview_id", array(
-      ':mview_query' => $update_mview['query'],
-      ':mview_id' => $mview_id,
-    ));
-  }
-}
-
-
 
 ///////
 

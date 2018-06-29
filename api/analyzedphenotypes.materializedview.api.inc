@@ -11,7 +11,7 @@
  * @TODO: Replace this function with the function below.
  */
 function analyzedphenotypes_mview($property, $parameter = null) {
-  $mviewquery = ap_construct_mviewquery();
+  $mviewquery  = ap_construct_mviewquery();
   $mviewschema = ap_construct_mviewschema();
 
   return array(
