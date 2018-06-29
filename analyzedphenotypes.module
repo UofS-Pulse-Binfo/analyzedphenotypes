@@ -13,10 +13,15 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.systemv
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.projects.api');
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.genus.api');
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.cv.api');
-
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.columnheaders.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.datatype.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.tripaljob.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.datafile.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.database.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.materializedview.api');
 
 // Default Ontology Terms API.
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.defaultontology.api.inc');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontology.api.inc');
 // Validators.
 module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.validators');
 
