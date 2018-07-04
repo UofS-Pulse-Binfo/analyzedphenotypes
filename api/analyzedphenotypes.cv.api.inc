@@ -545,19 +545,3 @@ function ap_get_cv($identifiers = null) {
     }
   }
 }
-
-/**
- * FUNCTION SCALE PHOTO.
- */
-function analyzedphenotypes_scale_photo($parameter) {
-  $h = $parameter['height'];
-  $w = $parameter['width'];
-  $scale_to = $parameter['scale_to'];
-
-  $ratio = ($w > $h) ? $scale_to / $w : $scale_to / $h;
-
-  $new_w = round($w * $ratio);
-  $new_h = round($h * $ratio);
-
-  return array('height' => $new_h, 'width' => $new_w);
-}
