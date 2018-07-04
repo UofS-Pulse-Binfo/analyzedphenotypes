@@ -7,21 +7,29 @@
 
 
 // AP API.
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
+// System variables.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.systemvars.api');
 
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.projects.api');
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.genus.api');
+// API with reference to Tripal/chado Database and APIs.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.cv.api');
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.columnheaders.api');
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.datatype.api');
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.tripaljob.api');
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.datafile.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.genus.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.projects.api');
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.database.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontology.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.tripaljob.api');
+
+// Materialized views, data summary.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.materializedview.api');
 
-// Default Ontology Terms API.
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontology.api');
+// General API and Helper functions.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.datatype.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.datafile.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.columnheaders.api');
+
+// AJAX fields API in Data donwloader module.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.formfields.api');
+
 // Validators.
 module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.validators');
 
@@ -781,12 +789,90 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
 
         // Next... the Rows and rows and more rows.
         // Fetch dataset for a given filters.
-        $dataset = analyzedphenotypes_populatefield('file', array(
-          'filters' => $filter_value,
-        ));
+        $filters = $filter_value;
 
-        if ($dataset) {
+        // Match field to actual chado column names.
+        // Limit rows to project, trait, year, location, germplasm type and germplasm.
+        $column = array(
+          $fldname['experiment']['base']    => 'project_id',
+          $fldname['traits']['base']        => 'cvterm_id',
+          $fldname['germplasmtype']['base'] => 't3.type_id',
+          $fldname['year']['base']          => 't7.value',
+          $fldname['location']['base']      => 't8.value',
+          // As entered in the germplasm field.
+          $fldname['germplasm']['base']     => "CONCAT(t3.name, ' (', t3.uniquename, ')')",
+        );
+
+        $limit = array();
+        foreach($column as $filter => $col) {
+          $filter_val = $filters[$filter];
+
+          // Convert filter so chado_query arguments (:placeholder = value).
+          // Exclude filter with value = all.
+          if ($filter_val != 'all') {
+            $placeholder = ':' . $filter;
+
+            $limit['limit'] .= ' AND ' . $col . ' IN (' . $placeholder . ')';
+            $limit['args'][$placeholder] = explode($delimiter, $filter_val);
+          }
+        }
+
+        $sql = sprintf("
+          SELECT
+            t2.project_id, t1.phenotype_id, t2.name AS %s, t3.name AS %s,
+            STRING_AGG(t4.value, '') AS %s, t5.name AS %s, t1.value AS %s, t6.value AS %s,
+            t7.value AS %s, t8.value AS %s, t9.value AS %s
+          FROM
+            {phenotype}                AS t1
+            INNER JOIN {project}       AS t2 USING(project_id)
+            INNER JOIN {stock}         AS t3 USING(stock_id)
+            LEFT  JOIN {stockprop}     AS t4 ON t3.stock_id = t4.stock_id AND t4.type_id = :term_origin
+            INNER JOIN {cvterm}        AS t5 ON t1.attr_id = t5.cvterm_id
+            INNER JOIN {phenotypeprop} AS t6 USING(phenotype_id)
+            INNER JOIN {phenotypeprop} AS t7 USING(phenotype_id)
+            INNER JOIN {phenotypeprop} AS t8 USING(phenotype_id)
+            INNER JOIN {phenotypeprop} AS t9 USING(phenotype_id)
+          WHERE
+            t6.type_id = :term_replicate AND t7.type_id = :term_year
+            AND t8.type_id = :term_location AND t9.type_id = :term_collector
+            %s
+          GROUP BY
+            t2.project_id, t1.phenotype_id, t2.name, t3.name, t5.name, t1.value, t6.value, t7.value, t8.value, t9.value
+          ORDER BY t2.name, t3.name, t7.value, t8.value ASC",
+            $fldname['experiment']['base'],
+            $fldname['germplasm']['base'],
+            $fldname['origin']['base'],
+            $fldname['traits']['base'],
+            $fldname['value']['base'],
+            $fldname['replicate']['base'],
+            $fldname['year']['base'],
+            $fldname['location']['base'],
+            $fldname['collector']['base'],
+            $limit['limit']
+        );
+
+        // Plant property (replicate, year, location, data collector) cvterms;
+        $sysvar = ap_get_variablenames(
+          array('variablename' => 'varset'),
+          array('set' => 'terms')
+        );
+
+        $dataset = chado_query(
+          $sql,
+          $limit['args'] + array(
+            // Plant property terms.
+            ':term_replicate' => variable_get($sysvar['ap_replicate']),
+            ':term_year'      => variable_get($sysvar['ap_year']),
+            ':term_origin'    => variable_get($sysvar['ap_origin']),
+            ':term_location'  => variable_get($sysvar['ap_location']),
+            ':term_collector' => variable_get($sysvar['ap_collector']),
+          )
+        );
+
+        if ($dataset->rowCount()) {
           // Have something to write to file.
+
+          $dataset = $dataset->fetchAll();
 
           // SQL query uses alias to reference field. Use alias to access piece of data.
           $field_alias = analyzedphenotypes_columnsprop('column_to_field');
@@ -896,7 +982,7 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
 
           // CREATE FILE.
           if ($to_file) {
-            analyzedphenotypes_writefile($filename, $to_file, $file_type);
+            analyzedphenotypes_trpdownload_writefile($filename, $to_file, $file_type);
           }
         }
         else {
@@ -910,5 +996,53 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
       }
     //
     }
+  }
+}
+
+/**
+ * FUNCTION GENERATE FILE.
+ * Create a tsv, csv and xlsx file.
+ *
+ * @param $filename
+ *   String, destination filename.
+ * @param $data_rows
+ *   An array containing the headers (index 0) and data points to write to a file.
+ * @param $file_type
+ *   String, indicating the type of file (tsv, csv, xlsx).
+ */
+function analyzedphenotypes_trpdownload_writefile($filename, $data_rows, $file_type) {
+  $filepath = variable_get('trpdownload_fullpath', '') . $filename;
+
+  switch($file_type) {
+    //
+    case 'tsv':
+    //
+    case 'csv':
+      $FILE = fopen($filepath, 'w') or die ('Unable to create file to write to...');
+
+      foreach($data_rows as $row) {
+        if ($file_type == 'tsv') {
+          fputcsv($FILE, $row, "\t");
+        }
+        else {
+          fputcsv($FILE, $row);
+        }
+      }
+
+      fclose($FILE);
+
+      break;
+
+    //
+    case 'xlsx':
+      // Load spreadsheet writer library.
+      $xlsx_writer = libraries_load('spreadsheet_writer');
+      include_once $xlsx_writer['library path'] . '/'. $xlsx_writer['files'][0];
+
+      $writer = new XLSXWriter();
+      @$writer->writeSheet($data_rows);
+      $writer->writeToFile($filepath);
+
+      break;
   }
 }
