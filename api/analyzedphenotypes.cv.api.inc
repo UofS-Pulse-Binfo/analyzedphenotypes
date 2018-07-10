@@ -65,18 +65,18 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
       'opts'  => null,
     ),
     'suggest_term' => array(
-      'func'  => 'ap_autocomplete_cvtermfields',
-      'param' => array('keyword' => $parameter['keyword']),
+      'func'  => 'ap_autocomplete_cvtermfield_bykeyword',
+      'param' => $parameter['keyword'],
       'opts'  => null,
     ),
     'term_cv' => array(
-      'func'  => 'ap_autocomplete_cvtermfields',
-      'param' => array('cvtermcv_cvtermid' => $parameter['term_cv']),
+      'func'  => 'ap_autocomplete_cvtermfield_bycvtermcv',
+      'param' => $parameter['term_cv'],
       'opts'  => null,
     ),
     'term_id' => array(
-      'func'  => 'ap_autocomplete_cvtermfields',
-      'param' => array('cvtermid_cvtermcv' => $parameter['term_id']),
+      'func'  => 'ap_autocomplete_cvtermfield_bycvtermid',
+      'param' => $parameter['term_id'],
       'opts'  => null,
     ),
   );
@@ -84,7 +84,7 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
   // Function name, parameter (project name key or name), additional options.
   $cvterm = call_user_func($command[$property]['func'], $command[$property]['param'], $command[$property]['opts']);
 
-  if ($command[$property]['result'] == 1) {
+  if (isset($command[$property]['result'])) {
     $cvterm = reset($cvterm);
   }
 
@@ -364,10 +364,11 @@ function ap_upload_cvtermphoto($identifiers, $options = array('scaleto' => 400))
         'width' => $info['width'],
         'scale_to' => $options['scaleto'],
        ));
-
-      $photo_dir = 'public://ap-photo';
-      file_prepare_directory($photo_dir, FILE_CREATE_DIRECTORY);
-
+      
+      // Fetch traitpictures/ directory.
+      $directories = ap_construct_datafile_destinationpath();
+      $photo_dir = $directories['traitpictures'];
+      
       // Create a blank image using the computed height and width, then resample uploaded
       // image into this blank image which will become the traits photo.
       $new_image = imagecreatetruecolor($scale['width'], $scale['height']);
@@ -411,16 +412,19 @@ function ap_download_cvtermphoto($cvterm_id) {
 
   foreach($photo as $i => $v) {
     $filename = $cvterm_id . '_' . ($i + 1) . '.jpg';
-    $filedir = 'public://ap-photo';
+   
+    // Fetch traitpictures/ directory.
+    $directories = ap_construct_datafile_destinationpath();
+    $photo_dir = $directories['traitpictures'];
 
-    $fileuri = drupal_realpath($filedir) . '/' . $filename;
+    $fileuri = drupal_realpath($photo_dir) . '/' . $filename;
 
     if (file_exists($fileuri)) {
       $info = image_get_info($fileuri);
 
       $cvtermphoto[$v] = array(
         'filename' => $filename,
-        'uri' => $filedir . '/' . $filename,
+        'uri' => $photo_dir . '/' . $filename,
         'height' => $info['height'],
         'width' => $info['width'],
       );
@@ -432,70 +436,6 @@ function ap_download_cvtermphoto($cvterm_id) {
   }
 
   return $cvtermphoto;
-}
-
-/**
- * FUNCTION:
- * Handle autocomplete fields that takes in cvterm name (cv name) or cvterm_id.
- * Return value may either be cvterm_id or cvterm name (cv name).
- * Format: cvterm name (cv name).
- *
- * @param $identifiers
- *   An array with the following key:
- *     - keyword : request terms given a keyword used in populating field suggestions/options.
- *     or - cvtermcv_cvtermid : request cvterm id number given a cvterm name (cv name).
- *     or - cvtermid_cvtermcv : request cvterm name (cv name) given a cvterm id number.
- *
- * @return
- *   cvterm name (cv name) format or cvterm id number.
- */
-function ap_autocomplete_cvtermfields($identifiers) {
-  $value = reset(array_keys($identifiers));
-  $cvterm = null;
-
-  if ($value == 'keyword') {
-    // Keyword entered in a field.
-    $term = ap_get_cvterm(
-      array('keyword' => $identifiers['keyword']),
-      array('dataset' => 'namecvname')
-    );
-
-    if ($term) {
-      foreach($term as $i => $t) {
-        $cvterm[ $t['name'] ] = $t['cv_name'];
-
-        if ($i >= 20) {
-          break;
-        }
-      }
-    }
-  }
-  elseif ($value == 'cvtermcv_cvtermid') {
-    // Cvterm name (cv name) entered in a field and expect cvterm_id number.
-    $term = ap_get_cvterm(
-      array('cvtermcv' => $identifiers['cvtermcv_cvtermid']),
-      array('dataset' => 'cvtermid')
-    );
-
-    if ($term) {
-      $term = reset($term);
-      $cvterm = $term['cvterm_id'];
-    }
-  }
-  elseif ($value == 'cvtermid_cvtermcv') {
-    // Cvterm id number entered in a field and expect cvterm name (cv name).
-    $term = ap_get_cvterm(
-      array('cvterm_id' => $identifiers['cvtermid_cvtermcv']),
-      array('dataset' => 'namecvname_format')
-    );
-
-    if ($term) {
-      $term = reset($term);
-      $cvterm = $term['namecvname'];
-    }
-  }
-
-  return $cvterm;
 }
 
 /**
@@ -542,6 +482,111 @@ function ap_get_cv($identifiers = null) {
       }
 
       return $cvs;
+    }
+  }
+}
+
+/**
+ * AUTOCOMPLETE FIELD FUNCTION CALLBACK:
+ * Fetch terms given a keyword to be used in populating options to
+ * an autocomplete text field.
+ * 
+ * @param $keyword
+ *   String, cvterm name keyword.
+ * 
+ * @return 
+ *   An array, where key is cvterm name and value is cv name.
+ */
+function ap_autocomplete_cvtermfield_bykeyword($keyword) {
+  $term = null;
+  
+  if (empty($keyword)) {
+    return $term;    
+  }
+  else {
+    // A cvtern name keyword entered in the field.  
+      
+    $cvterm = ap_get_cvterm(
+      array('keyword' => $keyword),
+      array('dataset' => 'namecvname')
+    );
+    
+    if ($cvterm) {
+      foreach($term as $i => $t) {
+        $term[ $t['name'] ] = $t['cv_name'];
+        
+        if ($i >= 20) {
+          break;
+        }
+      }    
+    }
+  }
+  
+  return $term;
+}
+
+/**
+ * AUTOCOMPLETE FIELD FUNCTION CALLBACK:
+ * Fetch terms given a cvterm id number to be used in populating options to
+ * an autocomplete text field. Result in cvterm name (cv name) format/combination.
+ *
+ * @param $cvtermid
+ *   Integer, cvterm id number.
+ * 
+ * @return 
+ *   String, cvterm name (cv name).
+ */
+function ap_autocomplete_cvtermfield_bycvtermid($cvtermid) {
+  $term = null;
+  
+  if (empty($cvtermid) || $cvtermid <= 0) {
+    return $term;
+  }
+  else {
+    // Cvterm id number on hand, fetch cvterm name (cv name) combination.
+    
+    $cvterm = ap_get_cvterm(
+      array('cvterm_id' => $cvtermid),
+      array('dataset' => 'namecvname_format')
+    );
+    
+    if ($cvterm) {
+      $t = reset($term);
+      $term = $cvterm['namecvname'];
+    }
+  }
+  
+  return $term;
+}
+
+/**
+ * AUTOCOMPLETE FIELD FUNCTION CALLBACK:
+ * Fetch terms given a cvterm name (cv name) to be used in populating options to
+ * an autocomplete text field. 
+ * 
+ * @param $cvtermcv
+ *   String, cvterm name (cv name).
+ * 
+ * @return
+ *   Integer, cvterm id number.
+ */
+function ap_autocomplete_cvtermfield_bycvtermcv($cvtermcv) {
+  $term = null;
+  
+  if (empty($cvtermcv)) {
+    return $term;      
+  }
+  else {
+    // Cvterm name (cv name) entered in a field, return cvterm id number.
+    
+    $cvterm = ap_get_cvterm(
+      array('cvtermcv' => $cvtermcv),
+      array('dataset' => 'cvtermid')
+    );
+    
+    if ($cvterm) {
+      $t = reset($term);
+      $term = $cvterm['cvterm_id'];
     }
   }
 }
