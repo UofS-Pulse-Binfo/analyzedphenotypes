@@ -7,9 +7,13 @@
 // Make the API available during install.
 
 // AP API.
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
-// Default Ontology Terms API.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.materializedview.api');
+// Default Ontology Terms API.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontology.api');
+// Materialized View API.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.materializedview.api');
+// System variables.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.systemvars.api');
 
 /**
  * Implements hook_enable().
