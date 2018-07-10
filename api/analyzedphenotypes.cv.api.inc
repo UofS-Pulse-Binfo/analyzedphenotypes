@@ -512,7 +512,7 @@ function ap_autocomplete_cvtermfield_bykeyword($keyword) {
     );
     
     if ($cvterm) {
-      foreach($term as $i => $t) {
+      foreach($cvterm as $i => $t) {
         $term[ $t['name'] ] = $t['cv_name'];
         
         if ($i >= 20) {
@@ -538,7 +538,7 @@ function ap_autocomplete_cvtermfield_bykeyword($keyword) {
  */
 function ap_autocomplete_cvtermfield_bycvtermid($cvtermid) {
   $term = null;
-  
+
   if (empty($cvtermid) || $cvtermid <= 0) {
     return $term;
   }
@@ -549,10 +549,10 @@ function ap_autocomplete_cvtermfield_bycvtermid($cvtermid) {
       array('cvterm_id' => $cvtermid),
       array('dataset' => 'namecvname_format')
     );
-    
+
     if ($cvterm) {
-      $t = reset($term);
-      $term = $cvterm['namecvname'];
+      $t = reset($cvterm);
+      $term = $t['namecvname'];
     }
   }
   
@@ -585,8 +585,8 @@ function ap_autocomplete_cvtermfield_bycvtermcv($cvtermcv) {
     );
     
     if ($cvterm) {
-      $t = reset($term);
-      $term = $cvterm['cvterm_id'];
+      $t = reset($cvterm);
+      $term = $t['cvterm_id'];
     }
   }
 }
