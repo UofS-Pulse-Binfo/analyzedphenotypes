@@ -184,8 +184,10 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
   $arr_all_genus = array(0 => '- Select -');
   $genusprop = analyzedphenotypes_genusprop('sysvar_genus_set');
 
-  foreach($genusprop as $g) {
-    $arr_all_genus[$g] = $g;
+  if ($genusprop) {
+    foreach($genusprop as $g) {
+      $arr_all_genus[$g] = $g;
+    }
   }
 
   // Project genus - autofill.
@@ -1052,6 +1054,9 @@ function analyzedphenotypes_dragdrop($form, &$form_state, $source_name) {
     $text[] = $info . ' (' . $extension . ')';
   }
 
+  // Fetch spreadsheet/ directory.
+  $directories = ap_construct_datafile_destinationpath();
+
   $text = implode(', ', $text) . ' only';
   $source_id = str_replace('_', '-', $source_name);
 
@@ -1060,7 +1065,7 @@ function analyzedphenotypes_dragdrop($form, &$form_state, $source_name) {
     '#type' => 'dragndrop_upload',
     '#title' => t('TSV Data File'),
     '#file_upload_max_size' => '10M',
-    '#upload_location' => 'public://',
+    '#upload_location' => $directories['spreadsheet'],
     '#upload_event' => 'auto',
     '#upload_validators' => array(
       'file_validate_extensions' => array(),
