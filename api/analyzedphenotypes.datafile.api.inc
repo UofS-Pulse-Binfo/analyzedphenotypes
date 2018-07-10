@@ -35,6 +35,31 @@ function ap_define_datafile_extensions($set = null) {
   return ($set) ? $extensions[$set] : $extensions;
 }
 
+/**
+ * Define file destination path for file upload and trait image.
+ * 
+ * @return 
+ *   Associative array where the key is directory type and value as directory path.
+ */
+function ap_construct_datafile_destinationpath() {
+  $drupal_public = 'public://';
+  $ap_root_dir = 'tripal/analyzedphenotypes/';
+  
+  // Add directory here. 
+  $directory = array(
+    'spreadsheet',
+    'traitpictures'
+  );
+  
+  // Constuct directories.
+  $file_dir = array();
+  
+  foreach($directory as $dir) {
+    $file_dir[$dir] = $drupal_public . $ap_root_dir . $dir; 
+  }
+  
+  return $file_dir;
+}
 
 ///////
 
