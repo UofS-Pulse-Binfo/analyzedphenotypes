@@ -136,6 +136,11 @@ function analyzedphenotypes_enable() {
   foreach($system_vars as $v => $var) {
     variable_set($var, 1);
   }
+  
+  $directories = ap_construct_datafile_destinationpath();
+  foreach($directories as $dir) {
+    file_prepare_directory($dir, FILE_CREATE_DIRECTORY);
+  }
 }
 
 
@@ -163,4 +168,31 @@ function analyzedphenotypes_uninstall() {
       tripal_delete_mview($mview_id);
     }
   }
+}
+
+
+/**
+ * Implements hook_requirements().
+ */
+function analyzedpenotypes_requirements($phase) {
+  $requirements = array();
+  
+  if ($phase == 'install') {
+    $directories = ap_construct_datafile_destinationpath();
+    
+    foreach($directories as $dir) {
+      $dir_exists = file_prepare_directory($dir);
+      
+      if (!$dir_exists) {
+        $requirements['file_directory' . $dir] = array(
+          'severity' => REQUIREMENT_ERROR,
+          'description' => $t('File directory !dir is not writable. Please update directory permission and try again.',
+            array('!dir' => $dir)
+          )
+        );
+      }
+    }
+  }
+  
+  return $requirements;
 }
