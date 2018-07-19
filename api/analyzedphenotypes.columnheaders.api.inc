@@ -195,7 +195,12 @@ function ap_match_columncombination($datarow) {
        year.type_id = :year_cvterm
        AND location.type_id  = :location_cvterm
        AND replicate.type_id = :replicate_cvterm
-       AND trait_name.name || germplasm_accession.uniquename || year.value || location.value || replicate.value = :combination"
+       
+       AND trait_name.name = :trait
+       AND germplasm_accession.uniquename = :uniquename
+       AND year.value = :year 
+       AND location.value = :location
+       AND replicate.value = :rep"
     ,
     array(
       ':year_cvterm'      => $sysvar_terms['ap_year'],
@@ -203,7 +208,11 @@ function ap_match_columncombination($datarow) {
       ':replicate_cvterm' => $sysvar_terms['ap_replicate'],
 
       // Trait name, Germplasm Accession, Year, Location and Replicate.
-      ':combination'      => $datarow[ $combination_columns[0] ] . $datarow[ $combination_columns[1] ] . $datarow[ $combination_columns[2] ] . $datarow[ $combination_columns[3] ] . $datarow[ $combination_columns[4] ],
+      ':trait'            => $datarow[ $combination_columns[0] ], 
+      ':uniquename'       => $datarow[ $combination_columns[1] ],
+      ':year'             => $datarow[ $combination_columns[2] ],
+      ':location'         => $datarow[ $combination_columns[3] ],
+      ':rep'              => $datarow[ $combination_columns[4] ],
     )
   );
 
