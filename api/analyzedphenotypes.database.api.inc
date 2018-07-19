@@ -81,19 +81,22 @@ function analyzedphenotypes_dbprop($property = null, $parameter = null) {
  *   An array, containing database id, name and description.
  */
 function ap_match_database($dbid) {
-  $all_database = ap_get_database();
+  $databse = null;
+  
+  $result = chado_query(
+    "SELECT db_id, name, description FROM {db} WHERE db_id = :db_id LIMIT 1",
+    array(':db_id' => $dbid)
+  );
 
-  foreach($all_database as $db_id => $db) {
-    if ($db_id == $dbid) {
-      $database = array(
-        'db_id' => $db_id,
-        'name'  => $db['name'],
-        'description' => $db['description'],
-      );
-
-      break;
-    }
+  if ($result->rowCount()) {
+    $db = $result->fetchObject();
+    
+    $database = array(
+      'db_id' => $db->db_id,
+      'name'  => $db->name,
+      'description' => $db->desciption,
+    );
   }
-
-  return (isset($database)) ? $database : null;
+  
+  return $database;
 }
