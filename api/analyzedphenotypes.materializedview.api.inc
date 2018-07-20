@@ -11,8 +11,8 @@
  * @TODO: Replace this function with the function below.
  */
 function analyzedphenotypes_mview($property, $parameter = null) {
-  $mviewquery  = ap_construct_mviewquery();
-  $mviewschema = ap_construct_mviewschema();
+  $mviewquery  = ap_construct_mview_phenotypesummary_query();
+  $mviewschema = ap_construct_mview_phenotypesummary_schema();
 
   return array(
     'query' => $mviewquery,
@@ -24,7 +24,7 @@ function analyzedphenotypes_mview($property, $parameter = null) {
  * @TODO: Replace this function with the function below.
  */
 function analyzedphenotypes_updatemview() {
-  ap_update_mview();
+  ap_update_mview_phenotypesummary();
 }
 
 
@@ -38,7 +38,7 @@ function analyzedphenotypes_updatemview() {
  * @return
  *   Text block, sql query statement.
  */
-function ap_construct_mviewquery() {
+function ap_construct_mview_phenotypesummary_query() {
   $sysvar = ap_get_variablenames(
     array('variablename' => 'varset'),
     array('set' => 'terms')
@@ -91,7 +91,7 @@ function ap_construct_mviewquery() {
  * @return
  *   An array, field definitions.
  */
-function ap_construct_mviewschema() {
+function ap_construct_mview_phenotypesummary_schema() {
   $mviewschema = array(
     'description' => 'Caches phenotypic data for easier retrieval of means. Data replicates are combined.',
     'table' => 'mview_phenotype',
@@ -153,7 +153,7 @@ function ap_construct_mviewschema() {
  * Update/populate materialized view.
  * Dependencies: ap_construct_mviewquery().
  */
-function ap_update_mview() {
+function ap_update_mview_phenotypesummary() {
   $mview_id = tripal_get_mview_id('mview_phenotype');
 
   if ($mview_id) {
