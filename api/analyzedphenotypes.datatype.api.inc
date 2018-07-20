@@ -12,7 +12,7 @@
  * Define data type, name and symbol of a unit.
  *
  * @return array.
- *   An array containing the name and the data type of a unit. Data types:
+ *   An array containing the name, unit symbol and the data type. Data types:
  *   - alphanumeric    : Letters, number combination.
  *   - trait           : String value strickly in - Trait name (unit) additional text - format.
  *   - text            : Letters only.
@@ -23,6 +23,7 @@
  *   - y/n/?           : y, yes, n, no, unsure, ?.
  *   - date            : YYYY-MM-DD.
  *   - year            : YYYY
+ *   - days            : Number of days to.
  */
 function ap_define_datatypes() {
   $datatype = array(
@@ -32,8 +33,7 @@ function ap_define_datatypes() {
     'mg'   => array('name' => 'milligrams',   'type' => 'number'),
     'mM'    => array('name' => 'milimolar',  'type' => 'number'),
     'days'   => array('name' => 'days',     'type' => 'number_no_zero'),
-    'days'    => array('name' => 'days',   'type' => 'number_no_zero'),
-    'days'     => array('name' => 'days', 'type' => 'number_no_zero'),
+    'date'     => array('name' => 'date', 'type' => 'date'),
     'text'      => array('name' => 'text', 'type' => 'alphanumeric'),
     'year'       => array('name' => 'year', 'type' => 'four_digit_year'),
     'count'       => array('name' => 'count', 'type' => 'number'),
