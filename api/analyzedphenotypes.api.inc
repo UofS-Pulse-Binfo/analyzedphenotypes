@@ -333,3 +333,110 @@ function ap_scale_photo($height, $width, $scale_to) {
 
 
 //////
+
+/**
+ * FUNCTION:
+ * Define file extension this module supports.
+ *
+ * @param $set
+ *   A string value requesting a subset of file extensions required in file upload
+ *   and file extension used in data export. Default to null which will return
+ *   all or both subsets.
+ *
+ * @return
+ *   An array, containing file extensions.
+ */
+function ap_define_datafile_extensions($set = null) {
+  $extensions = array(
+    'file_upload'   => array(
+      'tsv'  => 'Tab Separated Values',
+      'txt'  => 'Text File',
+    ),
+    'file_download' => array(
+      'tsv'  => '.TSV - Tab Separated Values',
+      'csv'  => '.CSV - Comman Separated Values',
+      'xlsx' => '.XLSX - Microsoft Excel Spreadsheet File',
+    )
+  );
+
+  return ($set) ? $extensions[$set] : $extensions;
+}
+
+/**
+ * FUNCTION:
+ * Define file destination path for file upload and trait image.
+ * 
+ * @return 
+ *   Associative array where the key is directory type and value as directory path.
+ */
+function ap_construct_datafile_destinationpath() {
+  $drupal_public = 'public://';
+  $ap_root_dir = 'tripal/analyzedphenotypes/';
+  
+  // Add directory here. 
+  $directory = array(
+    'spreadsheet',
+    'traitpictures'
+  );
+  
+  // Constuct directories.
+  $file_dir = array();
+  
+  foreach($directory as $dir) {
+    $file_dir[$dir] = $drupal_public . $ap_root_dir . $dir; 
+  }
+  
+  return $file_dir;
+}
+
+/**
+ * CONTROL/SWITCHBOARD.
+ * Pass a request to a corresponding function.
+ * @TODO: leave out when api reorganize/update is complete and use functions below.
+ */
+function analyzedphenotypes_datafileprop($property = null, $parameter = null) {
+  if (is_null($property)) {
+    // Default.
+    $property = 'default';
+  }
+
+  // Process request.
+  // Default to all projects.
+  $command = array(
+    'default' => array(
+      'func'  => 'ap_define_datafile_extensions',
+      'param' => 'file_upload',
+    ),
+    'download_type' => array(
+      'func'  => 'ap_define_datafile_extensions',
+      'param' => 'file_download',
+    ),
+    'make_permanent' => array(
+      'func'  => 'ap_make_datafile_permanent',
+      'param' => $parameter['data_file'],
+    ),
+  );
+
+  return call_user_func($command[$property]['func'], $command[$property]['param']);
+}
+
+/**
+ * FUNCTION:
+ * Set the status of file to permanent and inform Drupal File manager that
+ * a file is being used by AP module.
+ *
+ * @param $datafile
+ *   Drupal file object.
+ */
+function ap_make_datafile_permanent($datafile) {
+  if ($datafile) {
+    $datafile->status = FILE_STATUS_PERMANENT;
+    file_save($datafile);
+
+    // Also, point out that we are using it ;-)
+    // Note, the file_usage_add() function expects a numerical unique id which we don't have.
+    // We have gotten around this by using the uid concatenated with the timestamp using
+    // the assumption that a single user cannot upload more than one phenotype file within a second.
+    file_usage_add($datafile, 'analyzedphenotypes', 'analyzedphenotypes-file', $datafile->uid . $datafile->timestamp);
+  }
+}

@@ -24,7 +24,6 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.materia
 // General API and Helper functions.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.datatype.api');
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.datafile.api');
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.columnheaders.api');
 
 // AJAX fields API in Data donwloader module.
