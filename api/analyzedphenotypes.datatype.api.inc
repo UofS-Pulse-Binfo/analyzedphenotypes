@@ -145,7 +145,7 @@ function ap_get_datatype($unit) {
   $datatype = ap_define_datatypes();
 
   // Could not resolve unit, use alphanumeric data type TEXT.
-  return (isset($datatype[ $unit ])) ? $datatype[ $unit ] : $datatype['text'];
+  return (isset($datatype[ $unit ])) ? $datatype[ $unit ]['type'] : $datatype['text']['type'];
 }
 
 /**
