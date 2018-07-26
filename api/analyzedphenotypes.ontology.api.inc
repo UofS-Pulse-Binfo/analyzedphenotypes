@@ -217,7 +217,17 @@ function ap_load_defaultontology() {
       if (!$t) {
         // Term not in chado.cvterm. Insert!
         // #1. Controlled vocabulary.
-        $ins_cv = tripal_insert_cv($details['name'], $details['definition']);
+        if (function_exists('chado_insert_cv')) {
+          $ins_cv = chado_insert_cv($details['name'], $details['definition']);          
+        }
+        else {
+          $ins_cv = tripal_insert_cv($details['name'], $details['definition']);
+        }
+
+        if (!$ins_cv) {
+          // Failed to insert cv.
+          tripal_report_error('Analyzed Phenotypes', TRIPAL_CRITICAL, 'Chado/Tripal failed to insert cv ontology', array(), array('print' => TRUE));
+        }
 
         // #2. Terms.
         $term['cv_name'] = $details['name'];
@@ -232,6 +242,8 @@ function ap_load_defaultontology() {
       // Save term to be used as configuration page default settings.
       // eg. ap_location = 1231.
       $ontology_load[$map_term] = ($t) ? $t->cvterm_id : $ins_cvterm->cvterm_id;
+      
+      
     }
   }
 
