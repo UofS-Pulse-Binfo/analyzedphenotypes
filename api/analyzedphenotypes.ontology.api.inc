@@ -274,30 +274,36 @@ function ap_set_ontology($identifiers, $options = array('replace' => FALSE)) {
 
   $sysvar_related = variable_get($sysvar);
 
-  $values = array(
-    'type_id' => $sysvar_related,
-    'object_id' => $identifiers['trait_cvtermid'],
-    'subject_id'  => $identifiers['ontology_cvtermid'],
-  );
+  if ($sysvar_related > 0 && $identifiers['trait_cvtermid'] > 0 && $identifiers['ontology_cvterm'] > 0) {
+    $values = array(
+      'type_id' => $sysvar_related,
+      'object_id' => $identifiers['trait_cvtermid'],
+      'subject_id'  => $identifiers['ontology_cvtermid'],
+    );
 
-  // Check if there existed any ontology for a trait.
-  $umatch = array_slice($values, 0, 2);
-  $on = chado_generate_var('cvterm_relationship', $umatch);
+    // Check if there existed any ontology for a trait.
+    $umatch = array_slice($values, 0, 2);
+    $on = chado_generate_var('cvterm_relationship', $umatch);
 
-  if ($on && $options['replace']) {
-    // When implied in otions array, replace previously set ontology.
+    if ($on && $options['replace']) {
+      // When implied in otions array, replace previously set ontology.
 
-    // Found an ontology term associated to a trait and
-    // replace existing value.
+      // Found an ontology term associated to a trait and
+      // replace existing value.
 
-    // Alter the subject_id part to new ontology.
-    $uvalue = array_slice($values, 2, 1);
-    chado_update_record('cvterm_relationship', $umatch, $uvalue);
+      // Alter the subject_id part to new ontology.
+      $uvalue = array_slice($values, 2, 1);
+      chado_update_record('cvterm_relationship', $umatch, $uvalue);
+    }
+    elseif (!$on) {
+      // Create trait - ontology relationship.
+      // No existing ontology information for this trait.
+      chado_insert_record('cvterm_relationship', $values);
+    }
   }
-  elseif (!$on) {
-    // Create trait - ontology relationship.
-    // No existing ontology information for this trait.
-    chado_insert_record('cvterm_relationship', $values);
+  else {
+    // Failed to update or set ontology term.
+    tripal_report_error('Analyzed Phenotypes', TRIPAL_CRITICAL, 'Chado/Tripal failed to update or set ontology term', array(), array('print' => TRUE));
   }
 }
 
