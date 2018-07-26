@@ -184,8 +184,8 @@ function ap_get_tripaljob($tripaljob_id) {
  */
 function ap_update_tripaljob_progress($tripaljob_id, $progress) {
   $tripal_config = ap_configure_tripaljob();
-
-  $update = dp_update($tripal_config['TRIPALJOB_job_table'])
+  
+  $update = db_update($tripal_config['TRIPALJOB_job_table'])
     ->fields(array('progress' => $progress))
     ->condition('job_id', $tripaljob_id, '=')
     ->execution();
