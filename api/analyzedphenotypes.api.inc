@@ -175,6 +175,54 @@ function ap_send_ajaxrequest($form, $form_state) {
   return (isset($contain)) ? $form[$contain][$element] : $form[$element];
 }
 
+/**
+ * FUNCTION:
+ * AJAX callback for managing germplasm fields as filter.
+ * 
+ * NOTE: checking and uncheking in done in hook_form does not seem to work.
+ *       move this operation to this callback.
+ */
+function ap_AJAX_germplasmfield_callback($form, $form_state) {
+  // Trigerring elements value and command option.
+  $triggering_element = array(
+    'command' => $form_state['triggering_element']['#ajax']['command'],
+    'value' => $form_state['triggering_element']['#value']
+  );
+  
+  // Reference standard filed element id element.
+  $fldname = analyzedphenotypes_fieldnames();
+  $fld_germplasm = $fldname['germplasm']['base'];
+
+  // Checking and unchecking.
+  if ($triggering_element['command'] == 'germplasm_remove_element') {
+    $germplasm_name = $form_state['values']['ap_field_hidden_values'][ $triggering_element['value'] ];
+    $form['ap_AJAX_wrapper_main']['ap_additional_filter_fieldset']['ap_AJAX_germplasmname_field_wrapper'][ $fldname[$fld_germplasm]['field'] ][$germplasm_name]['#checked'] = FALSE;
+  }
+  elseif ($triggering_element['command'] == 'germplasm_update_element') {
+    // User interacting with field - using delete or backspace to remove 
+    // germplasm/stock name.
+    $field_attr_id =  $form_state['triggering_element']['#id'];
+    $field_value = $form_state['input']['ap_AJAX_germplasmname_field_wrapper']['ap_field_textfield_' . $field_attr_id];
+    
+    if (in_array($field_value, $form['ap_AJAX_wrapper_main']['ap_additional_filter_fieldset']['ap_AJAX_germplasmname_field_wrapper'][ $fldname[$fld_germplasm]['field'] ]['#options'])) {
+      // Field has value.
+      $form['ap_AJAX_wrapper_main']['ap_additional_filter_fieldset']['ap_AJAX_germplasmname_field_wrapper'][ $fldname[$fld_germplasm]['field'] ][ $triggering_element['value'] ]['#checked'] = TRUE;  
+    }
+    else {
+      // Read cached value of field before it got erased.
+      $field_value = $form_state['values']['ap_cache_germplasmname'];
+      $form['ap_AJAX_wrapper_main']['ap_additional_filter_fieldset']['ap_AJAX_germplasmname_field_wrapper'][ $fldname[$fld_germplasm]['field'] ][$field_value]['#checked'] = FALSE;  
+      
+      // Now we can unset the field in values array and empty the field.
+      $form_state['values']['ap_cache_germplasmname'] = '';
+    }
+  }
+  
+  // Update AJAX field wrapper.
+  return $form['ap_AJAX_wrapper_main']['ap_additional_filter_fieldset']['ap_AJAX_germplasmname_field_wrapper'];
+}
+
+
 /////
 
 /**

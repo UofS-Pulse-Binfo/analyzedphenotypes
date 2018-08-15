@@ -218,8 +218,9 @@
   cursor: pointer;
 }
 
-.odd, .even {
-  background-color: #FFFFFF !important;
+#ap-table-default-headers .odd, #ap-table-default-headers .even,
+#ap-table-optional-headers .odd, #ap-table-optional-headers .even {
+  background-color: #FFFFFF;
 }
 
 tr:nth-child(even) td {
@@ -308,107 +309,77 @@ th.ap-header {
 
 
 
-/* Autofield */
-#ap-autofield {
-  max-height: 300px;
-  margin: 10px 0 20px 0;
-  overflow-y: scroll;
-  overflow-x: none;
-}
 
-#ap-autofield input {
-  font-size: 0.889em;
-  font-weight: 300;
-  width: 84%;
-}
-
-.ap-autofield-AJAX-on input {
-  background: url(../img/throbber-active.gif) right no-repeat;
-}
-
-.ap-autofield-AJAX-off input {
-  background: url(../img/throbber-inactive.png) right no-repeat;
-}
-
-/* No AJAX animation on field controls. */
-#ap-filter-germplasm-found .ajax-progress-throbber,
-#ap-autofield .ajax-progress-throbber {
-  display: none;
-}
-
-/* Suggestion container */
-.ap-autofield-AJAX-off div {
-  border: 1px solid #EAEAEA;
-  max-height: 100px;
-  overflow-y: scroll;
-  position: absolute;
-  width: 90% ;
-
-  -webkit-box-shadow: 10px 10px 15px -10px rgba(0,0,0,0.75);
-  -moz-box-shadow: 10px 10px 15px -10px rgba(0,0,0,0.75);
-  box-shadow: 10px 10px 15px -10px rgba(0,0,0,0.75);
-}
-
-.ap-autofield-AJAX-off div ul {
-  background-color: #FFFFFF;
-  list-style-type: none;
-  margin: -1px 0 0 0 !important;
-  padding: 0 !important;
-  z-index: 1000;
-}
-
-.ap-autofield-AJAX-off div ul li {
+/* Germplasm fields */
+#ap-field-germplasm-names div {
+  border-right: 1px solid #CCCCCC;
+  float: left;
   font-style: italic;
+  margin: 0 10px 8px 0;
+  padding: 0 12px 0 0;
+}
+
+#ap-field-germplasm-names div:last-child {
+  border: none;
+}
+
+
+#ap-field-germplasm-names div label {
+  color:  #3A7F21;
   cursor: pointer;
-  margin: 0;
-  padding: 5px 0 5px 5px;
+  font-size: 0.9em;
 }
 
-.ap-autofield-AJAX-off div ul li:hover {
-  background-color: #EAEAEA;
+#ap-field-germplasm-names div label:hover {
+  color: #13B72D;
+  text-decoration: underline;
 }
 
-/* Add and delete button */
-.ap-autofield-wrapper span {
-  margin: 0 0 0 5px;
-  padding: 3px 0;
+/* Main AJAX wrapper */
+#ap-AJAX-germplasmname-field-wrapper {
+  clear: both;
+  display: block;
+  margin-bottom: 20px;
+  position: relative;
 }
 
-.ap-autofield-wrapper span a {
-  background-size: 45%;
-  background-repeat: no-repeat;
-  background-position: center;
-  border: 2px solid #FFFFFF;
-  border-radius: 60%;
-  color: transparent;
-  font-size: 9px;
+#ap-AJAX-germplasmname-field-wrapper input[type=submit].remove-btn {
+  position:  absolute;
+  margin-top: -43px;
+  right: 10%;
+  width: 15px;
+  text-indent: 50px;
   overflow: hidden;
-  padding: 6px 4px;
-  text-decoration: none;
-}
-
-.ap-autofield-wrapper span a:first-child {
+  
   background-image: url('../../theme/img/remove-button.png');
+  background-position: center;
+  background-repeat: no-repeat;
   background-color: #EAEAEA;
 }
 
-.ap-autofield-wrapper span a:last-child {
-  background-image: url('../../theme/img/add-button.png');
-  background-color: #4E9537;
-  margin: 0 0 0 5px;
-}
 
-.ap-autofield-germplasm-name-disabled {
-  background-image: url('../../theme/img/icon-success.jpg');
-  background-position: left center;
+#ap-AJAX-germplasmname-field-wrapper input[type=submit].add-btn {  
+  position:  absolute;
+  margin-bottom: -45px;
+  right: 4%;
+  
+  background-image: url('../../theme/img/add-button.png');
+  background-position: center;
   background-repeat: no-repeat;
-  background-size: 15px 15px;
-  color: black;
-  padding-left: 17px;
-  pointer-events: none;
-  text-decoration: none;
+  background-color: #4E9537;
+
+  width: 15px;
+  text-indent: 50px;
+  overflow: hidden;
 }
 
 .ap-no-mouse-event {
   pointer-events: none;
+}
+
+.ap-germplasmfield-error {
+  color: red;
+  display: block;
+  margin: -15px 0 0 0;
+  padding: 0;
 }

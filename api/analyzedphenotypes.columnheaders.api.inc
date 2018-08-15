@@ -149,7 +149,7 @@ function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
     ),
   );
 
-  call_user_func($command[$property]['func'], $command[$property]['param']);
+  return call_user_func($command[$property]['func'], $command[$property]['param']);
 }
 
 
@@ -256,7 +256,7 @@ function ap_convert_rcolumnheader($columnheader) {
 
   // Remove leading and trailing spaces from the selected trait.
   // Convert string to lowercase.
-  $selected_trait = trim(strtolower($parameter['column_header']));
+  $selected_trait = trim(strtolower($columnheader));
   // 1. Break the column header in string to individual words,
   //    and remove all words that matches an entry in the words transfomation rules.
   $w = explode(' ', $selected_trait);

@@ -112,127 +112,6 @@ function ap_cache_download_fieldvalue($value) {
 
 ///////
 
-/**
- * TODO: Replace this function with the function below.
- */
-function analyzedphenotypes_autofield_callback($command, $element, $default_value = null) {
-  return ap_insert_autocomplete_formfield($command, $element, $default_value);
-}
-
-/**
- * FUNCTION CALLBACK:
- * AJAX add and remove form field.
- * Dependencies: analyzedphenotypes_autofieldprop().
- *
- * @param $command
- *   String, add (add) or remove (rem) to add and remove autocomplete from field element.
- * @param $element
- *   String, id attribute of element where to insert field in case of command add and
- *   id attribute of field to delete in case of command rem.
- * @param $default_value
- *   String, default value of autocomplete field. base64 encoding used.
- *
- * @return
- *   Rendered autocomplete form element.
- *
- * @see
- *   hook_menu().
- *   autocomplete form field API definition.
- */
-function ap_insert_autocomplete_formfield($command, $element, $default_value = null) {
-  // Add or remove autofield command.
-  $cmd = trim($command);
-  $elm = trim($element);
-
-  if (($cmd == 'add' || $cmd == 'rem') && !empty($elm)) {
-    // Add or remove autofield command.
-    $element_id = '#' . $elm;
-
-    if ($cmd == 'add') {
-      // Create a from field api and append to element wrapper.
-      $default_value = base64_decode($default_value);
-      $field_api = analyzedphenotypes_autofieldprop($default_value);
-      $field_htm = drupal_render($field_api);
-
-      $AJAX_cmd = ajax_command_prepend($element_id, $field_htm);
-    }
-    else {
-      // Given a reference id to an element, remove if from DOM.
-      $AJAX_cmd = ajax_command_remove($element_id);
-    }
-
-    return array(
-      '#type' => 'ajax',
-      '#commands' => array($AJAX_cmd),
-    );
-  }
-  else {
-    // Not valid command. No element. Do nothing.
-    return FALSE;
-  }
-}
-
-/**
- * TODO: Replace this function with the function below.
- */
-function analyzedphenotypes_autofieldprop($default_value) {
-  return ap_construct_autocomplete_formfield($default_value);
-}
-
-/**
- * FUNCTION:
- * Define a autocomplete form field. Button set add and remove are rendered adjacent 
- * to each field element inserted.
- * Dependencies:
- *
- * @param $default_value
- *   Default to: Type Germplasm/Stock Name.
- *   Initial value of autocomplete form field (#value key of the form field API).
- *
- * @return array
- *   Array, form autocomplete form field API array.
- */
-function ap_construct_autocomplete_formfield($default_value) {
-  // Menu item that will handle AJAX request.
-  $autofield_menu = 'download/autofield/';
-  // Id each field added. This id will be use to reference an element.
-  $autofield_id = uniqid();
-  // Add and remove command - argument to menu item.
-  $autofield_rem  = 'rem';
-  $autofield_add  = 'add';
-  // Make an AJAX link.
-  $autofield_attr = array(
-    'attributes' => array(
-      'class' => array('use-ajax', 'ap-autofield-germplasm-control'),
-      'title' => 'Click to Add (+) or Remove (x) Germplasm',
-    )
-  );
-
-  $emptyfield_default_value = 'Type Germplasm/Stock Name';
-
-  // l(text, url + element, attributes);
-  // Use id #ap-autofield in the main form where field will be inserted.
-  // Remove does not require a default value - &.
-  $autofield_btns = l('Rem', $autofield_menu . $autofield_rem . '/ap-autofield-wrapper-' . $autofield_id . '/&', $autofield_attr)
-                  . l('Add', $autofield_menu . $autofield_add . '/ap-autofield/' . base64_encode($emptyfield_default_value), $autofield_attr);
-
-  // Define field API.
-  $default_value = ($default_value) ? $default_value : $emptyfield_default_value;
-  $autofield_fld['ap_autofield_' . $autofield_id] = array(
-    '#type' => 'textfield',
-    '#value' => $default_value,
-    '#theme_wrappers' => array(),
-    // Wrap this field.
-    '#prefix' => '<div id="ap-autofield-wrapper-' . $autofield_id . '" class="ap-autofield-wrapper ap-autofield-AJAX-off">',
-    // Buttons.
-    '#suffix' => '<span>' . $autofield_btns . '</span></div>',
-    // CSS - class & id.
-    '#attributes' => array('class' => array('ap-autofield-field')),
-    '#id' => 'ap-autofield-' . $autofield_id,
-  );
-
-  return $autofield_fld;
-}
 
 /**
  * FUNCTION:
@@ -820,9 +699,9 @@ function ap_populate_fieldgermplasmlist($identifiers) {
 
       $args[':germplasmtype'] = $identifiers['germplasmtype'];
     }
+  
+    $sql = $sql . " ORDER BY germplasm ASC";
   }
-
-  $sql = $sql . " ORDER BY germplasm ASC";
 
   $query = chado_query($sql, $args);
   $values = ($query->rowCount()) ? $query->fetchAllKeyed() : $values;
