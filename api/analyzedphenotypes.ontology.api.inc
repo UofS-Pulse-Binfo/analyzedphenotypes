@@ -133,54 +133,6 @@ function ap_define_defaultontology() {
 
 
 /**
- * CONTROL/SWITCHBOARD.
- * Pass a request to a corresponding function.
- * @TODO: leave out when api reorganize/update is complete and use functions below.
- */
-function analyzedphenotypes_ontologyprop($property = null, $parameter = null) {
-  if (is_null($property)) {
-    // Default.
-    $property = 'default';
-  }
-
-  // Process request.
-  $command = array(
-    'map_ontology_trait' => array(
-      'func'  => 'ap_set_ontology',
-      'param' => array('trait_cvterm' => $parameter['trait_cvtermid'], 'ontology_cvterm_id' => $parameter['ontology_cvtermid']),
-      'opts'  => null,
-    ),
-    'match_ontology' => array(
-      'func'  => 'ap_match_ontology',
-      'param' => $parameter['ontology'],
-      'opts'  => $parameter['genus'],
-    ),
-    'suggest' => array(
-      'func'  => 'ap_suggest_ontology',
-      'param' => array('trait' => $parameter['trait_name'], 'genus' => $parameter['genus']),
-      'opts'  => null,
-    ),
-  );
-
-  // Execute function.
-  call_user_func($command[$property]['func'], $command[$property]['param'], $command[$property]['opts']);
-}
-
-// * @TODO: leave out when api reorganize/update is complete and use functions below.
-function analyzedphenotypes_defaultontologydefine() {
-  return ap_define_defaultontology();
-}
-
-// * @TODO: leave out when api reorganize/update is complete and use functions below.
-function analyzedphenotypes_defaultontologyload() {
-  return ap_load_defaultontology();
-}
-
-
-///////
-
-
-/**
  * FUNCTION:
  * Insert into chado.cvterm or test existence of a cvterm.
  * and return cvterm id to be set as default value in configuration page.
