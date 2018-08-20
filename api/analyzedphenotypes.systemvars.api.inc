@@ -91,57 +91,6 @@ function ap_construct_variablenames() {
 
 
 /**
- * CONTROL/SWITCHBOARD.
- * Pass a request to a corresponding function.
- * @TODO: leave out when api reorganize/update is complete and use functions below.
- */
-function analyzedphenotypes_systemvariables($property = null, $parameter = null) {
-  $systemvars = null;
-
-  if (is_null($property)) {
-    // Default.
-    $property = 'default';
-  }
-
-  // Process request.
-  // Default to all system variables.
-  $command = array(
-    'default' => array(
-      'func'  => 'ap_construct_variablenames',
-      'param' => null,
-      'opts'  => null,
-    ),
-    'options' => array(
-      'func'  => 'ap_get_variablenames',
-      'param' => array('variablename' => 'varset'),
-      'opts'  => array('set' => 'options'),
-    ),
-    'cvdbon' => array(
-      'func'  => 'ap_get_variablenames',
-      'param' => array('variablename' => 'varset'),
-      'opts'  => array('set' => 'cvdbon'),
-    ),
-    'terms' => array(
-      'func'  => 'ap_get_variablenames',
-      'param' => array('variablename' => 'varset'),
-      'opts'  => array('set' => 'terms'),
-    ),
-    'genus_vars' => array(
-      'func'  => 'ap_get_variablenames',
-      'param' => array('variablename' => $parameter['genus']),
-      'opts'  => array('set' => 'cvdbon', 'suffix' => 'allsuffix'),
-    ),
-  );
-
-  // Function name, parameter (project name key or name), additional options.
-  return call_user_func($command[$property]['func'], $command[$property]['param'], $command[$property]['opts']);
-}
-
-
-///////
-
-
-/**
  * FUNCTION:
  * Fetch system variable name.
  * Dependencies: ap_define_variablenames().
