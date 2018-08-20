@@ -32,8 +32,8 @@ function analyzedphenotypes_enable() {
   }
 
   // Add a materialized view to calculate the mean for quantitative data.
-  $mviewquery = ap_construct_mviewquery();
-  $mviewschema = ap_construct_mviewschema();
+  $mviewquery = ap_construct_mview_phenotypesummary_query();
+  $mviewschema = ap_construct_mview_phenotypesummary_schema();
   tripal_add_mview($mviewschema['table'], 'analyzedphenotypes', $mviewschema, $mviewquery, $mviewschema['description'], FALSE);
 
   // Add a summary materialized view.

@@ -157,7 +157,7 @@ function ap_update_mview_phenotypesummary() {
   $mview_id = tripal_get_mview_id('mview_phenotype');
 
   if ($mview_id) {
-    $mviewquery = ap_construct_mviewquery();
+    $mviewquery = ap_construct_mview_phenotypesummary_query();
 
     // This works but it deletes the schema and brakes the view.
     // tripal_edit_mview($mview_id, $mview_phenotype, 'analyzedphenotypes', '', '', 0, $update_mview['query'], '');

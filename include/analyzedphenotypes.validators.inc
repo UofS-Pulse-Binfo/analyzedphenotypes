@@ -324,7 +324,7 @@ function analyzedphenotypes_validator_genus($case, $dataset) {
  * GENUS VALIDATOR
  * Perform validation to project/experiment genus.
  * Default to:
- * Dependencies: analyzedphenotypes_datafileprop(), analyzedphenotypes_columnsprop(), analyzedphenotypes_cvprop().
+ * Dependencies: analyzedphenotypes_datafileprop(), analyzedphenotypes_columnsprop(), ap_get_cvterm().
  *
  * @param String $case
  *  A value representing a validation requested (each case represents a case in the switch implementation):
@@ -436,11 +436,11 @@ function analyzedphenotypes_validator_datafile($case, $dataset) {
               continue;
             }
             else {
-              // @TODO: Replace with new cv api.
-              $exists = analyzedphenotypes_cvprop('get_cvterm', array(
-                'name' => $file_traitname_value,
-                'genus' => $dataset['project_genus'],
-              ));
+              // Fetch term name, limit search to genus configuration of project genus.
+              $exists = ap_get_cvterm(
+                array('name' => $file_traitname_value, 'genus' => $dataset['project_genus']),
+                array('dataset' => 'cvtermid')
+              );
 
               if (empty($exists)) {
                 // Found new trait, takes only a condition to satisfy that
@@ -910,9 +910,11 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
           // cvterm_id used by this trait name from trait to cvterm_id in previous stage.
           $cvterm_id = $trait_cvterm[$file_traitname];
           
-          $trait_property = analyzedphenotypes_cvprop('get_cvterm', array(
-            'cvterm_id' => $cvterm_id,
-          ));
+          // Test cvterm id number if it matched a record.
+          $trait_property = ap_get_cvterm(
+            array('cvterm_id' => $cvterm_id),
+            array('dataset' => 'cvtermid')
+          );
           
           if (!$trait_property) {
             analyzedphenotypes_tripaljobprop('tripal_fail', array(
@@ -942,7 +944,7 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
             exit(32);
           }
           
-          $trait_id = $trait_property['cvterm_id'];
+          $trait_id = $trait_property[0]['cvterm_id'];
           
           $file_year = $data[ $col_index['Year'] ];
           $file_location = $data[ $col_index['Location'] ];

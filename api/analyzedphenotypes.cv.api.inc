@@ -14,13 +14,13 @@
  * CONTROL/SWITCHBOARD.
  * Pass a request to a corresponding function.
  * @TODO: leave out when api reorganize/update is complete and use functions below.
- */
+*/
 function analyzedphenotypes_cvprop($property = null, $parameter = null) {
   if (is_null($property)) {
     // Default.
     $property = 'default';
   }
-
+  
   // Process request.
   $command = array(
     'default' => array(
@@ -70,13 +70,13 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
       'opts'  => null,
     ),
     'term_cv' => array(
-      'func'  => 'ap_autocomplete_cvtermfield_bycvtermcv',
-      'param' => $parameter['term_cv'],
+      'func'  => 'ap_get_cvterm',
+      'param' => array('cvtermcv' => $parameter['term_cv']),
       'opts'  => null,
     ),
     'term_id' => array(
-      'func'  => 'ap_autocomplete_cvtermfield_bycvtermid',
-      'param' => $parameter['term_id'],
+      'func'  => 'ap_get_cvterm',
+      'param' => array('cvterm_id' => $parameter['term_id']),
       'opts'  => null,
     ),
   );
@@ -90,6 +90,7 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
 
   return $cvterm;
 }
+
 
 
 ///////
@@ -123,7 +124,8 @@ function analyzedphenotypes_cvprop($property = null, $parameter = null) {
  */
 function ap_get_cvterm($identifiers, $options = array('dataset' => 'cvtermid')) {
   // Inspect what is provided:
-  $value = reset(array_keys($identifiers));
+  $v = array_keys($identifiers);
+  $value = reset($v);
 
   // Build Query: Fill in the blanks.
   // SELECT __ FROM __ WHERE __ AND __ ORDER BY __

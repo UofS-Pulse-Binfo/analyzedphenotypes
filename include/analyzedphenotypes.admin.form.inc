@@ -414,11 +414,16 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
            $traitprop['name'] = $name;
 
            // Match cvterm key.
-           $similar_cvterm = analyzedphenotypes_cvprop('match_key', array(
-             'cvterm_keyword' => $name,
-             'genus' => $project_genus,
-           ));
-
+           // Try to match the trait name with existing name and suggest to user.
+           // Limit the search to genus configuration of genus selected. 
+           // Cvterm Id passed on to callback.
+           $similar_cvterm = ap_get_cvterm(
+             array('keyword' => $name, 'genus' => $project_genus),
+             array('dataset' => 'cvtermidname')
+           );
+           
+           $similar_cvterm = array_values($similar_cvterm);
+           
            if ($similar_cvterm) {
              $form[$ap_fieldset]['ap_similar_trait_select_field' . $i] = array(
                '#type' => 'select',
@@ -447,6 +452,7 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
              $describeform_show = 'yes';
            }
 
+           // From cvterm suggestion above, load and set fields default to term properties.
            if (isset($form_state['values']['ap_similar_trait_select_field' . $i])) {
              $select_trait = (int)$form_state['values']['ap_similar_trait_select_field' . $i];
 
@@ -454,24 +460,26 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
                if ($select_trait > 0) {
                  $selected_cvterm = $form_state['values']['ap_similar_trait_select_field' . $i];
 
-                 $exists = analyzedphenotypes_cvprop('get_cvterm', array(
-                   'cvterm_id' => $selected_cvterm,
-                 ));
+                 // Fetch cvterm and all properties to be used as default value in fields.
+                 $exists = ap_get_cvterm(
+                   array('cvterm_id' => $selected_cvterm),
+                   array('dataset' => 'fullset')
+                 );
 
                  if ($exists) {
-                   $trait_name_value = $exists['name'];
+                   $trait_name_value = $exists[0]['name'];
                    $name = analyzedphenotypes_traitprop('no_unit', array(
                      'trait_name' => $trait_name_value,
                    ));
+                   
+                   // Term properties.
                    $traitprop['name']          = $name;
-                   $traitprop['cvterm_id']     = $exists['cvterm_id'];
-                   $traitprop['definition']    = $exists['definition'];
+                   $traitprop['cvterm_id']     = $exists[0]['cvterm_id'];
+                   $traitprop['definition']    = $exists[0]['definition'];
                    $traitprop['scale']         = '';
-                   $traitprop['crop_ontology'] = $exists['crop_ontology'];
-
-                   $traitprop['photos'] = analyzedphenotypes_cvprop('cvterm_get_photo', array(
-                     'cvterm_id' => $exists['cvterm_id'],
-                   ));
+                   $traitprop['crop_ontology'] = $exists[0]['crop_ontology'];
+                   // Term photo.  
+                   $traitprop['photos'] = ap_download_cvtermphoto($exists[0]['cvterm_id']);
                  }
                }
 
@@ -744,11 +752,15 @@ function analyzedphenotypes_loader_form_save($form, &$form_state) {
       else {
         $description = $form_state['values']['ap_description_text_field' . $i];
 
-        $cvterm = analyzedphenotypes_cvprop('insert_cvterm', array(
-          'name' => $trait,
-          'definition' => $description,
-          'genus' => $project_genus,
-        ));
+        // Insert new term. Inserted term id is required.
+        $cvterm = ap_insert_cvterm(
+          array(
+            'name' => $trait,
+            'definition' => $description,
+            'genus' => $project_genus,
+          ),
+          array('return_insert_id' => TRUE)
+        );
 
         if ($cvterm) {
           $cvterm_id = $cvterm;
@@ -762,15 +774,16 @@ function analyzedphenotypes_loader_form_save($form, &$form_state) {
             $ontology_value = $form_state['values']['ap_crop_ontology_text_field' . $i];
 
             if (!empty($ontology_value)) {
-              $ontologyprop = analyzedphenotypes_cvprop('get_cvterm', array(
-                'name' => $ontology_value,
-                'cv_id' => $sysvar_genus_ontology,
-              ));
+              // Fetch cvterm/ontology term limit search in genus configuration of project genus.
+              $ontologyprop = ap_get_cvterm(
+                array('name' => $ontology_value, 'genus' => $sysvar_genus_ontology),
+                array('dataset' => 'cvtermid')
+              );
 
               if ($ontologyprop) {
                 // Create relationship.
                 analyzedphenotypes_ontologyprop('map_ontology_trait', array(
-                  'ontology_cvterm_id' => $ontologyprop['cvterm_id'],
+                  'ontology_cvterm_id' => $ontologyprop[0]['cvterm_id'],
                   'trait_cvterm_id' => $cvterm_id,
                 ));
               }
@@ -780,11 +793,12 @@ function analyzedphenotypes_loader_form_save($form, &$form_state) {
           // Photo.
           $photo_1 = 'ap_photo_1' . $i;
           $photo_2 = 'ap_photo_2' . $i;
-
-          analyzedphenotypes_cvprop('cvterm_save_photo', array(
-            'cvterm_id' => $cvterm_id,
-            'photo' => array($photo_1, $photo_2),
-          ));
+          
+          // Save cvterm image.
+          ap_upload_cvtermphoto(
+            array('cvterm_id' => $cvterm_id, 'photo' => array($photo_1, $photo_2)),
+            array('scaleto' => 400)
+          ); 
         }
       }
 
@@ -1149,7 +1163,7 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
   );
 
   // Fetch all Controlled Vocabulary.
-  $cvs = analyzedphenotypes_cvprop();
+  $cvs = ap_get_cv();
   $cv_options = array_map(function($c) {
     return $c['name'];
   }, $cvs);
@@ -1342,20 +1356,23 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
       // Since what is saved is cvterm_id into the variable, we need to convert the id
       // to something human readbale.
       $var_id = variable_get($prop['field_name']);
-      $default_field = analyzedphenotypes_cvprop('term_id', array(
-        'term_id' => $var_id,
-      ));
+      
+      // Fetch the cvterm name (cv name) of a cvterm id number.
+      $default_field = ap_get_cvterm(
+        array('cvterm_id' => $var_id),
+        array('dataset' => 'namecvname_format')
+      );
 
-      $default_value = (empty($default_field)) ? '' : $default_field;
+      $default_value = ($default_field) ? reset($default_field) : '';
 
       // Otherwise a autocomplete field.
       $form[$frameset_cv][ $prop['field_name'] ] = array(
         '#type' => 'textfield',
         '#title' => t($term),
         '#description' => t($prop['description']),
-        '#default_value' => $default_value,
+        '#default_value' => $default_value['namecvname'],
         '#attributes' => array('class' => array('ap-autocomplete-field-terms'),
-          'title' => array($default_value)),
+          'title' => array($default_value['namecvname'])),
         //
         '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/cvterms/cv',
       );
@@ -1444,10 +1461,11 @@ function system_settings_form_validate($form, &$form_state) {
       form_set_error($t, 'You must set the controlled vocabulary term for ' . $var_key . '.');
     }
     else {
-      // Check if term in cvterm table.
-      $is_term = analyzedphenotypes_cvprop('term_cv', array(
-        'term_cv' => $field_term,
-      ));
+      // Term entered a combination of cvterm name and cv name.
+      // Checking to see if it matched a record.
+      $is_term = ap_get_cvterm(
+        array('cvtermcv' => $field_term)
+      );
 
       if (is_null($is_term)) {
         // Invalid term. Mark field.
@@ -1492,14 +1510,16 @@ function system_settings_form_config_submit($form, &$form_state) {
       foreach ($var as $v) {
         $fld_value = $form_state['values'][$v];
 
-        $fld_value_id = analyzedphenotypes_cvprop('term_cv', array(
-          'term_cv' => $fld_value,
-        ));
+        $fld_value_id = ap_get_cvterm(
+          array('cvtermcv' => $fld_value)
+        );
 
-        variable_set($v, $fld_value_id);
+        // Term entered a combination of cvterm name and cv name.
+        // Checking to see if it matcheed a record before saving it to a system var.
+        variable_set($v, $fld_value_id[0]['cvterm_id']);
       }
 
-      analyzedphenotypes_updatemview();
+      ap_update_mview_phenotypesummary();
     }
   }
 
