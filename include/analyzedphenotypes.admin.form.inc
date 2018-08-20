@@ -564,17 +564,17 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
 
                if ($sysvar_genus_ontology) {
                  // Attempt suggest term.
-                 $ontology_suggestions = analyzedphenotypes_ontologyprop('suggest', array(
-                   'trait_name' => $traitprop['name'],
-                   'genus' => $project_genus,
-                 ));
+                 $ontology_suggestions = ap_suggest_ontology(
+                   array('trait' => $traitprop['name'], 'genus' => $project_genus),
+                   array('limitrows' => 10)
+                 );
 
                  if ($ontology_suggestions) {
                    // Found term to suggest.
                    $a = array();
 
                    foreach($ontology_suggestions as $k => $term) {
-                     $definition = empty($term['definition']) ? $term['name'] : $term['definition'];
+                     $definition = $term['name'];
 
                      $a[] = l($term['name'], '#', array('attributes' => array(
                        'alt' => $definition,
@@ -782,10 +782,12 @@ function analyzedphenotypes_loader_form_save($form, &$form_state) {
 
               if ($ontologyprop) {
                 // Create relationship.
-                analyzedphenotypes_ontologyprop('map_ontology_trait', array(
-                  'ontology_cvterm_id' => $ontologyprop[0]['cvterm_id'],
-                  'trait_cvterm_id' => $cvterm_id,
-                ));
+                // Set the ontology for term to crop ontology selected.
+                // Replace existing ontology-trait relationship set to FALSE.
+                ap_set_ontology(
+                  array('trait_cvterm_id' => $cvterm_id, 'ontology_cvterm_id' => $ontologyprop[0]['cvterm_id']),
+                  array('replace' => FALSE)
+                );
               }
             }
           }
@@ -970,11 +972,10 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
     $field_value = $form_state['values'][$field_name];
     if (!empty($field_value)) {
       $project_genus = $form_state['values']['ap_genus_select_field'];
-      $exists = analyzedphenotypes_ontologyprop('match_ontology', array(
-        'genus' => $project_genus,
-        'ontology' => $field_value,
-      ));
-
+      
+      // Check if a trait ontology matched a record.
+      $exists = ap_match_ontology($project_genus, $field_value);
+      
       if (!$exists) {
         $error = TRUE;
         form_set_error($field_name, t('Crop ontology entered is not recognized. Please enter or select crop ontology.'));

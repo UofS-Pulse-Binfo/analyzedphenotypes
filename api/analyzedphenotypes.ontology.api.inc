@@ -274,11 +274,11 @@ function ap_set_ontology($identifiers, $options = array('replace' => FALSE)) {
 
   $sysvar_related = variable_get($sysvar);
 
-  if ($sysvar_related > 0 && $identifiers['trait_cvtermid'] > 0 && $identifiers['ontology_cvterm'] > 0) {
+  if ($sysvar_related > 0 && $identifiers['trait_cvterm_id'] > 0 && $identifiers['ontology_cvterm_id'] > 0) {
     $values = array(
       'type_id' => $sysvar_related,
-      'object_id' => $identifiers['trait_cvtermid'],
-      'subject_id'  => $identifiers['ontology_cvtermid'],
+      'object_id' => $identifiers['trait_cvterm_id'],
+      'subject_id'  => $identifiers['ontology_cvterm_id'],
     );
 
     // Check if there existed any ontology for a trait.
