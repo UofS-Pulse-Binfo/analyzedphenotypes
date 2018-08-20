@@ -341,7 +341,7 @@ function ap_suggest_ontology($identifiers, $options = array('limitrows' => 10)) 
 function ap_match_ontology($genus, $ontology) {
   $sysvar = ap_get_variablenames(
     array('variablename' => $genus),
-    array('set' => 'cvdbon', 'suffix' => 'on')
+    array('set' => 'cvdbon', 'suffix' => 'ontology')
   );
 
   $sysvar_genus_ontology = variable_get($sysvar);

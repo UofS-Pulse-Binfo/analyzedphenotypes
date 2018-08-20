@@ -69,8 +69,12 @@ function analyzedphenotypes_ap_validators($all_scope = NULL) {
   );
 
   // Optional, only when allow new trait is set to not allow.
-  $vars = analyzedphenotypes_systemvariables('options');
-  $allow_new = variable_get($vars['ap_allownew']);
+  $sysvars = ap_get_variablenames(
+    array('variablename' => 'varset'),
+    array('set' => 'options')
+  );
+  
+  $allow_new = variable_get($sysvars['ap_allownew']);
 
   if (!$allow_new) {
     $validators['FILE_allow_new'] = array(
@@ -795,7 +799,7 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
  * SAVE ANALYZED PHENOTYPES.
  * Save project, genus and analyzed phenotypic data.
  * Default to:
- * Dependencies: analyzedphenotypes_tripaljobpro(), analyzedphenotypes_projectprop(), analyzedphenotypes_systemvariables().
+ * Dependencies: analyzedphenotypes_tripaljobpro(), analyzedphenotypes_projectprop(), ap_get_variablenames().
  *
  * @param Array $dataset
  *  An associative array containing user provide values:
@@ -872,7 +876,12 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
     }
     unset($columnsprop);
 
-    $sysvars = analyzedphenotypes_systemvariables('terms');
+    // All term configurations.
+    $sysvar = ap_get_variablenames(
+      array('variablename' => 'varset'),
+      array('set' => 'terms')
+    );
+    
     // Assay id : method/taken by eye.
     $sysvar_method = variable_get($sysvars['ap_method']);
 

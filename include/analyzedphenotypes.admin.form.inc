@@ -556,11 +556,13 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
              //  This field should not be available.
              if (!$disabled) {
                // When field is enabled. Disabled might mean the field is used to load previously added record.
-               $sysvar_genus = analyzedphenotypes_systemvariables('genus_vars', array(
-                 'genus' => $project_genus,
-               ));
+               // Fetch ontology settings for this project genus.
+               $sysvar = ap_get_variablenames(
+                 array('variablename' => $project_genus),
+                 array('set' => 'cvdbon', 'suffix' => 'ontology')
+               );
 
-               $sysvar_genus_ontology = variable_get($sysvar_genus['ontology']);
+               $sysvar_genus_ontology = variable_get($sysvar);
 
                if ($sysvar_genus_ontology) {
                  // Attempt suggest term.
@@ -735,12 +737,13 @@ function analyzedphenotypes_loader_form_save($form, &$form_state) {
     $data_file = $form_state['values']['ap_file_fid_field'];
 
     // System variables: Genus ontology.
-    $sysvars = analyzedphenotypes_systemvariables('genus_vars', array(
-      'genus' => $project_genus,
-    ));
-
-    $sysvar_genus_ontology = variable_get($sysvars['ontology']);
-    unset($sysvars);
+    // Fetch genus ontology settings for this project genus.
+    $sysvar = ap_get_variablenames(
+      array('variablename' => $project_genus),
+      array('set' => 'cvdbon', 'suffix' => 'ontology')
+    );
+    
+    $sysvar_genus_ontology = variable_get($sysvar);
 
     foreach($traits as $i => $trait) {
       // Check the select similar trait value.
@@ -1280,7 +1283,11 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
   );
 
   // Array for property terms.
-  $term_vars = analyzedphenotypes_systemvariables('terms');
+  // Fetch terms configuration used by AP.
+  $term_vars = ap_get_variablenames(
+    array('variablename' => 'varset'),
+    array('set' => 'terms')
+  );
 
   // Property terms.
   $terms_prop = array(
@@ -1420,7 +1427,10 @@ function system_settings_form_validate($form, &$form_state) {
   // For a give genus, if one field was altered then user is trying
   // to set a value and this validate should ensure that both
   // controlled vocabulary and database configuration must have a value selected.
-  $cvdbon = analyzedphenotypes_systemvariables('cvdbon');
+  $cvdbon = ap_get_variablenames(
+    array('variablename' => 'varset'),
+    array('set' => 'cvdbon')
+  );
 
   foreach($cvdbon as $i => $vars) {
     $var_ctr = 0;
@@ -1450,7 +1460,11 @@ function system_settings_form_validate($form, &$form_state) {
   }
 
   // CHECK CONTROLLED VOCABULARY TERMS:
-  $terms = analyzedphenotypes_systemvariables('terms');
+  // All term configuration used by AP.
+  $terms = ap_get_variablenames(
+    array('variablename' => 'varset'),
+    array('set' => 'terms')
+  );
 
   // Test if value entered (field for terms are autocomplete).
   foreach($terms as $term => $t) {
@@ -1482,8 +1496,9 @@ function system_settings_form_validate($form, &$form_state) {
  * Save congfiguration variables.
  */
 function system_settings_form_config_submit($form, &$form_state) {
-  $vars = analyzedphenotypes_systemvariables();
-
+  // All system variables, groupped by options, terms and cvdbon.
+  $vars = ap_construct_variablenames();
+  
   foreach($vars as $i => $var) {
     // Convert the values selected from the interface to id number (cvterm or cv id number).
     if ($i == 'cvdbon') {
@@ -1519,7 +1534,8 @@ function system_settings_form_config_submit($form, &$form_state) {
         // Checking to see if it matcheed a record before saving it to a system var.
         variable_set($v, $fld_value_id[0]['cvterm_id']);
       }
-
+      
+      // Update materialized view to account for terms location and year.
       ap_update_mview_phenotypesummary();
     }
   }

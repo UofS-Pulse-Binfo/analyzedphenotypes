@@ -111,11 +111,12 @@ function analyzedphenotypes_enable() {
   // in AP configuration page.
   $default_ontology = analyzedphenotypes_defaultontologyload();
 
-  // System variable for all controlled vocabulary terms.
-  $system_vars = analyzedphenotypes_systemvariables('terms');
+  // All system variables, groupped by options, cvdbon and terms.
+  $sysvars = ap_construct_variablenames();
 
   // Set default.
-  foreach($system_vars as $v => $var) {
+  // Terms.
+  foreach($sysvars['terms'] as $v => $var) {
     // Set the variable to default ontology term.
     // base terms: location, replicate, year ...
     $v = trim(str_replace('ap_', '', $v));
@@ -125,19 +126,15 @@ function analyzedphenotypes_enable() {
 
   // Other system variables.
   // Genus - cv, db and ontology.
-  unset($system_vars);
-  $system_vars = analyzedphenotypes_systemvariables('cvdbon');
-
-  foreach($system_vars as $v => $var) {
+  foreach($sysvars['cvdbon'] as $v => $var) {
     foreach($var as $h) {
       variable_set($h, 'not set');
     }
   }
 
   // Allow new traits.
-  unset($system_vars);
-  $system_vars = analyzedphenotypes_systemvariables('options');
-  foreach($system_vars as $v => $var) {
+  // Default to allow new traits to be added.
+  foreach($sysvars['options'] as $v => $var) {
     variable_set($var, 1);
   }
   
@@ -152,9 +149,9 @@ function analyzedphenotypes_enable() {
  * Implements hook_uninstall().
  */
 function analyzedphenotypes_uninstall() {
-  $vars = analyzedphenotypes_systemvariables();
+  $sysvars = ap_construct_variablenames();
 
-  foreach($vars as $i => $v) {
+  foreach($sysvars as $i => $v) {
     if (is_array($v)) {
       foreach($v as $j => $k) {
         variable_del($k);
