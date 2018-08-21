@@ -889,10 +889,6 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
 
           // SQL query uses alias to reference field. Use alias to access piece of data.
           $field_alias = ap_create_columnheaders('columns_downloadable_tofield');
-          
-          // Compose a key to group data points. This grouping can then be used for
-          // average replicate option.
-          $field_keys = array($fldname['experiment']['base'], );
 
           // Begin.
           $column_headers_data = array();

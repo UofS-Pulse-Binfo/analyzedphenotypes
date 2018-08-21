@@ -8,30 +8,6 @@
 
 
 /**
- * @TODO: Replace this function with the function below.
- */
-function analyzedphenotypes_mview($property, $parameter = null) {
-  $mviewquery  = ap_construct_mview_phenotypesummary_query();
-  $mviewschema = ap_construct_mview_phenotypesummary_schema();
-
-  return array(
-    'query' => $mviewquery,
-    'schema' => $mviewschema,
-  );
-}
-
-/**
- * @TODO: Replace this function with the function below.
- */
-function analyzedphenotypes_updatemview() {
-  ap_update_mview_phenotypesummary();
-}
-
-
-///////
-
-
-/**
  * Prepare SQL query required by materialized view.
  * Dependencies: ap_get_variablenames() in systemvars.api.
  *
