@@ -219,11 +219,8 @@ function ap_insert_cvterm($identifiers, $options = array('return_inserted_id' =>
   // Database.
   $sysvar_genus_db = variable_get($sysvar['db']);
   //
-  // TODO: Replace when database API is ready.
-  // Requires the db name.
-  $dbprop = analyzedphenotypes_dbprop('match_db', array(
-    'db_id' => $sysvar_genus_db,
-  ));
+  $dbprop = ap_match_database($sysvar_genus_db);
+  
   $db_name = $dbprop['name'];
 
   // Controlled Vocabulary.

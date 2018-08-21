@@ -1182,7 +1182,7 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
 
   $field_default = 0;
   // Fetch all Database.
-  $dbs = analyzedphenotypes_dbprop();
+  $dbs = ap_get_database();
   $db_options = array_map(function($d) {
     return $d['name'];
   }, $dbs);
