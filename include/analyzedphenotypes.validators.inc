@@ -677,7 +677,7 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
  * DATA FILE VALUE VALIDATOR
  * Perform validation to values.
  * Default to:
- * Dependencies: ap_create_columnheaders(), analyzedphenotypes_datatypeprop(), analyzedphenotypes_stockprop().
+ * Dependencies: ap_create_columnheaders(), ap_validate_unitvalue(), analyzedphenotypes_stockprop().
  *
  * @param String $case
  *  A value representing a validation requested (each case represents a case in the switch implementation):
@@ -727,10 +727,10 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
         $column_names = array_keys($required_columns);
 
         if (!empty($column_data_type) && $column_names[$column] != $column_names[6]) {
-          $coltype_value_check = analyzedphenotypes_datatypeprop($column_data_type, array(
-            'value' => $value,
-          ));
-
+          
+          // Check if value matches the unit.
+          $coltype_value_check = ap_validate_unitvalue($column_data_type, $value);
+          
           if (!$coltype_value_check) {
             $status['type'] = 'failed';
             $status['details'] = ' in ' . $column . ' line #' . $row . ' (' . $value . ' is not a valid ' . $column_data_type . ')';
@@ -747,12 +747,12 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
           'trait_name' => $trait_name,
         ));
 
-        $unit_type = analyzedphenotypes_datatypeprop('unit_type');
+        // Fetch unit properties.
+        $unit_type = ap_define_datatypes();
         $trait_unit_datatype = $unit_type[$unit]['type'];
-
-        $trait_value_check = analyzedphenotypes_datatypeprop($trait_unit_datatype, array(
-          'value' => $value,
-        ));
+        
+        // Check value matches unit.
+        $trait_value_check = ap_validate_unitvalue($trait_unit_datatype, $value);
 
         if (!$trait_value_check) {
           $status['type'] = 'failed';

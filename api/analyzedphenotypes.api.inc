@@ -285,7 +285,7 @@ function analyzedphenotypes_table_values($rows, $column_row, $trait) {
  * FUNCTION:
  * Construct values for summary table of trait values. Table is displayed in Stage 3 - Describe Trait.
  * Dependencies: ap_create_columnheaders() in columnheaders.api.
- *               analyzedphenotypes_datatypeprop() in datatype.api.
+ *               ap_validate_unitvalue() in datatype.api.
  *
  * @param $rows
  *   All rows/datapoints collected for a trait.
@@ -318,9 +318,8 @@ function ap_create_summarytable($rows, $column_rows, $traitname) {
 
       if ($data[$index_trait] == $traitname) {
         $value = $data[$index_value];
-        $is_number = analyzedphenotypes_datatypeprop('number', array(
-          'value' => $value
-        ));
+        
+        $is_number = ap_validate_unitvalue('number', $value);
 
         if ($is_number) {
           $site_year = $data[$index_site] . ' ' . $data[$index_year];
