@@ -31,56 +31,6 @@ function ap_get_projects() {
 
 
 /**
- * CONTROL/SWITCHBOARD.
- * Pass a request to a corresponding function.
- * @TODO: leave out when api reorganize/update is complete and use functions below.
- */
-function analyzedphenotypes_projectprop($property = null, $parameter = null) {
-  if (is_null($property)) {
-    // Default.
-    $property = 'default';
-  }
-
-  // Process request.
-  // Default to all projects.
-  $command = array(
-    'default' => array(
-      'func'  => 'ap_get_projects',
-      'param' => null,
-      'opts'  => null,
-    ),
-    'match_id' => array(
-      'func'  => 'ap_match_projectid',
-      'param' => array('project_id' => $parameter['project_id']),
-      'opts'  => null,
-    ),
-    'match_key' => array(
-      'func'  => 'ap_match_projectname',
-      'param' => array('key' => $parameter['project_keyword']),
-      'opts'  => array(
-        'fullmatch' => FALSE,
-        'limitrows' => 10,
-      ),
-    ),
-    'match_name' => array(
-      'func'  => 'ap_match_projectname',
-      'param' => array('name' => $parameter['project_name']),
-      'opts'  => array(
-        'fullmatch' => TRUE,
-        'limitrows' => 1,
-      ),
-    ),
-  );
-
-  // Function name, parameter (project name key or name), additional options.
-  return call_user_func($command[$property]['func'], $command[$property]['param'], $command[$property]['opts']);
-}
-
-
-///////
-
-
-/**
  * FUNCTION:
  * Fetch record in chado.project that matches experiment id number.
  * Dependencies: ap_get_projects().
