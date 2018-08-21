@@ -30,50 +30,6 @@ function ap_get_genus() {
 
 
 /**
- * CONTROL/SWITCHBOARD.
- * Pass a request to a corresponding function.
- * @TODO: leave out when api reorganize/update is complete and use functions below.
- */
-function analyzedphenotypes_genusprop($property = null, $parameter = null) {
-  if (is_null($property)) {
-    // Default.
-    $property = 'default';
-  }
-
-  // Process request.
-  // Default to all projects.
-  $command = array(
-    'default' => array(
-      'func'  => 'ap_get_genus',
-      'param' => null,
-      'opts'  => null,
-    ),
-    'project_genus' => array(
-      'func'  => 'ap_get_projectgenus',
-      'param' => $parameter,
-      'opts'  => null,
-    ),
-    'assign_genus' => array(
-      'func'  => 'ap_set_projectgenus',
-      'param' => array('project_id' => $parameter['project_id'], 'genus' => $parameter['project_genus']),
-      'opts'  => null,
-    ),
-    'sysvar_genus_set' => array(
-      'func'  => 'ap_get_activegenus',
-      'param' => null,
-      'opts'  => null,
-    ),
-  );
-
-  // Function name, parameter (project name key or name), additional options.
-  return call_user_func($command[$property]['func'], $command[$property]['param'], $command[$property]['opts']);
-}
-
-
-///////
-
-
-/**
  * FUNCTION:
  * Assign a genus to an experiment/project in chado.projectprop table.
  * Dependencies: ap_get_projectgenus(), ap_get_variablenames() - systemvars.api.
