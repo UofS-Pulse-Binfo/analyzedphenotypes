@@ -40,36 +40,6 @@ function ap_get_database() {
 
 
 /**
- * CONTROL/SWITCHBOARD.
- * Pass a request to a corresponding function.
- * @TODO: leave out when api reorganize/update is complete and use functions below.
- */
-function analyzedphenotypes_dbprop($property = null, $parameter = null) {
-  if (is_null($property)) {
-    // Default.
-    $property = 'default';
-  }
-
-  // Process request.
-  $command = array(
-    'default' => array(
-      'func'  => 'ap_get_database',
-      'param' => null,
-    ),
-    'match_db' => array(
-      'func'  => 'ap_match_database',
-      'param' => $parameter['db_id'],
-    )
-  );
-
-  return call_user_func($command[$property]['func'], $command[$property]['param']);
-}
-
-
-///////
-
-
-/**
  * FUNCTION:
  * Match a database record given a database id number.
  * Dependencies: ap_get_database().
