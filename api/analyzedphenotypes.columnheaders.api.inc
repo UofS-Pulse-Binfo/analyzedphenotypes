@@ -111,52 +111,6 @@ function ap_create_columnheaders($set) {
 
 
 /**
- * CONTROL/SWITCHBOARD.
- * Pass a request to a corresponding function.
- * @TODO: leave out when api reorganize/update is complete and use functions below.
- */
-function analyzedphenotypes_columnsprop($property = null, $parameter = null) {
-  if (is_null($property)) {
-    // Default.
-    $property = 'default';
-  }
-
-  // Process request.
-  $command = array(
-    'default' => array(
-      'func'  => 'ap_create_columnheaders',
-      'param' => 'columns_datatype',
-    ),
-    'combination' => array(
-      'func'  => 'ap_create_columnheaders',
-      'param' => 'columns_combination',
-    ),
-    'downloadable' => array(
-      'func'  => 'ap_create_columnheaders',
-      'param' => 'columns_downloadable',
-    ),
-    'column_to_field' => array(
-      'func'  => 'ap_create_columnheaders',
-      'param' => 'columns_downloadable_tofield',
-    ),
-    'match_combination' => array(
-      'func'  => 'ap_match_columncombination',
-      'param' => $parameter,
-    ),
-    'rfriendly' => array(
-      'func'  => 'ap_convert_rcolumnheader',
-      'param' => $parameter['column_header'],
-    ),
-  );
-
-  return call_user_func($command[$property]['func'], $command[$property]['param']);
-}
-
-
-///////
-
-
-/**
  * FUNCTION:
  * Test combnination of column headers against matching column headers from a data point/row to see if it
  * exsits in chado.phenotype and/or chado.phenotypeprop tables.
