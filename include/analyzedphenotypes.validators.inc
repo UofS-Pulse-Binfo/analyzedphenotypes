@@ -277,7 +277,7 @@ function analyzedphenotypes_validator_project($case, $dataset) {
  * GENUS VALIDATOR
  * Perform validation to project/experiment genus.
  * Default to:
- * Dependencies: analyzedphenotypes_genusprop().
+ * Dependencies: ap_get_projectgenus().
  *
  * @param String $case
  *  A value representing a validation requested (each case represents a case in the switch implementation):
@@ -304,9 +304,10 @@ function analyzedphenotypes_validator_genus($case, $dataset) {
         $status['type'] = 'failed';
       }
       else {
-        $genusprop = analyzedphenotypes_genusprop('project_genus', array(
-          'project_name' => $dataset['project_name'],
-        ));
+        // Fetch genus of project.
+        $genusprop = ap_get_projectgenus(
+          array('project_name' => $dataset['project_name'])
+        );
 
         if ($genusprop && $dataset['project_genus'] != $genusprop) {
           $status['type'] = 'failed';
@@ -838,9 +839,10 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
 
   // # GENUS.
   $genus = $dataset['project_genus'];
-  $genusprop = analyzedphenotypes_genusprop();
+  $genusprop = ap_get_genus();
 
   if (!$genus || array_search($genus, $genusprop) === FALSE) {
+    // See if genus exists.
     analyzedphenotypes_tripaljobprop('tripal_fail', array(
       'message' => 'CODE:101 Experiment or project genus is not recognized by this system.',
       'param' => $genus,

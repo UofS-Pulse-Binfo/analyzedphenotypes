@@ -285,7 +285,7 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$va
   $allow_new = 0;
 
   // All genus.
-  $genus = analyzedphenotypes_genusprop();
+  $genus = ap_get_genus();
 
   $sysvar_genus_set = 0;
 

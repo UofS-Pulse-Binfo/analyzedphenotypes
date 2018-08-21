@@ -182,7 +182,8 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
 
   // All genus.
   $arr_all_genus = array(0 => '- Select -');
-  $genusprop = analyzedphenotypes_genusprop('sysvar_genus_set');
+  // Fetch all genus that have been configured in settings page.
+  $genusprop = ap_get_activegenus();
 
   if ($genusprop) {
     foreach($genusprop as $g) {
@@ -195,9 +196,10 @@ function analyzedphenotypes_loader_form_upload($form, &$form_state) {
     $project = trim($form_state['values']['ap_project_select_field']);
 
     if (!empty($project)) {
-      $project_genus = analyzedphenotypes_genusprop('project_genus', array(
-        'project_name' => $project,
-      ));
+      // Fetch genus assigned to a project.
+      $project_genus = ap_get_projectgenus(
+        array('project_name' => $project)
+      );
 
       if ($project_genus) {
         $arr_project_genus = array($project_genus => $project_genus);
@@ -812,21 +814,23 @@ function analyzedphenotypes_loader_form_save($form, &$form_state) {
 
     // Save genus and project.
     // Does project have a genus?
-    $projectprop = analyzedphenotypes_genusprop('project_genus', array(
-      'project_name' => $project_name,
-    ));
-
+    $projectprop = ap_get_projectgenus(
+      array('project_name' => $project_name)
+    );
+    
     if (!$projectprop) {
+      // No previous genus set for the project, create one.
       // Match (full match) a project name.
       $projectprop = ap_match_projectname(
         array('name' => $project_name),
         array('fullmatch' => TRUE, 'limitrows' => 1)
       );
 
-      analyzedphenotypes_genusprop('assign_genus', array(
-        'project_genus' => $project_genus,
-        'project_id' => $projectprop['project_id']
-      ));
+      // Set new genus to project.
+      ap_set_projectgenus(
+        array('project_id' => $projectprop['project_id'], 'genus' => $project_genus),
+        array('replace' => FALSE)
+      );
     }
 
     // Register a job.
@@ -1156,7 +1160,7 @@ function analyzedphenotypes_admin_settings($form, &$form_state) {
 
   // Table Field.
   // Fetch all available genus.
-  $genus = analyzedphenotypes_genusprop();
+  $genus = ap_get_genus();
 
   // Create fields.
   $fields = array();
