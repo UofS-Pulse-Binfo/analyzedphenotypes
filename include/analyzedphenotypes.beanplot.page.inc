@@ -78,7 +78,7 @@ function analyzedphenotypes_beanplot_form($form, $form_state) {
     else {
       $all_id = array_map(function($e) {
         return $e->cvterm_id;
-      },$traits);
+      }, $traits);
 
       if (!in_array($trait_id, $all_id)) {
         $stage = 1;

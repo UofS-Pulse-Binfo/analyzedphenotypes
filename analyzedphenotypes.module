@@ -787,9 +787,8 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
             $col = trim($col);
 
             if (!empty($col)) {
-              $column_headers_picked_rfriendly[] = analyzedphenotypes_columnsprop('rfriendly', array(
-                'column_header' => $col,
-              ));
+              $rf = ap_convert_rcolumnheader($col);
+              $column_headers_picked_rfriendly[] = $rf;
             }
           }
 
@@ -889,8 +888,8 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
           $dataset = $dataset->fetchAll();
 
           // SQL query uses alias to reference field. Use alias to access piece of data.
-          $field_alias = analyzedphenotypes_columnsprop('column_to_field');
-
+          $field_alias = ap_create_columnheaders('columns_downloadable_tofield');
+          
           // Compose a key to group data points. This grouping can then be used for
           // average replicate option.
           $field_keys = array($fldname['experiment']['base'], );

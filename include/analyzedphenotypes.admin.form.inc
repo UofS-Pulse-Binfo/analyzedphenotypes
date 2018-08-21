@@ -369,7 +369,9 @@ function analyzedphenotypes_loader_form_describe($form, &$form_state) {
       unset($file_contents);
 
       $columns_row = $rows[0];
-      $expected_columns = analyzedphenotypes_columnsprop();
+      // Fetch expected column headers and data type for each.
+      $expected_columns = ap_create_columnheaders('columns_datatype');
+      
       $trait_name = array_keys($expected_columns)[0];
       unset($expected_columns, $rows[0]);
 
@@ -1636,7 +1638,7 @@ function analyzedphenotypes_data_download($form, &$form_state) {
 
   // Create list of default and optional column headers.
   // Will return Experiment, Trait Name, Germplasm Name, Year, Location, Replicate, Data Collector, Country of Origin.
-  $headers = analyzedphenotypes_columnsprop('downloadable');
+  $headers = ap_create_columnheaders('columns_downloadable');
   $default_headers = array_combine($headers, $headers);
   $optional_headers = array();
 
@@ -2800,10 +2802,8 @@ function analyzedphenotypes_data_download($form, &$form_state) {
       $id = 'ap-default-row-' . $i;
 
       // Load the RFriendly version of headers.
-      $rfriendly = analyzedphenotypes_columnsprop('rfriendly', array(
-        'column_header' => $def,
-      ));
-
+      $rfriendly = ap_convert_rcolumnheader($def);
+      // Comma separate trait list.
       $rfriendly = ucwords(str_replace(',.', ', ', $rfriendly));
 
       $rows[] = array(
@@ -2855,11 +2855,8 @@ function analyzedphenotypes_data_download($form, &$form_state) {
     foreach($optional_headers as $opt) {
       $id = 'ap-optional-row' . $i;
 
-      $rfriendly = analyzedphenotypes_columnsprop('rfriendly', array(
-        'column_header' => $opt,
-      ));
-
-      $rfriendly = '<em>' . $rfriendly  . '</em>';
+      // Load the RFriendly version of headers.
+      $rfriendly = ap_convert_rcolumnheader($opt);
 
       $rows[] = array(
         'number'   => array('title' => t('Check header to include/exclude in the output file.'), 'id' => $id . 'seqn', 'class' => array(), 'data' => '+'),

@@ -284,7 +284,7 @@ function analyzedphenotypes_table_values($rows, $column_row, $trait) {
 /**
  * FUNCTION:
  * Construct values for summary table of trait values. Table is displayed in Stage 3 - Describe Trait.
- * Dependencies: analyzedphenotypes_columnsprop() in columnheaders.api.
+ * Dependencies: ap_create_columnheaders() in columnheaders.api.
  *               analyzedphenotypes_datatypeprop() in datatype.api.
  *
  * @param $rows
@@ -298,7 +298,8 @@ function analyzedphenotypes_table_values($rows, $column_row, $trait) {
  *   An array of values, summarized by site and year.
  */
 function ap_create_summarytable($rows, $column_rows, $traitname) {
-  $c = analyzedphenotypes_columnsprop();
+  // Fetch expected column headers and data type for each.
+  $c = ap_create_columnheaders('columns_datatype');
   $columns = array_keys($c);
 
   // Reference index number of headers in the column rows.

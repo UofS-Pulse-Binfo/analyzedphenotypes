@@ -111,7 +111,9 @@ function analyzedphenotypes_ap_validators($all_scope = NULL) {
     'error message' => 'A value does not match the data type expected in items: @replace',
   );
 
-  $e = analyzedphenotypes_columnsprop();
+  // Fetch expected column headers and data type for each.
+  $e = ap_create_columnheaders('columns_datatype');
+  
   $expected_columns = array_keys($e);
   $trait_name = $expected_columns[6];
 
@@ -138,7 +140,7 @@ function analyzedphenotypes_ap_validators($all_scope = NULL) {
     'error message' => 'Germplasm is not recognized by this resource in items: @replace Please contact the administrator of this website.',
   );
 
-  $arr_combine_cols = analyzedphenotypes_columnsprop('combination');
+  $arr_combine_cols = ap_create_columnheaders('columns_combination');
 
   $validators['VALUE_unique_combo'] = array(
     'label' => 'Column combination is unique',
@@ -330,7 +332,7 @@ function analyzedphenotypes_validator_genus($case, $dataset) {
  * GENUS VALIDATOR
  * Perform validation to project/experiment genus.
  * Default to:
- * Dependencies: analyzedphenotypes_datafileprop(), analyzedphenotypes_columnsprop(), ap_get_cvterm().
+ * Dependencies: analyzedphenotypes_datafileprop(), ap_create_columnheaders(), ap_get_cvterm().
  *
  * @param String $case
  *  A value representing a validation requested (each case represents a case in the switch implementation):
@@ -382,7 +384,9 @@ function analyzedphenotypes_validator_datafile($case, $dataset) {
             // Extract the first row which is the column headers row.
             $columns_noformat  = array_map('analyzedphenotypes_noformat', $file_columns);
 
-            $columnsprop = analyzedphenotypes_columnsprop();
+            // Fetch expected column headers and data type for each.
+            $columnsprop = ap_create_columnheaders('columns_datatype');
+            
             $expected_columns = array_keys($columnsprop);
             $expected_columns_noformat = array_map('analyzedphenotypes_noformat', $expected_columns);
 
@@ -413,8 +417,9 @@ function analyzedphenotypes_validator_datafile($case, $dataset) {
       $handle = fopen($file, 'r');
 
       if ($handle) {
-        // @TODO: replace with new columns api.
-        $columnsprop = analyzedphenotypes_columnsprop();
+        // Fetch expected column headers and data type for each.
+        $columnsprop = ap_create_columnheaders('columns_datatype');
+        
         $expected_columns = array_keys($columnsprop);
         $trait_name = $expected_columns[0];
 
@@ -537,8 +542,8 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
     }
     
     // Column headers.
-    // @TODO: replace with new column headers api.
-    $e = analyzedphenotypes_columnsprop();
+    // Fetch expected column headers and data type for each.
+    $e = ap_create_columnheaders('columns_datatype');
     $expected_columns = array_keys($e);
     
     $percent = 0;
@@ -672,7 +677,7 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
  * DATA FILE VALUE VALIDATOR
  * Perform validation to values.
  * Default to:
- * Dependencies: analyzedphenotypes_columnsprop(), analyzedphenotypes_datatypeprop(), analyzedphenotypes_stockprop().
+ * Dependencies: ap_create_columnheaders(), analyzedphenotypes_datatypeprop(), analyzedphenotypes_stockprop().
  *
  * @param String $case
  *  A value representing a validation requested (each case represents a case in the switch implementation):
@@ -714,7 +719,10 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
     case 'match_type':
       if (!empty($value)) {
         // Check if the data in a column match the data type required.
-        $required_columns = analyzedphenotypes_columnsprop();
+        
+        // Fetch expected column headers and data type for each.
+        $required_columns = ap_create_columnheaders('columns_datatype');
+        
         $column_data_type = $required_columns[$column];
         $column_names = array_keys($required_columns);
 
@@ -757,7 +765,8 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
     //
     case 'germplasm_recognized':
       if ($value) {
-        $e = analyzedphenotypes_columnsprop();
+        // Fetch expected column headers and data type for each.
+        $e = ap_create_columnheaders('columns_datatype');
         $expected_columns = array_keys($e);
 
         $stock_id_check = analyzedphenotypes_stockprop('match_name', array(
@@ -776,9 +785,8 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
     //
     case 'unique_combo':
       if ($value) {
-        $match = analyzedphenotypes_columnsprop('match_combination', array(
-          'combination' => $value,
-        ));
+        // Fetch column headers combination required in checking if row was unique.
+        $match = ap_match_columncombination($value);
 
         if ($match) {
           $status['type'] = 'failed';
@@ -873,7 +881,9 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
     $tripaljob_settings = analyzedphenotypes_tripaljobprop();
 
     $col_index = array();
-    $columnsprop = analyzedphenotypes_columnsprop();
+    // Fetch expected column headers and data type for each.
+    $columnsprop = ap_create_columnheaders('columns_datatype');
+    
     foreach($columnsprop as $col => $t) {
       $j = array_search($col, $columns);
       $col_index[$col] = $j;
