@@ -427,9 +427,11 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
       //   $key : Keyword enterd in the field.
       $data_JSON = array();
 
-      $projectprop = analyzedphenotypes_projectprop('match_key', array(
-        'project_keyword' => $key,
-      ));
+      // Pattern match projects, return the first 10.
+      $projectprop = ap_match_projectname(
+        array('key' => $key),
+        array('fullmatch' => FALSE, 'limitrows' => 10)
+      );
 
       if ($projectprop) {
         foreach($projectprop as $id => $name) {

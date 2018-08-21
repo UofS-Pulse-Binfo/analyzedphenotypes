@@ -225,7 +225,7 @@ function analyzedphenotypes_validate_tsv_file($dataset) {
  * PROJECT VALIDATOR
  * Perform validation to project/experiment.
  * Default to:
- * Dependencies: analyzedphenotypes_projectprop().
+ * Dependencies: ap_match_projectname().
  *
  * @param String $case
  *  A value representing a validation requested (each case represents a case in the switch implementation):
@@ -252,9 +252,10 @@ function analyzedphenotypes_validator_project($case, $dataset) {
         $status['type'] = 'failed';
       }
       else {
-        $projectprop = analyzedphenotypes_projectprop('match_name', array(
-          'project_name' => $dataset['project_name'],
-        ));
+        $projectprop = ap_match_projectname(
+          array('name' => $dataset['project_name']),
+          array('fullmatch' => TRUE, 'limitrows' => 1)
+        );
 
         if (!$projectprop) {
           $status['type'] = 'failed';
@@ -799,7 +800,7 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
  * SAVE ANALYZED PHENOTYPES.
  * Save project, genus and analyzed phenotypic data.
  * Default to:
- * Dependencies: analyzedphenotypes_tripaljobpro(), analyzedphenotypes_projectprop(), ap_get_variablenames().
+ * Dependencies: analyzedphenotypes_tripaljobpro(), ap_match_projectname(), ap_get_variablenames().
  *
  * @param Array $dataset
  *  An associative array containing user provide values:
@@ -818,10 +819,11 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
   $trait_cvterm = $dataset['trait_cvterm'];
 
   // # PROJECT.
-  $projectprop = analyzedphenotypes_projectprop('match_name', array(
-    'project_name' => $dataset['project_name'],
-  ));
-
+  $projectprop = ap_match_projectname(
+    array('name' => $dataset['project_name']),
+    array('fullmatch' => TRUE, 'limitrows' => 1)
+  );
+  
   $project_id = ($projectprop) ? $projectprop['project_id'] : 0;
 
   if (!$project_id) {

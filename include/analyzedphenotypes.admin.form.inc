@@ -817,13 +817,15 @@ function analyzedphenotypes_loader_form_save($form, &$form_state) {
     ));
 
     if (!$projectprop) {
-      $projectprop = analyzedphenotypes_projectprop('match_name', array(
-        'project_name' => $project_name,
-      ));
+      // Match (full match) a project name.
+      $projectprop = ap_match_projectname(
+        array('name' => $project_name),
+        array('fullmatch' => TRUE, 'limitrows' => 1)
+      );
 
       analyzedphenotypes_genusprop('assign_genus', array(
         'project_genus' => $project_genus,
-        'project_id' => $projectprop['project_id'],
+        'project_id' => $projectprop['project_id']
       ));
     }
 
