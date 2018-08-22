@@ -16,6 +16,10 @@
   -webkit-box-shadow: 1px 1px 5px 3px #EAEAEA;
   box-shadow:         inset 1px 1px 5px 3px #EAEAEA;
 
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+
   height: 250px;
   margin: 0;
   padding: 0;

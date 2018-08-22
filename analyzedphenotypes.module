@@ -38,7 +38,9 @@ module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.val
  */
 function analyzedphenotypes_menu() {
   $items = array();
-
+  
+  // DATA SUMMARY:
+  
   // Main menu items for phenotypes: shows a beanplot -select trait and project.
   $items['phenotypes'] = array(
     'title' => 'Phenotypes',
@@ -69,42 +71,63 @@ function analyzedphenotypes_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  // ADMINISTRATIVE PAGES.
+  
   $tripal_extension_ap = 'admin/tripal/extension/analyzedphenotypes';
-
+  
   // Main administrative pages for analyzed phenotypes.
   $items[$tripal_extension_ap] = array(
     'title' => 'Analyzed Phenotypes',
     'description' => 'Provides phenotypic trait pages, charts, upload and download for partially filtered (not raw) phenotypic data.',
     'access arguments' => array('administer tripal'),
   );
+  
+  
+  // CONFIGURATION PAGE:
+  
+  $items[$tripal_extension_ap . '/configuration'] = array(
+    'title' => 'Configuration',
+    'description' => 'Set the controlled vocabularies to be used by this module, as well, as other options to customize it to your data/organism.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('analyzedphenotypes_configuration_form'),
+    'access arguments' => array('administer tripal'),
+    'file' => 'include/analyzedphenotypes.configuration.page.inc',
+    'weight' => 2,
+    'type' => MENU_NORMAL_ITEM,
+  );
+  
+  // FORM IMPLEMENTATIONS:
 
-  // Data Loader.
+
+  // UPLOAD DATA.
   // @todo should this be at admin/tripal/loaders?
   $items[$tripal_extension_ap . '/upload'] = array(
     'title' => 'Upload Phenotypic Data',
     'description' => 'Import a partially filtered (not raw) phenotypic datasets into Chado for display on Trait and Germplasm pages.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('analyzedphenotypes_admin_data_loader'),
+    'page arguments' => array('analyzedphenotypes_uploaddata_form'),
     'access arguments' => array('upload analyzed phenotypes'),
-    'file' => 'include/analyzedphenotypes.admin.form.inc',
+    'file' => 'include/analyzedphenotypes.uploaddata.page.inc',
     'weight' => 1,
     'type' => MENU_NORMAL_ITEM,
   );
 
-  // Settings.
-  $items[$tripal_extension_ap . '/settings'] = array(
-    'title' => 'Configuration',
-    'description' => 'Set the controlled vocabularies to be used by this module, as well, as other options to customize it to your data/organism.',
+  // DOWNLOAD DATA.
+  $items['phenotype/download'] = array(
+    'title' => 'Download Analyzed Phenotypic Data',
+    'description' => 'Download Analyzed Phenotypic Data.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('analyzedphenotypes_admin_settings'),
-    'access arguments' => array('administer tripal'),
-    'file' => 'include/analyzedphenotypes.admin.form.inc',
+    'page arguments' => array('analyzedphenotypes_downloaddata_form'),
+    'access arguments' => array('access administration pages'),
+    'file' => 'include/analyzedphenotypes.downloaddata.page.inc',
     'weight' => 2,
     'type' => MENU_NORMAL_ITEM,
   );
 
+  // MENU CALLBACK:
+  
+  
   // Generate data in JSON object.
+  // Global menu callback used to generate JSON.
   $items[$tripal_extension_ap . '/json/%/%'] = array(
     'page callback' => 'analyzedphenotypes_data_json',
     'page arguments' => array(5, 6),
@@ -120,27 +143,6 @@ function analyzedphenotypes_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  // Data Downloader.
-  $items['phenotype/download'] = array(
-    'title' => 'Download Analyzed Phenotypic Data',
-    'description' => 'Download Analyzed Phenotypic Data.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('analyzedphenotypes_data_download'),
-    'access arguments' => array('access administration pages'),
-    'file' => 'include/analyzedphenotypes.admin.form.inc',
-    'weight' => 2,
-    'type' => MENU_NORMAL_ITEM,
-  );
-
-    $items['phenotype/download/autofield/%/%/%'] = array(
-      'title' => 'link',
-      'page callback' => 'analyzedphenotypes_autofield_callback',
-      'page arguments' => array(3, 4, 5),
-      'access callback' => TRUE,
-      'type' => MENU_CALLBACK,
-      'delivery callback' => 'ajax_deliver',
-    );
-
   // Tripal Download Implementation.
   $items['phenotype/download/analyzed_phenotypic_data'] = array(
     'title' => 'Analyzed Phenotypic Data Download',
@@ -149,6 +151,7 @@ function analyzedphenotypes_menu() {
     'access arguments' => array('access administration pages'),
     'type' => MENU_CALLBACK,
   );
+
 
   return $items;
 }
@@ -185,35 +188,24 @@ function analyzedphenotypes_permission() {
 function analyzedphenotypes_theme($existing, $type, $theme, $path) {
   $items = array();
 
-  // Administrative settings
-  $items['analyzedphenotypes_admin_settings'] = array(
+  // Form implementations:
+
+  // Configuration form.
+  $items['analyzedphenotypes_configuration_form'] = array(
     'template' => 'analyzedphenotypes_pages',
     'render element' => 'form',
     'path' => $path . '/theme',
   );
 
-  // Administrative page directory
-  $items['analyzedphenotypes_admin_page_directory'] = array(
+  // Data uploader.
+  $items['analyzedphenotypes_uploaddata_form'] = array(
     'template' => 'analyzedphenotypes_pages',
     'render element' => 'form',
-    'path' => $path . '/theme',
-  );
-
-  // Data loader.
-  $items['analyzedphenotypes_admin_data_loader'] = array(
-    'template' => 'analyzedphenotypes_pages',
-    'render element' => 'form',
-    'path' => $path . '/theme',
-  );
-
-  // Report errors generated by validators.
-  $items['analyzedphenotypes_validator_report'] = array(
-    'template' => 'analyzedphenotypes_validators',
     'path' => $path . '/theme',
   );
 
   // Data downloader.
-  $items['analyzedphenotypes_data_download'] = array(
+  $items['analyzedphenotypes_downloaddata_form'] = array(
     'template' => 'analyzedphenotypes_pages',
     'render element' => 'form',
     'path' => $path . '/theme',
@@ -222,6 +214,21 @@ function analyzedphenotypes_theme($existing, $type, $theme, $path) {
   // Form table.
   $items['analyzedphenotypes_form_table'] = array(
     'render element' => 'form',
+  );
+
+  // Module page directory
+  
+  $items['analyzedphenotypes_admin_page_directory'] = array(
+    'template' => 'analyzedphenotypes_pages',
+    'render element' => 'form',
+    'path' => $path . '/theme',
+  );
+
+  // Report errors generated by validators.
+  
+  $items['analyzedphenotypes_validator_report'] = array(
+    'template' => 'analyzedphenotypes_validators',
+    'path' => $path . '/theme',
   );
 
 
@@ -271,7 +278,6 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&
   $variables['path_extension'] = 'admin/tripal/extension/analyzedphenotypes';
   $variables['directory'] = $variables['form']['#ap_admin_directory'];
 
-
   return $variables;
 }
 
@@ -279,7 +285,7 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&
 /**
  * Implements hook_preprocess().
  */
-function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$variables, $hook) {
+function analyzedphenotypes_preprocess_analyzedphenotypes_uploaddata_form(&$variables, $hook) {
   // Default system to not properly set, then prove otherwise.
   $notset = 'not set';
   $allow_new = 0;
@@ -361,7 +367,6 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$va
 
   return $variables;
 }
-
 
 
 /**
@@ -599,9 +604,9 @@ function analyzedphenotypes_register_trpdownload_type() {
     ),
   );
 
+
   return $types;
 }
-
 
 /**
  * Generate a readable and unique filename for the file to be generated.

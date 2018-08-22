@@ -7,10 +7,10 @@
  */
 
 $form_id = $form['#form_id'];
-$ap_admin = 'analyzedphenotypes_admin_';
+$ap = 'analyzedphenotypes_';
 
 // # DATA LOADER/UPLOAD.
-if ($form_id == $ap_admin . 'data_loader') {
+if ($form_id == $ap . 'uploaddata_form') {
   if ($system_set == 'not set') {
     // System variables (default cv, db etc.) not set.
     print '<div class="messages warning">System settings not set. Please contact the administrator of this site.</div>';
@@ -166,11 +166,11 @@ if ($form_id == $ap_admin . 'data_loader') {
   }
 }
 // # DOWNLOADER
-elseif ($form_id == 'analyzedphenotypes_data_download') {
+elseif ($form_id == $ap . 'downloaddata_form') {
   print drupal_render_children($form);
 }
 // # SETTINGS.
-elseif ($form_id == $ap_admin . 'settings') {
+elseif ($form_id == $ap . 'configuration_form') {
   // Settings form are rendered by system_settings_form()
   // this theme is not recognized for some reason.
 
