@@ -4,33 +4,24 @@
  * @file
  * The main functionality of this module.
  */
-
-
-// AP API.
-// System variables.
+ 
+// Include system variables API.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.systemvars.api');
+// Include general API and helper functions.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
 
-// API with reference to Tripal/chado Database and APIs.
+// Include Tripal/Chado support API.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.cv.api');
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.genus.api');
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.projects.api');
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.database.api');
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontology.api');
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.tripaljob.api');
 
 // Materialized views, data summary.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.materializedview.api');
 
-// General API and Helper functions.
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.datatype.api');
+// Expected, downloadable, header combinationns - column headers.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.columnheaders.api');
-
-// AJAX fields API in Data donwloader module.
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.formfields.api');
-
-// Validators.
-module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.validators');
 
 
 /**

@@ -4,9 +4,11 @@
  * Contains administrative interfaces of this module.
  */
 
-module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.validators');
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
 
+// Validators.
+module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.validators');
+// Unit and data types.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.datatype.api');
 
 /**
  * Implements hook_form().

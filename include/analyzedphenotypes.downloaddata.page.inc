@@ -4,6 +4,10 @@
  * @file
  * Contains data exporter interface of this module.
  */
+ 
+// AJAX fields API in Data donwloader module.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.formfields.api');
+ 
 
 /**
  * FUNCTION CALLBACK

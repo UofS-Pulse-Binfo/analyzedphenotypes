@@ -5,6 +5,9 @@
  * Contains configuration interface of this module.
  */
 
+// Ontologies API.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontology.api');
+
 /**
  * Implements hook_form().
  * Construct module configuration page.

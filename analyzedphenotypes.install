@@ -6,14 +6,15 @@
 
 // Make the API available during install.
 
-// AP API.
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.materializedview.api');
-// Default Ontology Terms API.
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontology.api');
-// Materialized View API.
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.materializedview.api');
+
 // System variables.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.systemvars.api');
+
+// Default Ontology Terms API.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontology.api');
+
+// Materialized View API.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.materializedview.api');
 
 /**
  * Implements hook_enable().
@@ -109,7 +110,7 @@ function analyzedphenotypes_enable() {
   // Initialize Variables:
   // Load default ontology terms for method, location, replicate, collector, genus, related and year
   // in AP configuration page.
-  $default_ontology = analyzedphenotypes_defaultontologyload();
+  $default_ontology = ap_load_defaultontology();
 
   // All system variables, groupped by options, cvdbon and terms.
   $sysvars = ap_construct_variablenames();
@@ -150,19 +151,22 @@ function analyzedphenotypes_enable() {
  */
 function analyzedphenotypes_uninstall() {
   $sysvars = ap_construct_variablenames();
-
-  foreach($sysvars as $i => $v) {
-    if (is_array($v)) {
-      foreach($v as $j => $k) {
-        variable_del($k);
+  
+  foreach($sysvars as $i => $vars) {
+    foreach($vars as $var_name) {
+      if ($i == 'cvdbon') {
+        foreach($var_name as $cvdbon => $var_name2) {
+          variable_del($var_name2);
+        }
+      }
+      else {
+        variable_del($var_name);
       }
     }
-    else {
-      variable_del($v);
-    }
   }
-
-  foreach(array('mview_phenotype', 'mview_phenotype_summary') as $mview) {
+  
+  $mviews = array('mview_phenotype', 'mview_phenotype_summary');
+  foreach($mviews as $mview) {
     $mview_id = tripal_get_mview_id($mview);
 
     if (isset($mview_id) && $mview_id > 0) {
