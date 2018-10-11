@@ -151,8 +151,8 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         $field_prop[$fld_species]['empty'] = null;
 
         // #Traits.
-        $options = analyzedphenotypes_populatefield('field_traits', array(
-          'project_id' => $field_values[$fld_experiment],
+        $options = ap_populate_fieldtraits(array(
+          'project_id' => $field_values[$fld_experiment]
         ));
 
         if ($options) {
@@ -164,11 +164,11 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
           // #Year.
           unset($options);
-          $options = analyzedphenotypes_populatefield('field_year', array(
+          $options = ap_populate_fieldyear(array(
             'project_id' => $field_values[$fld_experiment],
             'traits' => $field_values[$fld_traits],
             'genus' => $field_values[$fld_genus],
-            'species' => $field_values[$fld_species],
+            'species' => $field_values[$fld_species]
           ));
 
           if ($options) {
@@ -180,10 +180,10 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
             // #Location.
             unset($options);
-            $options = analyzedphenotypes_populatefield('field_location', array(
+            $options = ap_populate_fieldlocation(array(
               'project_id' => $field_values[$fld_experiment],
               'traits' => $field_prop[$fld_traits]['default'],
-              'year' => $field_prop[$fld_year]['default'],
+              'year' => $field_prop[$fld_year]['default']
             ));
 
             if ($options) {
@@ -195,13 +195,13 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
               // #Germplasm Type.
               unset($options);
-              $options = analyzedphenotypes_populatefield('field_germplasmtype', array(
+              $options = ap_populate_fieldgermplasmtype(array(
                 'project_id' => $field_values[$fld_experiment],
                 'traits' => $field_prop[$fld_traits]['default'],
                 'year' => $field_prop[$fld_year]['default'],
-                'location' => $field_prop[$fld_location]['default'],
+                'location' => $field_prop[$fld_location]['default']
               ));
-
+              
               if ($options) {
                 $field_values[$fld_germplasmtype] = array_keys($options);
 
@@ -211,8 +211,8 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
                 // Germplasm.
                 unset($options);
-                $options = analyzedphenotypes_populatefield('field_germplasm', array(
-                  'project_id' => $field_values[$fld_experiment],
+                $options = ap_populate_fieldgermplasmlist(array(
+                  'project_id' => $field_values[$fld_experiment]
                 ));
 
                 if ($options) {
@@ -247,10 +247,10 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         }
 
         // #Genus.
-        $options = analyzedphenotypes_populatefield('field_genus', array(
-          'project_id' => $field_values[$fld_experiment],
+        $options = ap_populate_fieldgenus(array(
+          'project_id' => $field_values[$fld_experiment]
         ));
-
+        
         if ($options) {
           $field_prop[$fld_genus]['options'] = $options;
           $field_prop[$fld_genus]['disabled'] = FALSE;
@@ -260,9 +260,9 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
           // #Species
           unset($options);
-          $options = analyzedphenotypes_populatefield('field_species', array(
+          $options = ap_populate_fieldspecies(array(
             'project_id' => $field_values[$fld_experiment],
-            'genus' => $field_values[$fld_genus],
+            'genus' => $field_values[$fld_genus]
           ));
 
           if ($options) {
@@ -276,8 +276,8 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         // Cache value selected. This will allow us to compare cache values
         // with current values returned from selecting different filters in the form.
         // NOTE: _cachevalue() function returns string as a result of imploding the array.
-        $form['values'][ $fldname[$fld_experiment]['cache'] ] = analyzedphenotypes_cachevalue($field_values[$fld_experiment]);
-        $form['values'][ $fldname[$fld_genus]['cache'] ] = analyzedphenotypes_cachevalue($field_values[$fld_genus]);
+        $form['values'][ $fldname[$fld_experiment]['cache'] ] = ap_cache_download_fieldvalue($field_values[$fld_experiment]);
+        $form['values'][ $fldname[$fld_genus]['cache'] ] = ap_cache_download_fieldvalue($field_values[$fld_genus]);
 
         $cache_values[$fld_experiment] = $form_state['values'][ $fldname[$fld_experiment]['cache'] ];
         $cache_values[$fld_genus] = $form_state['values'][ $fldname[$fld_genus]['cache'] ];
@@ -290,10 +290,10 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
           if ($form_state['values'][ $fldname[$fld_species]['field'] ] != '') {
             $field_values[$fld_species] = $form_state['values'][ $fldname[$fld_species]['field'] ];
 
-            $options = analyzedphenotypes_populatefield('field_traits', array(
+            $options = ap_populate_fieldtraits(array(
               'project_id' => $field_values[$fld_experiment],
               'genus' => $field_values[$fld_genus],
-              'species' => $field_values[$fld_species],
+              'species' => $field_values[$fld_species]
             ));
 
             // #Traits.
@@ -305,7 +305,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
             unset($options);
 
             // Cache value selected.
-            $form['values'][ $fldname[$fld_species]['cache'] ] = analyzedphenotypes_cachevalue($field_values[$fld_species]);
+            $form['values'][ $fldname[$fld_species]['cache'] ] = ap_cache_download_fieldvalue($field_values[$fld_species]);
             $cache_values[$fld_species] = $form_state['values'][ $fldname[$fld_species]['cache'] ];
 
             // AJAX - same experiment, genus and species.
@@ -320,11 +320,11 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                   // User selected some traits, enable submit button.
                   $btn_ok = 1;
 
-                  $options = analyzedphenotypes_populatefield('field_year', array(
+                  $options = ap_populate_fieldyear(array(
                     'project_id' => $field_values[$fld_experiment],
                     'traits' => $field_values[$fld_traits],
                     'genus' => $field_values[$fld_genus],
-                    'species' => $field_values[$fld_species],
+                    'species' => $field_values[$fld_species]
                   ));
 
                   if ($options) {
@@ -337,12 +337,12 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                       $field_values[$fld_year] = array_keys($options);
 
                       $field_prop[$fld_year]['default'] = $field_values[$fld_year];
-                      $options = analyzedphenotypes_populatefield('field_location', array(
+                      $options = ap_populate_fieldlocation(array(
                         'project_id' => $field_values[$fld_experiment],
                         'genus' => $field_values[$fld_genus],
                         'species' => $field_values[$fld_species],
                         'traits' => $field_values[$fld_traits],
-                        'year' => $field_values[$fld_year],
+                        'year' => $field_values[$fld_year]
                       ));
 
                       if ($options) {
@@ -352,13 +352,13 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                         $field_prop[$fld_location]['options'] = $options;
                         $field_prop[$fld_location]['disabled'] = FALSE;
 
-                        $options = analyzedphenotypes_populatefield('field_germplasmtype', array(
+                        $options = ap_populate_fieldgermplasmtype(array(
                           'project_id' => $field_values[$fld_experiment],
                           'genus' => $field_values[$fld_genus],
                           'species' => $field_values[$fld_species],
                           'traits' => $field_values[$fld_traits],
                           'year' => $field_values[$fld_year],
-                          'location' => $field_values[$fld_location],
+                          'location' => $field_values[$fld_location]
                         ));
 
                         if ($options) {
@@ -375,7 +375,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                   unset($options);
 
                   // Cache value selected.
-                  $form['values'][ $fldname[$fld_traits]['cache'] ] = analyzedphenotypes_cachevalue($field_values[$fld_traits]);
+                  $form['values'][ $fldname[$fld_traits]['cache'] ] = ap_cache_download_fieldvalue($field_values[$fld_traits]);
                   $cache_values[$fld_traits] = $form_state['values'][ $fldname[$fld_traits]['cache'] ];
 
                   // AJAX - same experiment, genus, species and traits.
@@ -394,12 +394,12 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                       }
 
                       if (count($field_values[$fld_year]) > 0) {
-                        $options = analyzedphenotypes_populatefield('field_location', array(
+                        $options = ap_populate_fieldlocation(array(
                           'project_id' => $field_values[$fld_experiment],
                           'genus' => $field_values[$fld_genus],
                           'species' => $field_values[$fld_species],
                           'traits' => $field_values[$fld_traits],
-                          'year' => $field_values[$fld_year],
+                          'year' => $field_values[$fld_year]                        
                         ));
 
                         if ($options) {
@@ -412,13 +412,13 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                             $field_values[$fld_location] = array_keys($options);
 
                             $field_prop[$fld_location]['default'] = $field_values[$fld_location];
-                            $options = analyzedphenotypes_populatefield('field_germplasmtype', array(
+                            $options = ap_populate_fieldgermplasmtype(array(
                               'project_id' => $field_values[$fld_experiment],
                               'genus' => $field_values[$fld_genus],
                               'species' => $field_values[$fld_species],
                               'traits' => $field_values[$fld_traits],
                               'year' => $field_values[$fld_year],
-                              'location' => $field_values[$fld_location],
+                              'location' => $field_values[$fld_location]
                             ));
 
                             if ($options) {
@@ -434,7 +434,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                         unset($options);
 
                         // Cache value selected.
-                        $form['values'][ $fldname[$fld_year]['cache'] ] = analyzedphenotypes_cachevalue($field_values[$fld_year]);
+                        $form['values'][ $fldname[$fld_year]['cache'] ] = ap_cache_download_fieldvalue($field_values[$fld_year]);
                         $cache_values[$fld_year] = $form_state['values'][ $fldname[$fld_year]['cache'] ];
 
                         // AJAX - same experiment, genus, species, traits and year.
@@ -453,13 +453,13 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                             }
 
                             if (count($field_values[$fld_location]) > 0) {
-                              $options = analyzedphenotypes_populatefield('field_germplasmtype', array(
+                              $options = ap_populate_fieldgermplasmtype(array(
                                 'project_id' => $field_values[$fld_experiment],
                                 'genus' => $field_values[$fld_genus],
                                 'species' => $field_values[$fld_species],
                                 'traits' => $field_values[$fld_traits],
                                 'year' => $field_values[$fld_year],
-                                'location' => $field_values[$fld_location],
+                                'location' => $field_values[$fld_location]
                               ));
 
                               if ($options) {
@@ -472,13 +472,13 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                                   $field_values[$fld_germplasmtype] = array_keys($options);
 
                                   $field_prop[$fld_germplasmtype]['default'] = $field_values[$fld_germplasmtype];
-                                  $options = analyzedphenotypes_populatefield('field_germplasmtype', array(
+                                  $options = ap_populate_fieldgermplasmtype(array(
                                     'project_id' => $field_values[$fld_experiment],
                                     'genus' => $field_values[$fld_genus],
                                     'species' => $field_values[$fld_species],
                                     'traits' => $field_values[$fld_traits],
                                     'year' => $field_values[$fld_year],
-                                    'location' => $field_values[$fld_location],
+                                    'location' => $field_values[$fld_location]
                                   ));
 
                                   if ($options) {
@@ -584,7 +584,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
           'germplasmtype' => $field_values[$fld_germplasmtype],
         );
 
-        $options = analyzedphenotypes_populatefield('field_germplasm', $values);
+        $options = ap_populate_fieldgermplasmlist($values);
 
         if ($options) {
           $field_prop[$fld_germplasm]['disabled'] = FALSE;
@@ -645,7 +645,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
     //
     // FIELD: EXPERIMENT:
-    $exp = analyzedphenotypes_populatefield('field_project');
+    $exp = ap_populate_fieldproject();
     $field_prop[$fld_experiment]['options'] = ($exp) ? $exp : array();
     $experiment_count = count($field_prop[$fld_experiment]['options']);
 
@@ -669,7 +669,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
     + analyzedphenotypes_wrapcheckbox($h * $experiment_count, $experiment_count);
 
     // Count data points, # of traits and # of stocks.
-    $summary = analyzedphenotypes_populatefield('field_project_summary');
+    $summary = ap_populate_fieldprojectsummary();
 
     // Show a short summary (# of data available) on mouse over.
     if ($summary) {
