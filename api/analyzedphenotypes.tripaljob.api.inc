@@ -37,67 +37,6 @@ function ap_configure_tripaljob() {
   );
 }
 
-
-///////
-/**
- * CONTROL/SWITCHBOARD.
- * Pass a request to a corresponding function.
- * @TODO: leave out when api reorganize/update is complete and use functions below.
- */
-function analyzedphenotypes_triapjob($property = null, $parameter = null) {
-  if (is_null($property)) {
-    // Default.
-    $property = 'default';
-  }
-  // Process request.
-  $command = array(
-    'default' => array(
-      'func'  => 'ap_configure_tripaljob',
-      'param' => null,
-      'opts'  => null,
-      'val'   => null,
-    ),
-    'new_job' => array(
-      'func'  => 'ap_create_tripaljob',
-      'param' => array('description' => $parameter['description'], 'dataset' => $parameter['dataset'], 'callback' => $parameter['callback']),
-      'opts'  => null,
-      'val'   => null,
-    ),
-    'get_job' => array(
-      'func'  => 'ap_get_tripaljob',
-      'param' => $parameter['job_id'],
-      'opts'  => null,
-      'val'   => null,
-    ),
-    'update_progress' => array(
-      'func'  => 'ap_update_tripaljob_progress',
-      'param' => $parameter['job_id'],
-      'opts'  => $parameter['progress'],
-      'val'   => null,
-    ),
-    'write_progress' => array(
-      'func'  => 'ap_readwrite_tripaljob_progress',
-      'param' => $parameter['job_id'],
-      'opts'  => $parameter['source'],
-      'val'   => $parameter['progress'],
-    ),
-    'read_progress' => array(
-      'func'  => 'ap_readwrite_tripaljob_progress',
-      'param' => $parameter['job_id'],
-      'opts'  => $parameter['source'],
-      'val'   => null,
-    ),
-    'tripal_fail' => array(
-      'func'  => 'ap_echo_tripaljob_error',
-      'param' => $parameter['tripal_job'],
-      'opts'  => $parameter['param'],
-      'val'   => $parameter['message'],
-    ),
-  );
-  return call_user_func($command[$property]['func'], $command[$property]['param'], $command[$property]['opts'], $command[$property]['val']);
-}
-
-
 /**
  * FUNCTION:
  * Register a Tripal Job.
