@@ -23,8 +23,8 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
   // Field names.
   // Same name will be used for hooks, js etc.
-  $fldname = analyzedphenotypes_fieldnames();
-
+  $fldname = ap_construct_download_fieldnames();
+  
   // F. 1.
   $fld_experiment      = $fldname['experiment']['base'];
   $fld_genus           = $fldname['genus']['base'];
@@ -1386,7 +1386,7 @@ function analyzedphenotypes_downloaddata_submit($form, &$form_state) {
   $field_values = array();
 
   // Field names.
-  $fldname = analyzedphenotypes_fieldnames();
+  $fldname = ap_construct_download_fieldnames();
 
   foreach($fldname as $f) {
     if (isset($form_state['values'][ $f['field'] ]) || 

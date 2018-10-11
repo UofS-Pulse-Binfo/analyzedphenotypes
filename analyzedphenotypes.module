@@ -620,7 +620,7 @@ function analyzedphenotypes_trpdownload_get_readable_format($vars) {
 
   if (!empty($v)) {
     // Field names.
-    $fldname = analyzedphenotypes_fieldnames();
+    $fldname = ap_construct_download_fieldnames();
     $filters = explode('&', $v);
 
     foreach($filters as $i) {
@@ -669,7 +669,7 @@ function analyzedphenotypes_trpdownload_get_suffix($vars) {
 
   if (!empty($v)) {
     // Field names.
-    $fldname = analyzedphenotypes_fieldnames();
+    $fldname = ap_construct_download_fieldnames();
     $filters = explode('&', $v);
 
     foreach($filters as $i) {
@@ -737,7 +737,7 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
       // Global/standard field names used in form, submit etc.
       // experiment, genus, species, traits, year, location, germplasmtype,
       // missingdata, filetype, averagerep, rfriendly, columnheaders
-      $fldname = analyzedphenotypes_fieldnames();
+      $fldname = ap_construct_download_fieldnames();
       // File type field name value.
       $file_type = $filter_value[ $fldname['filetype']['base'] ];
 
