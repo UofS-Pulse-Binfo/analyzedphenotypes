@@ -6,14 +6,6 @@
  * Manage property and operation pertaining to download data form fields.
  */
 
-
-/**
- * TODO: Replace this function with the function below.
- */
-function analyzedphenotypes_fieldnames() {
-  return ap_construct_download_fieldnames();
-}
-
 /**
  * FUNCTION:
  * Global field names.
@@ -80,13 +72,6 @@ function ap_construct_download_fieldnames() {
 
 
 /**
- * TODO: Replace this function with the function below.
- */
-function analyzedphenotypes_cachevalue($value) {
-  return ap_cache_download_fieldvalue($value);
-}
-
-/**
  * FUNCTION:
  * Form field values are save (cached) when nanipulating fields. Values are then compared
  * to current selection to predict if new value had been selected or form retained same
@@ -112,120 +97,6 @@ function ap_cache_download_fieldvalue($value) {
 
 ///////
 
-
-/**
- * FUNCTION:
- * @TODO: replace this function with functions below.
- */
-function analyzedphenotypes_populatefield($field, $parameter = null) {
-  // Use this character to separate entries in a string.
-  $field_values = null;
-
-  switch($field) {
-    //
-    case 'field_project':
-      $field_values = ap_populate_fieldproject();
-
-      break;
-
-    //
-    case 'field_project_summary':
-      $field_values = ap_populate_fieldprojectsummary();
-
-      break;
-
-    //
-    case 'field_genus':
-      $field_values = ap_populate_fieldgenus(
-        array('project_id' => $parameter['project_id'])
-      );
-
-      break;
-
-    //
-    case 'field_species':
-      $field_values = ap_populate_fieldspecies(
-        array(
-          'project_id' => $parameter['project_id'],
-          'genus' => $parameter['genus']
-        )
-      );
-
-      break;
-
-    //
-    case 'field_traits':
-      $field_values = ap_populate_fieldtraits(
-        array(
-          'project_id' => $parameter['project_id'],
-          'genus' => $parameter['genus'],
-          'species' => $parameter['species']
-        )
-      );
-
-      break;
-
-    //
-    case 'field_year':
-      $field_values = ap_populate_fieldyear(
-        array(
-          'project_id' => $parameter['project_id'],
-          'genus' => $parameter['genus'],
-          'species' => $parameter['species'],
-          'traits' => $parameter['traits']
-        )
-      );
-
-      break;
-
-    //
-    case 'field_location':
-      $field_values = ap_populate_fieldlocation(
-        array(
-          'project_id' => $parameter['project_id'],
-          'genus' => $parameter['genus'],
-          'species' => $parameter['species'],
-          'traits' => $parameter['traits'],
-          'year' => $parameter['year']
-        )
-      );
-
-      break;
-
-    //
-    case 'field_germplasmtype':
-      $field_values = ap_populate_fieldgermplasmtype(
-        array(
-          'project_id' => $parameter['project_id'],
-          'genus' => $parameter['genus'],
-          'species' => $parameter['species'],
-          'traits' => $parameter['traits'],
-          'year' => $parameter['year'],
-          'location' => $parameter['location']
-        )
-      );
-
-      break;
-
-    //
-    case 'field_germplasm':
-      $field_values = ap_populate_fieldgermplasmlist(
-        array(
-          'project_id' => $parameter['project_id'],
-          'genus' => $parameter['genus'],
-          'species' => $parameter['species'],
-          'traits' => $parameter['traits'],
-          'year' => $parameter['year'],
-          'location' => $parameter['location'],
-          'germplasmtype' => $parameter['germplasmtype']
-        )
-      );
-
-      break;
-  }
-
-  return $field_values;
-}
 
 /**
  * FUNCTION:
