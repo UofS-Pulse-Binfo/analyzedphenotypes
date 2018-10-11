@@ -39,8 +39,6 @@ function ap_configure_tripaljob() {
 
 
 ///////
-
-
 /**
  * CONTROL/SWITCHBOARD.
  * Pass a request to a corresponding function.
@@ -51,7 +49,6 @@ function analyzedphenotypes_triapjob($property = null, $parameter = null) {
     // Default.
     $property = 'default';
   }
-
   // Process request.
   $command = array(
     'default' => array(
@@ -97,12 +94,8 @@ function analyzedphenotypes_triapjob($property = null, $parameter = null) {
       'val'   => $parameter['message'],
     ),
   );
-
   return call_user_func($command[$property]['func'], $command[$property]['param'], $command[$property]['opts'], $command[$property]['val']);
 }
-
-
-///////
 
 
 /**
@@ -123,7 +116,7 @@ function analyzedphenotypes_triapjob($property = null, $parameter = null) {
  * @return
  *   An integer, Tripal job object.
  */
-function ap_create_tripaljob($identifiers, $options = array('return_job' => TRUE)) {
+function ap_create_tripaljob($identifiers, $options = array('return_jobid' => TRUE)) {
   $tripal_config = ap_configure_tripaljob();
   global $user;
 

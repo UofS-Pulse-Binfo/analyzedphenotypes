@@ -28,9 +28,7 @@ function analyzedphenotypes_uploaddata_form($form, &$form_state) {
       $projectprop = unserialize($p);
 
       if (isset($projectprop['job_id']) && $projectprop['job_id'] > 0) {
-        $job_id = analyzedphenotypes_tripaljobprop('get_job', array(
-          'job_id' => $projectprop['job_id'],
-        ));
+        $job_id = ap_get_tripaljob($projectprop['job_id']);
 
         if ($job_id) {
           $form_state['stage'] = 'validate';
@@ -268,16 +266,14 @@ function analyzedphenotypes_uploadata_form_validates($form, &$form_state, $proje
       )
     );
 
-    $job_id = analyzedphenotypes_tripaljobprop('new_job', $tripal_dataset);
+    $job_id = ap_create_tripaljob($tripal_dataset, array('return_jobid' => TRUE));
   }
   elseif ($projectprop) {
     $project_name  = $projectprop['project_name'];
     $project_genus = $projectprop['project_genus'];
     $data_file     = $projectprop['data_file'];
 
-    $job = analyzedphenotypes_tripaljobprop('get_job', array(
-      'job_id' => $projectprop['job_id'],
-    ));
+    $job = ap_get_tripaljob($projectprop['job_id']);
 
     if ($job) {
       $job_id = $job['job_id'];
@@ -849,7 +845,8 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
       )
     );
 
-    $job_id = analyzedphenotypes_tripaljobprop('new_job', $tripal_dataset);
+    // Create a new Tripal Job.
+    $job_id = ap_create_tripaljob($tripal_dataset, array('return_jobid' => TRUE));
 
     if ($job_id) {
       $base_admin = base_path() . 'admin/tripal/extension/analyzedphenotypes';
@@ -935,8 +932,9 @@ function analyzedphenotypes_file_insert($file) {
           'data_file'     => $data_file,
         )
       );
-
-      $job_id = analyzedphenotypes_tripaljobprop('new_job', $tripal_dataset);
+      
+      // Create a new Tripal Job.
+      $job_id = ap_create_tripaljob($tripal_dataset, array('return_jobid' => TRUE));
 
       if ($job_id) {
         $tripal_dataset['dataset']['job_id'] = $job_id;

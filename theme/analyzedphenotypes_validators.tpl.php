@@ -65,8 +65,8 @@ $failed_counter = 0;
 
     <?php
       if ($scope == 'ap-data-scope' && $failed_counter > 0) {
-        $tripaljob_settings = analyzedphenotypes_tripaljobprop();
-        print '<em>We have stopped validation process to report the first ' . $tripaljob_settings['error_limit'] . ' number of errors found. Please fix the errors reported above and then upload the fixed file. <br /><br /></em>';
+        $tripaljob_settings = ap_configure_tripaljob();
+        print '<em>We have stopped validation process to report the first ' . $tripaljob_settings['TRIPALJOB_error_limit'] . ' number of errors found. Please fix the errors reported above and then upload the fixed file. <br /><br /></em>';
       }
     ?>
   </div>

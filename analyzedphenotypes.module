@@ -448,9 +448,7 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
       //   $key : null.
       $data_JSON = array();
 
-      $job = analyzedphenotypes_tripaljobprop('get_job', array(
-        'job_id' => $parameter,
-      ));
+      $job = ap_get_tripaljob($parameter);
 
       if ($job) {
         $job_status = strtolower(trim($job['status']));
@@ -462,20 +460,14 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
           $message  = 'Completed';
 
           if ($job['progress'] != $progress) {
-            analyzedphenotypes_tripaljobprop('update_progress', array(
-              'job_id' => $parameter,
-              'progress' => $progress,
-            ));
+            ap_update_tripaljob_progress($parameter, $progress);
           }
         }
         else {
           // Job not complete. Read progress written by tripaljobprop write_progress function
           // and convert progress value to JSON for progress bar in
           // analyzedphenotypes_save_tsv_data() in validators.inc.
-          $tripaljobprop = analyzedphenotypes_tripaljobprop('read_progress', array(
-            'job_id' => $parameter,
-            'source' => 'jobprogress',
-          ));
+          ap_readwrite_tripaljob_progress($parameter, 'jobprogress');
 
           $progress = (empty($tripaljobprop)) ? '...' : trim($tripaljobprop);
           $message = ($progress == '100' || $job['status'] == $job_status)

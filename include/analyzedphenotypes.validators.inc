@@ -518,7 +518,7 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
     $arr_status = array();
 
     // Tripal Job module settings.
-    $tripaljob_settings = analyzedphenotypes_tripaljobprop();
+    $tripaljob_settings = ap_configure_tripaljob();
     $error_counter = 0;
     
     print '0% Complete...' . "\n";
@@ -646,12 +646,10 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
             $prev_percent = $percent;
           }
         }
-
-        analyzedphenotypes_tripaljobprop('write_progress', array(
-          'job_id' => $job_id,
-          'source' => 'jobprogress',
-          'progress' => $percent,
-        ));
+        
+        // Write progress to temp file which in turn be used
+        // by JS to update progress bar.
+        ap_readwrite_tripaljob_progress($job_id, 'jobprogress', $percent);
         
         // End else data row.  
       }
@@ -660,12 +658,9 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
     
     // Report validation status.
     $status_JSON = json_encode($arr_status);
-    analyzedphenotypes_tripaljobprop('write_progress', array(
-      'job_id' => $job_id,
-      'source' => 'validateresult',
-      'progress' => $status_JSON,
-    ));
-
+    // Final write to indicate job process completed.
+    ap_readwrite_tripaljob_progress($job_id, 'validateresult', $status_JSON);
+    
     print '100% Complete...' . "\n";
     
     // End if $handle.  
@@ -836,12 +831,9 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
   $project_id = ($projectprop) ? $projectprop['project_id'] : 0;
 
   if (!$project_id) {
-    analyzedphenotypes_tripaljobprop('tripal_fail', array(
-      'message' => 'CODE:100 Experiment or project is not recognized by this system.',
-      'param' => $dataset['project_name'],
-      'job_id' => $job_id,
-    ));
-
+    $tripal_error_message = 'CODE:100 Experiment or project is not recognized by this system.';
+    ap_echo_tripaljob_error($job_id, $dataset['project_name'], $tripal_error_message);
+     
     exit(1);
   }
 
@@ -851,11 +843,8 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
 
   if (!$genus || array_search($genus, $genusprop) === FALSE) {
     // See if genus exists.
-    analyzedphenotypes_tripaljobprop('tripal_fail', array(
-      'message' => 'CODE:101 Experiment or project genus is not recognized by this system.',
-      'param' => $genus,
-      'job_id' => $job_id,
-    ));
+    $tripal_error_message = 'CODE:101 Experiment or project genus is not recognized by this system.';
+    ap_echo_tripaljob_error($job_id, $genus, $tripal_error_message);
 
     exit(2);
   }
@@ -865,11 +854,9 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
   $file = drupal_realpath($datafile->uri);
   
   if (!$data_file || !file_exists($file)) {
-    analyzedphenotypes_tripaljobprop('tripal_fail', array(
-      'message' => 'CODE:102 Unable to read or open data file.',
-      'param' => 'FID#' . $dataset['data_file'],
-      'job_id' => $job_id,
-    ));
+    $tripal_error_message = 'CODE:102 Unable to read or open data file.';
+    $issue = 'FID#' . $dataset['data_file'];
+    ap_echo_tripaljob_error($job_id, $issue, $tripal_error_message);
 
     exit(3);
   }
@@ -878,7 +865,7 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
 
   // # DATA
   if ($handle) {
-    $tripaljob_settings = analyzedphenotypes_tripaljobprop();
+    $tripaljob_settings = ap_configure_tripaljob();
 
     $col_index = array();
     // Fetch expected column headers and data type for each.
@@ -940,11 +927,8 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
           );
           
           if (!$trait_property) {
-            analyzedphenotypes_tripaljobprop('tripal_fail', array(
-              'message' => 'CODE:104 Trait name is not recognized by this system.',
-              'param' => $file_traitname,
-              'job_id' => $job_id,
-            ));
+            $tripal_error_message = 'CODE:104 Trait name is not recognized by this system.';
+            ap_echo_tripaljob_error($job_id, $file_traitname, $tripal_error_message);
             
             exit(31);
           }
@@ -958,11 +942,9 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
           ));
           
           if (!$stock_id) {
-            analyzedphenotypes_tripaljobprop('tripal_fail', array(
-              'message' => 'CODE:105 Stock/Germplasm name is not recognized by this system.',
-              'param' => $file_germplasm_name . ':' . $file_germplasm_accession,
-              'job_id' => $job_id,
-            ));
+            $tripal_error_message = 'CODE:105 Stock/Germplasm name is not recognized by this system.';
+            $issue = $file_germplasm_name . ':' . $file_germplasm_accession;
+            ap_echo_tripaljob_error($job_id, $issue, $tripal_error_message);
 
             exit(32);
           }
@@ -1014,22 +996,18 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
                 ->execute();
 
               if (!$property_insert) {
-                analyzedphenotypes_tripaljobprop('tripal_fail', array(
-                  'message' => 'CODE:107 Unable to insert phenotype property record.',
-                  'param' => print_r($property_data),
-                  'job_id' => $job_id,
-                ));
+                $tripal_error_message = 'CODE:107 Unable to insert phenotype property record.';
+                $issue = $print_r($property_data);
+                ap_echo_tripaljob_error($job_id, $issue, $tripal_error_message);
 
                 exit(34);
               }
             }
           }
           else {
-            analyzedphenotypes_tripaljobprop('tripal_fail', array(
-              'message' => 'CODE:106 Unable to insert phenotype record.',
-              'param' => print_r($phenotype_data),
-              'job_id' => $job_id,
-            ));
+            $tripal_job_error = 'CODE:106 Unable to insert phenotype record.';
+            $issue = print_r($phenotype_data);
+            ap_echo_tripaljob_error($job_id, $issue, $tripal_job_error);
 
             exit(33);
           }            
@@ -1038,15 +1016,12 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
         // Report.
         $percent = round(($i / $row_count) * 100);
 
-        if ($percent % $tripaljob_settings['report_frequency'] == 0) {
+        if ($percent % $tripaljob_settings['TRIPALJOB_report_frequency'] == 0) {
           print $percent . '% Complete...' . "\n";
         }
-
-        analyzedphenotypes_tripaljobprop('write_progress', array(
-          'job_id' => $job_id,
-          'source' => 'jobprogress',
-          'progress' => $percent,
-        ));
+        
+        // Echo actual percent completed in the progress bar. 
+        ap_readwrite_tripaljob_progress($job_id, 'jobprogress', $percent);
         
         $i++;
       }
@@ -1055,23 +1030,17 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
       $TRANSACTION->rollback();
       watchdog_exception($ap, $e);
 
-      analyzedphenotypes_tripaljobprop('tripal_fail', array(
-        'message' => 'CODE:107 Failed to insert records.',
-        'param' => 'Tripal Job',
-        'job_id' => $job_id,
-      ));
+      $tripal_error_message = 'CODE:107 Failed to insert records.';
+      ap_echo_tripaljob_error($job_id, 'Tripal Job', $tripal_error_message);
 
       exit(5);        
     }
   }
   else {
     // Unable to read file.  
-    analyzedphenotypes_tripaljobprop('tripal_fail', array(
-      'message' => 'CODE:103 File is empty.',
-      'param' => $data_file->uri,
-      'job_id' => $job_id,
-    ));
-
+    $tripal_error_message = 'CODE:103 File is empty.';
+    ap_echo_tripaljob_error($job_id, $data_file->uri, $tripal_error_message);
+    
     exit(4);
   }
   

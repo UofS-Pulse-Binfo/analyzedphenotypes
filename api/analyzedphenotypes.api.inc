@@ -132,11 +132,7 @@ function ap_report_validationresult($identifiers) {
       // Default to scope data.
       // When scope is data level, it is expecting the Tripal job id number.
       $tripaljob_id = $identifiers['data'];
-
-      $s = analyzedphenotypes_tripaljobprop('read_progress', array(
-        'job_id' => $tripaljob_id,
-        'source' => 'validateresult',
-      ));
+      $s = ap_readwrite_tripaljob_progress($tripaljob_id, 'validateresult');
 
       $status = json_decode($s, TRUE);
       return theme('analyzedphenotypes_validator_report', array('status' => $status, 'scope' => 'ap-data-scope'));
