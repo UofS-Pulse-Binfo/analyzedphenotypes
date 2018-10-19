@@ -5,6 +5,8 @@
  * The main functionality of this module.
  */
  
+ 
+ 
 // Include system variables API.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.systemvars.api');
 // Include general API and helper functions.
@@ -22,6 +24,13 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.materia
 
 // Expected, downloadable, header combinationns - column headers.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.columnheaders.api');
+// Field names.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.formfields.api');
+
+// Unit and data types.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.datatype.api');
+// Validators.
+module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.validators');
 
 
 /**
@@ -128,7 +137,7 @@ function analyzedphenotypes_menu() {
 
   // Generate validation result.
   $items[$tripal_extension_ap . '/validation_result/%/%'] = array(
-    'page callback' => 'analyzedphenotypes_validationresult',
+    'page callback' => 'ap_report_validationresult',
     'page arguments' => array(5, 6),
     'access arguments' => array('upload analyzed phenotypes'),
     'type' => MENU_CALLBACK,
@@ -268,6 +277,7 @@ function theme_analyzedphenotypes_form_table(&$variables) {
 function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&$variables, $hook) {
   $variables['path_extension'] = 'admin/tripal/extension/analyzedphenotypes';
   $variables['directory'] = $variables['form']['#ap_admin_directory'];
+
 
   return $variables;
 }
@@ -464,11 +474,10 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
           }
         }
         else {
-          // Job not complete. Read progress written by tripaljobprop write_progress function
-          // and convert progress value to JSON for progress bar in
-          // analyzedphenotypes_save_tsv_data() in validators.inc.
-          ap_readwrite_tripaljob_progress($parameter, 'jobprogress');
-
+          // Job not complete. Next percent to pass on to the progress bar.
+          // Percent written by write function called in validators.
+          $tripal_jobprop = ap_read_tripaljob_progress($parameter, 'jobprogress');
+          
           $progress = (empty($tripaljobprop)) ? '...' : trim($tripaljobprop);
           $message = ($progress == '100' || $job['status'] == $job_status)
             ? 'Completed' : $job['status'];
@@ -495,12 +504,20 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
 
       // Fetch terms in a cv.
       $ontology_suggestions = ap_get_cvterm(
-        array('cv_id' => $parameter),
+        array('keyword' => $key, 'genus' => $parameter),
         array('dataset' => 'cvtermidname')
       );
 
+      // Limit the result shown to 10. This will
+      // prevent a long list that will break the layout since
+      // Drupal does not add a scrollbars to drop select when
+      // it is long list.
+      $suggest_limit = 10;
+
       foreach($ontology_suggestions as $i => $term) {
         $data_JSON[ $term['name'] ] = $term['name'];
+        
+        if ($i == $suggest_limit) break;
       }
 
       break;
@@ -522,12 +539,16 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
         array('dataset' => 'namecvname_format')
       );
       
-      $cvterms = array_values($cvterms);
+      // Limit the result shown to 10. This will
+      // prevent a long list that will break the layout since
+      // Drupal does not add a scrollbars to drop select when
+      // it is long list.
+      $suggest_limit = 10;
 
-      foreach($cvterms as $term => $cv) {
-        $t = $term . ' (' . $cv . ')';
+      foreach($cvterms as $i => $term) {
+        $data_JSON[ $term['namecvname'] ] = $term['namecvname'];
 
-        $data_JSON[$t] = $t;
+        if ($i == $suggest_limit) break;
       }
 
       break;
@@ -598,6 +619,7 @@ function analyzedphenotypes_trpdownload_get_filename($vars) {
   // Filename.
   $filename = 'analyzed_phenotypic_data_download' . date('YMd') .'_'. time();
 
+
   return $filename;
 }
 
@@ -646,6 +668,7 @@ function analyzedphenotypes_trpdownload_get_readable_format($vars) {
         break;
     }
 
+
     return $format;
   }
 }
@@ -680,6 +703,7 @@ function analyzedphenotypes_trpdownload_get_suffix($vars) {
         break;
       }
     }
+
 
     return $file_type;
   }
@@ -743,7 +767,7 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
 
       // Fetch all valid file types for download.
       // Use the result to ensure that only these registered types are allowed.
-      $d = analyzedphenotypes_datafileprop('download_type');
+      $d = ap_define_datafile_extensions('file_download');
       $download_type = array_keys($d);
 
       if (in_array($file_type, $download_type)) {

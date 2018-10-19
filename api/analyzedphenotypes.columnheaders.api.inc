@@ -5,8 +5,9 @@
  * API: COLUMN HEADERS/TRAITS.
  * Manage property and operation pertaining column headers.
  */
-
-
+ 
+ 
+ 
 /**
  * DATA SOURCE
  * Prepare column headers used in forms, validators and data exporter.
@@ -88,7 +89,7 @@ function ap_create_columnheaders($set) {
     else {
       // Field names used by Data download form that relates to a column header.
       // @TODO: change when field name api is ready.
-      $fieldnames = analyzedphenotypes_fieldnames();
+      $fieldnames = ap_construct_download_fieldnames();
 
       $columnheaders = array(
         $downloadable_columns[0] => $fieldnames['experiment']['base'],
@@ -103,11 +104,9 @@ function ap_create_columnheaders($set) {
     }
   }
 
+
   return $columnheaders;
 }
-
-
-///////
 
 
 /**
@@ -170,13 +169,14 @@ function ap_match_columncombination($datarow) {
     )
   );
 
+
   return ($result->rowCount()) ? $result->fetchField() : null;
 }
+
 
 /**
  * FUNCTION:
  * Convert column header to R-Friendly version.
- * Dependencies: ap_create_columnheaders().
  *
  * @param $columnheader
  *   A string, column header or value in Trait Name column.
@@ -234,6 +234,7 @@ function ap_convert_rcolumnheader($columnheader) {
       }
     }
   }
+  
 
   // Final transformation is replacing all spaces to dots/period (.)
   return ucfirst(implode('.', $rfriendly));

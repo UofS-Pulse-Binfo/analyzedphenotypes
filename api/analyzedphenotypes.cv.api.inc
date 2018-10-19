@@ -7,8 +7,6 @@
  */
 
 
-///////
-
 
 /**
  * FUNCTION:
@@ -24,8 +22,7 @@
  *   or - cvterm_id : fetch term that matches a cvterm id number.
  *   - genus : genus, optional, when provided will restrict/limit search to cv configuration of a genus.
  * @param $options
- *   An array to be used as additional options to be performed to
- *   returned result. Keys:
+ *   An array to be used as additional options to be performed to returned result. Keys:
  *   - dataset : Option to format and limit fields in returned value. Default to cvtermid.
  *     cvtermid - return cvterm id numbers.
  *    or cvtermidname - return cvterm id and cvterm name.
@@ -35,6 +32,16 @@
  *
  * @return
  *   An array, information or properties about controlled vocabulary term.
+ * 
+ * Example:
+ *   Get trait name Planting Date (date) using only a keyword, but limit to Tripalus genus.
+ *   include all properties in the result.
+ *   
+ *   ap_get_cvterm(
+ *     array('keyword' => 'planting', genus' => 'Tripalus'),
+ *     array('dataset' => 'fullset')
+ *   );
+ * 
  */
 function ap_get_cvterm($identifiers, $options = array('dataset' => 'cvtermid')) {
   // Inspect what is provided:
@@ -189,8 +196,10 @@ function ap_get_cvterm($identifiers, $options = array('dataset' => 'cvtermid')) 
     }
   }
 
+
   return $cvterm;
 }
+
 
 /**
  * FUNCTION:
@@ -211,23 +220,23 @@ function ap_get_cvterm($identifiers, $options = array('dataset' => 'cvtermid')) 
  *   An array, term properties.
  */
 function ap_insert_cvterm($identifiers, $options = array('return_inserted_id' => TRUE)) {
+  // Get system configuration of this genus.
   $sysvar = ap_get_variablenames(
     array('variablename' => $identifiers['genus']),
     array('set' => 'cvdbon', 'suffix' => 'allsuffix')
   );
 
-  // Database.
+  // Database (db). Used in the ID in cvterm property array below.
   $sysvar_genus_db = variable_get($sysvar['db']);
-  //
   $dbprop = ap_match_database($sysvar_genus_db);
-  
   $db_name = $dbprop['name'];
 
-  // Controlled Vocabulary.
+  // Controlled Vocabulary (cv). Used in the cv_name in cvterm property array below.
   $sysvar_genus_cv = variable_get($sysvar['cv']);
-  $cvprop = analyzedphenotypes_cvprop('match_cvid', array(
-    'cv_id' => $sysvar_genus_cv,
+  $cvprop = ap_get_cv(array(
+    'cv_id' => $sysvar_genus_cv
   ));
+  
   $cv_name = $cvprop['name'];
 
   //Insert cvterm.
@@ -238,16 +247,18 @@ function ap_insert_cvterm($identifiers, $options = array('return_inserted_id' =>
     'definition' => $identifiers['definition']
   ));
 
+
   // Return inserted id when implied in options.
   if ($cvterm && $options['return_inserted_id']) {
     return $cvterm->cvterm_id;
   }
 }
 
+
 /**
  * FUNCTION:
  * Upload/save image/photo of a cvterm.
- * Dependencies:
+ * Dependencies: ap_scale_photo(), ap_construct_datafile_destinationpath().
  *
  * @param $identifiers
  *   An array with the following keys:
@@ -272,11 +283,7 @@ function ap_upload_cvtermphoto($identifiers, $options = array('scaleto' => 400))
       $info = image_get_info($source_file);
 
       // Scale but maintain aspect ratio.
-      $scale = analyzedphenotypes_scale_photo(array(
-        'height' => $info['height'],
-        'width' => $info['width'],
-        'scale_to' => $options['scaleto'],
-       ));
+      $scale = ap_scale_photo($info['height'], $info['width'], $options['scaleto']);
       
       // Fetch traitpictures/ directory.
       $directories = ap_construct_datafile_destinationpath();
@@ -308,10 +315,11 @@ function ap_upload_cvtermphoto($identifiers, $options = array('scaleto' => 400))
   }
 }
 
+
 /**
  * FUNCTION:
  * Dowload/get photo file information of a cvterm.
- * Dependencies:
+ * Dependencies: ap_construct_datafile_destinationpath().
  *
  * @param $cvterm_id
  *   An integer, controlled vocabulary id number.
@@ -348,8 +356,10 @@ function ap_download_cvtermphoto($cvterm_id) {
     }
   }
 
+
   return $cvtermphoto;
 }
+
 
 /**
  * FUNCTION:
@@ -399,6 +409,7 @@ function ap_get_cv($identifiers = null) {
   }
 }
 
+
 /**
  * AUTOCOMPLETE FIELD FUNCTION CALLBACK:
  * Fetch terms given a keyword to be used in populating options to
@@ -434,9 +445,11 @@ function ap_autocomplete_cvtermfield_bykeyword($keyword) {
       }    
     }
   }
+ 
   
   return $term;
 }
+
 
 /**
  * AUTOCOMPLETE FIELD FUNCTION CALLBACK:
@@ -468,9 +481,11 @@ function ap_autocomplete_cvtermfield_bycvtermid($cvtermid) {
       $term = $t['namecvname'];
     }
   }
+ 
   
   return $term;
 }
+
 
 /**
  * AUTOCOMPLETE FIELD FUNCTION CALLBACK:

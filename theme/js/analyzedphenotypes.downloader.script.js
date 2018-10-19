@@ -33,9 +33,13 @@
       // when species field has been altered.
       $(document).ajaxComplete(function() { 
         if ($('#ap-reset-traits').val()) {
-          $('#ap-traits-field-id input').each(function(){
-            $(this).removeAttr('checked');      
-          });    
+          var rt = $('#ap-reset-traits').val();
+          
+          if (rt == 1) {
+            $('#ap-traits-field-id input').each(function(){
+              $(this).removeAttr('checked');      
+            });
+          }
         }      
       });
       

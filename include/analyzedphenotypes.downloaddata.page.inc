@@ -1,9 +1,10 @@
 <?php
-
 /**
  * @file
  * Contains data exporter interface of this module.
  */
+ 
+ 
  
 // AJAX fields API in Data donwloader module.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.formfields.api');
@@ -70,7 +71,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
   // This array element will add AJAX to any field.
   $AJAX_callback['#ajax'] = array(
     'event' => 'change',
-    'callback' => 'analyzedphenotypes_AJAX_callback',
+    'callback' => 'ap_send_ajaxrequest',
     'case' => 'main',
     'wrapper' => $AJAX_wrapper_id,
     'progress' => array('type' => 'none', 'message' => ''),
@@ -149,10 +150,20 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         $field_prop[$fld_species]['options'] = array($field_values[$fld_genus] => 'All Species');
         $field_prop[$fld_species]['disabled'] = FALSE;
         $field_prop[$fld_species]['empty'] = null;
+        
+        // Convert all value for genus and species into values.
+        $all_genus = ap_populate_fieldgenus(array(
+          'project_id' => $field_values[$fld_experiment]
+        ));
 
+        $all_species = ap_populate_fieldspecies(array(
+          'project_id' => $field_values[$fld_experiment],
+          'genus' => $all_genus
+        ));
+        
         // #Traits.
         $options = ap_populate_fieldtraits(array(
-          'project_id' => $field_values[$fld_experiment]
+          'project_id' => $field_values[$fld_experiment],
         ));
 
         if ($options) {
@@ -167,8 +178,8 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
           $options = ap_populate_fieldyear(array(
             'project_id' => $field_values[$fld_experiment],
             'traits' => $field_values[$fld_traits],
-            'genus' => $field_values[$fld_genus],
-            'species' => $field_values[$fld_species]
+            'genus' => $all_genus,
+            'species' => $all_species
           ));
 
           if ($options) {
@@ -250,7 +261,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         $options = ap_populate_fieldgenus(array(
           'project_id' => $field_values[$fld_experiment]
         ));
-        
+
         if ($options) {
           $field_prop[$fld_genus]['options'] = $options;
           $field_prop[$fld_genus]['disabled'] = FALSE;
@@ -492,7 +503,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                               }
 
                               // Cache value selected.
-                              $form['values'][ $fldname[$fld_location]['cache'] ] = analyzedphenotypes_cachevalue($field_values[$fld_location]);
+                              $form['values'][ $fldname[$fld_location]['cache'] ] = ap_cache_download_fieldvalue($field_values[$fld_location]);
                               $cache_values[$fld_location] = $form_state['values'][ $fldname[$fld_location]['cache'] ];
 
                               // AJAX - same experiment, genus, species, traits, year and location.
@@ -759,13 +770,15 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         $form[$AJAX_wrapper][$ap_fieldset_1][ $fldname[$fld_traits]['field'] ][$o]['#attributes']
           = array('checked' => 'checked');
       }
+      
+      $form[$AJAX_wrapper][$ap_fieldset_1][ $fldname[$fld_traits]['field'] ]['#attributes']['class'][] = 'ap-no-mouse-event';
     }
 
     $form[$AJAX_wrapper]['reset_traits'] = array(
       '#type' => 'hidden',
       '#value' => (isset($reset_traits)) ? 1 : 0,
       '#attributes' => array('id' => 'ap-reset-traits'),
-    );
+    ); 
     ///////
 
   //
@@ -1045,7 +1058,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
             }
           }
           
-          if ($blanks < 1) {
+          if ($blanks < 1 && count($germplasm_found) > 1) {
             // Can't add more than 1 empty field.
             $values_array[$germplasm_field_id] = '';
           }
@@ -1062,6 +1075,11 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
             // to extract the unique id number then use it to reset the value in that key.
             $fid = array_search($form_state['triggering_element']['#return_value'], $values_array);
             unset($values_array[$fid]);
+            
+            // All fields got deleted leave one or add a single field.
+            if (count($values_array) <= 0) {
+              $values_array[$id] = '';
+            }
           }
           else {
             // Tick off.
@@ -1117,8 +1135,18 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         }
       }
 
+      // Always leave one empty field.
+      if (count($values_array) < 1) {
+        $values_array[$id] = '';
+      }
+      
       // Render values array.
       foreach($values_array as $key => $value) {
+        // When there is only a single germplasm found and adding it would add an extra field.
+        if (count($germplasm_found) == 1 && count($values_array) == 1 && empty($value)) {
+          unset($values_array[$key]);
+        }
+        
         // Text field.
         $field_textfield['#value'] = $value;
         $field_textfield['#id'] = $key;
@@ -1187,7 +1215,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
 
     // FILE TYPE:
-    $download_type = analyzedphenotypes_datafileprop('download_type');
+    $download_type = ap_define_datafile_extensions('file_download');
     $form[$AJAX_wrapper][$ap_fieldset_3][ $fldname[$fld_filetype]['field'] ] = array(
       '#title' => t('File Type'),
       '#type' => 'select',
@@ -1380,7 +1408,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 /**
  * Implements hook_submit().
  */
-function analyzedphenotypes_downloaddata_submit($form, &$form_state) {
+function analyzedphenotypes_downloaddata_form_submit($form, &$form_state) {
   // Use this character to separate entries in a string.
   $delimiter = '~';
   $field_values = array();
@@ -1437,6 +1465,7 @@ function analyzedphenotypes_wrapcheckbox($height, $has_options) {
   // Set field to disabled when checkbox has no options available.
   $class = ($has_options > 0) ? '' : ' ap-field-disabled';
 
+
   return array(
     '#prefix' => '<div class="ap-checkboxes-container' . $class . '" style="height: '. $height .'px">
                     <div class="ap-checkbox-wrapper">',
@@ -1466,6 +1495,7 @@ function analyzedphenotypes_checkboxesvalue($value) {
       }
     }
   }
+
 
   return $checkboxes_value;
 }

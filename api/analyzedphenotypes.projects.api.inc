@@ -7,6 +7,7 @@
  */
 
 
+
 /**
  * DATA SOURCE - chado.project.
  * Fetch all records in chado.project as an associative array
@@ -23,11 +24,9 @@ function ap_get_projects() {
     "SELECT project_id, TRIM(name) AS name FROM {project} ORDER BY name ASC"
   );
 
+
   return ($result->rowCount()) ? $result->fetchAllKeyed() : 0;
 }
-
-
-///////
 
 
 /**
@@ -66,8 +65,10 @@ function ap_match_projectid($identifiers, $options = array()) {
     }
   }
 
+
   return $projectprop;
 }
+
 
 /**
  * FUNCTION:
@@ -128,6 +129,7 @@ function ap_match_projectname($identifiers, $options = array('fullmatch' => TRUE
       break;
     }
   }
+
 
   return $projectprop;
 }

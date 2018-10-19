@@ -7,6 +7,7 @@
  */
 
 
+
 /**
  * DATA SOURCE
  * Define data type, name and symbol of a unit.
@@ -49,11 +50,9 @@ function ap_define_datatypes() {
     // Define unit here...
   );
 
+
   return $datatype;
 }
-
-
-///////
 
 
 /**
@@ -76,10 +75,12 @@ function ap_get_datatype($unit) {
   return (isset($datatype[ $unit ])) ? $datatype[ $unit ]['type'] : $datatype['text']['type'];
 }
 
+
 /**
  * FUNCTION:
  * Test data or value entered to see if it matches the data type the unit is expecting.
- *
+ * Dependencies: ap_get_datatype(),
+ * 
  * @param $unit
  *   String, unit of a trait.
  * @param $value
@@ -95,7 +96,7 @@ function ap_validate_unitvalue($unit, $value) {
   // Fetch data type of unit.
   $datatype = ap_get_datatype($unit);
 
-  switch($datatype['type']) {
+  switch($datatype) {
     //
     case 'alphanumeric':
       // Letters, numbers and any 0 or more characters.

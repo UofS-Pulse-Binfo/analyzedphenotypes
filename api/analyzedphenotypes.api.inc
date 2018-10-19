@@ -3,18 +3,12 @@
  * @file
  * Contains general API required by this module.
  */
-
-
-/**
- * TODO: Replace this function with the function below.
- */
-function analyzedphenotypes_stockprop($property, $parameter = null) {
-  return ap_match_germplasm($parameter['name'], $parameter['uniquename']);
-}
-
+ 
+ 
+ 
 /**
  * FUNCTION:
- * Fetch stock/germplasm property form chado.stock given stock name and stock uniquename.
+ * Match a stock property form chado.stock given stock name and stock uniquename combination.
  *
  * @param $germplasm_name
  *   A string, the name of a stock that corresponds to name field in chado.stock.
@@ -29,127 +23,101 @@ function ap_match_germplasm($germplasm_name, $germplasm_uniquename) {
     return null;
   }
   else {
-    $germplasm = $germplasm_name . $germplasm_uniquename;
-
+    $germplasm = trim($germplasm_name) . trim($germplasm_uniquename);
+    
+    // Query stock_id by combining name and uniquename columns as the filter combination.
     $result = chado_query(
-      "SELECT stock_id FROM {stock} WHERE CONCAT(name, uniquename) = :germplasm LIMIT 1",
+      "SELECT stock_id FROM {stock} WHERE CONCAT(TRIM(name), TRIM(uniquename)) = :germplasm",
       array(':germplasm' => $germplasm)
     );
-
-    return ($result->rowCount()) ? $result->fetchField() : null;
+    
+    $result_count = $result->rowCount();
+    
+    if ($result_count == 1) {
+      return $result->fetchField();
+    }
+    else {
+      // Somethings not right, stock seems to have a duplicate record or
+      // name combination did not match a record at all.
+      return null;
+    }
   }
 }
 
-///////
-
-/**
- * TODO: Replace this function with the function below.
- */
-function analyzedphenotypes_traitprop($property, $parameter) {
-  $command = array(
-    'no_unit' => array(
-      'func'  => 'ap_format_traitname',
-      'param' => $parameter['trait_name'],
-      'opts'  => 'trait_name',
-    ),
-    'unit' => array(
-      'func'  => 'ap_format_traitname',
-      'param' => $parameter['trait_name'],
-      'opts'  => 'trait_unit',
-    ),
-  );
-
-  return call_user_func($command[$property]['func'], $command[$property]['param'], $command[$property]['opts']);
-}
 
 /**
  * FUNCTION:
- * Format data entry under Trait Name column header.
- *
+ * Extract name or unit from trait name following Trait Name (unit) format.
+ * 
  * @param $traitname
- *   String, trait name in the following format Trait Name (unit).
- * @param $format
+ *   String, trait name in the indicated format.
+ * @param $get
  *   String, trait_name or trait_unit - extract trait name or unit respectively.
  *
  * @return
  *   String, trait name or unit.
  */
-function ap_format_traitname($traitname, $format = 'trait_unit') {
-  if ($format == 'trait_name') {
-    preg_match("/.*\(([^)]*)\)/", $trait_name, $match);
+function ap_format_traitname($traitname, $get = 'trait_unit') {
+  if ($get == 'trait_unit') {
+    // Extract trait name.
+    preg_match("/.*\(([^)]*)\)/", $traitname, $match);
     // Return text if unit cannot be determined.
     $result = (isset($match[1])) ? $match[1] : 'text';
   }
   else {
-    // Default to extract unit.
+    // Default to extract unit (unit), excluding parenthesis.
     $result = preg_replace("/\(.+\)/", '', $traitname);
   }
+
 
   return trim($result);
 }
 
-///////
-
-/**
- * TODO: Replace this function with the function below.
- */
-function analyzedphenotypes_validationresult($property, $parameter) {
-  $command = array(
-    'data' => array(
-      'func'  => 'ap_report_validationresult',
-      'param' => array('data' => $parameter),
-    ),
-    'file' => array(
-      'func'  => 'ap_report_validationresult',
-      'param' => array('file' => $parameter),
-    ),
-  );
-
-  return call_user_func($command[$property]['func'], $command[$property]['param']);
-}
-
-/**
- * FUCTION:
- * Prepare validation result window for validation performed on file and data level.
- *
- * @param $identifiers
- *   An array with key:
- *   - data : scope is data level and validation report is sent to JS.
- *   - file : scope is file level and validation report is sent to Form API.
- */
-function ap_report_validationresult($identifiers) {
-  // Scope of validation done, file (stage 1) or data (stage 2).
-  $scope = (isset($identifiers['data'])) ? 'data' : 'file';
-
-  if ($scope == 'data' || $scope == 'file') {
-    if ($scope == 'file') {
-      // When scope is file, it is expecting the completed status message of
-      // the validation result.
-      $status = $identifiers['file'];
-      print theme('analyzedphenotypes_validator_report', array('status' => $status, 'scope' => 'ap-file-scope'));
-    }
-    else {
-      // Default to scope data.
-      // When scope is data level, it is expecting the Tripal job id number.
-      $tripaljob_id = $identifiers['data'];
-      $s = ap_readwrite_tripaljob_progress($tripaljob_id, 'validateresult');
-
-      $status = json_decode($s, TRUE);
-      return theme('analyzedphenotypes_validator_report', array('status' => $status, 'scope' => 'ap-data-scope'));
-    }
-  }
-}
-
-
-///////
 
 /**
  * FUNCTION:
- * TODO: Replace this function with the function below.
+ * Prepare validation result window for validation performed on file and data level.
+ *
+ * File validation.
+ *  - A Tripal Job is created, then in file validate, the file gets validated
+ *  on file level and validation status will be sent to this function
+ *  to be rendered and reported to user.
+ * 
+ *  @see hook_validate() for uploader.
+ * 
+ * Data validation.
+ *  - A Tripal Job is created, then performs a data level validation.
+ *  The validation result is written in a temporary file using the job id
+ *  as the part of the filename. To report the validation result status
+ *  that temporary file is retrieved using the job id and contents which is
+ *  the validation error status is then rendered.
+ * 
+ * @see hook_validate for uploader
+ * @see hook_menu() (validation result)
+ *
+ * @param $scope 
+ *   String either File or Data.
+ * @param $resource
+ *   - data level : scope is data level and validation report is sent to JS.
+ *   - file level : scope is file level and validation report is sent to Form API.
  */
-function analyzedphenotypes_AJAX_callback($form, $form_state) {
-  return call_user_func('ap_send_ajaxrequest', $form, $form_state);
+function ap_report_validationresult($scope, $resource) {
+  if ($scope == 'file') {
+    // When scope is file, it is expecting the completed status message of
+    // the validation result.
+    $status = $resource;
+    return theme('analyzedphenotypes_validator_report', array('status' => $status, 'scope' => 'ap-file-scope'));
+  }
+  elseif ($scope == 'data') {
+    // Default to scope data.
+    // When scope is data level, it is expecting the Tripal job id number.
+    $s = ap_read_tripaljob_progress($resource, 'validateresult');
+    $status = json_decode($s, TRUE);
+    
+    print theme('analyzedphenotypes_validator_report', array('status' => $status, 'scope' => 'ap-data-scope' . $tripaljobprop));
+  }
 }
+
 
 /**
  * FUNCTION:
@@ -167,16 +135,20 @@ function ap_send_ajaxrequest($form, $form_state) {
     $contain = $form_state['triggering_element']['#ajax']['contain'];
   }
 
+
   // AJAX refresh element.
   return (isset($contain)) ? $form[$contain][$element] : $form[$element];
 }
+
 
 /**
  * FUNCTION:
  * AJAX callback for managing germplasm fields as filter.
  * 
- * NOTE: checking and uncheking in done in hook_form does not seem to work.
- *       move this operation to this callback.
+ * NOTE: checking and uncheking in done in hook_form does not seem to work,
+ *       thus move this operation to this callback.
+ *
+ * @see analyzedphenotypes.downloaddata.page.inc.
  */
 function ap_AJAX_germplasmfield_callback($form, $form_state) {
   // Trigerring elements value and command option.
@@ -185,8 +157,8 @@ function ap_AJAX_germplasmfield_callback($form, $form_state) {
     'value' => $form_state['triggering_element']['#value']
   );
   
-  // Reference standard filed element id element.
-  $fldname = analyzedphenotypes_fieldnames();
+  // Reference standard field element id element.
+  $fldname = ap_construct_download_fieldnames();
   $fld_germplasm = $fldname['germplasm']['base'];
 
   // Checking and unchecking.
@@ -214,19 +186,11 @@ function ap_AJAX_germplasmfield_callback($form, $form_state) {
     }
   }
   
+  
   // Update AJAX field wrapper.
   return $form['ap_AJAX_wrapper_main']['ap_additional_filter_fieldset']['ap_AJAX_germplasmname_field_wrapper'];
 }
 
-
-/////
-
-/**
- * TODO: Replace this function with the function below.
- */
-function analyzedphenotypes_stats_standard_deviation(array $a, $sample = false) {
-  return ap_calculate_standard_deviation($a, $sample);
-}
 
 /**
  * FUNCTION:
@@ -253,7 +217,7 @@ function ap_calculate_standard_deviation(array $values, $sample = FALSE) {
     return false;
   }
 
-  $mean = array_sum($a) / $n;
+  $mean = array_sum($values) / $n;
   $carry = 0.0;
 
   foreach ($values as $val) {
@@ -265,17 +229,10 @@ function ap_calculate_standard_deviation(array $values, $sample = FALSE) {
     --$n;
   }
 
+
   return sqrt($carry / $n);
 }
 
-//////
-
-/**
- * TODO: Replace this function with the function below.
- */
-function analyzedphenotypes_table_values($rows, $column_row, $trait) {
-  return ap_create_summarytable($rows, $column_row, $trait);
-}
 
 /**
  * FUNCTION:
@@ -283,8 +240,8 @@ function analyzedphenotypes_table_values($rows, $column_row, $trait) {
  * Dependencies: ap_create_columnheaders() in columnheaders.api.
  *               ap_validate_unitvalue() in datatype.api.
  *
- * @param $rows
- *   All rows/datapoints collected for a trait.
+ * @param $file
+ *   Drupal file object.
  * @param $column_row
  *   Column header row (row 0) in the file.
  * @param $trait
@@ -293,7 +250,7 @@ function analyzedphenotypes_table_values($rows, $column_row, $trait) {
  * @return
  *   An array of values, summarized by site and year.
  */
-function ap_create_summarytable($rows, $column_rows, $traitname) {
+function ap_create_summarytable($file, $column_row, $traitname) {
   // Fetch expected column headers and data type for each.
   $c = ap_create_columnheaders('columns_datatype');
   $columns = array_keys($c);
@@ -307,46 +264,50 @@ function ap_create_summarytable($rows, $column_rows, $traitname) {
   $arr_siteyear = array();
   $arr_values = array();
 
-  foreach($rows as $i => $line) {
-    if ($i > 0 && !empty($line)) {
-      $data = str_getcsv($line, "\t");
-      $data = array_map('trim', $data);
 
-      if ($data[$index_trait] == $traitname) {
-        $value = $data[$index_value];
-        
-        $is_number = ap_validate_unitvalue('number', $value);
+  $handle = fopen($file, 'r');
+  
+  if ($handle) {
+    $i = 0;
+    while(!feof($handle)) {
+      $row = fgets($handle);
+      if ($i > 0 && !empty($row)) {
+        $data = str_getcsv($row, "\t");
+        $data = array_map('trim', $data);
 
-        if ($is_number) {
-          $site_year = $data[$index_site] . ' ' . $data[$index_year];
+        if ($data[$index_trait] == $traitname) {
+          // Each row in trait name.
+          $value = $data[$index_value];
+          $is_number = ap_validate_unitvalue('number', $value);
+          
+          if ($is_number) {
+            $site_year = $data[$index_site] . ' ' . $data[$index_year];
 
-          if (in_array($site_year, $arr_siteyear)) {
-            $arr_values[$site_year][] = $value;
+            if (in_array($site_year, $arr_siteyear)) {
+              $arr_values[$site_year][] = $value;
+            }
+            else {
+              $arr_siteyear[] = $site_year;
+              $arr_values[$site_year][] = $value;
+            }
           }
           else {
-            $arr_siteyear[] = $site_year;
-            $arr_values[$site_year][] = $value;
+            return 0;
           }
         }
-        else {
-          return 0;
-        }
-      }
+      }      
+      
+      $i++;
     }
+    
+    fclose($handle);
   }
+  
 
   sort($arr_siteyear);
   return array('siteyear' => $arr_siteyear, 'values' => $arr_values);
 }
 
-//////
-
-/**
- * TODO: Replace this function with the function below.
- */
-function analyzedphenotypes_scale_photos($parameter) {
-  return call_user_func('ap_scale_photo', $parameter['height'], $parameter['width'], $parameter['scale_to']);
-}
 
 /**
  * FUNCTION:
@@ -363,20 +324,15 @@ function analyzedphenotypes_scale_photos($parameter) {
  *   An array with reduced height and width as array elements.
  */
 function ap_scale_photo($height, $width, $scale_to) {
-  $h = $parameter['height'];
-  $w = $parameter['width'];
-  $scale_to = $parameter['scale_to'];
+  $ratio = ($width > $height) ? $scale_to / $width : $scale_to / $height;
 
-  $ratio = ($w > $h) ? $scale_to / $w : $scale_to / $h;
+  $new_w = round($width * $ratio);
+  $new_h = round($height * $ratio);
 
-  $new_w = round($w * $ratio);
-  $new_h = round($h * $ratio);
 
   return array('height' => $new_h, 'width' => $new_w);
 }
 
-
-//////
 
 /**
  * FUNCTION:
@@ -402,9 +358,11 @@ function ap_define_datafile_extensions($set = null) {
       'xlsx' => '.XLSX - Microsoft Excel Spreadsheet File',
     )
   );
+  
 
   return ($set) ? $extensions[$set] : $extensions;
 }
+
 
 /**
  * FUNCTION:
@@ -425,44 +383,17 @@ function ap_construct_datafile_destinationpath() {
   
   // Constuct directories.
   $file_dir = array();
-  
+
+  // Construct relative/absolute path eg. public://tripal/analzedphenotypes/spreadsheet 
+  // - for data file 
   foreach($directory as $dir) {
     $file_dir[$dir] = $drupal_public . $ap_root_dir . $dir; 
   }
   
+  
   return $file_dir;
 }
 
-/**
- * CONTROL/SWITCHBOARD.
- * Pass a request to a corresponding function.
- * @TODO: leave out when api reorganize/update is complete and use functions below.
- */
-function analyzedphenotypes_datafileprop($property = null, $parameter = null) {
-  if (is_null($property)) {
-    // Default.
-    $property = 'default';
-  }
-
-  // Process request.
-  // Default to all projects.
-  $command = array(
-    'default' => array(
-      'func'  => 'ap_define_datafile_extensions',
-      'param' => 'file_upload',
-    ),
-    'download_type' => array(
-      'func'  => 'ap_define_datafile_extensions',
-      'param' => 'file_download',
-    ),
-    'make_permanent' => array(
-      'func'  => 'ap_make_datafile_permanent',
-      'param' => $parameter['data_file'],
-    ),
-  );
-
-  return call_user_func($command[$property]['func'], $command[$property]['param']);
-}
 
 /**
  * FUNCTION:
@@ -483,4 +414,16 @@ function ap_make_datafile_permanent($datafile) {
     // the assumption that a single user cannot upload more than one phenotype file within a second.
     file_usage_add($datafile, 'analyzedphenotypes', 'analyzedphenotypes-file', $datafile->uid . $datafile->timestamp);
   }
+}
+
+
+/**
+ * FUNCTION:
+ * Convert text value to lowercase and remove leading and trailing spaces.
+ *
+ * @param $string
+ *   String, text value.
+ */
+function ap_noformat($string) {
+  return strtolower(trim($string));
 }

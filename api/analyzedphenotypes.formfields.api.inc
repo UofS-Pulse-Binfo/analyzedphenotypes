@@ -6,6 +6,8 @@
  * Manage property and operation pertaining to download data form fields.
  */
 
+
+
 /**
  * FUNCTION:
  * Global field names.
@@ -64,11 +66,9 @@ function ap_construct_download_fieldnames() {
     }
   }
 
+
   return $fieldnames;
 }
-
-
-///////
 
 
 /**
@@ -83,7 +83,7 @@ function ap_construct_download_fieldnames() {
  *
  * @return
  *   An array, to register a value in Drupal Form API.
- */
+ */      
 function ap_cache_download_fieldvalue($value) {
   if (is_array($value)) {
     $value = implode('_', $value);
@@ -94,8 +94,6 @@ function ap_cache_download_fieldvalue($value) {
     '#value' => $value,
   );
 }
-
-///////
 
 
 /**
@@ -109,15 +107,16 @@ function ap_cache_download_fieldvalue($value) {
 function ap_populate_fieldproject() {
   $sql = "
     SELECT project_id, t1.name
-    FROM
-      {project} AS t1 INNER JOIN {phenotype} USING(project_id)
+    FROM {project} AS t1 INNER JOIN {phenotype} USING(project_id)
     GROUP BY project_id
-    ORDER BY t1.name ASC
-  ";
+    ORDER BY t1.name ASC";
 
   $query = chado_query($sql);
+  
+  
   return ($query->rowCount()) ? $query->fetchAllKeyed() : null;
 }
+
 
 /**
  * FUNCTION:
@@ -136,8 +135,10 @@ function ap_populate_fieldprojectsummary() {
     ORDER BY project_id ASC";
 
   $query = chado_query($sql);
+  
   return ($query->rowCount()) ? $query->fetchAllKeyed() : null;
 }
+
 
 /**
  * FUNCTION:
@@ -152,17 +153,15 @@ function ap_populate_fieldprojectsummary() {
  *   Associative array, where key and value are genus.
  */
 function ap_populate_fieldgenus($identifiers) {
-  $values = null;
-
   if (isset($identifiers['project_id']) && $identifiers['project_id'] > 0) {
     $sql = "
       SELECT value, value FROM {projectprop}
-      WHERE type_id = :term_genus AND project_id = :project_id
+      WHERE type_id = :term_genus AND project_id IN (:project_id)
       LIMIT 1";
 
     $sysvar = ap_get_variablenames(
       array('variablename' => 'genus'),
-      array('set' => 'term')
+      array('set' => 'terms')
     );
 
     $sysvar_genus = variable_get($sysvar);
@@ -173,11 +172,13 @@ function ap_populate_fieldgenus($identifiers) {
     );
 
     $query = chado_query($sql, $args);
-    $values = ($query->rowCount()) ? $query->fetchAllKeyed() : $values;
+    $values = ($query->rowCount()) ? $query->fetchAllKeyed() : null;
   }
+
 
   return $values;
 }
+
 
 /**
  * FUNCTION:
@@ -198,8 +199,8 @@ function ap_populate_fieldspecies($identifiers) {
 
   if (isset($identifiers['project_id']) && $identifiers['project_id'] > 0 && isset($identifiers['genus'])) {
     $sql = "
-      SELECT species, species FROM {organism} WHERE genus = :genus
-        AND organism_id IN (SELECT organism_id FROM {stock} INNER JOIN {phenotype} USING (stock_id) WHERE project_id = :project_id)
+      SELECT species, species FROM {organism} WHERE genus IN (:genus)
+        AND organism_id IN (SELECT organism_id FROM {stock} INNER JOIN {phenotype} USING (stock_id) WHERE project_id IN (:project_id))
       GROUP BY species
       ORDER BY species ASC";
 
@@ -212,8 +213,10 @@ function ap_populate_fieldspecies($identifiers) {
     $values = ($query->rowCount()) ? $query->fetchAllKeyed() : $values;
   }
 
+
   return $values;
 }
+
 
 /**
  * FUNCTION:
@@ -234,7 +237,7 @@ function ap_populate_fieldspecies($identifiers) {
 function ap_populate_fieldtraits($identifiers) {
   $values = null;
 
-  if (isset($identifiers['project_id']) && $identifiers['project_id'] > 0) {
+  if (isset($identifiers['project_id']) && count($identifiers['project_id']) > 1) {
     // 2 or more experiments - fields genus and species field value become all
     // indicating all species and all genus.
     $sql = "
@@ -276,8 +279,10 @@ function ap_populate_fieldtraits($identifiers) {
     }
   }
 
+
   return $values;
 }
+
 
 /**
  * FUNCTION:
@@ -301,7 +306,7 @@ function ap_populate_fieldyear($identifiers) {
     && !empty($identifiers['genus']) && !empty($identifiers['species'])
     && isset($identifiers['traits'])) {
 
-    $sysvar = ap_get_systemvariables(
+    $sysvar = ap_get_variablenames(
       array('variablename' => 'year'),
       array('set' => 'terms')
     );
@@ -331,8 +336,10 @@ function ap_populate_fieldyear($identifiers) {
     $values = ($query->rowCount()) ? $query->fetchAllKeyed() : $values;
   }
 
+
   return $values;
 }
+
 
 /**
  * FUNCTION:
@@ -354,7 +361,7 @@ function ap_populate_fieldyear($identifiers) {
 function ap_populate_fieldlocation($identifiers) {
   $values = null;
 
-  $sysvar = ap_get_systemvariables(
+  $sysvar = ap_get_variablenames(
     array('variablename' => 'varset'),
     array('set' => 'terms')
   );
@@ -374,9 +381,9 @@ function ap_populate_fieldlocation($identifiers) {
       AND t1.type_id = :location_property";
 
   $args = array(
-    ':project_id' => $field_values['project_id'],
-    ':traits' => $field_values['traits'],
-    ':year' => $field_values['year'],
+    ':project_id' => $identifiers['project_id'],
+    ':traits' => $identifiers['traits'],
+    ':year' => $identifiers['year'],
 
     ':year_property' => $sysvar_year,
     ':location_property' => $sysvar_location,
@@ -394,12 +401,13 @@ function ap_populate_fieldlocation($identifiers) {
   }
 
   $sql = $sql . ' ORDER BY t1.value ASC';
-
   $query = chado_query($sql, $args);
   $values = ($query->rowCount()) ? $query->fetchAllKeyed() : $values;
 
+
   return $values;
 }
+
 
 /**
  * FUNCTION:
@@ -422,7 +430,7 @@ function ap_populate_fieldlocation($identifiers) {
 function ap_populate_fieldgermplasmtype($identifiers) {
   $values = null;
 
-  $sysvar = ap_get_systemvariables(
+  $sysvar = ap_get_variablenames(
     array('variablename' => 'varset'),
     array('set' => 'terms')
   );
@@ -444,13 +452,13 @@ function ap_populate_fieldgermplasmtype($identifiers) {
         AND t1.type_id = :location_property";
 
   $args = array(
-    ':project_id' => $parameter['project_id'],
-    ':traits' => $parameter['traits'],
-    ':year' => $parameter['year'],
-    ':location' => $parameter['location'],
+    ':project_id' => $identifiers['project_id'],
+    ':traits' => $identifiers['traits'],
+    ':year' => $identifiers['year'],
+    ':location' => $identifiers['location'],
 
-    ':year_property' => $year_property,
-    ':location_property' => $location_property,
+    ':year_property' => $sysvar_year,
+    ':location_property' => $sysvar_location,
   );
 
   if (isset($identifiers['project_id']) && $identifiers['project_id'] > 0
@@ -464,13 +472,14 @@ function ap_populate_fieldgermplasmtype($identifiers) {
     $args[':species'] = $identifiers['species'];
   }
 
-  $sql = $sql . ' ORDER BY t0.name ASC';
-
+  $sql = $sql . ') ORDER BY t0.name ASC';
   $query = chado_query($sql, $args);
   $values = ($query->rowCount()) ? $query->fetchAllKeyed() : $values;
 
+
   return $values;
 }
+
 
 /**
  * FUNCTION:
@@ -518,7 +527,7 @@ function ap_populate_fieldgermplasmlist($identifiers) {
     if (isset($identifiers['project_id']) && $identifiers['project_id'] > 0) {
       // Experiment.
       $where_clause[] = 'project_id IN (:project_id)';
-      $args[':project'] = $identifiers['project_id'];
+      $args[':project_id'] = $identifiers['project_id'];
     }
 
     if (isset($identifiers['traits']) && !empty($identifiers['traits'])) {
@@ -560,7 +569,7 @@ function ap_populate_fieldgermplasmlist($identifiers) {
     if (!empty($identifiers['genus']) && !empty($identifiers['species'])) {
       $sql = $sql . " AND organism_id IN (SELECT organism_id FROM {organism} WHERE genus = :genus AND species = :species)";
 
-      $where_args[':genus'] = $identifiers['genus'];
+      $args[':genus'] = $identifiers['genus'];
       $args[':species'] = $identifiers['species'];
     }
 
@@ -574,8 +583,9 @@ function ap_populate_fieldgermplasmlist($identifiers) {
     $sql = $sql . " ORDER BY germplasm ASC";
   }
 
-  $query = chado_query($sql, $args);
-  $values = ($query->rowCount()) ? $query->fetchAllKeyed() : $values;
+  $result = chado_query($sql, $args);
+  $values = ($result->rowCount()) ? $result->fetchAllKeyed() : $values;
+
 
   return $values;
 }

@@ -11,6 +11,7 @@
  */
 
 
+
 /**
  * DATA SOURCE
  * Define controlled vocabulary terms required by this system.
@@ -33,7 +34,6 @@ function ap_define_defaultontology() {
     'replicate' => 'replicate',
     'collector' => 'Collected By',
   );
-
 
   // YEAR - TRIPAL PUB, TRIPAL CORE:
   $ontology['tripal_pub'] = array(
@@ -122,14 +122,12 @@ function ap_define_defaultontology() {
     ),
   );
 
+
   return array(
     'terms' => $ontology,
     'map_term' => $map_term,
   );
 }
-
-
-///////
 
 
 /**
@@ -194,10 +192,10 @@ function ap_load_defaultontology() {
       // Save term to be used as configuration page default settings.
       // eg. ap_location = 1231.
       $ontology_load[$map_term] = ($t) ? $t->cvterm_id : $ins_cvterm->cvterm_id;
-      
-      
+
     }
   }
+
 
   return $ontology_load;
 }
@@ -258,6 +256,7 @@ function ap_set_ontology($identifiers, $options = array('replace' => FALSE)) {
     tripal_report_error('Analyzed Phenotypes', TRIPAL_CRITICAL, 'Chado/Tripal failed to update or set ontology term', array(), array('print' => TRUE));
   }
 }
+
 
 /**
  * FUNCTION:
@@ -321,8 +320,10 @@ function ap_suggest_ontology($identifiers, $options = array('limitrows' => 10)) 
     }
   }
 
+
   return (isset($suggest_ontology)) ? $suggest_ontology : null;
 }
+
 
 /**
  * FUNCTION:
@@ -354,6 +355,7 @@ function ap_match_ontology($genus, $ontology) {
   );
 
   $ontology_match = reset($ontology_match);
+
 
   return ($ontology_match)
     ? array($ontology_match['cvterm_id'] => $ontology_match['name'])

@@ -7,6 +7,7 @@
  */
 
 
+
 /**
  * DATA SOURCE - chado.organism.
  * Fetch all genus in chado.organism.
@@ -22,11 +23,9 @@ function ap_get_genus() {
     "SELECT genus FROM {organism} GROUP BY genus ORDER BY genus ASC"
   );
 
+
   return ($result->rowCount()) ? $result->fetchCol() : 0;
 }
-
-
-///////
 
 
 /**
@@ -82,6 +81,7 @@ function ap_set_projectgenus($identifiers, $options = array('replace' => FALSE))
   }
 }
 
+
 /**
  * FUNCTION:
  * Fetch genus assigned to an experiment/project in chado.projectprop table.
@@ -122,8 +122,10 @@ function ap_get_projectgenus($identifiers) {
     )
   );
 
+
   return ($result->rowCount() == 1) ? $result->fetchField() : 0;
 }
+
 
 /**
  * FUNCTION:
@@ -156,6 +158,7 @@ function ap_get_activegenus() {
       $sysvar_genus_set[] = ucfirst($g);
     }
   }
+
 
   return (count($sysvar_genus_set)) ? $sysvar_genus_set : 0;
 }

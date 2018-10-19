@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Implements hook_install().
  */
@@ -15,6 +14,7 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontolog
 
 // Materialized View API.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.materializedview.api');
+
 
 /**
  * Implements hook_enable().
@@ -198,6 +198,7 @@ function analyzedpenotypes_requirements($phase) {
       }
     }
   }
+  
   
   return $requirements;
 }

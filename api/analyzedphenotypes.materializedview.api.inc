@@ -7,6 +7,7 @@
  */
 
 
+
 /**
  * Prepare SQL query required by materialized view.
  * Dependencies: ap_get_variablenames() in systemvars.api.
@@ -58,8 +59,10 @@ function ap_construct_mview_phenotypesummary_query() {
     ", $sysvar_location, $sysvar_year
   );
 
+
   return $mviewquery;
 }
+
 
 /**
  * Prepare schema required by materialized view.
@@ -122,8 +125,10 @@ function ap_construct_mview_phenotypesummary_schema() {
     'indexes' => array(),
   );
 
+
   return $mviewschema;
 }
+
 
 /**
  * Update/populate materialized view.

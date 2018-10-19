@@ -7,6 +7,7 @@
  */
 
 
+
 /**
  * FUNCTION:
  * Define configuration used in Tripal job process.
@@ -30,12 +31,12 @@ function ap_configure_tripaljob() {
     'TRIPALJOB_job_table'  => 'tripal_jobs',
     'TRIPALJOB_error_type'  => TRIPAL_CRITICAL,
     'TRIPALJOB_error_limit'  => 5,
-    'TRIPALJOB_write_option'  => 'FILE_EXISTS_REPLACE',
     'TRIPALJOB_source_module'  => 'analyzedphenotypes',
     'TRIPALJOB_file_extension'  => 'txt',
     'TRIPALJOB_report_frequency' => 5
   );
 }
+
 
 /**
  * FUNCTION:
@@ -63,7 +64,7 @@ function ap_create_tripaljob($identifiers, $options = array('return_jobid' => TR
     $identifiers['description'],
     $tripal_config['TRIPALJOB_source_module'],
     $identifiers['callback'],
-    serialize($identifiers['dataset']),
+    array(serialize($identifiers['dataset'])),
     $user->uid
   );
 
@@ -71,6 +72,7 @@ function ap_create_tripaljob($identifiers, $options = array('return_jobid' => TR
     return $job_id;
   }
 }
+
 
 /**
  * FUNCTION:
@@ -98,6 +100,7 @@ function ap_get_tripaljob($tripaljob_id) {
   }
 }
 
+
 /**
  * FUNCTION:
  * Write to file Tripal job computed progress (0 - 100%).
@@ -122,12 +125,41 @@ function ap_update_tripaljob_progress($tripaljob_id, $progress) {
     ->condition('job_id', $tripaljob_id, '=')
     ->execution();
 
+
   return ($update) ? $update : null;
 }
 
+
 /**
  * FUNCTION:
- * Read and write Tripal job progres to a temporary file.
+ * Rrite Tripal job progres to a temporary file.
+ * Dependencies: ap_configure_tripaljob().
+ *
+ * @param $tripaljob_id
+ *   An integer, Tripal job id number.
+ * @param $source
+ *   Source of Tripal job request:
+ *   - jobprogress : for standard progress bar in upload data.
+ *   - validateresult : perform validation.
+ *
+ * @return
+ *   Drupal file mangaed object.
+ */
+function ap_read_tripaljob_progress($tripaljob_id, $source) {
+  $tripal_config = ap_configure_tripaljob();
+  $file = $tripal_config['TRIPALJOB_file_path'] . '/ap_' . $source . '_tripaljob_' . $tripaljob_id . '.' . $tripal_config['TRIPALJOB_file_extension'];
+  
+  if (file_exists($file)) {
+    $content = file_get_contents($file);
+    
+    return ($content) ? $content : null;
+  }  
+}
+
+
+/**
+ * FUNCTION:
+ * Write Tripal job progres to a temporary file.
  * Dependencies: ap_configure_tripaljob().
  *
  * @param $tripaljob_id
@@ -142,26 +174,13 @@ function ap_update_tripaljob_progress($tripaljob_id, $progress) {
  * @return
  *   Drupal file mangaed object.
  */
-function ap_readwrite_tripaljob_progress($tripaljob_id, $source, $progress = null) {
+function ap_write_tripaljob_progress($tripaljob_id, $to_write, $source) {
   $tripal_config = ap_configure_tripaljob();
-
-  // Construct file name of Tripal job progress file.
-  // Filename consist of tripal job id number and the source of Tripal job calls.
   $file = $tripal_config['TRIPALJOB_file_path'] . '/ap_' . $source . '_tripaljob_' . $tripaljob_id . '.' . $tripal_config['TRIPALJOB_file_extension'];
-
-  if (file_exists($file)) {
-    if ($progress >= 0) {
-      // When progress 0-100 is provided, it wants to write progress to file.
-      $tripal_update = file_unmanaged_save_data($progress, $file, $tripal_config['TRIPALJOB_write_option']);
-    }
-    else {
-      // Null progress, read progress form file.
-      $tripal_update = file_get_contents($file);
-    }
-  }
-
-  return ($tripal_update) ? $tripal_update : null;
+  
+  file_unmanaged_save_data($to_write, $file, FILE_EXISTS_REPLACE);
 }
+
 
 /**
  * FUNCTION:

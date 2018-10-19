@@ -7,6 +7,7 @@
  */
 
 
+
 /**
  * DATA SOURCE
  * Define system variable names.
@@ -82,12 +83,11 @@ function ap_construct_variablenames() {
       }
     }
   }
+  
 
   return $systemvars;
 }
 
-
-///////
 
 
 /**
@@ -150,6 +150,7 @@ function ap_get_variablenames($identifiers, $options = array('set' => 'cvdbon', 
       $systemvars = $var_set[ 'ap_' . $variablename ];
     }
   }
+
 
   return $systemvars;
 }

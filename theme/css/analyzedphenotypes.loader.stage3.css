@@ -38,6 +38,10 @@ ul.ap-item-list {
   padding: 0 7px 0 0;
 }
 
+.ap-item-list a:last-child {
+  border-right: none;
+}
+
 .ap-form-fieldset-container .fieldset-legend {
   width: 98%;
 }
@@ -54,4 +58,8 @@ ul.ap-item-list {
 
 #accordion .ui-icon {
   display: none;
+}
+
+#autocomplete {
+  position: absolute;
 }

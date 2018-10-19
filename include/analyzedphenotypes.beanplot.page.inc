@@ -4,6 +4,8 @@
  * Provide analyzedphenotypes module with data summary page and visualizer.
  */
 
+
+
 /**
  * Beanplot Page
  * Implements hook_form().
@@ -407,6 +409,7 @@ function ajax_analyzedphenotypes_beanplot_page_nav_callback($form, $form_state) 
   return $form['nav'];
 }
 
+
 /**
  * Generates the data for the beanplot as JSON.
  *
@@ -453,6 +456,7 @@ function analyzedphenotypes_beanplot_json($project_id, $trait_id) {
 
   // Switch from associative array to sequenctial indexed array.
   $results = array_values($results);
+
 
   return drupal_json_output($results);
 }
