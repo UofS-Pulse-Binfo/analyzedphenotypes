@@ -311,6 +311,10 @@ th.ap-header {
 
 
 /* Germplasm fields */
+.ap-textfield-germplasmname {
+  width: 82%;
+}
+
 #ap-field-germplasm-names div {
   border-right: 1px solid #CCCCCC;
   float: left;
@@ -350,7 +354,7 @@ th.ap-header {
   width: 15px;
   text-indent: 50px;
   overflow: hidden;
-  
+
   background-image: url('../../theme/img/remove-button.png');
   background-position: center;
   background-repeat: no-repeat;
@@ -358,11 +362,11 @@ th.ap-header {
 }
 
 
-#ap-AJAX-germplasmname-field-wrapper input[type=submit].add-btn {  
+#ap-AJAX-germplasmname-field-wrapper input[type=submit].add-btn {
   position:  absolute;
   margin-bottom: -45px;
   right: 4%;
-  
+
   background-image: url('../../theme/img/add-button.png');
   background-position: center;
   background-repeat: no-repeat;

@@ -3,12 +3,12 @@
  * @file
  * Contains data exporter interface of this module.
  */
- 
- 
- 
+
+
+
 // AJAX fields API in Data donwloader module.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.formfields.api');
- 
+
 
 /**
  * FUNCTION CALLBACK
@@ -25,7 +25,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
   // Field names.
   // Same name will be used for hooks, js etc.
   $fldname = ap_construct_download_fieldnames();
-  
+
   // F. 1.
   $fld_experiment      = $fldname['experiment']['base'];
   $fld_genus           = $fldname['genus']['base'];
@@ -150,7 +150,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         $field_prop[$fld_species]['options'] = array($field_values[$fld_genus] => 'All Species');
         $field_prop[$fld_species]['disabled'] = FALSE;
         $field_prop[$fld_species]['empty'] = null;
-        
+
         // Convert all value for genus and species into values.
         $all_genus = ap_populate_fieldgenus(array(
           'project_id' => $field_values[$fld_experiment]
@@ -160,7 +160,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
           'project_id' => $field_values[$fld_experiment],
           'genus' => $all_genus
         ));
-        
+
         // #Traits.
         $options = ap_populate_fieldtraits(array(
           'project_id' => $field_values[$fld_experiment],
@@ -212,7 +212,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                 'year' => $field_prop[$fld_year]['default'],
                 'location' => $field_prop[$fld_location]['default']
               ));
-              
+
               if ($options) {
                 $field_values[$fld_germplasmtype] = array_keys($options);
 
@@ -410,7 +410,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                           'genus' => $field_values[$fld_genus],
                           'species' => $field_values[$fld_species],
                           'traits' => $field_values[$fld_traits],
-                          'year' => $field_values[$fld_year]                        
+                          'year' => $field_values[$fld_year]
                         ));
 
                         if ($options) {
@@ -770,7 +770,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         $form[$AJAX_wrapper][$ap_fieldset_1][ $fldname[$fld_traits]['field'] ][$o]['#attributes']
           = array('checked' => 'checked');
       }
-      
+
       $form[$AJAX_wrapper][$ap_fieldset_1][ $fldname[$fld_traits]['field'] ]['#attributes']['class'][] = 'ap-no-mouse-event';
     }
 
@@ -778,7 +778,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
       '#type' => 'hidden',
       '#value' => (isset($reset_traits)) ? 1 : 0,
       '#attributes' => array('id' => 'ap-reset-traits'),
-    ); 
+    );
     ///////
 
   //
@@ -926,15 +926,15 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
     if ($germplasm_count > 0) {
       // Define AJAX element wrapper.
       $field_container = 'ap_AJAX_germplasmname_field_wrapper';
-      
+
       $form[$AJAX_wrapper][$ap_fieldset_2][$field_container] = array(
         '#prefix' => '<div id="ap-AJAX-germplasmname-field-wrapper">',
         '#suffix' => '</div>',
-        // Nest elements inserted, this important or else 
+        // Nest elements inserted, this important or else
         // everything will be wobbly.
         '#tree' => TRUE,
       );
-      
+
       $form[$AJAX_wrapper][$ap_fieldset_2][$field_container][ $fldname[$fld_germplasm]['field'] ] = array(
         '#type' => 'checkboxes',
         '#options' => drupal_map_assoc($germplasm_found),
@@ -954,7 +954,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         '#markup' => '<div id="ap-filter-germplasm-reveal">
           <div class="ap-filter-germplasm-reveal-on" title="Show/Hide ' . count($germplasm_found) . ' Germplasm/Stock Name">&nbsp;</div>
           </div>
-          
+
           <div id="ap-filter-germplasm-by-field">
             Phenotype for Specific Germplasm<br />
             <small>If you are interested in phenotypes for specific germplasm, you can add them individually by clicking add button or germplasm names.
@@ -969,8 +969,8 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         'field_button_add'    => 'ap_field_button_add',
         'field_button_rem'    => 'ap_field_button_rem_', // suffix unique id.
       );
-      
-      
+
+
       // Field array.
       $field_textfield = array(
         '#type' => 'textfield',
@@ -986,7 +986,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         ),
         '#attributes' => array('placeholder' => 'Type Germplasm Name/Stock Name', 'class' => array('ap-textfield-germplasmname')),
       );
-      
+
       $field_button_rem = array(
         '#type' => 'button',
         '#value' => '',
@@ -998,13 +998,13 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         ),
         '#attributes' => array('class' => array('remove-btn')),
       );
-    
+
       // Each field inserted should contain a form of unique identifiers.
       $germplasm_field_id = uniqid();
       // Pass on to this variable each time a new field is added.
       $new_element = null;
-      
-      // Load values array (names pre-existing) by either buttons or 
+
+      // Load values array (names pre-existing) by either buttons or
       // start wit a single empty field on initial page load.
       $values_array = (isset($form_state['triggering_element']))
         ? $form_state['values'][ $field['field_hidden_values']  ]
@@ -1022,60 +1022,60 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         ),
         '#attributes' => array('class' => array('add-btn')),
       );
-      
+
       // Execute append action only when field count is less than the number
       // of germplasm and/or if added by link, germplasm is not previously added.
-      
+
       if (isset($form_state['triggering_element'])) {
         // Action required and value.
         $triggering_element = array(
           'command' => $form_state['triggering_element']['#ajax']['command'],
           'value' => $form_state['triggering_element']['#value'],
         );
-       
+
         // Execute command.
         // Save error - invalid/not found germplasm name.
         $error = array();
-        
+
         // Flag if form has been submitted for the first time.
         // This will indicate the stage to add the first set of elements.
         $form['ap_form_submitted'] = array(
           '#type' => 'hidden',
           '#value' => isset($form_state['values']['ap_form_submitted']) ? TRUE : FALSE,
         );
-        
+
         if ($triggering_element['command'] == 'germplasm_add_blank') {
           // ADD - add a blank field.
           // To add, check values array and inspect the number of empty
           // fields, if it exceeded 1, then don't allow any more blank fields.
           // Field is default to: Type Germplasm Name/Stock Name.
           $blanks = 0;
-          
+
           foreach($values_array as $v) {
             if (empty($v)) {
               $blanks++;
               if ($blanks > 1) break;
             }
           }
-          
+
           if ($blanks < 1 && count($germplasm_found) > 1) {
             // Can't add more than 1 empty field.
             $values_array[$germplasm_field_id] = '';
           }
-          
+
           // See JS for autocomplete support in fields.
         }
         elseif ($triggering_element['command'] == 'germplasm_add_name') {
           // ADD - add field by checking a germplasm name.
           // To add, see if action required is to include or exclude a name.
-          
+
           // Checking or uncheck-ing.
           if ($triggering_element['value'] === 0) {
             // To uncheck - Find the value (stock name) of the triggering element
             // to extract the unique id number then use it to reset the value in that key.
             $fid = array_search($form_state['triggering_element']['#return_value'], $values_array);
             unset($values_array[$fid]);
-            
+
             // All fields got deleted leave one or add a single field.
             if (count($values_array) <= 0) {
               $values_array[$id] = '';
@@ -1092,7 +1092,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
           // To add/rem, see if action required is to add or remove.
           $id =  $form_state['triggering_element']['#id'];
           $id_value = $form_state['input'][$field_container][ $field['field_textfield'] . $id ];
-          
+
           if ($id_value) {
             // User typed in a germplasm name.
             // Double check that value entered matches a name in germplasm names.
@@ -1112,7 +1112,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
               '#type' => 'hidden',
               '#value' => $values_array[$id],
             );
-            
+
             // With value cached, we can leave out this item.
             $values_array[$id] = '';
           }
@@ -1121,7 +1121,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
           // REMOVE - hit x / remove button ajacent to the field.
           // Remove field.
           unset($values_array[ $triggering_element['value'] ]);
-          
+
           // Uncheck matching germplasm name.
           // see callback.
         }
@@ -1139,20 +1139,24 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
       if (count($values_array) < 1) {
         $values_array[$id] = '';
       }
-      
+
       // Render values array.
       foreach($values_array as $key => $value) {
-        // When there is only a single germplasm found and adding it would add an extra field.
         if (count($germplasm_found) == 1 && count($values_array) == 1 && empty($value)) {
+          // When there is only a single germplasm found and adding it would add an extra field.
           unset($values_array[$key]);
         }
-        
+        elseif (count($values_array) >= count($germplasm_found) && empty($value)) {
+          // When all names have been checked, remove extra blank field.
+          unset($values_array[$key]);
+        }
+
         // Text field.
         $field_textfield['#value'] = $value;
         $field_textfield['#id'] = $key;
         $field_textfield['#suffix'] = (isset($error[$key])) ? $error[$key] : '';
         $form[$AJAX_wrapper][$ap_fieldset_2][$field_container][ $field['field_textfield'] . $key ] = $field_textfield;
-        
+
         // Remove button.
         if (count($values_array) > 1) {
           $field_button_rem['#value'] = $key;
@@ -1165,8 +1169,8 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         '#type' => 'hidden',
         '#value' => $values_array,
       );
-    
-      // Construct suggestion array - in autocomplete field by excluding 
+
+      // Construct suggestion array - in autocomplete field by excluding
       // name that had been checked.
       $suggest_germplasmname = $germplasm_found;
       foreach($values_array as $element_id => $element_value) {
@@ -1175,12 +1179,19 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
           $o = array_search($element_value, $suggest_germplasmname);
           unset($suggest_germplasmname[$o]);
         }
-      } 
+      }
 
-      drupal_add_js(array('analyzedphenotypes' => array('suggest' => array_values($suggest_germplasmname))), array('type' => 'setting'));
-    // End if germplasm_count.  
+      // To autocomplete JS.
+      $form[$AJAX_wrapper][$ap_fieldset_2][$field_container]['fld_suggest_germplasm'] = array(
+        '#type' => 'hidden',
+        '#value' => implode(',', $suggest_germplasmname),
+        '#attributes' => array('id' => 'ap_field_suggest_germplasmnames'),
+
+      );
+
+    // End if germplasm_count.
     }
-    
+
     //
     // FIELD: MAX MISSING DATA.
     $form[$AJAX_wrapper][$ap_fieldset_2][ $fldname[$fld_missingdata]['field'] ] = array(
@@ -1417,11 +1428,11 @@ function analyzedphenotypes_downloaddata_form_submit($form, &$form_state) {
   $fldname = ap_construct_download_fieldnames();
 
   foreach($fldname as $f) {
-    if (isset($form_state['values'][ $f['field'] ]) || 
+    if (isset($form_state['values'][ $f['field'] ]) ||
       isset($form_state['values']['ap_AJAX_germplasmname_field_wrapper'][ $f['field'] ])) {
       // NOTE: germplasm name had #tree option - check value with this option on.
-      
-      $val = (isset($form_state['values'][ $f['field'] ])) 
+
+      $val = (isset($form_state['values'][ $f['field'] ]))
         ? $form_state['values'][ $f['field'] ]
         : $form_state['values']['ap_AJAX_germplasmname_field_wrapper'][ $f['field'] ];
 
@@ -1437,8 +1448,8 @@ function analyzedphenotypes_downloaddata_form_submit($form, &$form_state) {
       $field_values[ $f['base'] ] = $f['base'] . '=' . $entered_value;
     }
   }
-  
-  // Prepare query string.  
+
+  // Prepare query string.
   $querystring = implode('&', $field_values);
   $url = base64_encode($querystring);
 
