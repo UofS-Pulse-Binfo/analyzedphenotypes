@@ -924,6 +924,8 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
           unset($columnsprop);
         }
         else {
+          if (empty($row)) continue;
+
           // Data rows.
           // # PHENOTYPES.
           $file_traitname = $data[ $col_index['Trait Name'] ];
@@ -936,7 +938,7 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
             array('dataset' => 'cvtermid')
           );
 
-          if (!$trait_property) {
+          if (is_null($trait_property)) {
             $tripal_error_message = 'CODE:104 Trait name is not recognized by this system.';
             ap_echo_tripaljob_error($job_id, $file_traitname, $tripal_error_message);
 

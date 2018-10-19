@@ -359,10 +359,10 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
     $data_file = file_load($data_file);
     $file = drupal_realpath($data_file->uri);
     $handle = fopen($file, 'r');
-    
+
     // Open the file and read the trait column header.
     // For each trait, the user has to describe before proceeding.
-    
+
     if ($handle) {
       // Extract the headers column and extract the trait name index that contain
       // all traits to be described.
@@ -370,18 +370,18 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
 
       $expected_columns = ap_create_columnheaders('columns_datatype');
       $trait_name = array_keys($expected_columns)[0];
-          
+
       unset($expected_columns);
-          
+
       // Find the trait nane column from the file.
       $c = str_getcsv($columns_row, "\t");
       $columns = array_map('trim', $c);
       // Column # where the trait name column is.
-      $trait_name_index = array_search($trait_name, $columns);      
+      $trait_name_index = array_search($trait_name, $columns);
 
       // Line counter.
       $i = 0;
-      
+
       // Array to hold each trait to describe.
       $arr_trait_describe = array();
       // Field id prefix.
@@ -390,14 +390,14 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
       while(!feof($handle)) {
         /// Each line.
         $row = fgets($handle);
-        
+
         // Data row.
         if (!empty($row)) {
-          // Individual cell.  
+          // Individual cell.
           $value = str_getcsv($row, "\t");
           // Trait name value in the trait column.
           $trait_name_value = $value[ $trait_name_index ];
-            
+
           if (in_array($trait_name_value, $arr_trait_describe)) {
             // Check if current trait name in array of traits to describe
             // and prevent it from being described more than once.
@@ -418,18 +418,18 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                 'ap_photo_2'  => '',
               ),
             );
-              
+
             // Prepare form fields.
             $ap_fieldset = $main_fieldset . $i;
-            $arr_trait_describe[] = $trait_name_value; 
-              
+            $arr_trait_describe[] = $trait_name_value;
+
             // Match cvterm key.
             // Try to match the trait name with existing name and suggest to user.
-            // Limit the search to genus configuration of genus selected. 
+            // Limit the search to genus configuration of genus selected.
             // Cvterm Id passed on to callback.
             $name = ap_format_traitname($trait_name_value, 'no_unit');
             $traitprop['name'] = $name;
-             
+
             $similar_cvterm = ap_get_cvterm(
               array('keyword' => $name, 'genus' => $project_genus),
               array('dataset' => 'cvtermidname')
@@ -437,13 +437,13 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
 
             // Suggest similar term to user.
             if (count($similar_cvterm) > 0) {
-              
+
               $cvterm_options = array();
               // Create the options.
               foreach($similar_cvterm as $n => $cvterm) {
                 $cvterm_options[ $cvterm['cvterm_id'] ] = $cvterm['name'];
               }
-              
+
               // Select field to let user select matching traits to be reused.
               $form[$ap_fieldset]['ap_similar_trait_select_field' . $i] = array(
                 '#type' => 'select',
@@ -458,11 +458,11 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                   'wrapper' => 'ap-AJAX-wrapper-describeform' . $i,
                   'progress' => array('type' => 'throbber', 'message' => 'Loading trait definition...'),
                 ),
-                 
+
                 '#description' => 'The system has detected a similar trait in the database.
                   It is recommended that you select a trait from the select box that best describes your data.
                   If trait is not listed, please select None of these apply option and use the form below to describe the trait.',
-                  
+
                 '#attributes' => array('class' => array('ap-required')),
                 '#element_validate' => array('analyzedphenotypes_validate_field_select_trait'),
                 '#id' => 'ap-similar-header-select-field' . $i,
@@ -475,7 +475,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               // Load describe form since no match found.
               $describeform_show = 'yes';
             }
-              
+
             // User has picked a trait from suggestions.
             // With cvterm suggestion above, load and set fields default to term properties.
             if (isset($form_state['values']['ap_similar_trait_select_field' . $i])) {
@@ -490,23 +490,23 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                     array('cvterm_id' => $selected_cvterm),
                     array('dataset' => 'fullset')
                   );
-                  
+
                   if ($exists) {
                     $trait_name_value = $exists[0]['name'];
                     $name = ap_format_traitname($trait_name_value, 'no_unit');
-                   
+
                     // Term properties.
                     $traitprop['name']          = $name;
                     $traitprop['cvterm_id']     = $exists[0]['cvterm_id'];
                     $traitprop['definition']    = $exists[0]['definition'];
                     $traitprop['scale']         = '';
                     $traitprop['crop_ontology'] = $exists[0]['crop_ontology'];
-                    // Term photo.  
+                    // Term photo.
                     $traitprop['photos'] = ap_download_cvtermphoto($exists[0]['cvterm_id']);
                   }
                 }
-                  
-                // Choice made, load the form with trait properties default values of fields. 
+
+                // Choice made, load the form with trait properties default values of fields.
                 $describeform_show = 'yes';
               }
               else {
@@ -572,17 +572,17 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                 '#type' => 'item',
                 '#title' => t('&#9660; MAPPING INFORMATION'),
               );
-                
+
               // Text field: Crop ontology.
               // When genus ontology set:
               //   Use the words in the trait name and attempt to match term(s) in the ontology system variable.
               //   When no terms matched, let user search for terms in all ontology terms.
               // When genus ontology not set:
               //  This field should not be available.
-              
+
               // Default to not found.
               $sysvar_genus_ontology = 0;
-              
+
               if (!$disabled) {
                 // When field is enabled. Disabled might mean the field is used to load previously added record.
                 // Fetch ontology settings for this project genus.
@@ -629,7 +629,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                   // Disable the field.
                   $ontology_disable = TRUE;
                 }
-              }                
+              }
 
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_crop_ontology_text_field' . $i] = array(
                 '#title' => 'Crop Ontology',
@@ -638,7 +638,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                 '#default_value' => $traitprop['crop_ontology'],
                 '#description' => t('Type in crop ontology or click one from suggestions below.'),
                 '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/ontology/' . $project_genus,
-                '#attributes' => array('class' => array('ap-crop-ontology', $class)),
+                '#attributes' => array('class' => array('ap-crop-ontology', ap-no-required)),
                 '#id' => drupal_html_id('ap-crop-ontology-text-field' . $i),
               );
 
@@ -648,7 +648,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                   '#markup' => $list . '<br />',
                 );
               }
-                
+
               // Field group title:
               // Photo.
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_group_photo_upload' . $i] = array(
@@ -679,7 +679,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                       '#title' => t('Image ' . $g . ' of 2'),
                       '#name' => 'files[' . $seq . $i . ']',
                       '#description' => t('JPG file type only.'),
-                      '#attributes' => ($g == 1) ? array('class' => array('ap-required')) : array(),
+                      '#attributes' => ($g == 1) ? array('class' => array('ap-no-required')) : array(),
                       '#id' => 'ap-photo-'. $g .'-file-field' . $i,
                     );
                   }
@@ -703,11 +703,11 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                 '#type' => 'item',
                 '#title' => t('&#9660; SUMMARY TABLE'),
               );
-                
+
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_summary_table' . $i] = array(
                 '#type' => 'markup',
               );
-                
+
               $summary_data = ap_create_summarytable($file, $columns, $traitprop['term']);
 
               if ($summary_data) {
@@ -721,7 +721,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                   $min = min($syvalues[$sy]);
                   $avg = array_sum($syvalues[$sy]) / count($syvalues[$sy]);
                   $sdv = ap_calculate_standard_deviation($syvalues[$sy]);
-      
+
                   $table_rows[] = array($sy, $min, $max, round($avg, 2), round($sdv, 2));
                 }
 
@@ -735,17 +735,17 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               }
               ////
             }
-            // end prepare describe fieldset. 
+            // end prepare describe fieldset.
           }
         }
-        
+
         // Next line.
         $i++;
-        /// 
+        ///
       }
-      
+
       fclose($handle);
-      
+
       // Some values generated in this stage are required in the next stage.
       $form['#ap_describe_trait'] = $arr_trait_describe;
       $form_state['multistep_values']['traits'] = $form['#ap_describe_trait'];
@@ -777,7 +777,7 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
       array('variablename' => $project_genus),
       array('set' => 'cvdbon', 'suffix' => 'ontology')
     );
-    
+
     $sysvar_genus_ontology = variable_get($sysvar);
 
     foreach($traits as $i => $trait) {
@@ -833,12 +833,12 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
           // Photo.
           $photo_1 = 'ap_photo_1' . $i;
           $photo_2 = 'ap_photo_2' . $i;
-          
+
           // Save cvterm image.
           ap_upload_cvtermphoto(
             array('cvterm_id' => $cvterm_id, 'photo' => array($photo_1, $photo_2)),
             array('scaleto' => 400)
-          ); 
+          );
         }
       }
 
@@ -850,7 +850,7 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
     $projectprop = ap_get_projectgenus(
       array('project_name' => $project_name)
     );
-    
+
     if (!$projectprop) {
       // No previous genus set for the project, create one.
       // Match (full match) a project name.
@@ -962,7 +962,7 @@ function analyzedphenotypes_file_insert($file) {
           'data_file'     => $data_file,
         )
       );
-      
+
       // Create a new Tripal Job.
       $job_id = ap_create_tripaljob($tripal_dataset);
 
@@ -1012,10 +1012,10 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
       $field_value = $form_state['values'][$field_name];
       if (!empty($field_value)) {
         $project_genus = $form_state['values']['ap_genus_select_field'];
-      
+
         // Check if a trait ontology matched a record.
         $exists = ap_match_ontology($project_genus, $field_value);
-      
+
         if (!$exists) {
           $error = TRUE;
           form_set_error($field_name, t('Crop ontology entered is not recognized. Please enter or select crop ontology.'));
@@ -1035,7 +1035,7 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
          form_set_error($field_name, t('Photo 1 of 2 is not a .jpg file. Please provide a .jpg photo.'));
        }
     }
-    
+
     // Image 2.
     $field_name = str_replace('ap_description_text_field', 'ap_photo_2', $element['#name']);
     $field_value = $_FILES['files']['name'][$field_name];
@@ -1047,7 +1047,7 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
          form_set_error($field_name, t('Photo 2 of 2 is not a .jpg file. Please provide a .jpg photo.'));
        }
     }
-    
+
     if ($error) {
       drupal_add_library('system', 'ui.accordion');
     }
