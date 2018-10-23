@@ -4,12 +4,31 @@
  * @file
  * The main functionality of this module.
  */
-
-
-// AP API.
+ 
+ 
+ 
+// Include system variables API.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.systemvars.api');
+// Include general API and helper functions.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
-// Default Ontology Terms API.
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.defaultontology.api.inc');
+
+// Include Tripal/Chado support API.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.cv.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.genus.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.projects.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.database.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.tripaljob.api');
+
+// Materialized views, data summary.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.materializedview.api');
+
+// Expected, downloadable, header combinationns - column headers.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.columnheaders.api');
+// Field names.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.formfields.api');
+
+// Unit and data types.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.datatype.api');
 // Validators.
 module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.validators');
 
@@ -19,7 +38,9 @@ module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.val
  */
 function analyzedphenotypes_menu() {
   $items = array();
-
+  
+  // DATA SUMMARY:
+  
   // Main menu items for phenotypes: shows a beanplot -select trait and project.
   $items['phenotypes'] = array(
     'title' => 'Phenotypes',
@@ -50,42 +71,63 @@ function analyzedphenotypes_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  // ADMINISTRATIVE PAGES.
+  
   $tripal_extension_ap = 'admin/tripal/extension/analyzedphenotypes';
-
+  
   // Main administrative pages for analyzed phenotypes.
   $items[$tripal_extension_ap] = array(
     'title' => 'Analyzed Phenotypes',
     'description' => 'Provides phenotypic trait pages, charts, upload and download for partially filtered (not raw) phenotypic data.',
     'access arguments' => array('administer tripal'),
   );
+  
+  
+  // CONFIGURATION PAGE:
+  
+  $items[$tripal_extension_ap . '/configuration'] = array(
+    'title' => 'Configuration',
+    'description' => 'Set the controlled vocabularies to be used by this module, as well, as other options to customize it to your data/organism.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('analyzedphenotypes_configuration_form'),
+    'access arguments' => array('administer tripal'),
+    'file' => 'include/analyzedphenotypes.configuration.page.inc',
+    'weight' => 2,
+    'type' => MENU_NORMAL_ITEM,
+  );
+  
+  // FORM IMPLEMENTATIONS:
 
-  // Data Loader.
+
+  // UPLOAD DATA.
   // @todo should this be at admin/tripal/loaders?
   $items[$tripal_extension_ap . '/upload'] = array(
     'title' => 'Upload Phenotypic Data',
     'description' => 'Import a partially filtered (not raw) phenotypic datasets into Chado for display on Trait and Germplasm pages.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('analyzedphenotypes_admin_data_loader'),
+    'page arguments' => array('analyzedphenotypes_uploaddata_form'),
     'access arguments' => array('upload analyzed phenotypes'),
-    'file' => 'include/analyzedphenotypes.admin.form.inc',
+    'file' => 'include/analyzedphenotypes.uploaddata.page.inc',
     'weight' => 1,
     'type' => MENU_NORMAL_ITEM,
   );
 
-  // Settings.
-  $items[$tripal_extension_ap . '/settings'] = array(
-    'title' => 'Configuration',
-    'description' => 'Set the controlled vocabularies to be used by this module, as well, as other options to customize it to your data/organism.',
+  // DOWNLOAD DATA.
+  $items['phenotype/download'] = array(
+    'title' => 'Download Analyzed Phenotypic Data',
+    'description' => 'Download Analyzed Phenotypic Data.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('analyzedphenotypes_admin_settings'),
-    'access arguments' => array('administer tripal'),
-    'file' => 'include/analyzedphenotypes.admin.form.inc',
+    'page arguments' => array('analyzedphenotypes_downloaddata_form'),
+    'access arguments' => array('access administration pages'),
+    'file' => 'include/analyzedphenotypes.downloaddata.page.inc',
     'weight' => 2,
     'type' => MENU_NORMAL_ITEM,
   );
 
+  // MENU CALLBACK:
+  
+  
   // Generate data in JSON object.
+  // Global menu callback used to generate JSON.
   $items[$tripal_extension_ap . '/json/%/%'] = array(
     'page callback' => 'analyzedphenotypes_data_json',
     'page arguments' => array(5, 6),
@@ -95,32 +137,11 @@ function analyzedphenotypes_menu() {
 
   // Generate validation result.
   $items[$tripal_extension_ap . '/validation_result/%/%'] = array(
-    'page callback' => 'analyzedphenotypes_validationresult',
+    'page callback' => 'ap_report_validationresult',
     'page arguments' => array(5, 6),
     'access arguments' => array('upload analyzed phenotypes'),
     'type' => MENU_CALLBACK,
   );
-
-  // Data Downloader.
-  $items['phenotype/download'] = array(
-    'title' => 'Download Analyzed Phenotypic Data',
-    'description' => 'Download Analyzed Phenotypic Data.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('analyzedphenotypes_data_download'),
-    'access arguments' => array('access administration pages'),
-    'file' => 'include/analyzedphenotypes.admin.form.inc',
-    'weight' => 2,
-    'type' => MENU_NORMAL_ITEM,
-  );
-
-    $items['phenotype/download/autofield/%/%/%'] = array(
-      'title' => 'link',
-      'page callback' => 'analyzedphenotypes_autofield_callback',
-      'page arguments' => array(3, 4, 5),
-      'access callback' => TRUE,
-      'type' => MENU_CALLBACK,
-      'delivery callback' => 'ajax_deliver',
-    );
 
   // Tripal Download Implementation.
   $items['phenotype/download/analyzed_phenotypic_data'] = array(
@@ -130,6 +151,7 @@ function analyzedphenotypes_menu() {
     'access arguments' => array('access administration pages'),
     'type' => MENU_CALLBACK,
   );
+
 
   return $items;
 }
@@ -166,35 +188,24 @@ function analyzedphenotypes_permission() {
 function analyzedphenotypes_theme($existing, $type, $theme, $path) {
   $items = array();
 
-  // Administrative settings
-  $items['analyzedphenotypes_admin_settings'] = array(
+  // Form implementations:
+
+  // Configuration form.
+  $items['analyzedphenotypes_configuration_form'] = array(
     'template' => 'analyzedphenotypes_pages',
     'render element' => 'form',
     'path' => $path . '/theme',
   );
 
-  // Administrative page directory
-  $items['analyzedphenotypes_admin_page_directory'] = array(
+  // Data uploader.
+  $items['analyzedphenotypes_uploaddata_form'] = array(
     'template' => 'analyzedphenotypes_pages',
     'render element' => 'form',
-    'path' => $path . '/theme',
-  );
-
-  // Data loader.
-  $items['analyzedphenotypes_admin_data_loader'] = array(
-    'template' => 'analyzedphenotypes_pages',
-    'render element' => 'form',
-    'path' => $path . '/theme',
-  );
-
-  // Report errors generated by validators.
-  $items['analyzedphenotypes_validator_report'] = array(
-    'template' => 'analyzedphenotypes_validators',
     'path' => $path . '/theme',
   );
 
   // Data downloader.
-  $items['analyzedphenotypes_data_download'] = array(
+  $items['analyzedphenotypes_downloaddata_form'] = array(
     'template' => 'analyzedphenotypes_pages',
     'render element' => 'form',
     'path' => $path . '/theme',
@@ -203,6 +214,21 @@ function analyzedphenotypes_theme($existing, $type, $theme, $path) {
   // Form table.
   $items['analyzedphenotypes_form_table'] = array(
     'render element' => 'form',
+  );
+
+  // Module page directory
+  
+  $items['analyzedphenotypes_admin_page_directory'] = array(
+    'template' => 'analyzedphenotypes_pages',
+    'render element' => 'form',
+    'path' => $path . '/theme',
+  );
+
+  // Report errors generated by validators.
+  
+  $items['analyzedphenotypes_validator_report'] = array(
+    'template' => 'analyzedphenotypes_validators',
+    'path' => $path . '/theme',
   );
 
 
@@ -260,21 +286,22 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&
 /**
  * Implements hook_preprocess().
  */
-function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$variables, $hook) {
+function analyzedphenotypes_preprocess_analyzedphenotypes_uploaddata_form(&$variables, $hook) {
   // Default system to not properly set, then prove otherwise.
   $notset = 'not set';
   $allow_new = 0;
 
   // All genus.
-  $genus = analyzedphenotypes_genusprop();
+  $genus = ap_get_genus();
 
   $sysvar_genus_set = 0;
 
   // Test genus cv and db. System only requires a genus to have a cv and db set.
   foreach($genus as $g) {
-    $sysvar_genus = analyzedphenotypes_systemvariables('genus_vars', array(
-      'genus' => $g,
-    ));
+    $sysvar_genus = ap_get_variablenames(
+      array('variablename' => $g),
+      array('set' => 'cvdbon', 'suffix' => 'allsuffix')
+    );
 
     $sysvar_genus_cv = variable_get($sysvar_genus['cv']);
     $sysvar_genus_db = variable_get($sysvar_genus['db']);
@@ -293,7 +320,10 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$va
   }
 
   // Test if terms (location, replicate etc.) were set.
-  $sysvars = analyzedphenotypes_systemvariables('terms');
+  $sysvars = ap_get_variablenames(
+    array('variablename' => 'varset'),
+    array('set' => 'terms')
+  );
 
   foreach($sysvars as $var) {
     $sysvar_term = variable_get($var);
@@ -310,7 +340,10 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$va
 
   // Allow new terms to be upload. Warn admin that the module is set to not allow
   // new trait be uploaded.
-  $sysvars = analyzedphenotypes_systemvariables('options');
+  $sysvars = ap_get_variablenames(
+    array('variablename' => 'varset'),
+    array('set' => 'options')
+  );
 
   foreach($sysvars as $i => $var) {
     $sysvar_options = variable_get($var);
@@ -335,7 +368,6 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_data_loader(&$va
 
   return $variables;
 }
-
 
 
 /**
@@ -401,9 +433,11 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
       //   $key : Keyword enterd in the field.
       $data_JSON = array();
 
-      $projectprop = analyzedphenotypes_projectprop('match_key', array(
-        'project_keyword' => $key,
-      ));
+      // Pattern match projects, return the first 10.
+      $projectprop = ap_match_projectname(
+        array('key' => $key),
+        array('fullmatch' => FALSE, 'limitrows' => 10)
+      );
 
       if ($projectprop) {
         foreach($projectprop as $id => $name) {
@@ -424,9 +458,7 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
       //   $key : null.
       $data_JSON = array();
 
-      $job = analyzedphenotypes_tripaljobprop('get_job', array(
-        'job_id' => $parameter,
-      ));
+      $job = ap_get_tripaljob($parameter);
 
       if ($job) {
         $job_status = strtolower(trim($job['status']));
@@ -438,21 +470,14 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
           $message  = 'Completed';
 
           if ($job['progress'] != $progress) {
-            analyzedphenotypes_tripaljobprop('update_progress', array(
-              'job_id' => $parameter,
-              'progress' => $progress,
-            ));
+            ap_update_tripaljob_progress($parameter, $progress);
           }
         }
         else {
-          // Job not complete. Read progress written by tripaljobprop write_progress function
-          // and convert progress value to JSON for progress bar in
-          // analyzedphenotypes_save_tsv_data() in validators.inc.
-          $tripaljobprop = analyzedphenotypes_tripaljobprop('read_progress', array(
-            'job_id' => $parameter,
-            'source' => 'jobprogress',
-          ));
-
+          // Job not complete. Next percent to pass on to the progress bar.
+          // Percent written by write function called in validators.
+          $tripal_jobprop = ap_read_tripaljob_progress($parameter, 'jobprogress');
+          
           $progress = (empty($tripaljobprop)) ? '...' : trim($tripaljobprop);
           $message = ($progress == '100' || $job['status'] == $job_status)
             ? 'Completed' : $job['status'];
@@ -477,12 +502,22 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
       //   $key : null.
       $data_JSON = array();
 
-      $ontology_suggestions = analyzedphenotypes_cvprop('terms_in_cv', array(
-        'cv_id' => $parameter,
-      ));
+      // Fetch terms in a cv.
+      $ontology_suggestions = ap_get_cvterm(
+        array('keyword' => $key, 'genus' => $parameter),
+        array('dataset' => 'cvtermidname')
+      );
+
+      // Limit the result shown to 10. This will
+      // prevent a long list that will break the layout since
+      // Drupal does not add a scrollbars to drop select when
+      // it is long list.
+      $suggest_limit = 10;
 
       foreach($ontology_suggestions as $i => $term) {
         $data_JSON[ $term['name'] ] = $term['name'];
+        
+        if ($i == $suggest_limit) break;
       }
 
       break;
@@ -497,15 +532,23 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
       //   $page_argument_6 : cv.
       //   $key : Keyword entered in the field.
       $data_JSON = array();
+      
+      // Fetch all terms that match a keyword. No conditions to scope of search.
+      $cvterms = ap_get_cvterm(
+        array('keyword' => $key),
+        array('dataset' => 'namecvname_format')
+      );
+      
+      // Limit the result shown to 10. This will
+      // prevent a long list that will break the layout since
+      // Drupal does not add a scrollbars to drop select when
+      // it is long list.
+      $suggest_limit = 10;
 
-      $cvterms = analyzedphenotypes_cvprop('suggest_term', array(
-        'keyword' => $key,
-      ));
+      foreach($cvterms as $i => $term) {
+        $data_JSON[ $term['namecvname'] ] = $term['namecvname'];
 
-      foreach($cvterms as $term => $cv) {
-        $t = $term . ' (' . $cv . ')';
-
-        $data_JSON[$t] = $t;
+        if ($i == $suggest_limit) break;
       }
 
       break;
@@ -565,9 +608,9 @@ function analyzedphenotypes_register_trpdownload_type() {
     ),
   );
 
+
   return $types;
 }
-
 
 /**
  * Generate a readable and unique filename for the file to be generated.
@@ -575,6 +618,7 @@ function analyzedphenotypes_register_trpdownload_type() {
 function analyzedphenotypes_trpdownload_get_filename($vars) {
   // Filename.
   $filename = 'analyzed_phenotypic_data_download' . date('YMd') .'_'. time();
+
 
   return $filename;
 }
@@ -598,7 +642,7 @@ function analyzedphenotypes_trpdownload_get_readable_format($vars) {
 
   if (!empty($v)) {
     // Field names.
-    $fldname = analyzedphenotypes_fieldnames();
+    $fldname = ap_construct_download_fieldnames();
     $filters = explode('&', $v);
 
     foreach($filters as $i) {
@@ -624,6 +668,7 @@ function analyzedphenotypes_trpdownload_get_readable_format($vars) {
         break;
     }
 
+
     return $format;
   }
 }
@@ -647,7 +692,7 @@ function analyzedphenotypes_trpdownload_get_suffix($vars) {
 
   if (!empty($v)) {
     // Field names.
-    $fldname = analyzedphenotypes_fieldnames();
+    $fldname = ap_construct_download_fieldnames();
     $filters = explode('&', $v);
 
     foreach($filters as $i) {
@@ -658,6 +703,7 @@ function analyzedphenotypes_trpdownload_get_suffix($vars) {
         break;
       }
     }
+
 
     return $file_type;
   }
@@ -715,13 +761,13 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
       // Global/standard field names used in form, submit etc.
       // experiment, genus, species, traits, year, location, germplasmtype,
       // missingdata, filetype, averagerep, rfriendly, columnheaders
-      $fldname = analyzedphenotypes_fieldnames();
+      $fldname = ap_construct_download_fieldnames();
       // File type field name value.
       $file_type = $filter_value[ $fldname['filetype']['base'] ];
 
       // Fetch all valid file types for download.
       // Use the result to ensure that only these registered types are allowed.
-      $d = analyzedphenotypes_datafileprop('download_type');
+      $d = ap_define_datafile_extensions('file_download');
       $download_type = array_keys($d);
 
       if (in_array($file_type, $download_type)) {
@@ -729,7 +775,7 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
 
         // This array will hold datapoints for write-to-file.
         $to_write = array();
-        
+
         // Start by reading the column headers field. This contains the headers
         // programmatically picked and/or selected by user. In addition, this
         // contains the set of columns required as well as the order it appears in file.
@@ -753,9 +799,8 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
             $col = trim($col);
 
             if (!empty($col)) {
-              $column_headers_picked_rfriendly[] = analyzedphenotypes_columnsprop('rfriendly', array(
-                'column_header' => $col,
-              ));
+              $rf = ap_convert_rcolumnheader($col);
+              $column_headers_picked_rfriendly[] = $rf;
             }
           }
 
@@ -769,19 +814,93 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
 
         // Next... the Rows and rows and more rows.
         // Fetch dataset for a given filters.
-        $dataset = analyzedphenotypes_populatefield('file', array(
-          'filters' => $filter_value,
-        ));
+        $filters = $filter_value;
 
-        if ($dataset) {
+        // Match field to actual chado column names.
+        // Limit rows to project, trait, year, location, germplasm type and germplasm.
+        $column = array(
+          $fldname['experiment']['base']    => 'project_id',
+          $fldname['traits']['base']        => 'cvterm_id',
+          $fldname['germplasmtype']['base'] => 't3.type_id',
+          $fldname['year']['base']          => 't7.value',
+          $fldname['location']['base']      => 't8.value',
+          // As entered in the germplasm field.
+          $fldname['germplasm']['base']     => "CONCAT(t3.name, ' (', t3.uniquename, ')')",
+        );
+
+        $limit = array();
+        foreach($column as $filter => $col) {
+          $filter_val = $filters[$filter];
+
+          // Convert filter so chado_query arguments (:placeholder = value).
+          // Exclude filter with value = all.
+          if ($filter_val != 'all') {
+            $placeholder = ':' . $filter;
+
+            $limit['limit'] .= ' AND ' . $col . ' IN (' . $placeholder . ')';
+            $limit['args'][$placeholder] = explode($delimiter, $filter_val);
+          }
+        }
+
+        $sql = sprintf("
+          SELECT
+            t2.project_id, t1.phenotype_id, t2.name AS %s, t3.name AS %s,
+            STRING_AGG(t4.value, '') AS %s, t5.name AS %s, t1.value AS %s, t6.value AS %s,
+            t7.value AS %s, t8.value AS %s, t9.value AS %s
+          FROM
+            {phenotype}                AS t1
+            INNER JOIN {project}       AS t2 USING(project_id)
+            INNER JOIN {stock}         AS t3 USING(stock_id)
+            LEFT  JOIN {stockprop}     AS t4 ON t3.stock_id = t4.stock_id AND t4.type_id = :term_origin
+            INNER JOIN {cvterm}        AS t5 ON t1.attr_id = t5.cvterm_id
+            INNER JOIN {phenotypeprop} AS t6 USING(phenotype_id)
+            INNER JOIN {phenotypeprop} AS t7 USING(phenotype_id)
+            INNER JOIN {phenotypeprop} AS t8 USING(phenotype_id)
+            INNER JOIN {phenotypeprop} AS t9 USING(phenotype_id)
+          WHERE
+            t6.type_id = :term_replicate AND t7.type_id = :term_year
+            AND t8.type_id = :term_location AND t9.type_id = :term_collector
+            %s
+          GROUP BY
+            t2.project_id, t1.phenotype_id, t2.name, t3.name, t5.name, t1.value, t6.value, t7.value, t8.value, t9.value
+          ORDER BY t2.name, t3.name, t7.value, t8.value ASC",
+            $fldname['experiment']['base'],
+            $fldname['germplasm']['base'],
+            $fldname['origin']['base'],
+            $fldname['traits']['base'],
+            $fldname['value']['base'],
+            $fldname['replicate']['base'],
+            $fldname['year']['base'],
+            $fldname['location']['base'],
+            $fldname['collector']['base'],
+            $limit['limit']
+        );
+
+        // Plant property (replicate, year, location, data collector) cvterms;
+        $sysvar = ap_get_variablenames(
+          array('variablename' => 'varset'),
+          array('set' => 'terms')
+        );
+
+        $dataset = chado_query(
+          $sql,
+          $limit['args'] + array(
+            // Plant property terms.
+            ':term_replicate' => variable_get($sysvar['ap_replicate']),
+            ':term_year'      => variable_get($sysvar['ap_year']),
+            ':term_origin'    => variable_get($sysvar['ap_origin']),
+            ':term_location'  => variable_get($sysvar['ap_location']),
+            ':term_collector' => variable_get($sysvar['ap_collector']),
+          )
+        );
+
+        if ($dataset->rowCount()) {
           // Have something to write to file.
 
-          // SQL query uses alias to reference field. Use alias to access piece of data.
-          $field_alias = analyzedphenotypes_columnsprop('column_to_field');
+          $dataset = $dataset->fetchAll();
 
-          // Compose a key to group data points. This grouping can then be used for
-          // average replicate option.
-          $field_keys = array($fldname['experiment']['base'], );
+          // SQL query uses alias to reference field. Use alias to access piece of data.
+          $field_alias = ap_create_columnheaders('columns_downloadable_tofield');
 
           // Begin.
           $column_headers_data = array();
@@ -836,7 +955,7 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
               $to_write['data'][$u_k]['avg'] = $first_item;
             }
           }
-          
+
           // Write to file.
 
           // Start off with the header.
@@ -884,7 +1003,7 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
 
           // CREATE FILE.
           if ($to_file) {
-            analyzedphenotypes_writefile($filename, $to_file, $file_type);
+            analyzedphenotypes_trpdownload_writefile($filename, $to_file, $file_type);
           }
         }
         else {
@@ -898,5 +1017,53 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
       }
     //
     }
+  }
+}
+
+/**
+ * FUNCTION GENERATE FILE.
+ * Create a tsv, csv and xlsx file.
+ *
+ * @param $filename
+ *   String, destination filename.
+ * @param $data_rows
+ *   An array containing the headers (index 0) and data points to write to a file.
+ * @param $file_type
+ *   String, indicating the type of file (tsv, csv, xlsx).
+ */
+function analyzedphenotypes_trpdownload_writefile($filename, $data_rows, $file_type) {
+  $filepath = variable_get('trpdownload_fullpath', '') . $filename;
+
+  switch($file_type) {
+    //
+    case 'tsv':
+    //
+    case 'csv':
+      $FILE = fopen($filepath, 'w') or die ('Unable to create file to write to...');
+
+      foreach($data_rows as $row) {
+        if ($file_type == 'tsv') {
+          fputcsv($FILE, $row, "\t");
+        }
+        else {
+          fputcsv($FILE, $row);
+        }
+      }
+
+      fclose($FILE);
+
+      break;
+
+    //
+    case 'xlsx':
+      // Load spreadsheet writer library.
+      $xlsx_writer = libraries_load('spreadsheet_writer');
+      include_once $xlsx_writer['library path'] . '/'. $xlsx_writer['files'][0];
+
+      $writer = new XLSXWriter();
+      @$writer->writeSheet($data_rows);
+      $writer->writeToFile($filepath);
+
+      break;
   }
 }

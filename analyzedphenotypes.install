@@ -1,15 +1,20 @@
 <?php
-
 /**
  * Implements hook_install().
  */
 
 // Make the API available during install.
 
-// AP API.
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
+
+// System variables.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.systemvars.api');
+
 // Default Ontology Terms API.
-module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.defaultontology.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontology.api');
+
+// Materialized View API.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.materializedview.api');
+
 
 /**
  * Implements hook_enable().
@@ -28,79 +33,9 @@ function analyzedphenotypes_enable() {
   }
 
   // Add a materialized view to calculate the mean for quantitative data.
-  $query = "
-      SELECT
-        o.genus as organism_genus,
-        trait.cvterm_id as trait_id,
-        trait.name as trait_name,
-        proj.project_id as project_id,
-        proj.name as project_name,
-        loc.value as location,
-        yr.value as year,
-        s.stock_id as germplasm_id,
-        s.name as germplasm_name,
-        avg( CAST(p.value as FLOAT) ) as mean
-      FROM {phenotype} p
-      LEFT JOIN {cvterm} trait ON trait.cvterm_id=p.attr_id
-      LEFT JOIN {project} proj USING(project_id)
-      LEFT JOIN {stock} s USING(stock_id)
-      LEFT JOIN {organism} o ON o.organism_id=s.organism_id
-      LEFT JOIN {phenotypeprop} loc ON loc.phenotype_id=p.phenotype_id AND loc.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE name='Location')
-      LEFT JOIN {phenotypeprop} yr ON yr.phenotype_id=p.phenotype_id AND yr.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE name='Year')
-      GROUP BY trait.cvterm_id, trait.name, proj.project_id, proj.name, loc.value, yr.value, s.stock_id, s.name, o.genus";
-  $schema = array(
-    'description' => 'Caches phenotypic data for easier retrieval of means. Data replicates are combined.',
-    'table' => 'mview_phenotype',
-    'fields' => array (
-      'organism_genus' => array (
-        'type' => 'varchar',
-        'length' => '255',
-        'not null' => TRUE,
-      ),
-      'trait_id' => array (
-        'size' => 'big',
-        'type' => 'int',
-        'not null' => TRUE,
-      ),
-      'trait_name' => array (
-        'type' => 'varchar',
-        'length' => '255',
-        'not null' => TRUE,
-      ),
-      'experiment_id' => array (
-        'size' => 'big',
-        'type' => 'int',
-        'not null' => TRUE,
-      ),
-      'experiment_name' => array (
-        'type' => 'text',
-        'not null' => TRUE,
-      ),
-      'location' => array (
-        'type' => 'text',
-        'not null' => TRUE,
-      ),
-      'year' => array (
-        'type' => 'text',
-        'not null' => TRUE,
-      ),
-      'stock_id' => array (
-        'size' => 'big',
-        'type' => 'int',
-        'not null' => TRUE,
-      ),
-      'stock_name' => array (
-        'type' => 'varchar',
-        'length' => '255',
-        'not null' => TRUE,
-      ),
-      'mean' => array(
-        'type' => 'float',
-      ),
-    ),
-    'indexes' => array(),
-  );
-  tripal_add_mview($schema['table'], 'analyzedphenotypes', $schema, $query, $schema['description'], FALSE);
+  $mviewquery = ap_construct_mview_phenotypesummary_query();
+  $mviewschema = ap_construct_mview_phenotypesummary_schema();
+  tripal_add_mview($mviewschema['table'], 'analyzedphenotypes', $mviewschema, $mviewquery, $mviewschema['description'], FALSE);
 
   // Add a summary materialized view.
   $query = "
@@ -175,13 +110,14 @@ function analyzedphenotypes_enable() {
   // Initialize Variables:
   // Load default ontology terms for method, location, replicate, collector, genus, related and year
   // in AP configuration page.
-  $default_ontology = analyzedphenotypes_defaultontologyload();
+  $default_ontology = ap_load_defaultontology();
 
-  // System variable for all controlled vocabulary terms.
-  $system_vars = analyzedphenotypes_systemvariables('terms');
+  // All system variables, groupped by options, cvdbon and terms.
+  $sysvars = ap_construct_variablenames();
 
   // Set default.
-  foreach($system_vars as $v => $var) {
+  // Terms.
+  foreach($sysvars['terms'] as $v => $var) {
     // Set the variable to default ontology term.
     // base terms: location, replicate, year ...
     $v = trim(str_replace('ap_', '', $v));
@@ -191,20 +127,21 @@ function analyzedphenotypes_enable() {
 
   // Other system variables.
   // Genus - cv, db and ontology.
-  unset($system_vars);
-  $system_vars = analyzedphenotypes_systemvariables('cvdbon');
-
-  foreach($system_vars as $v => $var) {
+  foreach($sysvars['cvdbon'] as $v => $var) {
     foreach($var as $h) {
       variable_set($h, 'not set');
     }
   }
 
   // Allow new traits.
-  unset($system_vars);
-  $system_vars = analyzedphenotypes_systemvariables('options');
-  foreach($system_vars as $v => $var) {
+  // Default to allow new traits to be added.
+  foreach($sysvars['options'] as $v => $var) {
     variable_set($var, 1);
+  }
+  
+  $directories = ap_construct_datafile_destinationpath();
+  foreach($directories as $dir) {
+    file_prepare_directory($dir, FILE_CREATE_DIRECTORY);
   }
 }
 
@@ -213,24 +150,55 @@ function analyzedphenotypes_enable() {
  * Implements hook_uninstall().
  */
 function analyzedphenotypes_uninstall() {
-  $vars = analyzedphenotypes_systemvariables();
-
-  foreach($vars as $i => $v) {
-    if (is_array($v)) {
-      foreach($v as $j => $k) {
-        variable_del($k);
+  $sysvars = ap_construct_variablenames();
+  
+  foreach($sysvars as $i => $vars) {
+    foreach($vars as $var_name) {
+      if ($i == 'cvdbon') {
+        foreach($var_name as $cvdbon => $var_name2) {
+          variable_del($var_name2);
+        }
+      }
+      else {
+        variable_del($var_name);
       }
     }
-    else {
-      variable_del($v);
-    }
   }
-
-  foreach(array('mview_phenotype', 'mview_phenotype_summary') as $mview) {
+  
+  $mviews = array('mview_phenotype', 'mview_phenotype_summary');
+  foreach($mviews as $mview) {
     $mview_id = tripal_get_mview_id($mview);
 
     if (isset($mview_id) && $mview_id > 0) {
       tripal_delete_mview($mview_id);
     }
   }
+}
+
+
+/**
+ * Implements hook_requirements().
+ */
+function analyzedpenotypes_requirements($phase) {
+  $requirements = array();
+  
+  if ($phase == 'install') {
+    $directories = ap_construct_datafile_destinationpath();
+    
+    foreach($directories as $dir) {
+      $dir_exists = file_prepare_directory($dir);
+      
+      if (!$dir_exists) {
+        $requirements['file_directory' . $dir] = array(
+          'severity' => REQUIREMENT_ERROR,
+          'description' => $t('File directory !dir is not writable. Please update directory permission and try again.',
+            array('!dir' => $dir)
+          )
+        );
+      }
+    }
+  }
+  
+  
+  return $requirements;
 }

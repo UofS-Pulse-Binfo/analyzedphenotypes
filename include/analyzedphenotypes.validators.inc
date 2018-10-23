@@ -5,6 +5,8 @@
  * These functions are currently used when new data is being uploaded.
  */
 
+
+
 /**
  * VALIDATOR DEFINITIONS
  * List of validators performed to user data file.
@@ -69,8 +71,12 @@ function analyzedphenotypes_ap_validators($all_scope = NULL) {
   );
 
   // Optional, only when allow new trait is set to not allow.
-  $vars = analyzedphenotypes_systemvariables('options');
-  $allow_new = variable_get($vars['ap_allownew']);
+  $sysvars = ap_get_variablenames(
+    array('variablename' => 'varset'),
+    array('set' => 'options')
+  );
+
+  $allow_new = variable_get($sysvars['ap_allownew']);
 
   if (!$allow_new) {
     $validators['FILE_allow_new'] = array(
@@ -81,11 +87,6 @@ function analyzedphenotypes_ap_validators($all_scope = NULL) {
       'error message' => 'The system has detected new traits in your file, and this module is set to not allow new traits to be added. Please contact the administrator of this website.',
     );
   }
-
-
-
-  ///////
-
 
 
   // VALUE.
@@ -107,7 +108,9 @@ function analyzedphenotypes_ap_validators($all_scope = NULL) {
     'error message' => 'A value does not match the data type expected in items: @replace',
   );
 
-  $e = analyzedphenotypes_columnsprop();
+  // Fetch expected column headers and data type for each.
+  $e = ap_create_columnheaders('columns_datatype');
+
   $expected_columns = array_keys($e);
   $trait_name = $expected_columns[6];
 
@@ -134,7 +137,7 @@ function analyzedphenotypes_ap_validators($all_scope = NULL) {
     'error message' => 'Germplasm is not recognized by this resource in items: @replace Please contact the administrator of this website.',
   );
 
-  $arr_combine_cols = analyzedphenotypes_columnsprop('combination');
+  $arr_combine_cols = ap_create_columnheaders('columns_combination');
 
   $validators['VALUE_unique_combo'] = array(
     'label' => 'Column combination is unique',
@@ -221,7 +224,7 @@ function analyzedphenotypes_validate_tsv_file($dataset) {
  * PROJECT VALIDATOR
  * Perform validation to project/experiment.
  * Default to:
- * Dependencies: analyzedphenotypes_projectprop().
+ * Dependencies: ap_match_projectname().
  *
  * @param String $case
  *  A value representing a validation requested (each case represents a case in the switch implementation):
@@ -248,9 +251,10 @@ function analyzedphenotypes_validator_project($case, $dataset) {
         $status['type'] = 'failed';
       }
       else {
-        $projectprop = analyzedphenotypes_projectprop('match_name', array(
-          'project_name' => $dataset['project_name'],
-        ));
+        $projectprop = ap_match_projectname(
+          array('name' => $dataset['project_name']),
+          array('fullmatch' => TRUE, 'limitrows' => 1)
+        );
 
         if (!$projectprop) {
           $status['type'] = 'failed';
@@ -272,7 +276,7 @@ function analyzedphenotypes_validator_project($case, $dataset) {
  * GENUS VALIDATOR
  * Perform validation to project/experiment genus.
  * Default to:
- * Dependencies: analyzedphenotypes_genusprop().
+ * Dependencies: ap_get_projectgenus().
  *
  * @param String $case
  *  A value representing a validation requested (each case represents a case in the switch implementation):
@@ -299,9 +303,10 @@ function analyzedphenotypes_validator_genus($case, $dataset) {
         $status['type'] = 'failed';
       }
       else {
-        $genusprop = analyzedphenotypes_genusprop('project_genus', array(
-          'project_name' => $dataset['project_name'],
-        ));
+        // Fetch genus of project.
+        $genusprop = ap_get_projectgenus(
+          array('project_name' => $dataset['project_name'])
+        );
 
         if ($genusprop && $dataset['project_genus'] != $genusprop) {
           $status['type'] = 'failed';
@@ -324,7 +329,7 @@ function analyzedphenotypes_validator_genus($case, $dataset) {
  * GENUS VALIDATOR
  * Perform validation to project/experiment genus.
  * Default to:
- * Dependencies: analyzedphenotypes_datafileprop(), analyzedphenotypes_columnsprop(), analyzedphenotypes_cvprop().
+ * Dependencies: analyzedphenotypes_datafileprop(), ap_create_columnheaders(), ap_get_cvterm().
  *
  * @param String $case
  *  A value representing a validation requested (each case represents a case in the switch implementation):
@@ -349,82 +354,110 @@ function analyzedphenotypes_validator_datafile($case, $dataset) {
   switch($case) {
     //
     case 'format':
-      $e = analyzedphenotypes_datafileprop();
+      $e = ap_define_datafile_extensions('file_upload');
       $valid_extension = array_keys($e);
 
       $file_extension = pathinfo($dataset['data_file']->filename, PATHINFO_EXTENSION);
-      $readable = analyzedphenotypes_datafileprop('get_contents', array(
-        'data_file' => $dataset['data_file'],
-      ));
+      $file = drupal_realpath($dataset['data_file']->uri);
+      $handle = fopen($file, 'r');
 
-      if (!in_array($file_extension, $valid_extension) || !$readable) {
+      if (!in_array($file_extension, $valid_extension) || FALSE === $handle) {
         $status['type'] = 'failed';
       }
 
+      fclose($handle);
       break;
 
     //
     case 'columns':
-      $file_columns = analyzedphenotypes_datafileprop('get_columns', array(
-        'data_file' => $dataset['data_file'],
-      ));
-      $columns_noformat  = array_map('analyzedphenotypes_noformat', $file_columns);
+      $file = drupal_realpath($dataset['data_file']->uri);
+      $handle = fopen($file, 'r');
 
+      if ($handle) {
+        while(!feof($handle)) {
+          $columns_row = fgets($handle);
 
-      $columnsprop = analyzedphenotypes_columnsprop();
-      $expected_columns = array_keys($columnsprop);
-      $expected_columns_noformat = array_map('analyzedphenotypes_noformat', $expected_columns);
+          if (!empty($column_row)) {
+            // Extract the first row which is the column headers row.
+            $columns_noformat  = array_map('ap_noformat', $file_columns);
 
-      $missing = array_diff($expected_columns_noformat, $columns_noformat);
+            // Fetch expected column headers and data type for each.
+            $columnsprop = ap_create_columnheaders('columns_datatype');
 
-      if (count($missing) > 0) {
+            $expected_columns = array_keys($columnsprop);
+            $expected_columns_noformat = array_map('ap_noformat', $expected_columns);
+
+            $missing = array_diff($expected_columns_noformat, $columns_noformat);
+
+            if (count($missing) > 0) {
+              $status['type'] = 'failed';
+
+              $missing = array_map('ucwords', $missing);
+              $status['details'] = implode(', ', $missing) . ' in line #1';
+            }
+
+            break;
+          }
+        }
+      }
+      else {
         $status['type'] = 'failed';
-
-        $missing = array_map('ucwords', $missing);
-        $status['details'] = implode(', ', $missing) . ' in line #1';
+        $status['details'] = 'Column headers not found in line #1';
       }
 
+      fclose($handle);
       break;
 
     //
     case 'allow_new':
-      $file_content = analyzedphenotypes_datafileprop('get_contents', array(
-        'data_file' => $dataset['data_file'],
-      ));
+      $file = drupal_realpath($dataset['data_file']->uri);
+      $handle = fopen($file, 'r');
 
-      if ($file_content) {
-        $columnsprop = analyzedphenotypes_columnsprop();
+      if ($handle) {
+        // Fetch expected column headers and data type for each.
+        $columnsprop = ap_create_columnheaders('columns_datatype');
+
         $expected_columns = array_keys($columnsprop);
-
         $trait_name = $expected_columns[0];
-        unset($expected_columns);
 
-        $rows = explode("\n", $file_content);
-        unset($file_content);
-
-        $columns_row = str_getcsv($rows[0], "\t");
-        unset($rows[0]);
-
-        $trait_name_index = array_search($trait_name, $columns_row);
         $arr_new_trait = array();
+        $i = 0;
 
-        foreach($rows as $i => $line) {
-          if (!empty($line)) {
-            $data = str_getcsv($line, "\t");
-            $file_traitname_value = $data[$trait_name_index];
+        while(!feof($handle)) {
+          $cur_row = fgets($handle);
+
+          if ($i == 0) {
+            // Extract column headers row.
+            $columns_row = str_getcsv($cur_row, "\t");
+
+            // Index of Trait Name in columns row.
+            $trait_name_index = array_search($trait_name, $columns_row);
+
+            $i = 1;
+          }
+          else {
+            // Data row.
+            $data = str_getcsv($cur_row, "\t");
+            $file_traitname_value = $data[ $trait_name_index ];
 
             if (in_array($file_traitname_value, $arr_new_trait)) {
               continue;
             }
             else {
-              $exists = analyzedphenotypes_cvprop('get_cvterm', array(
-                'name' => $file_traitname_value,
-                'genus' => $dataset['project_genus'],
-              ));
+              // Fetch term name, limit search to genus configuration of project genus.
+              $exists = ap_get_cvterm(
+                array('name' => $file_traitname_value, 'genus' => $dataset['project_genus']),
+                array('dataset' => 'cvtermid')
+              );
 
               if (empty($exists)) {
+                // Found new trait, takes only a condition to satisfy that
+                // this file could not be process any further because it
+                // contains a new trait and settings disallows new traits to
+                // be added.
                 $status['type'] = 'failed';
 
+                fclose($handle);
                 break;
               }
               else {
@@ -444,13 +477,6 @@ function analyzedphenotypes_validator_datafile($case, $dataset) {
 
   return $status;
 }
-
-
-
-
-///////
-
-
 
 
 /**
@@ -475,16 +501,20 @@ function analyzedphenotypes_validator_datafile($case, $dataset) {
 function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
   $dataset = unserialize($dataset);
 
-  $data_file = file_load($dataset['data_file']);
-  $file_contents = analyzedphenotypes_datafileprop('get_contents', array(
-    'data_file' => $data_file,
-  ));
+  $datafile = file_load($dataset['data_file']);
 
-  if ($file_contents) {
+  $file = drupal_realpath($datafile->uri);
+
+  // Estimate number of rows in a file.
+  $row_count = intval(exec("grep -cv '^$' '$file'"));
+
+  $handle = fopen($file, 'r');
+
+  if ($handle) {
     $arr_status = array();
 
-    // Get module settings.
-    $tripaljob_settings = analyzedphenotypes_tripaljobprop();
+    // Tripal Job module settings.
+    $tripaljob_settings = ap_configure_tripaljob();
     $error_counter = 0;
 
     print '0% Complete...' . "\n";
@@ -507,54 +537,100 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
       }
     }
 
-    // Rows.
-    $rows = explode("\n", $file_contents);
-    unset($file_contents);
-    $rows_count = count($rows);
-
-    // Columns.
-    $columns_row = $rows[0];
-    unset($rows[0]);
-
-    $c = str_getcsv($columns_row, "\t");
-    $columns = array_map('trim', $c);
-
-    $e = analyzedphenotypes_columnsprop();
+    // Column headers.
+    // Fetch expected column headers and data type for each.
+    $e = ap_create_columnheaders('columns_datatype');
     $expected_columns = array_keys($e);
 
-    $trait_name_index = array_search($expected_columns[0], $columns);
+    $percent = 0;
 
-    $prev_percent = 0;
-    $line_number = 1;
+    // Begin validation of values.
+    $i = 0;
+    while (!feof($handle)) {
+      // A line.
+      $cur_row = fgets($handle);
+      // Line broken down to individual cell.
+      $cells = str_getcsv($cur_row, "\t");
+      // Dropped leading and trailing spaces.
+      $data_values = array_map(trim, $cells);
 
-    // BEGIN TRIPAL VALIDATION.
-    foreach($rows as $i => $line) {
-      if (empty($line)) {
-        continue;
+      // 1. Columns Headers
+      // 2. Data
+
+      if ($i == 0) {
+        // Extract column headers.
+        $columns_row = $data_values;
+
+        // Index of Trait Name in columns row.
+        $trait_name_index = array_search($expected_columns[0], $columns_row);
+        $i = 1;
       }
       else {
-        $line_number ++;
-      }
-
-      $d = str_getcsv($line, "\t");
-      $data = array_map('trim', $d);
-
-      $trait_name = $data[$trait_name_index];
-
-      foreach($validator as $key => $item) {
-        $case = $item['case'];
-        $callback = $item['validation callback'];
-        $columns_required = $item['columns required'];
-
-        if ($arr_status[$key]['type'] != 'failed') {
-          $arr_status[$key]['type'] = 'passed';
+        // Data row.
+        if (empty($cur_row)) {
+          continue;
+        }
+        else {
+          $i++;
         }
 
-        if (empty($columns_required)) {
-          // Apply to all.
-          foreach($data as $j => $value) {
-            $value = trim($value, '"');
-            $result = call_user_func($callback, $case, $value, $columns[$j], $line_number, $trait_name);
+        // Remove leading and trailing whitespaces.
+        $data = $data_values;
+        // For a row, extract the trait.
+        $trait_name = $data[ $trait_name_index ];
+
+        // Execute applicable validators.
+        foreach($validator as $key => $item) {
+          $case = $item['case'];
+          $callback = $item['validation callback'];
+          $columns_required = $item['columns required'];
+
+          // Start positive and prove it otherwise.
+          if ($arr_status[$key]['type'] != 'failed') {
+            $arr_status[$key]['type'] = 'passed';
+          }
+
+          // Inspect validator apply-to-columns requirements.
+          // - When none is supplied, validator should be applied to each column
+          // - When an array is supplied, validator should be applied to a column but
+          // take into account these column combination.
+          // - When a single column is provided, apply to that column only.
+
+          if (empty($columns_required)) {
+            // Apply to all.
+            foreach($data as $j => $value) {
+              $value = trim($value, '"');
+              $result = call_user_func($callback, $case, $value, $columns_row[$j], $i, $trait_name);
+
+              if ($result['type'] == 'failed') {
+                if ($arr_status[$key]['type'] == 'passed') {
+                  $arr_status[$key]['type'] = 'failed';
+                }
+
+                // Group items that caused error and apply a single error message.
+                $arr_status[$key]['details'] .= $result['details'] . ', ';
+
+                $error_counter++;
+              }
+            }
+          }
+          else {
+            if (is_array($columns_required)) {
+              // A combination.
+              $value = array();
+              foreach($columns_required as $v) {
+                $j = array_search($v, $columns_row);
+                $value[$v] = trim($data[$j], '"');
+              }
+            }
+            else {
+              // A specific column,
+              $j = array_search($columns_required, $columns_row);
+              $value = trim($data[$j], '"');
+            }
+
+
+            $result = call_user_func($callback, $case, $value, $columns_required, $i, $trait_name);
 
             if ($result['type'] == 'failed') {
               if ($arr_status[$key]['type'] == 'passed') {
@@ -563,75 +639,46 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
 
               // Group details.
               $arr_status[$key]['details'] .= $result['details'] . ', ';
-
               $error_counter++;
             }
+
+          }
+
+          // End validator foreach.
+        }
+
+        if ($error_counter >= $tripaljob_settings['TRIPALJOB_error_limit']) {
+          // Stop validation when number of error limit (set in the config)
+          print 'Error limit reached. Job terminated.' . "\n";
+          break;
+        }
+
+        $percent = round((($i + 1) / $row_count) * 100);
+
+        if ($percent % $tripaljob_settings['TRIPALJOB_report_frequency'] == 0) {
+          // Report ever x number of times to terminal (set in the config)
+          if ($percent != $prev_percent) {
+            print $percent . '% Complete...' . "\n";
+            $prev_percent = $percent;
           }
         }
-        else {
-          if (is_array($columns_required)) {
-            // Column combination.
-            $value = array();
-            foreach($columns_required as $v) {
-              $j = array_search($v, $columns);
-              $value[$v] = trim($data[$j], '"');
-            }
-          }
-          else {
-            // Specific column,
-            $j = array_search($columns_required, $columns);
-            $value = trim($data[$j], '"');
-          }
 
-          $result = call_user_func($callback, $case, $value, $columns_required, $line_number, $trait_name);
+        // Write progress to temp file which in turn be used
+        // by JS to update progress bar.
+        ap_write_tripaljob_progress($job_id, 'jobprogress', $percent);
 
-          if ($result['type'] == 'failed') {
-            if ($arr_status[$key]['type'] == 'passed') {
-              $arr_status[$key]['type'] = 'failed';
-            }
-
-            // Group details.
-            $arr_status[$key]['details'] .= $result['details'] . ', ';
-
-            $error_counter++;
-          }
-        }
+        // End else data row.
       }
-
-
-      if ($error_counter >= $tripaljob_settings['error_limit']) {
-        print 'Error limit reached. Job terminated.' . "\n";
-        break;
-      }
-
-      //
-      $percent = round((($i + 1) / $rows_count) * 100);
-
-      if ($percent % $tripaljob_settings['report_frequency'] == 0) {
-        if ($percent != $prev_percent) {
-          print $percent . '% Complete...' . "\n";
-          $prev_percent = $percent;
-        }
-      }
-
-      analyzedphenotypes_tripaljobprop('write_progress', array(
-        'job_id' => $job_id,
-        'source' => 'jobprogress',
-        'progress' => $percent,
-      ));
+      // End while.
     }
 
-
+    // Report validation overall result.
     $status_JSON = json_encode($arr_status);
-    analyzedphenotypes_tripaljobprop('write_progress', array(
-      'job_id' => $job_id,
-      'source' => 'validateresult',
-      'progress' => $status_JSON,
-    ));
+    ap_write_tripaljob_progress($job_id, $status_JSON, 'validateresult');
 
     print '100% Complete...' . "\n";
 
-  ///
+    // End if $handle.
   }
 }
 
@@ -640,7 +687,7 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
  * DATA FILE VALUE VALIDATOR
  * Perform validation to values.
  * Default to:
- * Dependencies: analyzedphenotypes_columnsprop(), analyzedphenotypes_datatypeprop(), analyzedphenotypes_stockprop().
+ * Dependencies: ap_create_columnheaders(), ap_validate_unitvalue(), analyzedphenotypes_stockprop().
  *
  * @param String $case
  *  A value representing a validation requested (each case represents a case in the switch implementation):
@@ -682,14 +729,17 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
     case 'match_type':
       if (!empty($value)) {
         // Check if the data in a column match the data type required.
-        $required_columns = analyzedphenotypes_columnsprop();
+
+        // Fetch expected column headers and data type for each.
+        $required_columns = ap_create_columnheaders('columns_datatype');
+
         $column_data_type = $required_columns[$column];
         $column_names = array_keys($required_columns);
 
         if (!empty($column_data_type) && $column_names[$column] != $column_names[6]) {
-          $coltype_value_check = analyzedphenotypes_datatypeprop($column_data_type, array(
-            'value' => $value,
-          ));
+
+          // Check if value matches the unit.
+          $coltype_value_check = ap_validate_unitvalue($column_data_type, $value);
 
           if (!$coltype_value_check) {
             $status['type'] = 'failed';
@@ -703,16 +753,14 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
     //
     case 'unit_data':
       if (!empty($value)) {
-        $unit = analyzedphenotypes_traitprop('unit', array(
-          'trait_name' => $trait_name,
-        ));
+        $unit = ap_format_traitname($trait_name, 'trait_unit');
 
-        $unit_type = analyzedphenotypes_datatypeprop('unit_type');
+        // Fetch unit properties.
+        $unit_type = ap_define_datatypes();
         $trait_unit_datatype = $unit_type[$unit]['type'];
 
-        $trait_value_check = analyzedphenotypes_datatypeprop($trait_unit_datatype, array(
-          'value' => $value,
-        ));
+        // Check value matches unit.
+        $trait_value_check = ap_validate_unitvalue($trait_unit_datatype, $value);
 
         if (!$trait_value_check) {
           $status['type'] = 'failed';
@@ -725,13 +773,11 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
     //
     case 'germplasm_recognized':
       if ($value) {
-        $e = analyzedphenotypes_columnsprop();
+        // Fetch expected column headers and data type for each.
+        $e = ap_create_columnheaders('columns_datatype');
         $expected_columns = array_keys($e);
 
-        $stock_id_check = analyzedphenotypes_stockprop('match_name', array(
-          'name' => $value[$expected_columns[2]],
-          'uniquename' => $value[$expected_columns[1]],
-        ));
+        $stock_id_check = ap_match_germplasm($value[ $expected_columns[2] ], $value[ $expected_columns[1] ]);
 
         if (!$stock_id_check) {
           $status['type'] = 'failed';
@@ -744,9 +790,8 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
     //
     case 'unique_combo':
       if ($value) {
-        $match = analyzedphenotypes_columnsprop('match_combination', array(
-          'combination' => $value,
-        ));
+        // Fetch column headers combination required in checking if row was unique.
+        $match = ap_match_columncombination($value);
 
         if ($match) {
           $status['type'] = 'failed';
@@ -769,7 +814,7 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
  * SAVE ANALYZED PHENOTYPES.
  * Save project, genus and analyzed phenotypic data.
  * Default to:
- * Dependencies: analyzedphenotypes_tripaljobpro(), analyzedphenotypes_projectprop(), analyzedphenotypes_systemvariables().
+ * Dependencies: analyzedphenotypes_tripaljobpro(), ap_match_projectname(), ap_get_variablenames().
  *
  * @param Array $dataset
  *  An associative array containing user provide values:
@@ -788,240 +833,229 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
   $trait_cvterm = $dataset['trait_cvterm'];
 
   // # PROJECT.
-  $projectprop = analyzedphenotypes_projectprop('match_name', array(
-    'project_name' => $dataset['project_name'],
-  ));
+  $projectprop = ap_match_projectname(
+    array('name' => $dataset['project_name']),
+    array('fullmatch' => TRUE, 'limitrows' => 1)
+  );
 
   $project_id = ($projectprop) ? $projectprop['project_id'] : 0;
 
   if (!$project_id) {
-    analyzedphenotypes_tripaljobprop('tripal_fail', array(
-      'message' => 'CODE:100 Experiment or project is not recognized by this system.',
-      'param' => $dataset['project_name'],
-      'job_id' => $job_id,
-    ));
+    $tripal_error_message = 'CODE:100 Experiment or project is not recognized by this system.';
+    ap_echo_tripaljob_error($job_id, $dataset['project_name'], $tripal_error_message);
 
     exit(1);
   }
 
   // # GENUS.
   $genus = $dataset['project_genus'];
-  $genusprop = analyzedphenotypes_genusprop();
+  $genusprop = ap_get_genus();
 
   if (!$genus || array_search($genus, $genusprop) === FALSE) {
-    analyzedphenotypes_tripaljobprop('tripal_fail', array(
-      'message' => 'CODE:101 Experiment or project genus is not recognized by this system.',
-      'param' => $genus,
-      'job_id' => $job_id,
-    ));
+    // See if genus exists.
+    $tripal_error_message = 'CODE:101 Experiment or project genus is not recognized by this system.';
+    ap_echo_tripaljob_error($job_id, $genus, $tripal_error_message);
 
     exit(2);
   }
 
   // # FILE.
   $data_file = file_load($dataset['data_file']);
+  $file = drupal_realpath($data_file->uri);
 
-  if (!$data_file) {
-    analyzedphenotypes_tripaljobprop('tripal_fail', array(
-      'message' => 'CODE:102 Unable to read or open data file.',
-      'param' => 'FID#' . $dataset['data_file'],
-      'job_id' => $job_id,
-    ));
+  if (!$data_file || !file_exists($file)) {
+    $tripal_error_message = 'CODE:102 Unable to read or open data file.';
+    $issue = 'FID#' . $dataset['data_file'];
+    ap_echo_tripaljob_error($job_id, $issue, $tripal_error_message);
 
     exit(3);
   }
 
-  $file_contents = analyzedphenotypes_datafileprop('get_contents', array(
-    'data_file' => $data_file,
-  ));
-
-  if (empty($file_contents)) {
-    analyzedphenotypes_tripaljobprop('tripal_fail', array(
-      'message' => 'CODE:103 File is empty.',
-      'param' => $data_file->uri,
-      'job_id' => $job_id,
-    ));
-
-    exit(4);
-  }
+  $handle = fopen($file, 'r');
 
   // # DATA
-  $tripaljob_settings = analyzedphenotypes_tripaljobprop();
+  if ($handle) {
+    $tripaljob_settings = ap_configure_tripaljob();
 
-  $rows = explode("\n", $file_contents);
-  $columns = str_getcsv($rows[0], "\t");
-  unset($file_contents, $rows[0]);
-  // Excluding columns row.
-  $row_count = count($rows);
+    // All term configurations.
+    $sysvars = ap_get_variablenames(
+      array('variablename' => 'varset'),
+      array('set' => 'terms')
+    );
 
-  $col_index = array();
-  $columnsprop = analyzedphenotypes_columnsprop();
-  foreach($columnsprop as $col => $t) {
-    $j = array_search($col, $columns);
-    $col_index[$col] = $j;
-  }
-  unset($columnsprop);
+    // Assay id : method/taken by eye.
+    $sysvar_method = variable_get($sysvars['ap_method']);
 
-  $sysvars = analyzedphenotypes_systemvariables('terms');
-  // Assay id : method/taken by eye.
-  $sysvar_method = variable_get($sysvars['ap_method']);
+    $plantprop = array();
+    $plantprop['Year'] = variable_get($sysvars['ap_year']);
+    $plantprop['Location'] = variable_get($sysvars['ap_location']);
+    $plantprop['Replicate'] = variable_get($sysvars['ap_replicate']);
+    $plantprop['Data Collector'] = variable_get($sysvars['ap_collector']);
+    unset($sysvars);
 
-  $plantprop = array();
-  $plantprop['Year'] = variable_get($sysvars['ap_year']);
-  $plantprop['Location'] = variable_get($sysvars['ap_location']);
-  $plantprop['Replicate'] = variable_get($sysvars['ap_replicate']);
-  $plantprop['Data Collector'] = variable_get($sysvars['ap_collector']);
-  unset($sysvars);
+    print '0% Complete...' . "\n";
 
-  print '0% Complete...' . "\n";
+    // Estimate number of rows in a file.
+    $row_count = intval(exec("grep -cv '^$' '$file'"));
 
-  // # DB TRANSACTION.
-  $TRANSACTION = db_transaction();
+    // # DB TRANSACTION.
+    $TRANSACTION = db_transaction();
 
-  try {
-    // BEGIN TRANSACTION:
-    foreach($rows as $i => $line) {
-      if (!empty($line)) {
-        $data = str_getcsv($line, "\t");
+    try {
+      // BEGIN TRANSACTION:
+      $i = 0;
 
-        // ## PHENOTYPES.
-        $file_traitname = $data[$col_index['Trait Name']];
-        // cvterm_id used by this trait name from trait to cvterm_id in previous stage.
-        $cvterm_id = $trait_cvterm[$file_traitname];
+      while(!feof($handle)) {
+        $row = fgets($handle);
+        $data = str_getcsv($row, "\t");
 
-        $trait_property = analyzedphenotypes_cvprop('get_cvterm', array(
-          'cvterm_id' => $cvterm_id,
-        ));
+        if (!empty($row) && $i == 0) {
+          // Extract the first row which is the column headers row.
+          $columns = $data;
+          $col_index = array();
+          // Fetch expected column headers and data type for each.
+          $columnsprop = ap_create_columnheaders('columns_datatype');
 
-        if (!$trait_property) {
-          analyzedphenotypes_tripaljobprop('tripal_fail', array(
-            'message' => 'CODE:104 Trait name is not recognized by this system.',
-            'param' => $file_traitname,
-            'job_id' => $job_id,
-          ));
-
-          exit(31);
-        }
-
-        $file_germplasm_accession = $data[$col_index['Germplasm Accession']];
-        $file_germplasm_name = $data[$col_index['Germplasm Name']];
-
-        $stock_id = analyzedphenotypes_stockprop('match_name', array(
-          'name' => $file_germplasm_name,
-          'uniquename' => $file_germplasm_accession,
-        ));
-
-        if (!$stock_id) {
-          analyzedphenotypes_tripaljobprop('tripal_fail', array(
-            'message' => 'CODE:105 Stock/Germplasm name is not recognized by this system.',
-            'param' => $file_germplasm_name . ':' . $file_germplasm_accession,
-            'job_id' => $job_id,
-          ));
-
-          exit(32);
-        }
-
-        $trait_id = $trait_property['cvterm_id'];
-
-        $file_year = $data[$col_index['Year']];
-        $file_location = $data[$col_index['Location']];
-        $file_replicate = $data[$col_index['Replicate']];
-
-        $uniquename = str_replace(array(' ', ','), '', implode('_', array(
-          $trait_id, $project_id, $stock_id, $file_location, $file_year, $file_replicate, date('c'), $i
-        )));
-
-        $file_value = $data[$col_index['Value']];
-
-        $phenotype_data = array(
-          'uniquename'    => $uniquename,
-          'observable_id' => null,
-          'attr_id'       => $trait_id,
-          'value'         => $file_value,
-          'cvalue_id'     => null,
-          'assay_id'      => $method,
-          'project_id'    => $project_id,
-          'stock_id'      => $stock_id,
-        );
-
-        $phenotype_insert = db_insert('chado.phenotype')
-         ->fields($phenotype_data)
-         ->execute();
-
-        if ($phenotype_insert) {
-          $phenotype_id = $phenotype_insert;
-
-          foreach($plantprop as $col_title => $var_value) {
-            $file_property_value = $data[$col_index[$col_title]];
-
-            $property_data = array(
-              'phenotype_id' => $phenotype_id,
-              'type_id'   => $var_value,
-              'value'  => $file_property_value,
-              // NOTE: THIS FIELD HAS NOT-NULL CONSTRAINT.
-              'cvalue_id' => 1,
-              'rank' => 0,
-            );
-
-            $property_insert = db_insert('chado.phenotypeprop')
-              ->fields($property_data)
-              ->execute();
-
-            if (!$property_insert) {
-              analyzedphenotypes_tripaljobprop('tripal_fail', array(
-                'message' => 'CODE:107 Unable to insert phenotype property record.',
-                'param' => print_r($property_data),
-                'job_id' => $job_id,
-              ));
-
-              exit(34);
-            }
+          foreach($columnsprop as $col => $t) {
+            $j = array_search($col, $columns);
+            $col_index[$col] = $j;
           }
+
+          unset($columnsprop);
         }
         else {
-          analyzedphenotypes_tripaljobprop('tripal_fail', array(
-            'message' => 'CODE:106 Unable to insert phenotype record.',
-            'param' => print_r($phenotype_data),
-            'job_id' => $job_id,
-          ));
+          if (empty($row)) continue;
 
-          exit(33);
+          // Data rows.
+          // # PHENOTYPES.
+          $file_traitname = $data[ $col_index['Trait Name'] ];
+          // cvterm_id used by this trait name from trait to cvterm_id in previous stage.
+          $cvterm_id = $trait_cvterm[$file_traitname];
+
+          // Test cvterm id number if it matched a record.
+          $trait_property = ap_get_cvterm(
+            array('cvterm_id' => $cvterm_id),
+            array('dataset' => 'cvtermid')
+          );
+
+          if (is_null($trait_property)) {
+            $tripal_error_message = 'CODE:104 Trait name is not recognized by this system.';
+            ap_echo_tripaljob_error($job_id, $file_traitname, $tripal_error_message);
+
+            exit(31);
+          }
+
+          $file_germplasm_accession = $data[ $col_index['Germplasm Accession'] ];
+          $file_germplasm_name = $data[ $col_index['Germplasm Name'] ];
+
+          $stock_id = ap_match_germplasm($file_germplasm_name, $file_germplasm_accession);
+
+          if (!$stock_id) {
+            $tripal_error_message = 'CODE:105 Stock/Germplasm name is not recognized by this system.';
+            $issue = $file_germplasm_name . ':' . $file_germplasm_accession;
+            ap_echo_tripaljob_error($job_id, $issue, $tripal_error_message);
+
+            exit(32);
+          }
+
+          $trait_id = $trait_property[0]['cvterm_id'];
+
+          $file_year = $data[ $col_index['Year'] ];
+          $file_location = $data[ $col_index['Location'] ];
+          $file_replicate = $data[ $col_index['Replicate'] ];
+
+          $uniquename = str_replace(array(' ', ','), '', implode('_', array(
+            $trait_id, $project_id, $stock_id, $file_location, $file_year, $file_replicate, date('c'), $i
+          )));
+
+          $file_value = $data[ $col_index['Value'] ];
+
+          $phenotype_data = array(
+            'uniquename'    => $uniquename,
+            'observable_id' => null,
+            'attr_id'       => $trait_id,
+            'value'         => $file_value,
+            'cvalue_id'     => null,
+            'assay_id'      => $method,
+            'project_id'    => $project_id,
+            'stock_id'      => $stock_id,
+          );
+
+          $phenotype_insert = db_insert('chado.phenotype')
+            ->fields($phenotype_data)
+            ->execute();
+
+          if ($phenotype_insert) {
+            $phenotype_id = $phenotype_insert;
+
+            foreach($plantprop as $col_title => $var_value) {
+              $file_property_value = $data[$col_index[$col_title]];
+
+              $property_data = array(
+                'phenotype_id' => $phenotype_id,
+                'type_id'   => $var_value,
+                'value'  => $file_property_value,
+                // NOTE: THIS FIELD HAS NOT-NULL CONSTRAINT.
+                'cvalue_id' => 1,
+                'rank' => 0,
+              );
+
+              $property_insert = db_insert('chado.phenotypeprop')
+                ->fields($property_data)
+                ->execute();
+
+              if (!$property_insert) {
+                $tripal_error_message = 'CODE:107 Unable to insert phenotype property record.';
+                $issue = $print_r($property_data);
+                ap_echo_tripaljob_error($job_id, $issue, $tripal_error_message);
+
+                exit(34);
+              }
+            }
+          }
+          else {
+            $tripal_job_error = 'CODE:106 Unable to insert phenotype record.';
+            $issue = print_r($phenotype_data);
+            ap_echo_tripaljob_error($job_id, $issue, $tripal_job_error);
+
+            exit(33);
+          }
         }
 
         // Report.
         $percent = round(($i / $row_count) * 100);
 
-        if ($percent % $tripaljob_settings['report_frequency'] == 0) {
+        if ($percent % $tripaljob_settings['TRIPALJOB_report_frequency'] == 0) {
           print $percent . '% Complete...' . "\n";
         }
 
-        analyzedphenotypes_tripaljobprop('write_progress', array(
-          'job_id' => $job_id,
-          'source' => 'jobprogress',
-          'progress' => $percent,
-        ));
+        // Save actual percent completed in the progress bar.
+        ap_write_tripaljob_progress($job_id, 'jobprogress', $percent);
+
+        $i++;
       }
     }
-    // END TRANSACTION:
+    catch(Exception $e) {
+      $TRANSACTION->rollback();
+      watchdog_exception($ap, $e);
+
+      $tripal_error_message = 'CODE:107 Failed to insert records.';
+      ap_echo_tripaljob_error($job_id, 'Tripal Job', $tripal_error_message);
+
+      exit(5);
+    }
   }
-  catch(Exception $e) {
-    $TRANSACTION->rollback();
-    watchdog_exception($ap, $e);
+  else {
+    // Unable to read file.
+    $tripal_error_message = 'CODE:103 File is empty.';
+    ap_echo_tripaljob_error($job_id, $data_file->uri, $tripal_error_message);
 
-    analyzedphenotypes_tripaljobprop('tripal_fail', array(
-      'message' => 'CODE:107 Failed to insert records.',
-      'param' => 'Tripal Job',
-      'job_id' => $job_id,
-    ));
-
-    exit(5);
+    exit(4);
   }
 
   // Make file permanent.
   if ($data_file) {
-    analyzedphenotypes_datafileprop('make_permanent', array(
-      'data_file' => $data_file,
-    ));
+    ap_make_datafile_permanent($data_file);
   }
 
   // Update materialized views.
@@ -1029,13 +1063,4 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
     $mview_id = tripal_get_mview_id($mview);
     if ($mview_id) tripal_populate_mview($mview_id);
   }
-}
-
-
-/**
- * Function callback.
- * Remove text fomatting, leading and trailing spaces and convert to lowercase.
- */
-function analyzedphenotypes_noformat($string) {
-  return strtolower(trim($string));
 }
