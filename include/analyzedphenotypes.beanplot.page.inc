@@ -429,19 +429,19 @@ function analyzedphenotypes_beanplot_json($project_id, $trait_id) {
       WHERE experiment_id=:project_id AND trait_id=:trait_id",
     array(':project_id' => $project_id, 'trait_id' => $trait_id));
   foreach($resource as $r) {
-
-    $index = $r->location . '-' . $r->year . '-' . $r->mean;
+    // Group values such as 4.3, 4.5 and 4.1 to a value 4 to prevent
+    // bars stacking one on top of another due to differrence in decimal values.
+    $mean = strstr($r->mean, '.') ? (float)$r->mean : (int)$r->mean;
+    $index = $r->location . '-' . $r->year . '-' . floor($mean);
 
     // If index is found, increment the number of times it appeard in the dataset.
-    if (isset($results[$index])) {
+    if (in_array($index, array_keys($results))) {
       $results[$index]['no']++;
     }
     // Otherwise initialize the data point.
     else {
-
-      $mean = strstr($r->mean, '.') ? (float)$r->mean : (int)$r->mean;
-
       $results[$index] = array(
+        'index' => $index,
         'location' => $r->location,
         'year' => $r->year,
         'germ' => 0,
