@@ -381,6 +381,11 @@
           }
         })
         .ajaxComplete(function() {
+          // Show R friendly version when option is true.
+          if ($('#ap-rfriendly-field-id').attr('checked')) {
+            $('#ap-table-default-headers em, #ap-table-optional-headers em').css('display', 'block');
+          }
+
           // Enable all form elements after AJAX call.
           formFields.removeAttr('disabled');
           // Exclude the checkboxes in default column headers.

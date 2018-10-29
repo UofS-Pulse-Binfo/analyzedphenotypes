@@ -1150,6 +1150,11 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
           // When all names have been checked, remove extra blank field.
           unset($values_array[$key]);
         }
+        elseif (!in_array($value, $germplasm_found)) {
+          // Before officially adding an element to the DOM, make sure that
+          // a name matches a germplasm in the list of germplasm found.
+          $value = '';
+        }
 
         // Text field.
         $field_textfield['#value'] = $value;

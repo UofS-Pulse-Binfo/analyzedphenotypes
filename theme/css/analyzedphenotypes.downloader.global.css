@@ -60,7 +60,7 @@
 
 
 /* Fieldset 1 */
-#ap-experiment-field-id label {
+.ap-checkboxes-container label, #ap-experiment-field-id label {
   cursor: pointer;
 }
 
