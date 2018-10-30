@@ -558,7 +558,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               // Textarea: Definition/description.
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_description_text_field' . $i] = array(
                 '#type' => 'textarea',
-                '#title' => t('Description'),
+                '#title' => t('Description of Trait Including Collection Method'),
                 '#disabled' => $disabled,
                 '#default_value' => $traitprop['definition'],
                 '#description' => t('Text definition or description of trait.'),
@@ -570,7 +570,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               // Field group title:
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_group_mapping_information' . $i] = array(
                 '#type' => 'item',
-                '#title' => t('&#9660; MAPPING INFORMATION'),
+                '#title' => t('&#9660; RELATED ONTOLOGY TERMS'),
               );
 
               // Text field: Crop ontology.

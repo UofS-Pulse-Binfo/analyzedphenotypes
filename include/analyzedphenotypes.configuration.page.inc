@@ -75,6 +75,13 @@ function analyzedphenotypes_configuration_form($form, &$form_state) {
     return $d['name'];
   }, $dbs);
 
+
+  // Fetch all traits in a cv that have been used in phenotype table
+  // to see if a cv setting has been used or has data already attached to it.
+  // A single row would be enought to satisfy this condition.
+  $sql = "SELECT cvterm_id FROM {cvterm} INNER JOIN {phenotype} ON cvterm_id = attr_id
+    WHERE cv_id = :cv_id LIMIT 1";
+
   // Construct table form field.
   foreach($genus as $i => $g) {
     $fields[ 'ap_field_row_' . $i ] = array();
@@ -103,12 +110,21 @@ function analyzedphenotypes_configuration_form($form, &$form_state) {
           $field_default = $var_value;
         }
 
+        if ($j == 1) {
+          // Inspect if this genus has data attached to it and disable it.
+          $has_data = chado_query($sql, array(':cv_id' => $field_default))
+            ->fetchAll();
+
+          $is_disabled = ($has_data) ? TRUE : FALSE;
+        }
+
         $field_prop = array(
           '#type' => 'select',
           '#title' => '',
           '#options' => array(0 => $var_token[$j][1]) + $field_options,
           '#attributes' => array('class' => array('ap-table-select-field')),
           '#default_value' => $field_default,
+          '#disabled' => $is_disabled,
         );
 
         $field_name = $basename . $genus_key . '_' . $var_token[$j][0];
@@ -177,6 +193,15 @@ function analyzedphenotypes_configuration_form($form, &$form_state) {
       Thus the following configuration is completely optional, although I do recommend you review our choices.
       </div>',
   );
+
+
+
+  // To ensure any data uses same terms throughout by disabling this fieldset
+  // when phenotype table has data saved in it. 1 row is sufficient to meet this condition.
+  $has_data = chado_query("SELECT phenotype_id FROM {phenotype} LIMIT 1")
+    ->fetchAll();
+
+  $is_disabled = ($has_data) ? TRUE : FALSE;
 
   // Array for property terms.
   // Fetch terms configuration used by AP.
@@ -260,7 +285,7 @@ function analyzedphenotypes_configuration_form($form, &$form_state) {
       // Since what is saved is cvterm_id into the variable, we need to convert the id
       // to something human readbale.
       $var_id = variable_get($prop['field_name']);
-      
+
       // Fetch the cvterm name (cv name) of a cvterm id number.
       $default_field = ap_get_cvterm(
         array('cvterm_id' => $var_id),
@@ -279,6 +304,7 @@ function analyzedphenotypes_configuration_form($form, &$form_state) {
           'title' => array($default_value['namecvname'])),
         //
         '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/cvterms/cv',
+        '#disabled' => $is_disabled,
       );
     }
 
@@ -294,7 +320,7 @@ function analyzedphenotypes_configuration_form($form, &$form_state) {
 
   // Warning.
   $form[$frameset_cv]['warning'] = array(
-    '#markup' => '<div class="messages  status">
+    '#markup' => '<div class="messages  warning">
       Once phenotypic data has been uploaded for a genus, these vocabularies cannot be changed!
       Please take the time to read the description above and if you have questions,
       submit a ticket to <u>' . l('Github: UofS-Pulse-Binfo', 'https://github.com/UofS-Pulse-Binfo/analyzedphenotypes/issues') . '</u>.
@@ -394,7 +420,7 @@ function system_settings_form_validate($form, &$form_state) {
 function system_settings_form_config_submit($form, &$form_state) {
   // All system variables, groupped by options, terms and cvdbon.
   $vars = ap_construct_variablenames();
-  
+
   foreach($vars as $i => $var) {
     // Convert the values selected from the interface to id number (cvterm or cv id number).
     if ($i == 'cvdbon') {
@@ -430,7 +456,7 @@ function system_settings_form_config_submit($form, &$form_state) {
         // Checking to see if it matcheed a record before saving it to a system var.
         variable_set($v, $fld_value_id[0]['cvterm_id']);
       }
-      
+
       // Update materialized view to account for terms location and year.
       ap_update_mview_phenotypesummary();
     }

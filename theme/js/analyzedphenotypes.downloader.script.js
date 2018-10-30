@@ -32,6 +32,17 @@
       // Reset traits - when checked, should be unchecked
       // when species field has been altered.
       $(document).ajaxComplete(function() {
+        if ($('#ap-reset-species').val()) {
+          var rt = $('#ap-reset-species').val();
+
+          if (rt == 1) {
+            $('#ap-species-field-id input').each(function(){
+              $(this).removeAttr('checked');
+            });
+          }
+        }
+
+
         if ($('#ap-reset-traits').val()) {
           var rt = $('#ap-reset-traits').val();
 

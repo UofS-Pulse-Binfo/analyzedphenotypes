@@ -144,12 +144,6 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         $field_prop[$fld_genus]['disabled'] = FALSE;
         $field_prop[$fld_genus]['empty'] = null;
 
-        // #Species.
-        $field_values[$fld_species] = 'all';
-
-        $field_prop[$fld_species]['options'] = array($field_values[$fld_genus] => 'All Species');
-        $field_prop[$fld_species]['disabled'] = FALSE;
-        $field_prop[$fld_species]['empty'] = null;
 
         // Convert all value for genus and species into values.
         $all_genus = ap_populate_fieldgenus(array(
@@ -160,6 +154,11 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
           'project_id' => $field_values[$fld_experiment],
           'genus' => $all_genus
         ));
+
+        // #Species.
+        $field_prop[$fld_species]['default'] = array_keys($all_species);
+        $field_prop[$fld_species]['options'] = $all_species;
+        $field_prop[$fld_species]['disabled'] = FALSE;
 
         // #Traits.
         $options = ap_populate_fieldtraits(array(
@@ -271,6 +270,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
           // #Species
           unset($options);
+
           $options = ap_populate_fieldspecies(array(
             'project_id' => $field_values[$fld_experiment],
             'genus' => $field_values[$fld_genus]
@@ -299,7 +299,8 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
           /// Species selected - Create traits options.
           if ($form_state['values'][ $fldname[$fld_species]['field'] ] != '') {
-            $field_values[$fld_species] = $form_state['values'][ $fldname[$fld_species]['field'] ];
+            $s = $form_state['values'][ $fldname[$fld_species]['field'] ];
+            $field_values[$fld_species] = analyzedphenotypes_checkboxesvalue($s);
 
             $options = ap_populate_fieldtraits(array(
               'project_id' => $field_values[$fld_experiment],
@@ -311,6 +312,63 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
             if ($options) {
               $field_prop[$fld_traits]['options'] = $options;
               $field_prop[$fld_traits]['disabled'] = FALSE;
+              $field_values[$fld_traits] = array_keys($options);
+
+              if (count($field_values[$fld_species]) > 1) {
+                // Many species selected.
+                $btn_ok = 1;
+
+                $field_prop[$fld_traits]['default'] = $field_values[$fld_traits];
+
+                // Year, Location, Germplasm type.
+                $options = ap_populate_fieldyear(array(
+                  'project_id' => $field_values[$fld_experiment],
+                  'traits' => $field_values[$fld_traits],
+                  'genus' => $field_values[$fld_genus],
+                  'species' => $field_values[$fld_species]
+                ));
+
+                if ($options) {
+                  $field_prop[$fld_year]['options'] = $options;
+                  $field_prop[$fld_year]['disabled'] = FALSE;
+                  $field_prop[$fld_year]['default'] = array_keys($options);
+
+                  $field_values[$fld_year] = array_keys($options);
+
+                  $options = ap_populate_fieldlocation(array(
+                    'project_id' => $field_values[$fld_experiment],
+                    'genus' => $field_values[$fld_genus],
+                    'species' => $field_values[$fld_species],
+                    'traits' => $field_values[$fld_traits],
+                    'year' => $field_values[$fld_year],
+                  ));
+
+                  if ($options) {
+                    $field_prop[$fld_location]['options'] = $options;
+                    $field_prop[$fld_location]['disabled'] = FALSE;
+
+                    $field_values[$fld_location] = array_keys($options);
+                    $field_prop[$fld_location]['default'] = $field_values[$fld_location];
+
+                    $options = ap_populate_fieldgermplasmtype(array(
+                      'project_id' => $field_values[$fld_experiment],
+                      'genus' => $field_values[$fld_genus],
+                      'species' => $field_values[$fld_species],
+                      'traits' => $field_values[$fld_traits],
+                      'year' => $field_values[$fld_year],
+                      'location' => $field_values[$fld_location]
+                    ));
+
+                    if ($options) {
+                      $field_values[$fld_germplasmtype] = array_keys($options);
+
+                      $field_prop[$fld_germplasmtype]['default'] = $field_values[$fld_germplasmtype];
+                      $field_prop[$fld_germplasmtype]['options'] = $options;
+                      $field_prop[$fld_germplasmtype]['disabled'] = FALSE;
+                    }
+                  }
+                }
+              }
             }
 
             unset($options);
@@ -319,8 +377,9 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
             $form['values'][ $fldname[$fld_species]['cache'] ] = ap_cache_download_fieldvalue($field_values[$fld_species]);
             $cache_values[$fld_species] = $form_state['values'][ $fldname[$fld_species]['cache'] ];
 
+
             // AJAX - same experiment, genus and species.
-            if ($cache_values[$fld_species] == $field_values[$fld_species]) {
+            if ($cache_values[$fld_species] == implode('_', $field_values[$fld_species])) {
 
               ///// Traits selected - Create year options.
               if ($form_state['values'][ $fldname[$fld_traits]['field'] ] != '') {
@@ -576,12 +635,17 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
             // end AJAX - same experiment, genus and species.
             }
             else {
-              // Reset trait.
-              $reset_traits = 1;
+              if (isset($field_prop[$fld_traits]['default'][0]) && $field_prop[$fld_traits]['default'][0] == 0) {
+                $reset_traits = 1;
+              }
             }
           ///
           }
         // end AJAX - same experiment and genus.
+        }
+        else {
+          // Reset species.
+          $reset_species = 1;
         }
 
         // Update germplasm list.
@@ -647,8 +711,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
     $form[$AJAX_wrapper][$ap_fieldset_1]['ap_fieldset1_description'] = array(
       '#type' => 'item',
       '#description' => t('Indicate the trait you would like phenotypic data for by selecting
-        experiment and the genus of the crop, as well as the name of the trait below. Field marked with a * means field is required and must have a value before proceeding.<br /><br /><strong>It is highly
-        recommended</strong> to restrict the dataset to a specific experiment. This can be done by clicking on the name of
+        experiment and the genus of the crop, as well as the name of the trait below. Field marked with a * means field is required and must have a value before proceeding.<br /><br /><strong>Restrict the dataset to a specific experiment</strong>. This can be done by clicking on the name of
         the experiment below. You can further filter by year and location if desired.'),
       '#id' => 'ap-fieldset1-description',
     );
@@ -697,6 +760,15 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
     ///////
 
 
+    $form[$AJAX_wrapper][$ap_fieldset_1]['ap_genus_species_description'] = array(
+      '#type' => 'item',
+      '#description' => t('Select the genus of the crop you would like phenotypic data for. Additionally, the species
+        can be indicated to further restrict the germplasm phenotypic data is exported for.'),
+
+      '#id' => 'ap-genus-species-description',
+    );
+
+
     //
     // FIELD: GENUS AND SPECIES:
     $form[$AJAX_wrapper][$ap_fieldset_1][ $fldname[$fld_genus]['field'] ] = array(
@@ -711,34 +783,48 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
       // Class to indicate field aligned next to another.
       '#prefix' => '<div class="ap-field-inline-container">',
       '#suffix' => '</div>',
+
       '#id' => $fldname[$fld_genus]['field-id'],
     )
     + $AJAX_callback;
 
+
     //
-    $form[$AJAX_wrapper][$ap_fieldset_1]['ap_' . $fld_species . '_field'] = array(
+    // FIELD: SPECIES.
+    $form[$AJAX_wrapper][$ap_fieldset_1][$fld_species]['title'] = array(
       '#title' => t('Species'),
-      '#type' => 'select',
+      '#type' => 'item',
       '#required' => TRUE,
-      '#default_value' => 0,
-      '#empty_option'  => $field_prop[$fld_species]['empty'],
+    );
+
+    $form[$AJAX_wrapper][$ap_fieldset_1]['ap_' . $fld_species . '_field'] = array(
+      '#type' => 'checkboxes',
+      '#required' => TRUE,
+      '#default_value' => $field_prop[$fld_species]['default'],
       '#options'       => $field_prop[$fld_species]['options'],
       '#disabled'      => $field_prop[$fld_species]['disabled'],
 
-      // Class to indicate field aligned next to another.
-      '#prefix' => '<div class="ap-field-inline-container">',
-      '#suffix' => '</div>
-                    <div class="ap-clear-float"></div>',
+      // Class to indicate field is evaluated when generating a set of headers.
+      '#attributes' => array('class' => array('ap-field-header')),
       '#id' => $fldname[$fld_species]['field-id'],
     )
-    + $AJAX_callback;
+    + $AJAX_callback
+    + analyzedphenotypes_wrapcheckbox(70, count($field_prop[$fld_species]['options']));
 
-    $form[$AJAX_wrapper][$ap_fieldset_1]['ap_genus_species_description'] = array(
-      '#type' => 'item',
-      '#description' => t('Select the genus of the crop you would like phenotypic data for. Additionally, the species
-        can be indicated to further restrict the germplasm phenotypic data is exported for.'),
+    // Select all options when many experiments selected.
+    if ($field_prop[$fld_species]['default'][0] > 0 || !empty($field_prop[$fld_species]['default'][0])) {
+      foreach($field_prop[$fld_species]['default'] as $o) {
+        $form[$AJAX_wrapper][$ap_fieldset_1][ $fldname[$fld_species]['field'] ][$o]['#attributes']
+          = array('checked' => 'checked');
+      }
 
-      '#id' => 'ap-genus-species-description',
+      $form[$AJAX_wrapper][$ap_fieldset_1][ $fldname[$fld_species]['field'] ]['#attributes']['class'][] = 'ap-no-mouse-event';
+    }
+
+    $form[$AJAX_wrapper]['reset_species'] = array(
+      '#type' => 'hidden',
+      '#value' => (isset($reset_species)) ? 1 : 0,
+      '#attributes' => array('id' => 'ap-reset-species'),
     );
     ///////
 

@@ -9,6 +9,7 @@
 }
 
 #ap-experiment-field-id div,
+#ap-species-field-id div,
 #ap-traits-field-id div,
 #ap-year-field-id div,
 #ap-location-field-id div,
@@ -82,12 +83,12 @@
 }
 
 .ap-field-inline-container {
-  float: left;
+  float: none;
 }
 
 .ap-field-inline-container div {
   padding: 0;
-  margin: 0 20px 0 0;
+  margin: 20px 0;
 }
 
 .ap-field-inline-container select {
@@ -379,6 +380,7 @@ th.ap-header {
 
 .ap-no-mouse-event {
   pointer-events: none;
+  opacity: 0.5;
 }
 
 .ap-germplasmfield-error {
