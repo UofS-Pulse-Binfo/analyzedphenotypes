@@ -950,7 +950,7 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
           $file_germplasm_accession = $data[ $col_index['Germplasm Accession'] ];
           $file_germplasm_name = $data[ $col_index['Germplasm Name'] ];
 
-          $stock_id = ap_match_germplasm($file_germplasm_name, $file_germplasm_accession);
+          $stock_id = ap_match_germplasm($file_germplasm_name, $file_germplasm_accession, $dataset['project_genus']);
 
           if (!$stock_id) {
             $tripal_error_message = 'CODE:105 Stock/Germplasm name is not recognized by this system.';
