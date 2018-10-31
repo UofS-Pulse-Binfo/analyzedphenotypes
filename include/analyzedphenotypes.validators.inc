@@ -600,7 +600,7 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
             // Apply to all.
             foreach($data as $j => $value) {
               $value = trim($value, '"');
-              $result = call_user_func($callback, $case, $value, $columns_row[$j], $i, $trait_name);
+              $result = call_user_func($callback, $case, $value, $columns_row[$j], $i, $trait_name, $dataset['project_genus']);
 
               if ($result['type'] == 'failed') {
                 if ($arr_status[$key]['type'] == 'passed') {
@@ -630,7 +630,7 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
             }
 
 
-            $result = call_user_func($callback, $case, $value, $columns_required, $i, $trait_name);
+            $result = call_user_func($callback, $case, $value, $columns_required, $i, $trait_name, $dataset['project_genus']);
 
             if ($result['type'] == 'failed') {
               if ($arr_status[$key]['type'] == 'passed') {
@@ -704,11 +704,13 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
  *  The current row number.
  * @param String $trait_name
  *  A value representing the trait name in a given row.
+ * @param String $project_genus
+ *  Genus to be used to restrict dataset to only those that matched this value.
  *
  * @return Array
  *   An associative array, indicating if a validator passed or failed the requirements.
  */
-function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait_name) {
+function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait_name, $project_genus) {
   $status = array(
     'type' => 'passed', // Passed or Failed. Default to passed.
     'details' => '',    // Include more information.
@@ -777,7 +779,7 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
         $e = ap_create_columnheaders('columns_datatype');
         $expected_columns = array_keys($e);
 
-        $stock_id_check = ap_match_germplasm($value[ $expected_columns[2] ], $value[ $expected_columns[1] ]);
+        $stock_id_check = ap_match_germplasm($value[ $expected_columns[2] ], $value[ $expected_columns[1] ], $project_genus);
 
         if (!$stock_id_check) {
           $status['type'] = 'failed';

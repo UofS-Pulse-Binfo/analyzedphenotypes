@@ -708,6 +708,13 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
     '#id' => 'ap-about-traits-fieldset',
   );
 
+    $form[$AJAX_wrapper][$ap_fieldset_1]['ap_fieldset1_warning'] = array(
+      '#type' => 'markup',
+      '#markup' => '<div class="messages warning" style="margin: 0 0 20px 0">
+          Please note that filter criteria may become deactivated when exporting data from multiple experiments or species.
+        </div>',
+    );
+
     $form[$AJAX_wrapper][$ap_fieldset_1]['ap_fieldset1_description'] = array(
       '#type' => 'item',
       '#description' => t('Indicate the trait you would like phenotypic data for by selecting
@@ -715,7 +722,6 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         the experiment below. You can further filter by year and location if desired.'),
       '#id' => 'ap-fieldset1-description',
     );
-
 
     //
     // FIELD: EXPERIMENT:
