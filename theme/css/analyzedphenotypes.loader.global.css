@@ -144,3 +144,16 @@ ul.ap-content-window-sublist {
 li.ap-sublist-item {
   margin-left: 20px;
 }
+
+.ap-field-unit-container {
+  position: relative;
+}
+
+.ap-field-inline {
+  display: none;
+  margin: 0 0 0 335px;
+  position: absolute;
+  top: 27px;
+}
+
+

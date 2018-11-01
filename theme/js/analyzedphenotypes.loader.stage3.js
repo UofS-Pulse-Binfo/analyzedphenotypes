@@ -13,6 +13,36 @@
         collapsible: true,
       });
 
+      // Listen for when unit field is altered and
+      // provide user to revert value back.
+      $('.ap-allow-revert').focusout(function() {
+        var id = $(this).attr('id');
+        var origUnitId = id.replace('ap-unit-text-field', '#ap-orig-unit-field');
+        var origUnit = $(origUnitId).val().trim();
+
+        if (origUnit != $(this).val().trim()) {
+          // Offer to revert.
+          var x = origUnitId.replace('#ap-orig-unit-field', '#ap-revert');
+          $(x).show();
+        }
+      })
+      .focusin(function() {
+        $(this).select();
+      });
+
+      // Listen to revert link.
+      $('.ap-field-inline a').click(function(e) {
+        e.preventDefault();
+        var id = $(this).parent().attr('id');
+        var origUnitId = id.replace('ap-revert', '#ap-orig-unit-field');
+        var origUnit = $(origUnitId).val().trim();
+
+        var unitTxtField = origUnitId.replace('#ap-orig-unit-field', '#ap-unit-text-field');
+        $(unitTxtField).val(origUnit);
+
+        $(this).parent().hide();
+      });
+
       // Reference ul.
       var listItem = $('.ap-item-list a');
 
