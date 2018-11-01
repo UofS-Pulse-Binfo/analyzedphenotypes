@@ -184,7 +184,7 @@ Factory::define('chado.library', function (Faker\Generator $faker) {
 Factory::define('chado.project', function (Faker\Generator $faker) {
   return [
 
-    'name' => $faker->word,
+    'name' => $faker->unique->word,
     'description' => $faker->text,
   ];
 });
