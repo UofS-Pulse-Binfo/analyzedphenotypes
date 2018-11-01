@@ -158,7 +158,7 @@ function analyzedphenotypes_configuration_form($form, &$form_state) {
 
   // Warning.
   $form[$frameset_to]['ap_warning_text'] = array(
-    '#markup' => '<div class="messages  status">
+    '#markup' => '<div class="messages  warning">
       Once phenotypic data has been uploaded for a genus, these vocabularies cannot be changed!
       Please take the time to read the description above and if you have questions,
       submit a ticket to <u>' . l('Github: UofS-Pulse-Binfo', 'https://github.com/UofS-Pulse-Binfo/analyzedphenotypes/issues') . '</u>.
