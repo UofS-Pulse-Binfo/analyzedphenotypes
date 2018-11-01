@@ -3,9 +3,9 @@
  * @file
  * Contains general API required by this module.
  */
- 
- 
- 
+
+
+
 /**
  * FUNCTION:
  * Match a stock property form chado.stock given stock name and stock uniquename combination.
@@ -14,25 +14,28 @@
  *   A string, the name of a stock that corresponds to name field in chado.stock.
  * @param $germplasm_uniquename
  *   A string, the uniquename of a stock that corresponds to uniquename field in chado.stock.
+ * @param $genus
+ *   A string, genus to be use to limit the search of germplasm to only those that match.
  *
  * @return
  *   An integer, the stock id number of the matching record.
  */
-function ap_match_germplasm($germplasm_name, $germplasm_uniquename) {
+function ap_match_germplasm($germplasm_name, $germplasm_uniquename, $genus) {
   if (empty($germplasm_name) || empty($germplasm_uniquename)) {
     return null;
   }
   else {
     $germplasm = trim($germplasm_name) . trim($germplasm_uniquename);
-    
+
     // Query stock_id by combining name and uniquename columns as the filter combination.
     $result = chado_query(
-      "SELECT stock_id FROM {stock} WHERE CONCAT(TRIM(name), TRIM(uniquename)) = :germplasm",
-      array(':germplasm' => $germplasm)
+      "SELECT stock_id FROM {stock} WHERE CONCAT(TRIM(name), TRIM(uniquename)) = :germplasm
+      AND organism_id IN (SELECT organism_id FROM {organism} WHERE LOWER(genus) = LOWER(:genus))",
+      array(':germplasm' => $germplasm, ':genus' => $genus)
     );
-    
+
     $result_count = $result->rowCount();
-    
+
     if ($result_count == 1) {
       return $result->fetchField();
     }
@@ -48,7 +51,7 @@ function ap_match_germplasm($germplasm_name, $germplasm_uniquename) {
 /**
  * FUNCTION:
  * Extract name or unit from trait name following Trait Name (unit) format.
- * 
+ *
  * @param $traitname
  *   String, trait name in the indicated format.
  * @param $get
@@ -82,20 +85,20 @@ function ap_format_traitname($traitname, $get = 'trait_unit') {
  *  - A Tripal Job is created, then in file validate, the file gets validated
  *  on file level and validation status will be sent to this function
  *  to be rendered and reported to user.
- * 
+ *
  *  @see hook_validate() for uploader.
- * 
+ *
  * Data validation.
  *  - A Tripal Job is created, then performs a data level validation.
  *  The validation result is written in a temporary file using the job id
  *  as the part of the filename. To report the validation result status
  *  that temporary file is retrieved using the job id and contents which is
  *  the validation error status is then rendered.
- * 
+ *
  * @see hook_validate for uploader
  * @see hook_menu() (validation result)
  *
- * @param $scope 
+ * @param $scope
  *   String either File or Data.
  * @param $resource
  *   - data level : scope is data level and validation report is sent to JS.
@@ -113,7 +116,7 @@ function ap_report_validationresult($scope, $resource) {
     // When scope is data level, it is expecting the Tripal job id number.
     $s = ap_read_tripaljob_progress($resource, 'validateresult');
     $status = json_decode($s, TRUE);
-    
+
     print theme('analyzedphenotypes_validator_report', array('status' => $status, 'scope' => 'ap-data-scope' . $tripaljobprop));
   }
 }
@@ -144,7 +147,7 @@ function ap_send_ajaxrequest($form, $form_state) {
 /**
  * FUNCTION:
  * AJAX callback for managing germplasm fields as filter.
- * 
+ *
  * NOTE: checking and uncheking in done in hook_form does not seem to work,
  *       thus move this operation to this callback.
  *
@@ -156,7 +159,7 @@ function ap_AJAX_germplasmfield_callback($form, $form_state) {
     'command' => $form_state['triggering_element']['#ajax']['command'],
     'value' => $form_state['triggering_element']['#value']
   );
-  
+
   // Reference standard field element id element.
   $fldname = ap_construct_download_fieldnames();
   $fld_germplasm = $fldname['germplasm']['base'];
@@ -167,26 +170,26 @@ function ap_AJAX_germplasmfield_callback($form, $form_state) {
     $form['ap_AJAX_wrapper_main']['ap_additional_filter_fieldset']['ap_AJAX_germplasmname_field_wrapper'][ $fldname[$fld_germplasm]['field'] ][$germplasm_name]['#checked'] = FALSE;
   }
   elseif ($triggering_element['command'] == 'germplasm_update_element') {
-    // User interacting with field - using delete or backspace to remove 
+    // User interacting with field - using delete or backspace to remove
     // germplasm/stock name.
     $field_attr_id =  $form_state['triggering_element']['#id'];
     $field_value = $form_state['input']['ap_AJAX_germplasmname_field_wrapper']['ap_field_textfield_' . $field_attr_id];
-    
+
     if (in_array($field_value, $form['ap_AJAX_wrapper_main']['ap_additional_filter_fieldset']['ap_AJAX_germplasmname_field_wrapper'][ $fldname[$fld_germplasm]['field'] ]['#options'])) {
       // Field has value.
-      $form['ap_AJAX_wrapper_main']['ap_additional_filter_fieldset']['ap_AJAX_germplasmname_field_wrapper'][ $fldname[$fld_germplasm]['field'] ][ $triggering_element['value'] ]['#checked'] = TRUE;  
+      $form['ap_AJAX_wrapper_main']['ap_additional_filter_fieldset']['ap_AJAX_germplasmname_field_wrapper'][ $fldname[$fld_germplasm]['field'] ][ $triggering_element['value'] ]['#checked'] = TRUE;
     }
     else {
       // Read cached value of field before it got erased.
       $field_value = $form_state['values']['ap_cache_germplasmname'];
-      $form['ap_AJAX_wrapper_main']['ap_additional_filter_fieldset']['ap_AJAX_germplasmname_field_wrapper'][ $fldname[$fld_germplasm]['field'] ][$field_value]['#checked'] = FALSE;  
-      
+      $form['ap_AJAX_wrapper_main']['ap_additional_filter_fieldset']['ap_AJAX_germplasmname_field_wrapper'][ $fldname[$fld_germplasm]['field'] ][$field_value]['#checked'] = FALSE;
+
       // Now we can unset the field in values array and empty the field.
       $form_state['values']['ap_cache_germplasmname'] = '';
     }
   }
-  
-  
+
+
   // Update AJAX field wrapper.
   return $form['ap_AJAX_wrapper_main']['ap_additional_filter_fieldset']['ap_AJAX_germplasmname_field_wrapper'];
 }
@@ -266,7 +269,7 @@ function ap_create_summarytable($file, $column_row, $traitname) {
 
 
   $handle = fopen($file, 'r');
-  
+
   if ($handle) {
     $i = 0;
     while(!feof($handle)) {
@@ -279,7 +282,7 @@ function ap_create_summarytable($file, $column_row, $traitname) {
           // Each row in trait name.
           $value = $data[$index_value];
           $is_number = ap_validate_unitvalue('number', $value);
-          
+
           if ($is_number) {
             $site_year = $data[$index_site] . ' ' . $data[$index_year];
 
@@ -295,14 +298,14 @@ function ap_create_summarytable($file, $column_row, $traitname) {
             return 0;
           }
         }
-      }      
-      
+      }
+
       $i++;
     }
-    
+
     fclose($handle);
   }
-  
+
 
   sort($arr_siteyear);
   return array('siteyear' => $arr_siteyear, 'values' => $arr_values);
@@ -358,7 +361,7 @@ function ap_define_datafile_extensions($set = null) {
       'xlsx' => '.XLSX - Microsoft Excel Spreadsheet File',
     )
   );
-  
+
 
   return ($set) ? $extensions[$set] : $extensions;
 }
@@ -367,30 +370,30 @@ function ap_define_datafile_extensions($set = null) {
 /**
  * FUNCTION:
  * Define file destination path for file upload and trait image.
- * 
- * @return 
+ *
+ * @return
  *   Associative array where the key is directory type and value as directory path.
  */
 function ap_construct_datafile_destinationpath() {
   $drupal_public = 'public://';
   $ap_root_dir = 'tripal/analyzedphenotypes/';
-  
-  // Add directory here. 
+
+  // Add directory here.
   $directory = array(
     'spreadsheet',
     'traitpictures'
   );
-  
+
   // Constuct directories.
   $file_dir = array();
 
-  // Construct relative/absolute path eg. public://tripal/analzedphenotypes/spreadsheet 
-  // - for data file 
+  // Construct relative/absolute path eg. public://tripal/analzedphenotypes/spreadsheet
+  // - for data file
   foreach($directory as $dir) {
-    $file_dir[$dir] = $drupal_public . $ap_root_dir . $dir; 
+    $file_dir[$dir] = $drupal_public . $ap_root_dir . $dir;
   }
-  
-  
+
+
   return $file_dir;
 }
 

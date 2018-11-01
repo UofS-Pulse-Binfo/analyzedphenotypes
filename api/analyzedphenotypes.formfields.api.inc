@@ -83,7 +83,7 @@ function ap_construct_download_fieldnames() {
  *
  * @return
  *   An array, to register a value in Drupal Form API.
- */      
+ */
 function ap_cache_download_fieldvalue($value) {
   if (is_array($value)) {
     $value = implode('_', $value);
@@ -112,8 +112,8 @@ function ap_populate_fieldproject() {
     ORDER BY t1.name ASC";
 
   $query = chado_query($sql);
-  
-  
+
+
   return ($query->rowCount()) ? $query->fetchAllKeyed() : null;
 }
 
@@ -130,12 +130,12 @@ function ap_populate_fieldproject() {
 function ap_populate_fieldprojectsummary() {
   $sql = "
     SELECT project_id, CONCAT('*' || COUNT(DISTINCT attr_id) || ' Traits, ' || COUNT(phenotype_id) || ' Data Points ')
-    FROM {phenotype} 
-    GROUP BY project_id 
+    FROM {phenotype}
+    GROUP BY project_id
     ORDER BY project_id ASC";
 
   $query = chado_query($sql);
-  
+
   return ($query->rowCount()) ? $query->fetchAllKeyed() : null;
 }
 
@@ -264,14 +264,14 @@ function ap_populate_fieldtraits($identifiers) {
             project_id = :project_id
             AND stock_id IN (SELECT stock_id FROM {stock}
               WHERE organism_id IN (SELECT organism_id FROM {organism}
-                WHERE LOWER(genus) = LOWER(:genus) AND LOWER(species) = LOWER(:species))))
+                WHERE LOWER(genus) = LOWER(:genus) AND LOWER(species) IN(:species))))
         ORDER BY name ASC";
 
       $args = array(
         ':project_id' => $identifiers['project_id'],
 
         ':genus' => $identifiers['genus'],
-        ':species' => $identifiers['species'],
+        ':species' => array_map('strtolower', $identifiers['species']),
       );
 
       $query = chado_query($sql, $args);
@@ -319,7 +319,7 @@ function ap_populate_fieldyear($identifiers) {
         WHERE project_id IN (:project_id) AND attr_id IN (:traits)
           AND stock_id IN (SELECT stock_id FROM {stock}
             WHERE organism_id IN (SELECT organism_id FROM {organism}
-              WHERE LOWER(genus) = LOWER(:genus) AND LOWER(species) = LOWER(:species))))
+              WHERE LOWER(genus) = LOWER(:genus) AND LOWER(species) IN(:species))))
       GROUP BY value
       ORDER BY value DESC";
 
@@ -329,7 +329,7 @@ function ap_populate_fieldyear($identifiers) {
       ':traits' => $identifiers['traits'],
 
       ':genus' => $identifiers['genus'],
-      ':species' => $identifiers['species'],
+      ':species' => array_map('strtolower', $identifiers['species']),
     );
 
     $query = chado_query($sql, $args);
@@ -394,10 +394,10 @@ function ap_populate_fieldlocation($identifiers) {
 
     $sql = $sql . " AND stock_id IN (SELECT stock_id FROM {stock}
       WHERE organism_id IN (SELECT organism_id FROM {organism}
-        WHERE LOWER(genus) = LOWER(:genus) AND LOWER(species) = LOWER(:species)))";
+        WHERE LOWER(genus) = LOWER(:genus) AND LOWER(species) IN(:species)))";
 
     $args[':genus'] = $identifiers['genus'];
-    $args[':species'] = $identifiers['species'];
+    $args[':species'] = array_map('strtolower', $identifiers['species']);
   }
 
   $sql = $sql . ' ORDER BY t1.value ASC';
@@ -466,10 +466,10 @@ function ap_populate_fieldgermplasmtype($identifiers) {
 
     $sql = $sql . " AND stock_id IN (SELECT stock_id FROM {stock}
       WHERE organism_id IN (SELECT organism_id FROM {organism}
-        WHERE LOWER(genus) = LOWER(:genus) AND LOWER(species) = LOWER(:species)))";
+        WHERE LOWER(genus) = LOWER(:genus) AND LOWER(species) IN(:species)))";
 
     $args[':genus'] = $identifiers['genus'];
-    $args[':species'] = $identifiers['species'];
+    $args[':species'] = array_map('strtolower', $identifiers['species']);
   }
 
   $sql = $sql . ') ORDER BY t0.name ASC';
@@ -567,7 +567,7 @@ function ap_populate_fieldgermplasmlist($identifiers) {
 
     // Account for genus and species.
     if (!empty($identifiers['genus']) && !empty($identifiers['species'])) {
-      $sql = $sql . " AND organism_id IN (SELECT organism_id FROM {organism} WHERE genus = :genus AND species = :species)";
+      $sql = $sql . " AND organism_id IN (SELECT organism_id FROM {organism} WHERE genus = :genus AND species IN(:species))";
 
       $args[':genus'] = $identifiers['genus'];
       $args[':species'] = $identifiers['species'];
@@ -579,7 +579,7 @@ function ap_populate_fieldgermplasmlist($identifiers) {
 
       $args[':germplasmtype'] = $identifiers['germplasmtype'];
     }
-  
+
     $sql = $sql . " ORDER BY germplasm ASC";
   }
 

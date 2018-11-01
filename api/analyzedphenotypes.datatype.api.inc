@@ -80,7 +80,7 @@ function ap_get_datatype($unit) {
  * FUNCTION:
  * Test data or value entered to see if it matches the data type the unit is expecting.
  * Dependencies: ap_get_datatype(),
- * 
+ *
  * @param $unit
  *   String, unit of a trait.
  * @param $value

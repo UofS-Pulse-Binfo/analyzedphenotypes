@@ -33,6 +33,11 @@
           if (pbVar.stage == 'validate') {
             $(vrContainerId).once().load(pbVar.pathVR + pbVar.jobId, progressBarValidationResult);
           }
+          else {
+            if(percentage == 100) {
+              $('#ap-link-to-phenotypes').fadeIn();
+            }
+          }
 
           DrupalProgressBar.stopMonitoring();
         }

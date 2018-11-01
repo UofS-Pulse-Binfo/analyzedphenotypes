@@ -32,6 +32,17 @@
       // Reset traits - when checked, should be unchecked
       // when species field has been altered.
       $(document).ajaxComplete(function() {
+        if ($('#ap-reset-species').val()) {
+          var rt = $('#ap-reset-species').val();
+
+          if (rt == 1) {
+            $('#ap-species-field-id input').each(function(){
+              $(this).removeAttr('checked');
+            });
+          }
+        }
+
+
         if ($('#ap-reset-traits').val()) {
           var rt = $('#ap-reset-traits').val();
 
@@ -381,6 +392,11 @@
           }
         })
         .ajaxComplete(function() {
+          // Show R friendly version when option is true.
+          if ($('#ap-rfriendly-field-id').attr('checked')) {
+            $('#ap-table-default-headers em, #ap-table-optional-headers em').css('display', 'block');
+          }
+
           // Enable all form elements after AJAX call.
           formFields.removeAttr('disabled');
           // Exclude the checkboxes in default column headers.

@@ -546,19 +546,33 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               $unit = ap_format_traitname($trait_name_value, 'trait_unit');
               $traitprop['unit'] = $unit;
 
+              // Hidden field: Unit.
+              // Store original value extracted from the file. This value will be
+              // use to check if user altered this value and thus apply a validation below for this field.
+              $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_orig_unit_field' . $i] = array(
+                '#type' => 'hidden',
+                '#value' => $traitprop['unit'],
+                '#attributes' => array('id' => 'ap-orig-unit-field' . $i),
+              );
+
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_unit_text_field' . $i] = array(
                 '#type' => 'textfield',
                 '#title' => t('Unit'),
-                '#disabled' => TRUE,
+                '#disabled' => $disabled,
                 '#default_value' => $traitprop['unit'],
+                '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/traitunit/units',
+                '#element_validate' => array('analyzedphenotypes_validate_field_required'),
                 '#description' => t('Unit used to measure this trait.'),
+                '#attributes' => array('class' => array('ap-allow-revert')),
                 '#id' => 'ap-unit-text-field' . $i,
+                '#prefix' => '<div class="ap-field-unit-container">',
+                '#suffix' => '<div class="ap-field-inline" id="ap-revert'.$i.'"><a href="#">Revert value</a></div></div>',
               );
 
               // Textarea: Definition/description.
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_description_text_field' . $i] = array(
                 '#type' => 'textarea',
-                '#title' => t('Description'),
+                '#title' => t('Description of Trait Including Collection Method'),
                 '#disabled' => $disabled,
                 '#default_value' => $traitprop['definition'],
                 '#description' => t('Text definition or description of trait.'),
@@ -567,11 +581,6 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                 '#id' => 'ap-description-text-field' . $i,
               );
 
-              // Field group title:
-              $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_group_mapping_information' . $i] = array(
-                '#type' => 'item',
-                '#title' => t('&#9660; MAPPING INFORMATION'),
-              );
 
               // Text field: Crop ontology.
               // When genus ontology set:
@@ -580,21 +589,39 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               // When genus ontology not set:
               //  This field should not be available.
 
-              // Default to not found.
-              $sysvar_genus_ontology = 0;
+              // When ontology configuration is set to none we want to hide this frameset.
+              // In the same manner, we make this option unavailable when loading ontology info
+              // of a similar trait when it is not set.
+              $sysvar = ap_get_variablenames(
+                array('variablename' => $project_genus),
+                array('set' => 'cvdbon', 'suffix' => 'ontology')
+              );
 
-              if (!$disabled) {
-                // When field is enabled. Disabled might mean the field is used to load previously added record.
-                // Fetch ontology settings for this project genus.
-                $sysvar = ap_get_variablenames(
-                  array('variablename' => $project_genus),
-                  array('set' => 'cvdbon', 'suffix' => 'ontology')
-                );
+              $sysvar_genus_ontology = variable_get($sysvar);
 
-                $sysvar_genus_ontology = variable_get($sysvar);
 
-                if ($sysvar_genus_ontology) {
-                  // Attempt suggest term.
+              if ($sysvar_genus_ontology) {
+                // Ontology set.
+
+                if ($disabled) {
+                  // Field is disabled to load fetch ontology value for a trait
+                  // selected from suggested traits.
+
+                  // Additional check to see if there is a value at all.
+                  if (empty($traitprop['crop_ontology'])) {
+                    // Not set, fieldset should be hidden.
+                    $fieldset_disable = TRUE;
+                  }
+                  else {
+                    // A value in there, show the field but disabled.
+                    $fieldset_disable = FALSE;
+                    $ontology_disable = TRUE;
+                  }
+                }
+                else {
+                  // Regular page load with properly set ontoloy configuration
+                  // Begin suggestions.
+
                   $ontology_suggestions = ap_suggest_ontology(
                     array('trait' => $traitprop['name'], 'genus' => $project_genus),
                     array('limitrows' => 10)
@@ -622,31 +649,39 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                     }
                   }
 
-                  // Else.
-                  // Nope. Let user find the term but limit within the ontology system variable.
-                }
-                else {
-                  // Disable the field.
-                  $ontology_disable = TRUE;
+                  $fieldset_disable = FALSE;
                 }
               }
+              else {
+                // Not set, make ontology fieldset unavailable.
+                $fieldset_disable = TRUE;
+              }
 
-              $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_crop_ontology_text_field' . $i] = array(
-                '#title' => 'Crop Ontology',
-                '#type' => 'textfield',
-                '#disabled' => (isset($ontology_disable)) ? $ontology_disable : $disabled,
-                '#default_value' => $traitprop['crop_ontology'],
-                '#description' => t('Type in crop ontology or click one from suggestions below.'),
-                '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/ontology/' . $project_genus,
-                '#attributes' => array('class' => array('ap-crop-ontology', ap-no-required)),
-                '#id' => drupal_html_id('ap-crop-ontology-text-field' . $i),
-              );
 
-              // Suggest ontology.
-              if (isset($list) && !$disabled) {
-                $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_ontology_suggestion_markup_field' . $i] = array(
-                  '#markup' => $list . '<br />',
+              if (!$fieldset_disable) {
+                // Field group title:
+                $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_group_mapping_information' . $i] = array(
+                  '#type' => 'item',
+                  '#title' => t('&#9660; RELATED ONTOLOGY TERMS'),
                 );
+
+                $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_crop_ontology_text_field' . $i] = array(
+                  '#title' => 'Crop Ontology',
+                  '#type' => 'textfield',
+                  '#disabled' => (isset($ontology_disable)) ? $ontology_disable : $disabled,
+                  '#default_value' => $traitprop['crop_ontology'],
+                  '#description' => t('Type in crop ontology or click one from suggestions below.'),
+                  '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/ontology/' . $project_genus,
+                  '#attributes' => array('class' => array('ap-crop-ontology', ap-no-required)),
+                  '#id' => drupal_html_id('ap-crop-ontology-text-field' . $i),
+                );
+
+                // Suggest ontology.
+                if (isset($list) && !$disabled) {
+                  $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_ontology_suggestion_markup_field' . $i] = array(
+                    '#markup' => $list . '<br />',
+                  );
+                }
               }
 
               // Field group title:
@@ -993,11 +1028,43 @@ function analyzedphenotypes_validate_field_select_trait(&$element, &$form, &$for
 
 /**
  * Implements custom field validation.
- * Validate required fields: trait description, ontology and photo.
+ * Validate required fields: unit, trait description, ontology and photo.
  */
 function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_state) {
   if ($element['#disabled'] === FALSE) {
     $error = FALSE;
+
+    // Trait unit.
+    $original_unit_name = str_replace('ap_unit_text_field', 'ap_orig_unit_field', $element['#name']);
+    $original_unit = $form['values'][ $original_unit_name ];
+
+    if (stristr($element['#name'], 'ap_unit_text_field')
+      && trim(strtolower($original_unit)) != trim(strtolower($element['#value']))) {
+      // Check if unit field is different from the original value of the unit.
+      // If altered, then we suspect that user wanted a different unit.
+      // Begin validate.
+
+      $trait_name_name = str_replace('ap_unit_text_field', 'ap_name_text_field', $element['#name']);
+      $trait_name = $form['values'][$trait_name_name];
+
+      $full_traitname = $trait_name . ' (' . $element['#value'] . ')';
+
+      // Project genus.
+      $project_genus = $form['values']['ap_genus_select_field'];
+
+      $exists = ap_get_cvterm(
+        array('name' => $full_traitname, 'genus' => $project_genus),
+        array('dataset' => 'cvtermid')
+      );
+
+      if ($exists) {
+        // Found a match.
+        $error = TRUE;
+        form_set_error($element['#name'], t('@fulltraitname already exists. Please try using a different unit.', array('@fulltraitname' => $full_traitname)));
+      }
+    }
+
+
 
     // Description.
     $description_field_value = $element['#value'];

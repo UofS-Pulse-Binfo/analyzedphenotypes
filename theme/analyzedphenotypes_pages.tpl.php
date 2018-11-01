@@ -129,6 +129,10 @@ if ($form_id == $ap . 'uploaddata_form') {
                   </div>
                 <div>
 
+                <div id="ap-link-to-phenotypes" style="display: none">
+                  <a href="<?php print base_path(); ?>phenotypes">View summary of analyzed phenotypes</a>
+                </div>
+
                 <?php
                 break;
 
