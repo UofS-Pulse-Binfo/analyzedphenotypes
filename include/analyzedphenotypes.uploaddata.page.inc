@@ -823,12 +823,24 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
         $cvterm_id = $form_state['values']['ap_similar_trait_select_field' . $i];
       }
       else {
+        // Use the values entered or prefilled in the field since unit is editable.
+        $traitname = $form_state['values']['ap_name_text_field' . $i];
+        $traitunit = $form_state['values']['ap_unit_text_field' . $i];
+        // Reconstruct trait to follow Trait Name (unit) format.
+        $a_trait   = trim($traitname) . ' (' . trim($traitunit) . ')';
+
+        if ($trait != $a_trait) {
+          // User entered in a different unit.
+          $alt_trait = $a_trait;
+        }
+
         $description = $form_state['values']['ap_description_text_field' . $i];
 
         // Insert new term. Inserted term id is required.
+        // When alternate trait available use it over original trait.
         $cvterm = ap_insert_cvterm(
           array(
-            'name' => $trait,
+            'name' => isset($alt_trait) ? $alt_trait : $trait,
             'definition' => $description,
             'genus' => $project_genus,
           ),
@@ -877,6 +889,8 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
         }
       }
 
+      // When alternate trait present use it but use the original trait as reference.
+      // For example: Plant Height (cm) => (use) id of Plant Height (m).
       $arr_traitname_cvtermid[$trait] = $cvterm_id;
     }
 
@@ -1040,27 +1054,41 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
 
     if (stristr($element['#name'], 'ap_unit_text_field')
       && trim(strtolower($original_unit)) != trim(strtolower($element['#value']))) {
-      // Check if unit field is different from the original value of the unit.
-      // If altered, then we suspect that user wanted a different unit.
-      // Begin validate.
 
-      $trait_name_name = str_replace('ap_unit_text_field', 'ap_name_text_field', $element['#name']);
-      $trait_name = $form['values'][$trait_name_name];
-
-      $full_traitname = $trait_name . ' (' . $element['#value'] . ')';
-
-      // Project genus.
-      $project_genus = $form['values']['ap_genus_select_field'];
-
-      $exists = ap_get_cvterm(
-        array('name' => $full_traitname, 'genus' => $project_genus),
-        array('dataset' => 'cvtermid')
-      );
-
-      if ($exists) {
-        // Found a match.
+      // Basic validation:
+      if (strpbrk($element['#value'], '()')) {
+        // Have ( and ).
         $error = TRUE;
-        form_set_error($element['#name'], t('@fulltraitname already exists. Please try using a different unit.', array('@fulltraitname' => $full_traitname)));
+        form_set_error($element['#name'], 'The value in the unit field contains characters "(" and/or ")". Please remove these characters and try again.');
+      }
+      elseif (empty($element['#value'])) {
+        // Have none.
+        $error = TRUE;
+        form_set_error($element['#name'], 'The value in the unit field is empty. Please provide a value and try again.');
+      }
+      else {
+        // Check if unit field is different from the original value of the unit.
+        // If altered, then we suspect that user wanted a different unit.
+        // Begin validate.
+
+        $trait_name_name = str_replace('ap_unit_text_field', 'ap_name_text_field', $element['#name']);
+        $trait_name = $form['values'][$trait_name_name];
+
+        $full_traitname = $trait_name . ' (' . $element['#value'] . ')';
+
+        // Project genus.
+        $project_genus = $form['values']['ap_genus_select_field'];
+
+        $exists = ap_get_cvterm(
+          array('name' => $full_traitname, 'genus' => $project_genus),
+          array('dataset' => 'cvtermid')
+        );
+
+        if ($exists) {
+          // Found a match.
+          $error = TRUE;
+          form_set_error($element['#name'], t('@fulltraitname already exists. Please try using a different unit.', array('@fulltraitname' => $full_traitname)));
+        }
       }
     }
 
