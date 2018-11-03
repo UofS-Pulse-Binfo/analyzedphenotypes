@@ -1,11 +1,18 @@
 [![Build Status](https://travis-ci.org/UofS-Pulse-Binfo/analyzedphenotypes.svg?branch=7.x-3.x)](https://travis-ci.org/UofS-Pulse-Binfo/analyzedphenotypes)
+[![Documentation Status](https://readthedocs.org/projects/analyzedphenotypes/badge/?version=latest)](https://analyzedphenotypes.readthedocs.io/en/latest/?badge=latest)
+
 # Analyzed Phenotypes
-This module provides support and visualization for partially analyzed data stored in a modified GMOD Chado schema. It is meant to support **large scale phenotypic data** through backwards compatible improvements to the Chado schema including the addition of a project and stock foreign key to the existing phenotype table, optimized queries and well-choosen indexes. For benchmarking demonstrating the efficiency of this module, see our [wiki](https://github.com/UofS-Pulse-Binfo/analyzedphenotypes/wiki/Benchmarking).
+This module provides support and visualization for partially analyzed data stored in a modified GMOD Chado schema. It is meant to support **large scale phenotypic data** through backwards compatible improvements to the Chado schema including the addition of a project and stock foreign key to the existing phenotype table, optimized queries and well-choosen indexes. For benchmarking demonstrating the efficiency of this module, see our [documentation](https://analyzedphenotypes.readthedocs.io/en/latest/admin_guide/benchmarking.html).
 
 ## Dependencies
-1. Tripal 3.x
-2. Tripal Download API
-3. PostgreSQL 9.3 (9.4 recommended)
+
+1. [Drupal 7](https://www.drupal.org/)
+2. [Tripal 3.x](http://tripal.info/)
+3. [Tripal Download API](https://github.com/tripal/trpdownload_api)
+4. [PostgresSQL 9.3](https://www.postgresql.org/)
+5. [Drag and Drag Upload module](https://www.drupal.org/project/dragndrop_upload)
+6. [PHP Excel Writer Libraries](https://github.com/SystemDevil/PHP_XLSXWriter_plus)
+7. [D3 JavaScript Library](https://github.com/d3/d3/releases/download/v3.5.14/d3.zip)
 
 ## Installation
 1. Install the dependencies listed above.
@@ -33,8 +40,5 @@ This module provides support and visualization for partially analyzed data store
    - Germplasm Phenotype Summary: provides a summary of all phenotypic data collected from a given germplasm.
 - Integration of all fields with Tripal 3 web services allowing you to share your genotypic data with other groups.
 
-## Data Storage
-Phenotypic data is stored in the existing Chado phenotype table with the addition of a project and stock foreign key. This allows phenotypic data measurements to be linked directly to the germplasm they were taken from rather then through the Chado nd_experiment tables providing a huge efficiency boost.
-![database schema diagram](https://cloud.githubusercontent.com/assets/1566301/26503442/eec1a3a6-41fd-11e7-9ca5-ea7316439643.png)
-
-This allows the trait (attr_id), measurement (value or cvalue_id), germplasm (stock_id) combination for a given project (project_id) to be stored as a single record. The location, year, data collector, etc for that data point are then stored in the phenotypeprop table.
+## Documentation
+Further documentation is available on [ReadtheDocs](https://analyzedphenotypes.readthedocs.io/en/latest/index.html).
