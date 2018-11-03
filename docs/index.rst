@@ -8,3 +8,5 @@ This module provides support and visualization for partially analyzed data store
    :maxdepth: 2
    :caption: Contents:
 
+   admin_guide
+   user_guide
