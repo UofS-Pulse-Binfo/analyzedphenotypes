@@ -10,3 +10,5 @@ This guide is meant for administrators of a Tripal site. It will show you how to
    admin_guide/install
    admin_guide/usage
    admin_guide/configuration
+   admin_guide/benchmarking
+   admin_guide/data_storage
