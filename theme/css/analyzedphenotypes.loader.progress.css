@@ -25,3 +25,11 @@
   text-align:center;
   display: none;
 }
+
+
+/* Navy AJAX wait - spinner */
+.ap-navy-spinner {
+  background: url('../../theme/img/wait-validating.gif') no-repeat top center;
+  padding: 75px 90px 10px 90px !important;
+  text-align: center;
+}

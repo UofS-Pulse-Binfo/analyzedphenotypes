@@ -75,7 +75,9 @@ if ($form_id == $ap . 'uploaddata_form') {
                 <div class="ap-tsv-file-form-element"><label>TSV Data File</label><span>Validating...</span></div>
 
                 <div id="ap-progress-container" class="ap-tsv-file-form-element">
-                  <div class="ap-progress-wrapper">
+                  <div class="ap-navy-spinner">Validating data... Please wait.</div>
+                  <!-- Apply progress bar - disable display rule to use progress bar instead of spinner above !-->
+                  <div class="ap-progress-wrapper" style="display: none">
                     <div class="progress-pane"></div>
                   </div>
                 </div>
@@ -193,39 +195,3 @@ else {
   print '</ul>';
 }
 ?>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
