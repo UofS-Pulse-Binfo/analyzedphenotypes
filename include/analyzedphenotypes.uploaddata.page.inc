@@ -356,13 +356,12 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
       '#id' => 'ap-file-fid-field',
     );
 
+    // Open the file and read the trait column header.
+    // For each trait, the user has to describe before proceeding.
+    //------------------------------------------------------------
     $data_file = file_load($data_file);
     $file = drupal_realpath($data_file->uri);
     $handle = fopen($file, 'r');
-
-    // Open the file and read the trait column header.
-    // For each trait, the user has to describe before proceeding.
-
     if ($handle) {
       // Extract the headers column and extract the trait name index that contain
       // all traits to be described.
@@ -410,6 +409,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               'term'          => $trait_name_value,
               'name'          => '',
               'definition'    => '',
+              'method'        => '',
               'unit'          => '',
               'scale'         => '',
               'crop_ontology' => '',
@@ -522,6 +522,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
             );
 
             // Describe form required.
+            //-------------------------
             if ($describeform_show == 'yes') {
               ////
               $disabled = ($traitprop['cvterm_id']) ? TRUE : FALSE;
@@ -532,23 +533,48 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                 '#title' => t('&#9660; ABOUT THE TRAIT'),
               );
 
-              // Text field: Trait name.
+              // -- Trait name
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_name_text_field' . $i] = array(
                 '#type' => 'textfield',
                 '#title' => t('Name'),
                 '#disabled' => TRUE,
                 '#default_value' => $traitprop['name'],
-                '#description' => t('A Concise human-readable name or label for the trait.'),
+                '#description' => t('A Concise human-readable label for the trait. This should not include abbreviations.'),
                 '#id' => 'ap-name-text-field' . $i,
               );
 
-              // Text field: Unit.
+              // -- Definition/description.
+              $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_description_text_field' . $i] = array(
+                '#type' => 'textarea',
+                '#title' => t('Trait Description'),
+                '#disabled' => $disabled,
+                '#default_value' => $traitprop['definition'],
+                '#description' => t('Describe the trait. For example, for "Days to Flower", the description might be "The number of days from emergence of the plant until it flowers". <strong> This should not include the collection method or units.</strong>'),
+                '#element_validate' => array('analyzedphenotypes_validate_field_required'),
+                '#attributes' => array('class' => array($class)),
+                '#id' => 'ap-description-text-field' . $i,
+              );
+
+              // -- Method.
+              $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_method_text_field' . $i] = array(
+                '#type' => 'textarea',
+                '#title' => t('Collection Method'),
+                '#disabled' => $disabled,
+                '#default_value' => $traitprop['method'],
+                '#description' => t('Describe how you collected the data. Ensure you include all information needed for an unskilled labourer to reproduce your work.'),
+                '#element_validate' => array('analyzedphenotypes_validate_field_required'),
+                '#attributes' => array('class' => array($class)),
+                '#id' => 'ap-method-text-field' . $i,
+              );
+
+              // -- Unit.
               $unit = ap_format_traitname($trait_name_value, 'trait_unit');
               $traitprop['unit'] = $unit;
 
               // Hidden field: Unit.
               // Store original value extracted from the file. This value will be
-              // use to check if user altered this value and thus apply a validation below for this field.
+              // use to check if user altered this value and
+              // thus apply a validation below for this field.
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_orig_unit_field' . $i] = array(
                 '#type' => 'hidden',
                 '#value' => $traitprop['unit'],
@@ -562,27 +588,14 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                 '#default_value' => $traitprop['unit'],
                 '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/traitunit/units',
                 '#element_validate' => array('analyzedphenotypes_validate_field_required'),
-                '#description' => t('Unit used to measure this trait.'),
+                '#description' => t('The <strong>full name</strong> of the unit used to measure this trait.'),
                 '#attributes' => array('class' => array('ap-allow-revert')),
                 '#id' => 'ap-unit-text-field' . $i,
                 '#prefix' => '<div class="ap-field-unit-container">',
                 '#suffix' => '<div class="ap-field-inline" id="ap-revert'.$i.'"><a href="#">Revert value</a></div></div>',
               );
 
-              // Textarea: Definition/description.
-              $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_description_text_field' . $i] = array(
-                '#type' => 'textarea',
-                '#title' => t('Description of Trait Including Collection Method'),
-                '#disabled' => $disabled,
-                '#default_value' => $traitprop['definition'],
-                '#description' => t('Text definition or description of trait.'),
-                '#element_validate' => array('analyzedphenotypes_validate_field_required'),
-                '#attributes' => array('class' => array($class)),
-                '#id' => 'ap-description-text-field' . $i,
-              );
-
-
-              // Text field: Crop ontology.
+              // -- Crop ontology.
               // When genus ontology set:
               //   Use the words in the trait name and attempt to match term(s) in the ontology system variable.
               //   When no terms matched, let user search for terms in all ontology terms.
@@ -670,7 +683,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                   '#type' => 'textfield',
                   '#disabled' => (isset($ontology_disable)) ? $ontology_disable : $disabled,
                   '#default_value' => $traitprop['crop_ontology'],
-                  '#description' => t('Type in crop ontology or click one from suggestions below.'),
+                  '#description' => t('Type in a term name or click one from suggestions below. The term choosen should be generic but as similar as possible to your trait.'),
                   '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/ontology/' . $project_genus,
                   '#attributes' => array('class' => array('ap-crop-ontology', ap-no-required)),
                   '#id' => drupal_html_id('ap-crop-ontology-text-field' . $i),
@@ -689,6 +702,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_group_photo_upload' . $i] = array(
                 '#type' => 'item',
                 '#title' => t('&#9660; PHOTO UPLOAD'),
+                '#description' => '<br />If possible, please upload pictures of your trait. For example, for plant height, you could take a picture of the plant with the ruler, and for disease rating you could take a picture of the various levels of disease.',
               );
 
               $g = 1;
@@ -737,6 +751,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_group_summary_table' . $i] = array(
                 '#type' => 'item',
                 '#title' => t('&#9660; SUMMARY TABLE'),
+                '#description' => '<br />The following table summarizes your data, broken down by site year. Please take this opprotunity to <strong>ensure your data has been filtered for outliers</strong>.',
               );
 
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_summary_table' . $i] = array(
@@ -825,30 +840,31 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
       else {
         // Use the values entered or prefilled in the field since unit is editable.
         $traitname = $form_state['values']['ap_name_text_field' . $i];
-        $traitunit = $form_state['values']['ap_unit_text_field' . $i];
+        $description = $form_state['values']['ap_description_text_field' . $i];
+        $method = $form_state['values']['ap_method_text_field' . $i];
+        $unit = $form_state['values']['ap_unit_text_field' . $i];
+
         // Reconstruct trait to follow Trait Name (unit) format.
-        $a_trait   = trim($traitname) . ' (' . trim($traitunit) . ')';
+        $a_trait   = trim($traitname) . ' (' . trim($unit) . ')';
 
         if ($trait != $a_trait) {
           // User entered in a different unit.
           $alt_trait = $a_trait;
         }
 
-        $description = $form_state['values']['ap_description_text_field' . $i];
-
         // Insert new term. Inserted term id is required.
         // When alternate trait available use it over original trait.
-        $cvterm = ap_insert_cvterm(
-          array(
-            'name' => isset($alt_trait) ? $alt_trait : $trait,
-            'definition' => $description,
-            'genus' => $project_genus,
-          ),
-          array('return_inserted_id' => TRUE)
-        );
+        $result = ap_insert_trait([
+          'name' => $traitname,
+          'description' => $description,
+          'method_title' => 'test title for now.',
+          'method' => $method,
+          'unit' => $unit,
+          'genus' => $project_genus,
+        ]);
 
-        if ($cvterm) {
-          $cvterm_id = $cvterm;
+        if ($result) {
+          $cvterm_id = $result['trait']->cvterm_id;
 
           if ($sysvar_genus_ontology > 0) {
             // Create plant ontology relationship only when genus ontology (on)
@@ -1042,18 +1058,23 @@ function analyzedphenotypes_validate_field_select_trait(&$element, &$form, &$for
 
 /**
  * Implements custom field validation.
- * Validate required fields: unit, trait description, ontology and photo.
+ * Validate required fields: unit, method, trait description, ontology and photo.
  */
 function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_state) {
   if ($element['#disabled'] === FALSE) {
     $error = FALSE;
 
+    // @debug dpm($element, 'element in validate');
+
+    // Grab the index of the field to be validated.
+    preg_match('/(\d+)$/', $element['#name'], $matches);
+    $field_index = $matches[1];
+
     // Trait unit.
-    $original_unit_name = str_replace('ap_unit_text_field', 'ap_orig_unit_field', $element['#name']);
+    $original_unit_name = 'ap_orig_unit_field' . $field_index;
     $original_unit = $form['values'][ $original_unit_name ];
 
-    if (stristr($element['#name'], 'ap_unit_text_field')
-      && trim(strtolower($original_unit)) != trim(strtolower($element['#value']))) {
+    if (stristr($element['#name'], 'ap_unit_text_field') && trim(strtolower($original_unit)) != trim(strtolower($element['#value']))) {
 
       // Basic validation:
       if (strpbrk($element['#value'], '()')) {
@@ -1092,8 +1113,6 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
       }
     }
 
-
-
     // Description.
     $description_field_value = $element['#value'];
     if (empty($description_field_value)) {
@@ -1102,7 +1121,7 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
     }
 
     // Crop ontology.
-    $field_name = str_replace('ap_description_text_field', 'ap_crop_ontology_text_field', $element['#name']);
+    $field_name = 'ap_crop_ontology_text_field' . $field_index;
     if (isset($form_state['values'][$field_name])) {
       $field_value = $form_state['values'][$field_name];
       if (!empty($field_value)) {
@@ -1120,7 +1139,7 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
 
     // File.
     // Image 1.
-    $field_name = str_replace('ap_description_text_field', 'ap_photo_1', $element['#name']);
+    $field_name = 'ap_photo_1' . $field_index;
     $field_value = $_FILES['files']['name'][$field_name];
     if (!empty($field_value)) {
        $file_extension = pathinfo($field_value, PATHINFO_EXTENSION);
@@ -1132,7 +1151,7 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
     }
 
     // Image 2.
-    $field_name = str_replace('ap_description_text_field', 'ap_photo_2', $element['#name']);
+    $field_name = 'ap_photo_2' . $field_index;
     $field_value = $_FILES['files']['name'][$field_name];
     if (!empty($field_value)) {
        $file_extension = pathinfo($field_value, PATHINFO_EXTENSION);

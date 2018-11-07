@@ -25,6 +25,8 @@
  */
 function ap_insert_trait($data) {
 
+  // @debug dpm($data, 'inserting trait via new api function');
+
   // Grab necessary system config.
   //  - Get system configuration of this genus.
   $sysvar = ap_get_variablenames(
