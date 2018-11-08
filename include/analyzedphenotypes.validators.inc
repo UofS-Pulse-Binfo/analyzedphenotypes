@@ -820,9 +820,12 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
  *
  * @param Array $dataset
  *  An associative array containing user provide values:
- *  - project_name  : Project/experiment selected.
- *  - project_genus : Project/experiment genus selected.
- *  - data_file     : Standard Drupal File Id Number (FID).
+ *  - project_name      : Project/experiment selected.
+ *  - project_genus     : Project/experiment genus selected.
+ *  - trait_cvterm_ids  : array of trait name => trait cvterm_ids for all traits in file
+ *  - method_cvterm_ids : array of trait name => method cvterm_ids for all traits in file
+ *  - unit_cvterm_ids   : array of trait name => unit cvterm_ids for all traits in file
+ *  - data_file         : Standard Drupal File Id Number (FID).
  * @param Integer $job_id
  *  - Registered Tripal Job Id number.
  */
@@ -832,7 +835,9 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
   // Dataset - datafile (FID).
   // Dataset - traits.
   $dataset = unserialize($dataset);
-  $trait_cvterm = $dataset['trait_cvterm'];
+  $trait_cvterm_ids = $dataset['trait_cvterm'];
+  $method_cvterm_ids = $dataset['method_cvterm'];
+  $unit_cvterm_ids = $dataset['unit_cvterm'];
 
   // # PROJECT.
   $projectprop = ap_match_projectname(
@@ -932,7 +937,7 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
           // # PHENOTYPES.
           $file_traitname = $data[ $col_index['Trait Name'] ];
           // cvterm_id used by this trait name from trait to cvterm_id in previous stage.
-          $cvterm_id = $trait_cvterm[$file_traitname];
+          $cvterm_id = $trait_cvterm_ids[$file_traitname];
 
           // Test cvterm id number if it matched a record.
           $trait_property = ap_get_cvterm(
@@ -960,7 +965,9 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
             exit(32);
           }
 
-          $trait_id = $trait_property[0]['cvterm_id'];
+          $trait_id = $trait_cvterm_ids[$file_traitname];
+          $method_id = $method_cvterm_ids[$file_traitname];
+          $unit_id = $unit_cvterm_ids[$file_traitname];
 
           $file_year = $data[ $col_index['Year'] ];
           $file_location = $data[ $col_index['Location'] ];
@@ -976,9 +983,10 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
             'uniquename'    => $uniquename,
             'observable_id' => null,
             'attr_id'       => $trait_id,
+            'assay_id'      => $method_id,
+            'unit_id'       => $unit_id,
             'value'         => $file_value,
             'cvalue_id'     => null,
-            'assay_id'      => $method,
             'project_id'    => $project_id,
             'stock_id'      => $stock_id,
           );
@@ -997,8 +1005,6 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
                 'phenotype_id' => $phenotype_id,
                 'type_id'   => $var_value,
                 'value'  => $file_property_value,
-                // NOTE: THIS FIELD HAS NOT-NULL CONSTRAINT.
-                'cvalue_id' => 1,
                 'rank' => 0,
               );
 

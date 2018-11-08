@@ -69,6 +69,8 @@ class dataIntegrityTest extends TripalTestCase {
         // Compile the values to search on.
         $values = [];
         $values[':trait_id'] = $info['traits'][ $file['trait_name'] ];
+        $values[':method_id'] = $info['methods'][ $file['trait_name'] ];
+        $values[':unit_id'] = $info['units'][ $file['trait_name'] ];
         $values[':stock_id'] = $info['stocks'][ $file['stock_uniquename'] ];
         $values[':project_id'] = $info['project']->project_id;
         $values[':value'] = $file['value'];
@@ -77,6 +79,8 @@ class dataIntegrityTest extends TripalTestCase {
         $phenotype_records = chado_query(
           'SELECT phenotype_id FROM {phenotype} WHERE
               attr_id=:trait_id AND
+              assay_id = :method_id AND
+              unit_id = :unit_id AND
               stock_id=:stock_id AND
               project_id=:project_id AND
               value=:value',
@@ -110,6 +114,8 @@ class dataIntegrityTest extends TripalTestCase {
               SELECT json_build_object(
                 'phenotype_id', p.phenotype_id,
                 'trait_id', p.attr_id,
+                'method_id', p.assay_id,
+                'unit_id', p.unit_id,
                 'stock_id', p.stock_id,
                 'project_id', p.project_id,
                 'value', p.value,
@@ -246,17 +252,25 @@ class dataIntegrityTest extends TripalTestCase {
     // @debug print "FID: $data_file_fid.\n";
 
     // Set/Create Trait IDs for our file.
-    $trait_name = 'Lorem ipsum (cm)';
-    $cvterm = ap_insert_cvterm(
-      array(
-        'name' => $trait_name,
-        'definition' => 'Lorem ipsum testing.',
-        'genus' => $organism->genus,
-      ),
-      array('return_inserted_id' => TRUE)
-    );
-    $trait_cvterm_ids = [ $trait_name => $cvterm ];
+    $trait_name = 'Lorem ipsum';
+    $results = ap_insert_trait([
+      'name' => $trait_name,
+      'definition' => $faker->sentences(2, true),
+      'method_title' => $faker->words(2, true),
+      'method' => $faker->sentences(5, true),
+      'unit' => $faker->word(true),
+      'genus' => $organism->genus,
+    ]);
+
+    // @debug print_r($results);
+
+    $trait_cvterm_ids = [ $trait_name => $results['trait']->cvterm_id ];
     $info['traits'] = $trait_cvterm_ids;
+    $method_cvterm_ids = [ $trait_name => $results['method']->cvterm_id ];
+    $info['methods'] = $method_cvterm_ids;
+    $unit_cvterm_ids = [ $trait_name => $results['unit']->cvterm_id ];
+    $info['units'] = $unit_cvterm_ids;
+    $info['trait_details'] = [ $results ];
 
     // Ensure the germplasm exists.
     $info['stocks'] = [];
@@ -281,7 +295,9 @@ class dataIntegrityTest extends TripalTestCase {
       'project_name' => $project->name,
       'project_genus' => $organism->genus,
       'data_file' => $data_file_fid,
-      'trait_cvterm' => $trait_cvterm_ids];
+      'trait_cvterm' => $trait_cvterm_ids,
+      'method_cvterm' => $method_cvterm_ids,
+      'unit_cvterm' => $unit_cvterm_ids];
     analyzedphenotypes_save_tsv_data(serialize($dataset), 999999999);
     ob_end_clean();
 

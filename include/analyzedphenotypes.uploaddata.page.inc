@@ -902,12 +902,15 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
             array('cvterm_id' => $cvterm_id, 'photo' => array($photo_1, $photo_2)),
             array('scaleto' => 400)
           );
+
+          // When alternate trait present use it but use the original trait as reference.
+          // For example: Plant Height (cm) => (use) id of Plant Height (m).
+          $arr_traitname_cvtermid[$trait] = $result['trait']->cvterm_id;
+          $arr_method_cvtermid[$trait] = $result['method']->cvterm_id;
+          $arr_unit_cvtermid[$trait] = $result['unit']->cvterm_id;
+
         }
       }
-
-      // When alternate trait present use it but use the original trait as reference.
-      // For example: Plant Height (cm) => (use) id of Plant Height (m).
-      $arr_traitname_cvtermid[$trait] = $cvterm_id;
     }
 
     // Save genus and project.
@@ -940,6 +943,8 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
         'project_genus' => $project_genus,
         'data_file' => $data_file,
         'trait_cvterm' => $arr_traitname_cvtermid,
+        'method_cvterm' => $arr_method_cvtermid,
+        'unit_cvterm' => $arr_unit_cvtermid,
       )
     );
 
