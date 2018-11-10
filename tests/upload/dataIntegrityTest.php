@@ -3,6 +3,7 @@ namespace Tests\upload;
 
 use StatonLab\TripalTestSuite\DBTransaction;
 use StatonLab\TripalTestSuite\TripalTestCase;
+use  Tests\DatabaseSeeders\PhenotypeSeeder;
 use Faker\Factory;
 
 class dataIntegrityTest extends TripalTestCase {
@@ -10,9 +11,142 @@ class dataIntegrityTest extends TripalTestCase {
   use DBTransaction;
 
   /**
-   * Basic test example.
-   * Tests must begin with the word "test".
-   * See https://phpunit.readthedocs.io/en/latest/ for more information.
+   * Data Integrity test.
+   * This checks that the data is loaded into the chado tables correctly.
+   *
+   * @group seeder
+   * @group data-Integrity
+   *
+   * Specifically, analyzedphenotypes_save_tsv_data() is run with fake parameters
+   * and an example file and then
+   *   - it's checked that every fake phenotype became a record in chado.phenotype
+   *   - each record in chado.phenotype should be linked to the
+   *       - trait cvterm via phenotype.attr_id
+   *       - method cvterm via phenotype.assay_id
+   *       - unit cvterm via phenotype.unit_id
+   *       - project via phenotype.project_id
+   *       - germplasm assayed via phenotype.stock_id
+   *   - each record in chado.phenotype should have the following properties
+   *       - location
+   *       - year
+   *       - replicate
+   *       - data collector
+   *     using terms chosen by the administrator.
+   */
+  public function testPhenotypeSeederDataIntegrity() {
+
+    $seeder = new PhenotypeSeeder();
+    $data = $seeder->up();
+
+    /* DEBUG
+    $debug_query =  "
+      SELECT json_build_object(
+        'phenotype_id', p.phenotype_id,
+        'trait_id', p.attr_id,
+        'method_id', p.assay_id,
+        'unit_id', p.unit_id,
+        'stock_id', p.stock_id,
+        'project_id', p.project_id,
+        'value', p.value,
+        'properties', array_to_json(array_agg(props.json))
+      ) as json
+      FROM chado.phenotype p
+        LEFT JOIN (
+        SELECT row_to_json(prop) as json, phenotype_id
+        FROM chado.phenotypeprop prop
+      ) props ON props.phenotype_id=p.phenotype_id
+      GROUP BY p.phenotype_id, p.attr_id, p.stock_id, p.project_id, p.value";
+    $results = chado_query($debug_query)->fetchAll();
+    print "Database Records (JSON):\n";
+    foreach($results as $result) {
+      $noSlahes = str_replace('\\', '', $result->json);
+      $jsonObject = json_decode($noSlahes);
+      print "------------------------------\n";
+      print print_r($jsonObject, TRUE)."\n";
+    }
+
+    */
+
+    $single_phenotype_query =  "
+      SELECT json_build_object(
+        'phenotype_id', p.phenotype_id,
+        'trait_id', p.attr_id,
+        'method_id', p.assay_id,
+        'unit_id', p.unit_id,
+        'stock_id', p.stock_id,
+        'project_id', p.project_id,
+        'value', p.value,
+        'properties', array_to_json(array_agg(props.json))
+      ) as json
+      FROM chado.phenotype p
+        LEFT JOIN (
+        SELECT row_to_json(prop) as json, phenotype_id
+        FROM chado.phenotypeprop prop
+        LEFT JOIN chado.cvterm proptype ON proptype.cvterm_id=prop.type_id
+      ) props ON props.phenotype_id=p.phenotype_id
+      WHERE p.phenotype_id=:id
+      GROUP BY p.phenotype_id, p.attr_id, p.stock_id, p.project_id, p.value";
+
+
+    foreach ($data as $expected) {
+
+      // @debug print_r($expected);
+
+      // Select from the database as JSON.
+      $escaped_json = chado_query(
+          $single_phenotype_query,
+          [':id' => $expected['phenotype_id']])->fetchField();
+      $noSlahes = str_replace('\\', '', $escaped_json);
+      $db_result = json_decode($noSlahes);
+      // @debug print str_repeat('-',50) . print_r($db_result, TRUE)."\n";
+
+      $this->assertEquals($expected['trait']->cvterm_id, $db_result->trait_id,
+        "The Trait ID was not what we expected.");
+
+      $this->assertEquals($expected['method']->cvterm_id, $db_result->method_id,
+        "The Method ID was not what we expected.");
+
+      $this->assertEquals($expected['unit']->cvterm_id, $db_result->unit_id,
+        "The Unit ID was not what we expected.");
+
+      $this->assertEquals($expected['project']->project_id, $db_result->project_id,
+        "The Project ID was not what we expected.");
+
+      $this->assertEquals($expected['stock']->stock_id, $db_result->stock_id,
+        "The Stock ID was not what we expected.");
+
+      $this->assertEquals($expected['phenotype']['value'], $db_result->value,
+        "The Phenotypic Value was not what we expected.");
+
+      $this->assertEquals(4, sizeof($db_result->properties),
+        "There should be 4 properties (location, year, replicate and data collector) for each phenotype.");
+    }
+
+    $this->assertNotEmpty($data);
+  }
+
+  /**
+   * Data Integrity test.
+   * This checks that the data is loaded into the chado tables correctly.
+   *
+   * @group data-integrity
+   * @group upload
+   *
+   * Specifically, analyzedphenotypes_save_tsv_data() is run with fake parameters
+   * and an example file and then
+   *   - it's checked that every line of the file became a record in chado.phenotype
+   *   - each record in chado.phenotype should be linked to the
+   *       - trait cvterm via phenotype.attr_id
+   *       - method cvterm via phenotype.assay_id
+   *       - unit cvterm via phenotype.unit_id
+   *       - project via phenotype.project_id
+   *       - germplasm assayed via phenotype.stock_id
+   *   - each record in chado.phenotype should have the following properties
+   *       - location
+   *       - year
+   *       - replicate
+   *       - data collector
+   *     using terms chosen by the administrator.
    */
   public function testUploadDataIntegrity() {
 
@@ -211,7 +345,7 @@ class dataIntegrityTest extends TripalTestCase {
    * @param $file
    *   The full path to the file.
    */
-  function loadFile($file) {
+  public static function loadFile($file) {
     $faker = Factory::create();
     $info = [];
 
