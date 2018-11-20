@@ -68,22 +68,17 @@ class dataIntegrityTest extends TripalTestCase {
     */
 
     $single_phenotype_query =  "
-      SELECT json_build_object(
-        'phenotype_id', p.phenotype_id,
-        'trait_id', p.attr_id,
-        'method_id', p.assay_id,
-        'unit_id', p.unit_id,
-        'stock_id', p.stock_id,
-        'project_id', p.project_id,
-        'value', p.value,
-        'properties', array_to_json(array_agg(props.json))
-      ) as json
+      SELECT
+        p.phenotype_id as phenotype_id,
+        p.attr_id as trait_id,
+        p.assay_id as method_id,
+        p.unit_id as unit_id,
+        p.stock_id as stock_id,
+        p.project_id as project_id,
+        p.value as value,
+        count(props.*) as properties
       FROM chado.phenotype p
-        LEFT JOIN (
-        SELECT row_to_json(prop) as json, phenotype_id
-        FROM chado.phenotypeprop prop
-        LEFT JOIN chado.cvterm proptype ON proptype.cvterm_id=prop.type_id
-      ) props ON props.phenotype_id=p.phenotype_id
+        LEFT JOIN chado.phenotypeprop props ON props.phenotype_id=p.phenotype_id
       WHERE p.phenotype_id=:id
       GROUP BY p.phenotype_id, p.attr_id, p.stock_id, p.project_id, p.value";
 
@@ -93,11 +88,9 @@ class dataIntegrityTest extends TripalTestCase {
       // @debug print_r($expected);
 
       // Select from the database as JSON.
-      $escaped_json = chado_query(
+      $db_result = chado_query(
           $single_phenotype_query,
-          [':id' => $expected['phenotype_id']])->fetchField();
-      $noSlahes = str_replace('\\', '', $escaped_json);
-      $db_result = json_decode($noSlahes);
+          [':id' => $expected['phenotype_id']])->fetchObject();
       // @debug print str_repeat('-',50) . print_r($db_result, TRUE)."\n";
 
       $this->assertEquals($expected['trait']->cvterm_id, $db_result->trait_id,
@@ -118,7 +111,7 @@ class dataIntegrityTest extends TripalTestCase {
       $this->assertEquals($expected['phenotype']['value'], $db_result->value,
         "The Phenotypic Value was not what we expected.");
 
-      $this->assertEquals(4, sizeof($db_result->properties),
+      $this->assertEquals(4, $db_result->properties,
         "There should be 4 properties (location, year, replicate and data collector) for each phenotype.");
     }
 
