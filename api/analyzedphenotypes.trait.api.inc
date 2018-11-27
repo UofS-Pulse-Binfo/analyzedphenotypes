@@ -47,55 +47,55 @@ function ap_insert_trait($data) {
   $cv_name = $cvprop['name'];
 
   // Insert the trait cvterm
-  $trait_cvterm = [
+  $trait_cvterm = array(
     'cv_name' => $cv_name,
     'id' => trim($db_name) . ':' . $data['name'],
     'name' => $data['name'],
     'definition' => $data['description'],
-  ];
+  );
   $trait_cvterm = tripal_insert_cvterm($trait_cvterm);
 
   // Insert the method cvterm
-  $method_cvterm = [
+  $method_cvterm = array(
     'cv_name' => $cv_name, // @todo we shouldnt use the same cv...
     'id' => trim($db_name) . ':' . $data['method_title'],
     'name' => $data['method_title'],
     'definition' => $data['method'],
-  ];
+  );
   $method_cvterm = tripal_insert_cvterm($method_cvterm);
 
   // Insert the unit cvterm
-  $unit_cvterm = [
+  $unit_cvterm = array(
     'cv_name' => $cv_name, // @todo we shouldnt use the same cv...
     'id' => trim($db_name) . ':' . $data['unit'],
     'name' => $data['unit'],
     'definition' => '',
-  ];
+  );
   $unit_cvterm = tripal_insert_cvterm($unit_cvterm);
 
   // Relate Trait => Method
-  chado_insert_record('cvterm_relationship', [
+  chado_insert_record('cvterm_relationship', array(
     'subject_id' => $trait_cvterm->cvterm_id,
-    'type_id' => [
-      'cv_id' => ['name' => 'NCIT'],
+    'type_id' => array(
+      'cv_id' => array('name' => 'NCIT'),
       'name' => 'method',
-    ],
+    ),
     'object_id' => $method_cvterm->cvterm_id,
-  ]);
+  ));
 
   // Relate Method => Unit
-  chado_insert_record('cvterm_relationship', [
+  chado_insert_record('cvterm_relationship', array(
     'subject_id' => $method_cvterm->cvterm_id,
-    'type_id' => [
-      'cv_id' => ['name' => 'uo'],
+    'type_id' => array(
+      'cv_id' => array('name' => 'uo'),
       'name' => 'unit',
-    ],
+    ),
     'object_id' => $unit_cvterm->cvterm_id,
-  ]);
+  ));
 
-  return [
+  return array(
     'trait' => $trait_cvterm,
     'method' => $method_cvterm,
     'unit' => $unit_cvterm,
-  ];
+  );
 }

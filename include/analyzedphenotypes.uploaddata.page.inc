@@ -854,14 +854,14 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
 
         // Insert new term. Inserted term id is required.
         // When alternate trait available use it over original trait.
-        $result = ap_insert_trait([
+        $result = ap_insert_trait(array(
           'name' => $traitname,
           'description' => $description,
           'method_title' => 'test title for now.',
           'method' => $method,
           'unit' => $unit,
           'genus' => $project_genus,
-        ]);
+        ));
 
         if ($result) {
           $cvterm_id = $result['trait']->cvterm_id;
