@@ -6,8 +6,9 @@ use StatonLab\TripalTestSuite\Database\Seeder;
 use Faker\Factory;
 
 class PhenotypeSeeder extends Seeder {
+
   /**
-   * Seeds the database with users.
+   * Seeds the database with Phenotypes.
    *
    * @return void
    */
@@ -16,7 +17,15 @@ class PhenotypeSeeder extends Seeder {
 
     // Create Project.
     $project = $info['project'] = factory('chado.project')->create();
-    $organism = $info['organism'] = factory('chado.organism')->create();
+    $organism = $info['organism'] = factory('chado.organism')->create([
+      'genus' => 'Tripalus',
+      'species' => 'databasica',
+      'common_name' => 'Tripalus',
+      'abbreviation' => 'T. databasica',
+    ]);
+
+    // @debug
+    print "Project: ".$project->name."; Genus: ".$organism->genus."\n";
 
     // Configure Module for this organism.
     // Set the line in the config page for the fake organism.
@@ -46,43 +55,53 @@ class PhenotypeSeeder extends Seeder {
     ];
 
     // Create Stocks (between 50-100 of them).
-    $stocks = factory('chado.stock', rand(50,100))->create();
+    $stocks = factory('chado.stock', rand(50,1000))->create([
+        'organism_id' => $organism->organism_id]);
+
+    // @debug
+    print "Number of Germplasm: ".sizeof($stocks)."\n";
 
     // Create traits.
     $traits = [];
     for($i=1; $i<=$num_traits; $i++) {
 
-      $trait_name = $faker->name();
+      $trait_name = $faker->words(2, true);
       $trait_description = $faker->sentences(2, true);
 
-      //for($i=1; $i<=$num_methods_per_trait; $i++) {
-        $traits[] = ap_insert_trait([
-          'name' => $trait_name,
-          'definition' => $trait_description,
-          'method_title' => $faker->words(2, true),
-          'method' => $faker->sentences(5, true),
-          'unit' => $faker->word(true),
-          'genus' => $organism->genus,
-        ]);
-      //}
+      $traits[] = ap_insert_trait([
+        'name' => $trait_name,
+        'definition' => $trait_description,
+        'method_title' => $faker->words(2, true),
+        'method' => $faker->sentences(5, true),
+        'unit' => $faker->word(true),
+        'genus' => $organism->genus,
+      ]);
     }
 
-    // For each trait...
-    foreach ($traits as $trait_details) {
+    // @debug
+    print "Number of Traits: ".sizeof($traits)."\n";
 
-      // Generate specifics global to the trait.
-      $min = rand(10,500);
-      $max = $min + rand(100,500);
-      $num_years = rand(2,5);
-      $num_sites = rand(1,4);
+    $num_years = rand(2,4);
+    $num_sites = rand(1,2);
+    $start_year = $faker->year();
 
-      // For each year...
-      for ($yrI=1; $yrI<=$num_years; $yrI++) {
-        $year = $faker->year();
+    // @debug
+    print "Number of Site-Years: ".($num_sites * $num_years)."; Sites: ".$num_sites."; Years: ".$num_years."\n";
 
-        // For each site...
-        for ($siteI=1; $siteI<=$num_sites; $siteI++) {
-          $site = $faker->city() . ', ' . $faker->country();
+    // For each year...
+    for ($yrI=1; $yrI<=$num_years; $yrI++) {
+      $year = $start_year + $yrI;
+
+      // For each site...
+      for ($siteI=1; $siteI<=$num_sites; $siteI++) {
+        $site = $faker->city() . ', ' . $faker->country();
+
+        // For each trait...
+        foreach ($traits as $trait_details) {
+
+          // Generate specifics global to the trait.
+          $min = rand(10,500);
+          $max = $min + rand(100,500);
 
           // $mean = rand($min, $max);
 
@@ -160,9 +179,9 @@ class PhenotypeSeeder extends Seeder {
 
             } // stock...
           } // replicate...
-        } // site...
-      } // year...
-    } // trait...
+        } // trait...
+      } // site...
+    } // year...
 
     return $phenotypes;
   }
