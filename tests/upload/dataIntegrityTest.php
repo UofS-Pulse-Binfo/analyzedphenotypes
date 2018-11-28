@@ -15,7 +15,7 @@ class dataIntegrityTest extends TripalTestCase {
    * This checks that the data is loaded into the chado tables correctly.
    *
    * @group seeder
-   * @group data-Integrity
+   * @group data-integrity
    *
    * Specifically, analyzedphenotypes_save_tsv_data() is run with fake parameters
    * and an example file and then
@@ -116,6 +116,11 @@ class dataIntegrityTest extends TripalTestCase {
     }
 
     $this->assertNotEmpty($data);
+
+    // Remove configuration.
+    $genus = $data[0]['organism']->genus;
+    variable_del('analyzedphenotypes_systemvar_'.$genus.'_cv');
+    variable_del('analyzedphenotypes_systemvar_'.$genus.'_db');
   }
 
   /**
@@ -152,7 +157,7 @@ class dataIntegrityTest extends TripalTestCase {
       'SELECT count(*) FROM {phenotype} WHERE project_id=:project',
       array(':project' => $info['project']->project_id))->fetchField();
     $this->assertEquals(270, $num_records,
-      "The nunmber of records inserted does not match what we expected.");
+      "The number of records inserted does not match what we expected.");
 
     // Retrieve the types that should be used for each property.
     $sysvars = ap_get_variablenames(
@@ -330,6 +335,10 @@ class dataIntegrityTest extends TripalTestCase {
     else {
       $this->fail('Unable to read example file.');
     }
+
+    // Remove configuration.
+    variable_del('analyzedphenotypes_systemvar_'.$info['organism']->genus.'_cv');
+    variable_del('analyzedphenotypes_systemvar_'.$info['organism']->genus.'_db');
   }
 
   /**
@@ -424,7 +433,8 @@ class dataIntegrityTest extends TripalTestCase {
       'data_file' => $data_file_fid,
       'trait_cvterm' => $trait_cvterm_ids,
       'method_cvterm' => $method_cvterm_ids,
-      'unit_cvterm' => $unit_cvterm_ids];
+      'unit_cvterm' => $unit_cvterm_ids,
+    ];
     analyzedphenotypes_save_tsv_data(serialize($dataset), 999999999);
     ob_end_clean();
 

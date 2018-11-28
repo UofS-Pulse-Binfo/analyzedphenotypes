@@ -26,5 +26,10 @@ class generateFileTest extends TripalTestCase {
     $data = $seeder->up();
 
     $this->assertTrue(true);
+
+    // Remove configuration.
+    $genus = $data[0]['organism']->genus;
+    variable_del('analyzedphenotypes_systemvar_'.$genus.'_cv');
+    variable_del('analyzedphenotypes_systemvar_'.$genus.'_db');
   }
 }

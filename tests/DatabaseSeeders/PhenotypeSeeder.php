@@ -12,8 +12,14 @@ class PhenotypeSeeder extends Seeder {
    *
    * @return void
    */
-  public function up($num_traits = 3, $num_methods_per_trait = 1) {
+  public function up($options = []) {
     $faker = Factory::create();
+
+    // Set some defaults.
+    $num_traits = (isset($options['num_traits'])) ? $options['num_traits'] : 3;
+    $options['num_reps'] = (isset($options['num_reps'])) ? $options['num_reps'] : 3;
+    $options['min_num_stocks'] = (isset($options['min_num_stocks'])) ? $options['min_num_stocks'] : 2;
+    $options['max_num_stocks'] = (isset($options['max_num_stocks'])) ? $options['max_num_stocks'] : 10;
 
     // Create Project.
     $project = $info['project'] = factory('chado.project')->create();
@@ -24,8 +30,7 @@ class PhenotypeSeeder extends Seeder {
       'abbreviation' => 'T. databasica',
     ]);
 
-    // @debug
-    print "Project: ".$project->name."; Genus: ".$organism->genus."\n";
+    // @debug print "Project: ".$project->name."; Genus: ".$organism->genus."\n";
 
     // Configure Module for this organism.
     // Set the line in the config page for the fake organism.
@@ -55,11 +60,10 @@ class PhenotypeSeeder extends Seeder {
     ];
 
     // Create Stocks (between 50-100 of them).
-    $stocks = factory('chado.stock', rand(50,1000))->create([
+    $stocks = factory('chado.stock', rand($options['min_num_stocks'],$options['max_num_stocks']))->create([
         'organism_id' => $organism->organism_id]);
 
-    // @debug
-    print "Number of Germplasm: ".sizeof($stocks)."\n";
+    // @debug print "Number of Germplasm: ".sizeof($stocks)."\n";
 
     // Create traits.
     $traits = [];
@@ -78,15 +82,13 @@ class PhenotypeSeeder extends Seeder {
       ]);
     }
 
-    // @debug
-    print "Number of Traits: ".sizeof($traits)."\n";
+    // @debug print "Number of Traits: ".sizeof($traits)."\n";
 
     $num_years = rand(2,4);
     $num_sites = rand(1,2);
     $start_year = $faker->year();
 
-    // @debug
-    print "Number of Site-Years: ".($num_sites * $num_years)."; Sites: ".$num_sites."; Years: ".$num_years."\n";
+    // @debug print "Number of Site-Years: ".($num_sites * $num_years)."; Sites: ".$num_sites."; Years: ".$num_years."\n";
 
     // For each year...
     for ($yrI=1; $yrI<=$num_years; $yrI++) {
@@ -105,11 +107,11 @@ class PhenotypeSeeder extends Seeder {
 
           // $mean = rand($min, $max);
 
-          // For each of 3 reps...
-          for ($rep=1; $rep<=3; $rep++) {
+          // For each germplasm assayed...
+          foreach ($stocks as $stock) {
 
-            // For each germplasm assayed...
-            foreach ($stocks as $stock) {
+            // For each of 3 reps...
+            for ($rep=1; $rep<=$options['num_reps']; $rep++) {
 
               // Use sections to simulate a bell curve.
               // By having more sections near to the mean, we ensure more
@@ -165,6 +167,7 @@ class PhenotypeSeeder extends Seeder {
 
               $phenotypes[] = [
                 'project' => $project,
+                'organism' => $organism,
                 'stock' => $stock,
                 'trait' => $trait_details['trait'],
                 'method' => $trait_details['method'],
@@ -177,8 +180,8 @@ class PhenotypeSeeder extends Seeder {
                 'data_collector' => $values['value'],
               ];
 
-            } // stock...
-          } // replicate...
+            } // replicate...
+          } // stock...
         } // trait...
       } // site...
     } // year...
