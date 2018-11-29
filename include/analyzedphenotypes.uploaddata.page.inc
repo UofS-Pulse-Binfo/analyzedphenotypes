@@ -427,11 +427,10 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
             // Try to match the trait name with existing name and suggest to user.
             // Limit the search to genus configuration of genus selected.
             // Cvterm Id passed on to callback.
-            $name = ap_format_traitname($trait_name_value, 'no_unit');
-            $traitprop['name'] = $name;
+            $traitprop['name'] = $trait_name_value;
 
             $similar_cvterm = ap_get_cvterm(
-              array('keyword' => $name, 'genus' => $project_genus),
+              array('keyword' => $traitprop['name'], 'genus' => $project_genus),
               array('dataset' => 'cvtermidname')
             );
 
@@ -493,16 +492,32 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
 
                   if ($exists) {
                     $trait_name_value = $exists[0]['name'];
-                    $name = ap_format_traitname($trait_name_value, 'no_unit');
 
                     // Term properties.
-                    $traitprop['name']          = $name;
+                    $traitprop['name']          = $trait_name_value;
                     $traitprop['cvterm_id']     = $exists[0]['cvterm_id'];
                     $traitprop['definition']    = $exists[0]['definition'];
                     $traitprop['scale']         = '';
                     $traitprop['crop_ontology'] = $exists[0]['crop_ontology'];
                     // Term photo.
                     $traitprop['photos'] = ap_download_cvtermphoto($exists[0]['cvterm_id']);
+                    // Method.
+                    $trait_id = (isset($traitprop['cvterm_id'])) ? $traitprop['cvterm_id'] : NULL;
+                    $methods = ap_get_trait_methods($project_genus, $trait_name_value, array(), $trait_id);
+                    $traitprop['method'] = NULL;
+                    if (sizeof($methods) == 1) {
+                      $method_ids = array_keys($methods);
+                      $method_id = array_pop($method_ids);
+                      $traitprop['method'] = $methods[$method_id];
+                      // Unit.
+                      // If there is only a single unit for the supplied method then use it for the default.
+                      // Note: there must also be only one method.
+                      $units = ap_get_method_units($project_genus, $traitprop['method'], array(), $method_id);
+                      $traitprop['unit'] = NULL;
+                      if (sizeof($units) == 1) {
+                        $traitprop['unit'] = array_pop($units);
+                      }
+                    }
                   }
                 }
 
@@ -556,6 +571,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               );
 
               // -- Method.
+              // If there is only a single method for the supplied trait then use it for the default.
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_method_text_field' . $i] = array(
                 '#type' => 'textarea',
                 '#title' => t('Collection Method'),
@@ -568,8 +584,6 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               );
 
               // -- Unit.
-              $unit = ap_format_traitname($trait_name_value, 'trait_unit');
-              $traitprop['unit'] = $unit;
 
               // Hidden field: Unit.
               // Store original value extracted from the file. This value will be
