@@ -57,7 +57,7 @@ function ap_insert_trait($data) {
 
   // Insert the method cvterm
   $method_cvterm = array(
-    'cv_name' => $cv_name, // @todo we shouldnt use the same cv...
+    'cv_name' => $cv_name, // @todo we shouldnt use the same cv... @config-needed
     'id' => trim($db_name) . ':' . $data['method_title'],
     'name' => $data['method_title'],
     'definition' => $data['method'],
@@ -66,7 +66,7 @@ function ap_insert_trait($data) {
 
   // Insert the unit cvterm
   $unit_cvterm = array(
-    'cv_name' => $cv_name, // @todo we shouldnt use the same cv...
+    'cv_name' => $cv_name, // @todo we shouldnt use the same cv... @config-needed
     'id' => trim($db_name) . ':' . $data['unit'],
     'name' => $data['unit'],
     'definition' => '',
@@ -77,7 +77,7 @@ function ap_insert_trait($data) {
   chado_insert_record('cvterm_relationship', array(
     'subject_id' => $trait_cvterm->cvterm_id,
     'type_id' => array(
-      'cv_id' => array('name' => 'NCIT'),
+      'cv_id' => array('name' => 'NCIT'), // @todo @config-needed
       'name' => 'method',
     ),
     'object_id' => $method_cvterm->cvterm_id,
@@ -87,7 +87,7 @@ function ap_insert_trait($data) {
   chado_insert_record('cvterm_relationship', array(
     'subject_id' => $method_cvterm->cvterm_id,
     'type_id' => array(
-      'cv_id' => array('name' => 'uo'),
+      'cv_id' => array('name' => 'uo'), // @todo @config-needed
       'name' => 'unit',
     ),
     'object_id' => $unit_cvterm->cvterm_id,
@@ -98,4 +98,123 @@ function ap_insert_trait($data) {
     'method' => $method_cvterm,
     'unit' => $unit_cvterm,
   );
+}
+
+/**
+ * Retrieve the collection methods based on the name of the trait.
+ *
+ * @param $project_genus
+ *   The organism genus the trait is measured in.
+ * @param $trait_name
+ *   The full name of the trait.
+ * @param $options
+ *   An array with the following possible keys:
+ *    [NONE YET SUPPORTED]
+ * @param $trait_id
+ *   (OPTIONAL) The cvterm_id of the trait.
+ */
+function ap_get_trait_methods($project_genus, $trait_name, $options = [], $trait_id = NULL) {
+
+  // If we don't have the trait cvterm_id then look it up.
+  if (!$trait_id) {
+
+    // Retrieve the CV the traits are stored in.
+    $sysvar = ap_get_variablenames(
+      array('variablename' => $project_genus),
+      array('set' => 'cvdbon', 'suffix' => 'cv')
+    );
+    $cv_id = variable_get($sysvar);
+
+    // Search for an exact match of the trait name in the expected cv.
+    $results = chado_select_record('cvterm', array('cvterm_id'),
+      array('cv_id' => $cv_id, 'name' => $trait_name));
+    if (isset($results[0]->cvterm_id)) {
+      $trait_id = $results[0]->cvterm_id;
+    }
+    else {
+      return FALSE;
+    }
+  }
+
+  // Now look up all method cvterm_ids for that trait using the relationship.
+  $results = chado_select_record('cvterm_relationship', array('object_id'),
+    array(
+      'subject_id' => $trait_id,
+      'type_id' => array(
+        'cv_id' => array('name' => 'NCIT'), // @todo @config-needed
+        'name' => 'method',
+      ),
+    )
+  );
+
+  // Now lookup the description for each method found above.
+  $methods = array();
+  foreach ($results as $r) {
+    $method_r = chado_select_record('cvterm', array('cvterm_id', 'definition'),
+      array('cvterm_id' => $r->object_id));
+    $methods[ $method_r[0]->cvterm_id ] = $method_r[0]->definition;
+  }
+
+  return $methods;
+}
+
+/**
+ * Retrieve the potential units for a given method.
+ *
+ * @param $project_genus
+ *   The organism genus the trait is measured in.
+ * @param $method
+ *   The cvterm.definition of the method you want potential units for.
+ * @param $options
+ *   An array with the following possible keys:
+ *    - name_only (boolean): returns only the unit cvterm.name.
+ * @param $method_id
+ *   (OPTIONAL) The cvterm_id of the method.
+ */
+function ap_get_method_units($project_genus, $method, $options = [], $method_id = NULL) {
+
+  // If we don't have the trait cvterm_id then look it up.
+  if (!$method_id) {
+
+    // Retrieve the CV the traits are stored in.
+    // Currently we are using the same cv as the trait...
+    // @todo @config-needed
+    $sysvar = ap_get_variablenames(
+      array('variablename' => $project_genus),
+      array('set' => 'cvdbon', 'suffix' => 'cv')
+    );
+    $cv_id = variable_get($sysvar);
+
+    // Search for an exact match of the method cvterm.definition in the expected cv.
+    $results = chado_select_record('cvterm', array('cvterm_id'),
+      array('cv_id' => $cv_id, 'definition' => $method));
+    if (isset($results[0]->cvterm_id)) {
+      $method_id = $results[0]->cvterm_id;
+    }
+    else {
+      return FALSE;
+    }
+  }
+
+  // Now look up all method cvterm_ids for that trait using the relationship.
+  $results = chado_select_record('cvterm_relationship', array('object_id'),
+    array(
+      'subject_id' => $method_id,
+      'type_id' => array(
+        'cv_id' => array('name' => 'uo'), // @todo @config-needed
+        'name' => 'unit',
+      ),
+    )
+  );
+
+  // Now lookup the description for each method found above.
+  $units = array();
+  foreach ($results as $r) {
+    $unit_r = chado_select_record('cvterm', array('cvterm_id', 'name'),
+      array('cvterm_id' => $r->object_id));
+    $units[ $unit_r[0]->cvterm_id ] = $unit_r[0]->name;
+  }
+
+  return $units;
+
 }
