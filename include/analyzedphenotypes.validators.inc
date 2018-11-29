@@ -738,7 +738,7 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
         $column_data_type = $required_columns[$column];
         $column_names = array_keys($required_columns);
 
-        if (!empty($column_data_type) && $column_names[$column] != $column_names[6]) {
+        if (!empty($column_data_type) && $required_columns[$column] != $column_names[6]) {
 
           // Check if value matches the unit.
           $coltype_value_check = ap_validate_unitvalue($column_data_type, $value);
