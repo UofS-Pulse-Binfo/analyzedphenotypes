@@ -912,6 +912,11 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
       while(!feof($handle)) {
         $row = fgets($handle);
         $data = str_getcsv($row, "\t");
+        $data = array_map('trim', $data);
+        $data = array_map(function($element) {
+            $tmp = str_replace('"',"",$element);
+            return trim($tmp, "'");
+          }, $data);
 
         if (!empty($row) && $i == 0) {
           // Extract the first row which is the column headers row.
@@ -968,8 +973,6 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
 
           $file_year = $data[ $col_index['Year'] ];
           $file_location = $data[ $col_index['Location'] ];
-          $file_location = trim($file_location, '"');
-          $file_location = trim($file_location, "'");
           $file_replicate = $data[ $col_index['Replicate'] ];
 
           $uniquename = str_replace(array(' ', ','), '', implode('_', array(

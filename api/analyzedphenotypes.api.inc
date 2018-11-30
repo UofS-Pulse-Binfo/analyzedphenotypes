@@ -275,8 +275,14 @@ function ap_create_summarytable($file, $column_row, $traitname) {
     while(!feof($handle)) {
       $row = fgets($handle);
       if ($i > 0 && !empty($row)) {
+        // Known Bug: str_getcsv() is removing internal quotes.
         $data = str_getcsv($row, "\t");
+
         $data = array_map('trim', $data);
+        $data = array_map(function($element) {
+            $tmp = str_replace('"',"",$element);
+            return trim($tmp, "'");
+          }, $data);
 
         if ($data[$index_trait] == $traitname) {
           // Each row in trait name.
@@ -284,9 +290,7 @@ function ap_create_summarytable($file, $column_row, $traitname) {
           $is_number = ap_validate_unitvalue('number', $value);
 
           if ($is_number) {
-            $site = trim($data[$index_site], '"');
-            $site = trim($site, "'");
-            $site_year =  $site . ' ' . $data[$index_year];
+            $site_year =  $data[$index_site] . ' ' . $data[$index_year];
 
             if (in_array($site_year, $arr_siteyear)) {
               $arr_values[$site_year][] = $value;
