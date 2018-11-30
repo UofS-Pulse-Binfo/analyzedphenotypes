@@ -849,7 +849,21 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
       if (isset($form_state['values']['ap_similar_trait_select_field' . $i]) &&
           $form_state['values']['ap_similar_trait_select_field' . $i] > 0) {
 
+        // Retrieve the cvterm_id of the trait.
         $cvterm_id = $form_state['values']['ap_similar_trait_select_field' . $i];
+
+	// Retrieve the cvterm_id of the method given the cvterm.definition.
+        $method = $form_state['values']['ap_method_text_field' . $i];
+        $method_id = ap_get_method_id($project_genus, $method);
+
+        // Retrieve the cvterm_id of the unit given the cvterm.name.
+        $unit = $form_state['values']['ap_unit_text_field' . $i];
+        $unit_id = ap_get_unit_id($project_genus, $unit);
+
+        // Save the values in the array for the tripal job.
+        $arr_traitname_cvtermid[$trait] = $cvterm_id;
+        $arr_method_cvtermid[$trait] = $method_id;
+        $arr_unit_cvtermid[$trait] = $unit_id;
       }
       else {
         // Use the values entered or prefilled in the field since unit is editable.
@@ -857,14 +871,6 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
         $description = $form_state['values']['ap_description_text_field' . $i];
         $method = $form_state['values']['ap_method_text_field' . $i];
         $unit = $form_state['values']['ap_unit_text_field' . $i];
-
-        // Reconstruct trait to follow Trait Name (unit) format.
-        $a_trait   = trim($traitname) . ' (' . trim($unit) . ')';
-
-        if ($trait != $a_trait) {
-          // User entered in a different unit.
-          $alt_trait = $a_trait;
-        }
 
         // Insert new term. Inserted term id is required.
         // When alternate trait available use it over original trait.
@@ -917,8 +923,8 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
             array('scaleto' => 400)
           );
 
-          // When alternate trait present use it but use the original trait as reference.
-          // For example: Plant Height (cm) => (use) id of Plant Height (m).
+
+          // Save the values in the array for the tripal job.
           $arr_traitname_cvtermid[$trait] = $result['trait']->cvterm_id;
           $arr_method_cvtermid[$trait] = $result['method']->cvterm_id;
           $arr_unit_cvtermid[$trait] = $result['unit']->cvterm_id;

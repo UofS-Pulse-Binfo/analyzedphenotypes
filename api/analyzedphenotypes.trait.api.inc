@@ -175,25 +175,7 @@ function ap_get_method_units($project_genus, $method, $options = [], $method_id 
 
   // If we don't have the trait cvterm_id then look it up.
   if (!$method_id) {
-
-    // Retrieve the CV the traits are stored in.
-    // Currently we are using the same cv as the trait...
-    // @todo @config-needed
-    $sysvar = ap_get_variablenames(
-      array('variablename' => $project_genus),
-      array('set' => 'cvdbon', 'suffix' => 'cv')
-    );
-    $cv_id = variable_get($sysvar);
-
-    // Search for an exact match of the method cvterm.definition in the expected cv.
-    $results = chado_select_record('cvterm', array('cvterm_id'),
-      array('cv_id' => $cv_id, 'definition' => $method));
-    if (isset($results[0]->cvterm_id)) {
-      $method_id = $results[0]->cvterm_id;
-    }
-    else {
-      return FALSE;
-    }
+    $method_id = ap_get_method_id($method);
   }
 
   // Now look up all method cvterm_ids for that trait using the relationship.
@@ -217,4 +199,68 @@ function ap_get_method_units($project_genus, $method, $options = [], $method_id 
 
   return $units;
 
+}
+
+/**
+ * Retrieve the cvterm_id of the specified method in the correct cv.
+ *
+ * @param $project_genus
+ *   The genus of the project. Used to deteremine the correct cv.
+ * @param $method
+ *   The full text of the collection method. This is the cvterm.definition.
+ * @return
+ *   The cvterm_id of the method, if found; false otherwise.
+ */
+function ap_get_method_id($project_genus, $method) {
+
+    // Retrieve the CV the traits are stored in.
+    // Currently we are using the same cv as the trait...
+    // @todo @config-needed
+    $sysvar = ap_get_variablenames(
+      array('variablename' => $project_genus),
+      array('set' => 'cvdbon', 'suffix' => 'cv')
+    );
+    $cv_id = variable_get($sysvar);
+
+    // Search for an exact match of the method cvterm.definition in the expected cv.
+    $results = chado_select_record('cvterm', array('cvterm_id'),
+      array('cv_id' => $cv_id, 'definition' => $method));
+    if (isset($results[0]->cvterm_id)) {
+      $method_id = $results[0]->cvterm_id;
+    }
+    else {
+      return FALSE;
+    }
+}
+
+/**
+ * Retrieve the cvterm_id of the specified unit in the correct cv.
+ * 
+ * @param $project_genus
+ *   The genus of the project. Used to deteremine the correct cv.
+ * @param $method 
+ *   The full text of the collection unit. This is the cvterm.name.
+ * @return
+ *   The cvterm_id of the unit, if found; false otherwise.
+ */  
+function ap_get_unit_id($project_genus, $unit) {
+
+    // Retrieve the CV the traits are stored in.
+    // Currently we are using the same cv as the trait...
+    // @todo @config-needed
+    $sysvar = ap_get_variablenames(
+      array('variablename' => $project_genus),
+      array('set' => 'cvdbon', 'suffix' => 'cv')
+    );
+    $cv_id = variable_get($sysvar);
+    
+    // Search for an exact match of the unit cvterm.name in the expected cv.
+    $results = chado_select_record('cvterm', array('cvterm_id'), 
+      array('cv_id' => $cv_id, 'name' => $unit));
+    if (isset($results[0]->cvterm_id)) {
+      $unit_id = $results[0]->cvterm_id;
+    } 
+    else {
+      return FALSE;
+    } 
 }

@@ -284,7 +284,9 @@ function ap_create_summarytable($file, $column_row, $traitname) {
           $is_number = ap_validate_unitvalue('number', $value);
 
           if ($is_number) {
-            $site_year = $data[$index_site] . ' ' . $data[$index_year];
+            $site = trim($data[$index_site], '"');
+            $site = trim($site, "'");
+            $site_year =  $site . ' ' . $data[$index_year];
 
             if (in_array($site_year, $arr_siteyear)) {
               $arr_values[$site_year][] = $value;
