@@ -600,7 +600,9 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
             // Apply to all.
             foreach($data as $j => $value) {
               $value = trim($value, '"');
-              $result = call_user_func($callback, $case, $value, $columns_row[$j], $i, $trait_name, $dataset['project_genus']);
+              // @todo actually pass in the unit somehow here even though
+              // we don't yet know it because it's collected in the describe phase.
+              $result = call_user_func($callback, $case, $value, $columns_row[$j], $i, $trait_name, $dataset['project_genus'],' text');
 
               if ($result['type'] == 'failed') {
                 if ($arr_status[$key]['type'] == 'passed') {
@@ -629,8 +631,9 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
               $value = trim($data[$j], '"');
             }
 
-
-            $result = call_user_func($callback, $case, $value, $columns_required, $i, $trait_name, $dataset['project_genus']);
+            // @todo actually pass in the unit somehow here even though
+            // we don't yet know it because it's collected in the describe phase.
+            $result = call_user_func($callback, $case, $value, $columns_required, $i, $trait_name, $dataset['project_genus'], 'text');
 
             if ($result['type'] == 'failed') {
               if ($arr_status[$key]['type'] == 'passed') {
@@ -706,11 +709,13 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
  *  A value representing the trait name in a given row.
  * @param String $project_genus
  *  Genus to be used to restrict dataset to only those that matched this value.
+ * @param String $unit
+ *  The unit of the value in a given row.
  *
  * @return Array
  *   An associative array, indicating if a validator passed or failed the requirements.
  */
-function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait_name, $project_genus) {
+function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait_name, $project_genus, $unit) {
   $status = array(
     'type' => 'passed', // Passed or Failed. Default to passed.
     'details' => '',    // Include more information.
@@ -755,18 +760,13 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
     //
     case 'unit_data':
       if (!empty($value)) {
-        $unit = ap_format_traitname($trait_name, 'trait_unit');
-
-        // Fetch unit properties.
-        $unit_type = ap_define_datatypes();
-        $trait_unit_datatype = $unit_type[$unit]['type'];
 
         // Check value matches unit.
-        $trait_value_check = ap_validate_unitvalue($trait_unit_datatype, $value);
+        $trait_value_check = ap_validate_unitvalue($unit, $value);
 
         if (!$trait_value_check) {
           $status['type'] = 'failed';
-          $status['details'] = ' in ' . $column . ' line #' . $row . ' (' . $value . ' is not a valid ' . $unit . '/' . $unit_type[$unit]['name'] . ')';
+          $status['details'] = ' in ' . $column . ' line #' . $row . ' (' . $value . ' is not a valid ' . $unit . ')';
         }
       }
 

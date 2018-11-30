@@ -59,7 +59,7 @@ function ap_match_germplasm($germplasm_name, $germplasm_uniquename, $genus) {
  *
  * @return
  *   String, trait name or unit.
- */
+ *
 function ap_format_traitname($traitname, $get = 'trait_unit') {
   if ($get == 'trait_unit') {
     // Extract trait name.
@@ -75,6 +75,7 @@ function ap_format_traitname($traitname, $get = 'trait_unit') {
 
   return trim($result);
 }
+*/
 
 
 /**
