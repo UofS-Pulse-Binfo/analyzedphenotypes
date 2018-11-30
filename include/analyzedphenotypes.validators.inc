@@ -890,9 +890,6 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
       array('set' => 'terms')
     );
 
-    // Assay id : method/taken by eye.
-    $sysvar_method = variable_get($sysvars['ap_method']);
-
     $plantprop = array();
     $plantprop['Year'] = variable_get($sysvars['ap_year']);
     $plantprop['Location'] = variable_get($sysvars['ap_location']);
@@ -971,6 +968,8 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
 
           $file_year = $data[ $col_index['Year'] ];
           $file_location = $data[ $col_index['Location'] ];
+          $file_location = trim($file_location, '"');
+          $file_location = trim($file_location, "'");
           $file_replicate = $data[ $col_index['Replicate'] ];
 
           $uniquename = str_replace(array(' ', ','), '', implode('_', array(
