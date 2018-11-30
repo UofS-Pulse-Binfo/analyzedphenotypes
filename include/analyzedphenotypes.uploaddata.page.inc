@@ -877,7 +877,7 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
         $result = ap_insert_trait(array(
           'name' => $traitname,
           'description' => $description,
-          'method_title' => 'test title for now.',
+          'method_title' => uniqid(),
           'method' => $method,
           'unit' => $unit,
           'genus' => $project_genus,
