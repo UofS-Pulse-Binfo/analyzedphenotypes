@@ -17,6 +17,10 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontolog
 function analyzedphenotypes_uploaddata_form($form, &$form_state) {
   drupal_session_start();
 
+  // @debug TESTING
+  //$form_state = variable_get('laceystesting', $form_state);
+  //$current_stage = 'describe';
+
   if (!isset($form_state['stage'])) {
     // Default loader to upload stage.
     $form_state['stage'] = 'upload';
@@ -403,6 +407,8 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
             continue;
           }
           else {
+            // Form elements to Describe a Given Trait
+            //-----------------------------------------
             // Prepare describe fieldset.
             $traitprop = array(
               'cvterm_id'     => '',
@@ -474,6 +480,8 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               // Load describe form since no match found.
               $describeform_show = 'yes';
             }
+
+            // @debug TESTING $form_state['values']['ap_similar_trait_select_field' . $i] = 3768;
 
             // User has picked a trait from suggestions.
             // With cvterm suggestion above, load and set fields default to term properties.
@@ -571,11 +579,26 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               );
 
               // -- Method.
+              // Add help for users if there are 2+ pre-existing methods for the current trait.
+              if (!$traitprop['method'] && isset($methods)) {
+                $method_help = '<ul>';
+                foreach ($methods as $curr) {
+                  $method_help .= '<li><pre>'.$curr.'</pre></li>';
+                }
+                $method_help .= '</ul>';
+                $method_help .= '<p>If one of the above collection methods accurately describes how you collected your data then copy and paste it into the "Collection Method" space below. NOTE: Each pre-existing collection method is it\'s own bullet point.</p>';
+                $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_method_help' . $i] = array(
+                  '#type' => 'item',
+                  '#title' => 'Existing Collection Methods for this Trait',
+                  '#markup' => $method_help,
+                );
+              }
+
               // If there is only a single method for the supplied trait then use it for the default.
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_method_text_field' . $i] = array(
                 '#type' => 'textarea',
                 '#title' => t('Collection Method'),
-                '#disabled' => $disabled,
+                '#disabled' => FALSE,
                 '#default_value' => $traitprop['method'],
                 '#description' => t('Describe how you collected the data. Ensure you include all information needed for an unskilled labourer to reproduce your work.'),
                 '#element_validate' => array('analyzedphenotypes_validate_field_required'),
@@ -595,10 +618,28 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                 '#attributes' => array('id' => 'ap-orig-unit-field' . $i),
               );
 
+              // Add help for users if there are multiple units already used.
+              if (!$traitprop['unit'] && isset($methods)) {
+                //
+                $unit_help = '<ul>';
+                foreach ($methods as $curr_id => $curr) {
+                  $units = ap_get_method_units($project_genus, $curr, [], $curr_id);
+                  foreach ($units as $u) {
+                    $unit_help .= '<li><pre>'.$u.'</pre></li>';
+                  }
+                }
+                $unit_help .= '</ul>';
+                $unit_help .= '<p>If you used one of the above units when collecting your data then copy and paste it into the "Unit" space below. NOTE: Each unit is it\'s own bullet point.</p>';
+                $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_unit_help' . $i] = array(
+                  '#type' => 'item',
+                  '#title' => 'Existing Units used for this Trait',
+                  '#markup' => $unit_help,
+                );
+              }
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_unit_text_field' . $i] = array(
                 '#type' => 'textfield',
                 '#title' => t('Unit'),
-                '#disabled' => $disabled,
+                '#disabled' => FALSE,
                 '#default_value' => $traitprop['unit'],
                 '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/traitunit/units',
                 '#element_validate' => array('analyzedphenotypes_validate_field_required'),
@@ -847,12 +888,12 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
     foreach($traits as $i => $trait) {
       // Check the select similar trait value.
       if (isset($form_state['values']['ap_similar_trait_select_field' . $i]) &&
-          $form_state['values']['ap_similar_trait_select_field' . $i] > 0) {
+        $form_state['values']['ap_similar_trait_select_field' . $i] > 0) {
 
         // Retrieve the cvterm_id of the trait.
         $cvterm_id = $form_state['values']['ap_similar_trait_select_field' . $i];
 
-	// Retrieve the cvterm_id of the method given the cvterm.definition.
+	      // Retrieve the cvterm_id of the method given the cvterm.definition.
         $method = $form_state['values']['ap_method_text_field' . $i];
         $method_id = ap_get_method_id($project_genus, $method);
 
@@ -1165,30 +1206,34 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
     // File.
     // Image 1.
     $field_name = 'ap_photo_1' . $field_index;
-    $field_value = $_FILES['files']['name'][$field_name];
-    if (!empty($field_value)) {
-       $file_extension = pathinfo($field_value, PATHINFO_EXTENSION);
+    if (isset($_FILES['files']['name'][$field_name])) {
+      $field_value = $_FILES['files']['name'][$field_name];
+      if (!empty($field_value)) {
+         $file_extension = pathinfo($field_value, PATHINFO_EXTENSION);
 
-       if ($file_extension != 'jpg') {
-         $error = TRUE;
-         form_set_error($field_name, t('Photo 1 of 2 is not a .jpg file. Please provide a .jpg photo.'));
-       }
+         if ($file_extension != 'jpg') {
+           $error = TRUE;
+           form_set_error($field_name, t('Photo 1 of 2 is not a .jpg file. Please provide a .jpg photo.'));
+         }
+      }
     }
 
     // Image 2.
     $field_name = 'ap_photo_2' . $field_index;
-    $field_value = $_FILES['files']['name'][$field_name];
-    if (!empty($field_value)) {
-       $file_extension = pathinfo($field_value, PATHINFO_EXTENSION);
+    if (isset($_FILES['files']['name'][$field_name])) {
+      $field_value = $_FILES['files']['name'][$field_name];
+      if (!empty($field_value)) {
+         $file_extension = pathinfo($field_value, PATHINFO_EXTENSION);
 
-       if ($file_extension != 'jpg') {
-         $error = TRUE;
-         form_set_error($field_name, t('Photo 2 of 2 is not a .jpg file. Please provide a .jpg photo.'));
-       }
-    }
+         if ($file_extension != 'jpg') {
+           $error = TRUE;
+           form_set_error($field_name, t('Photo 2 of 2 is not a .jpg file. Please provide a .jpg photo.'));
+         }
+      }
 
-    if ($error) {
-      drupal_add_library('system', 'ui.accordion');
+      if ($error) {
+        drupal_add_library('system', 'ui.accordion');
+      }
     }
   }
 }
