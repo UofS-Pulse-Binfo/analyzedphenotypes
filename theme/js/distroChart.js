@@ -344,11 +344,11 @@ function makeDistroChart(settings) {
         chart.objs.axes = chart.objs.g.append("g").attr("class", "axis");
         chart.objs.axes.append("g")
             .attr("class", "x axis")
-            .attr("transform", "translate(0," + (chart.height-30) + ")")
+            .attr("transform", "translate(0," + (chart.height) + ")")
             .call(chart.objs.xAxis)
             .append("text")
               .attr("class", "label")
-              .attr("x", chart.height+50)
+              .attr("x", chart.height)
               .attr("y", 50)
               .style("text-anchor", "middle")
               .text(chart.xAxisLable);
