@@ -52,6 +52,7 @@ function analyzedphenotypes_menu() {
   );
 
   // Main menu items for phenotypes: shows a beanplot -select trait and project.
+  // Bean Plot.
   $items['phenotypes/trait-distribution'] = array(
     'title' => 'Trait Distribution Chart',
     'description' => 'Summarizes phenotypic data for a given trait and project.',
@@ -62,12 +63,34 @@ function analyzedphenotypes_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
+
+
   // JSON for beanplot.
   $items['json/phenotypes/beanplot/%/%'] = array(
     'page callback' => 'analyzedphenotypes_beanplot_json',
     'page arguments' => array(3, 4),
     'access arguments' => array('access analyzed phenotypes'),
     'file' => 'include/analyzedphenotypes.beanplot.page.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+  // Violin Plot.
+  $items['phenotypes/violin-plot'] = array(
+    'title' => 'Trait Violin Plot',
+    'description' => 'Summarizes phenotypic data for a given trait and project.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('analyzedphenotypes_violinplot_form'),
+    'access arguments' => array('access analyzed phenotypes'),
+    'file' => 'include/analyzedphenotypes.violinplot.page.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  // @todo actually set the method and unit.
+  $items['json/phenotypes/violinplot/%/%'] = array(
+    'page callback' => 'analyzedphenotypes_violinplot_csv',
+    'page arguments' => array(3, 4, '434','43'),
+    'access arguments' => array('access analyzed phenotypes'),
+    'file' => 'include/analyzedphenotypes.violinplot.page.inc',
     'type' => MENU_CALLBACK,
   );
 
