@@ -893,18 +893,24 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
         // Retrieve the cvterm_id of the trait.
         $cvterm_id = $form_state['values']['ap_similar_trait_select_field' . $i];
 
-	      // Retrieve the cvterm_id of the method given the cvterm.definition.
+        // Use the values entered or prefilled in the field since unit is editable.
         $method = $form_state['values']['ap_method_text_field' . $i];
-        $method_id = ap_get_method_id($project_genus, $method);
-
-        // Retrieve the cvterm_id of the unit given the cvterm.name.
         $unit = $form_state['values']['ap_unit_text_field' . $i];
-        $unit_id = ap_get_unit_id($project_genus, $unit);
+
+        // Insert new term. Inserted term id is required.
+        // When alternate trait available use it over original trait.
+        $result = ap_insert_trait(array(
+          'trait_id' => $form_state['values']['ap_similar_trait_select_field' . $i],
+          'method_title' => uniqid(),
+          'method' => $method,
+          'unit' => $unit,
+          'genus' => $project_genus,
+        ));
 
         // Save the values in the array for the tripal job.
-        $arr_traitname_cvtermid[$trait] = $cvterm_id;
-        $arr_method_cvtermid[$trait] = $method_id;
-        $arr_unit_cvtermid[$trait] = $unit_id;
+        $arr_traitname_cvtermid[$trait] = $result['trait']->cvterm_id;
+        $arr_method_cvtermid[$trait] = $result['method']->cvterm_id;
+        $arr_unit_cvtermid[$trait] = $result['unit']->cvterm_id;
       }
       else {
         // Use the values entered or prefilled in the field since unit is editable.
@@ -963,7 +969,6 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
             array('cvterm_id' => $cvterm_id, 'photo' => array($photo_1, $photo_2)),
             array('scaleto' => 400)
           );
-
 
           // Save the values in the array for the tripal job.
           $arr_traitname_cvtermid[$trait] = $result['trait']->cvterm_id;

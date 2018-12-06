@@ -27,6 +27,26 @@ function ap_insert_trait($data) {
 
   // @debug dpm($data, 'inserting trait via new api function');
 
+  // Ensure that parameters are available.
+  if (!isset($data['genus'])) {
+    tripal_report_error('ap_trait', TRIPAL_ERROR, '"genus" is required to insert a trait.');
+  }
+  if (!isset($data['name']) AND !isset($data['trait_id'])) {
+    tripal_report_error('ap_trait', TRIPAL_ERROR, '"name" is required to insert a trait.');
+  }
+  if (!isset($data['description']) AND !isset($data['trait_id'])) {
+    tripal_report_error('ap_trait', TRIPAL_ERROR, '"description" is required to insert a trait.');
+  }
+  if (!isset($data['method_title'])) {
+    tripal_report_error('ap_trait', TRIPAL_ERROR, '"method_title" is required to insert a trait.');
+  }
+  if (!isset($data['method'])) {
+    tripal_report_error('ap_trait', TRIPAL_ERROR, '"method" is required to insert a trait.');
+  }
+  if (!isset($data['unit'])) {
+    tripal_report_error('ap_trait', TRIPAL_ERROR, '"unit" is required to insert a trait.');
+  }
+
   // Grab necessary system config.
   //  - Get system configuration of this genus.
   $sysvar = ap_get_variablenames(
@@ -47,13 +67,23 @@ function ap_insert_trait($data) {
   $cv_name = $cvprop['name'];
 
   // Insert the trait cvterm
-  $trait_cvterm = array(
-    'cv_name' => $cv_name,
-    'id' => trim($db_name) . ':' . $data['name'],
-    'name' => $data['name'],
-    'definition' => $data['description'],
-  );
-  $trait_cvterm = tripal_insert_cvterm($trait_cvterm);
+  if (!isset($data['trait_id'])) {
+    $trait_cvterm = array(
+      'cv_name' => $cv_name,
+      'id' => trim($db_name) . ':' . $data['name'],
+      'name' => $data['name'],
+      'definition' => $data['description'],
+    );
+    $trait_cvterm = tripal_insert_cvterm($trait_cvterm);
+    if (!$trait_cvterm) {
+      tripal_report_error('ap_trait', TRIPAL_ERROR, 'Unable to create trait when the following is supplied: '.print_r($data,TRUE));
+      return FALSE;
+    }
+    $trait_id = $trait_cvterm->cvterm_id;
+  }
+  else {
+    $trait_cvterm = tripal_get_cvterm(array('cvterm_id' => $data['trait_id']));
+  }
 
   // Insert the method cvterm
   $method_cvterm = array(
@@ -63,6 +93,9 @@ function ap_insert_trait($data) {
     'definition' => $data['method'],
   );
   $method_cvterm = tripal_insert_cvterm($method_cvterm);
+  if (!$method_cvterm) {
+    tripal_report_error('ap_trait', TRIPAL_ERROR, 'Unable to create method when the following is supplied: '.print_r($data,TRUE));
+  }
 
   // Insert the unit cvterm
   $unit_cvterm = array(
@@ -72,6 +105,9 @@ function ap_insert_trait($data) {
     'definition' => '',
   );
   $unit_cvterm = tripal_insert_cvterm($unit_cvterm);
+  if (!$unit_cvterm) {
+    tripal_report_error('ap_trait', TRIPAL_ERROR, 'Unable to create unit when the following is supplied: '.print_r($data,TRUE));
+  }
 
   // Relate Trait => Method
   chado_insert_record('cvterm_relationship', array(
