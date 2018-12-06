@@ -85,16 +85,25 @@ function ap_insert_trait($data) {
     $trait_cvterm = tripal_get_cvterm(array('cvterm_id' => $data['trait_id']));
   }
 
-  // Insert the method cvterm
-  $method_cvterm = array(
-    'cv_name' => $cv_name, // @todo we shouldnt use the same cv... @config-needed
-    'id' => trim($db_name) . ':' . $data['method_title'],
-    'name' => $data['method_title'],
-    'definition' => $data['method'],
-  );
-  $method_cvterm = tripal_insert_cvterm($method_cvterm);
-  if (!$method_cvterm) {
-    tripal_report_error('ap_trait', TRIPAL_ERROR, 'Unable to create method when the following is supplied: '.print_r($data,TRUE));
+  // Check to see if the method exists.
+  // This is needed because the method uses cvterm.definition rather then name.
+  $exists = chado_query('SELECT cvterm_id FROM {cvterm} WHERE definition=:method AND cv_id IN (SELECT cv_id FROM {cv} WHERE name=:cv_name)',
+    array(':method' => $data['method'], ':cv_name' => $cv_name))->fetchField();
+  if (!$exists) {
+    // Insert the method cvterm
+    $method_cvterm = array(
+      'cv_name' => $cv_name, // @todo we shouldnt use the same cv... @config-needed
+      'id' => trim($db_name) . ':' . $data['method_title'],
+      'name' => $data['method_title'],
+      'definition' => $data['method'],
+    );
+    $method_cvterm = tripal_insert_cvterm($method_cvterm);
+    if (!$method_cvterm) {
+      tripal_report_error('ap_trait', TRIPAL_ERROR, 'Unable to create method when the following is supplied: '.print_r($data,TRUE));
+    }
+  }
+  else {
+    $method_cvterm = tripal_get_cvterm(array('cvterm_id' => $exists));
   }
 
   // Insert the unit cvterm
