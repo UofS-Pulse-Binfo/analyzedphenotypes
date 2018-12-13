@@ -206,7 +206,7 @@ function analyzedphenotypes_traitplot_form($form, $form_state) {
 
     $methods = array();
     $experiment_genus = 'Lens';
-    //$methods = ap_get_trait_methods($experiment_genus, $traits[$trait_id], array(), $trait_id);
+    $methods = ap_get_trait_methods($experiment_genus, $traits[$trait_id], array(), $trait_id);
     $form[$AJAX_wrapper]['method_id'] = array(
       '#type' => 'radios',
       '#title' => 'Method',
@@ -219,16 +219,15 @@ function analyzedphenotypes_traitplot_form($form, $form_state) {
       ),
     );
 
-    //if ($method_id) {
-      //$units = ap_get_method_units($experiment_genus, $methods[$method_id], array(), $method_id);
+    if ($method_id) {
+      $units = ap_get_method_units($experiment_genus, $methods[$method_id], array(), $method_id);
       $form[$AJAX_wrapper]['unit_id'] = array(
-        '#type' => 'select',
+        '#type' => 'radios',
         '#title' => 'Unit',
         '#description' => 'The unit used to measure the data.',
-        //'#empty_option' => '- Select -',
-        //'#options' => $units,
+        '#options' => $units,
       );
-    //}
+    }
 
   }
 
@@ -254,8 +253,8 @@ function analyzedphenotypes_traitplot_form($form, $form_state) {
   elseif ($stage == 2) {
 
     $form[$AJAX_wrapper]['#title'] = 'Select New Dataset';
-    $form[$AJAX_wrapper]['#collapsed'] = TRUE;
     $form[$AJAX_wrapper]['#collapsible'] = TRUE;
+    $form[$AJAX_wrapper]['#collapsed'] = ($selection_path != 'none') ? FALSE : TRUE;
 
     // Add a canvas for the chart.
     $form['figure']['chart'] = array(
