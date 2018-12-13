@@ -110,7 +110,8 @@ function analyzedphenotypes_configuration_form($form, &$form_state) {
           $field_default = $var_value;
         }
 
-        if ($j == 1) {
+        $is_disabled = FALSE;
+        if ($j == 1 AND is_integer($field_default)) {
           // Inspect if this genus has data attached to it and disable it.
           $has_data = chado_query($sql, array(':cv_id' => $field_default))
             ->fetchAll();

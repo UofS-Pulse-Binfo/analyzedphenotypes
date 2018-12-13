@@ -20,7 +20,7 @@
 function ap_get_genus() {
   // All genus.
   $result = chado_query(
-    "SELECT genus FROM {organism} GROUP BY genus ORDER BY genus ASC"
+    "SELECT genus FROM {organism} GROUP BY genus ORDER BY genus ASC LIMIT 50"
   );
 
 

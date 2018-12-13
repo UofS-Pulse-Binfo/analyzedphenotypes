@@ -156,7 +156,7 @@ function ap_validate_unitvalue($unit, $value) {
     //
     case 'trait':
       // Alphanumeric chars followed by ( letters and ) - Trait name (unit).
-      if (preg_match('/\A[^()]+\s*\({1}[^)(]+\)\z/i', $value) !== 1) {
+      if (preg_match('/\A[^()]+\s*\z/i', $value) !== 1) {
         $is_valid = FALSE;
       }
 

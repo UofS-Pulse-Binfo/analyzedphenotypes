@@ -3,6 +3,7 @@ namespace Tests\upload;
 
 use StatonLab\TripalTestSuite\DBTransaction;
 use StatonLab\TripalTestSuite\TripalTestCase;
+use  Tests\DatabaseSeeders\PhenotypeSeeder;
 use Faker\Factory;
 
 class dataIntegrityTest extends TripalTestCase {
@@ -10,9 +11,140 @@ class dataIntegrityTest extends TripalTestCase {
   use DBTransaction;
 
   /**
-   * Basic test example.
-   * Tests must begin with the word "test".
-   * See https://phpunit.readthedocs.io/en/latest/ for more information.
+   * Data Integrity test.
+   * This checks that the data is loaded into the chado tables correctly.
+   *
+   * @group seeder
+   * @group data-integrity
+   *
+   * Specifically, analyzedphenotypes_save_tsv_data() is run with fake parameters
+   * and an example file and then
+   *   - it's checked that every fake phenotype became a record in chado.phenotype
+   *   - each record in chado.phenotype should be linked to the
+   *       - trait cvterm via phenotype.attr_id
+   *       - method cvterm via phenotype.assay_id
+   *       - unit cvterm via phenotype.unit_id
+   *       - project via phenotype.project_id
+   *       - germplasm assayed via phenotype.stock_id
+   *   - each record in chado.phenotype should have the following properties
+   *       - location
+   *       - year
+   *       - replicate
+   *       - data collector
+   *     using terms chosen by the administrator.
+   */
+  public function testPhenotypeSeederDataIntegrity() {
+
+    $seeder = new PhenotypeSeeder();
+    $data = $seeder->up();
+
+    /* DEBUG
+    $debug_query =  "
+      SELECT json_build_object(
+        'phenotype_id', p.phenotype_id,
+        'trait_id', p.attr_id,
+        'method_id', p.assay_id,
+        'unit_id', p.unit_id,
+        'stock_id', p.stock_id,
+        'project_id', p.project_id,
+        'value', p.value,
+        'properties', array_to_json(array_agg(props.json))
+      ) as json
+      FROM chado.phenotype p
+        LEFT JOIN (
+        SELECT row_to_json(prop) as json, phenotype_id
+        FROM chado.phenotypeprop prop
+      ) props ON props.phenotype_id=p.phenotype_id
+      GROUP BY p.phenotype_id, p.attr_id, p.stock_id, p.project_id, p.value";
+    $results = chado_query($debug_query)->fetchAll();
+    print "Database Records (JSON):\n";
+    foreach($results as $result) {
+      $noSlahes = str_replace('\\', '', $result->json);
+      $jsonObject = json_decode($noSlahes);
+      print "------------------------------\n";
+      print print_r($jsonObject, TRUE)."\n";
+    }
+
+    */
+
+    $single_phenotype_query =  "
+      SELECT
+        p.phenotype_id as phenotype_id,
+        p.attr_id as trait_id,
+        p.assay_id as method_id,
+        p.unit_id as unit_id,
+        p.stock_id as stock_id,
+        p.project_id as project_id,
+        p.value as value,
+        count(props.*) as properties
+      FROM chado.phenotype p
+        LEFT JOIN chado.phenotypeprop props ON props.phenotype_id=p.phenotype_id
+      WHERE p.phenotype_id=:id
+      GROUP BY p.phenotype_id, p.attr_id, p.stock_id, p.project_id, p.value";
+
+
+    foreach ($data as $expected) {
+
+      // @debug print_r($expected);
+
+      // Select from the database as JSON.
+      $db_result = chado_query(
+          $single_phenotype_query,
+          [':id' => $expected['phenotype_id']])->fetchObject();
+      // @debug print str_repeat('-',50) . print_r($db_result, TRUE)."\n";
+
+      $this->assertEquals($expected['trait']->cvterm_id, $db_result->trait_id,
+        "The Trait ID was not what we expected.");
+
+      $this->assertEquals($expected['method']->cvterm_id, $db_result->method_id,
+        "The Method ID was not what we expected.");
+
+      $this->assertEquals($expected['unit']->cvterm_id, $db_result->unit_id,
+        "The Unit ID was not what we expected.");
+
+      $this->assertEquals($expected['project']->project_id, $db_result->project_id,
+        "The Project ID was not what we expected.");
+
+      $this->assertEquals($expected['stock']->stock_id, $db_result->stock_id,
+        "The Stock ID was not what we expected.");
+
+      $this->assertEquals($expected['phenotype']['value'], $db_result->value,
+        "The Phenotypic Value was not what we expected.");
+
+      $this->assertEquals(4, $db_result->properties,
+        "There should be 4 properties (location, year, replicate and data collector) for each phenotype.");
+    }
+
+    $this->assertNotEmpty($data);
+
+    // Remove configuration.
+    $genus = $data[0]['organism']->genus;
+    variable_del('analyzedphenotypes_systemvar_'.$genus.'_cv');
+    variable_del('analyzedphenotypes_systemvar_'.$genus.'_db');
+  }
+
+  /**
+   * Data Integrity test.
+   * This checks that the data is loaded into the chado tables correctly.
+   *
+   * @group data-integrity
+   * @group upload
+   *
+   * Specifically, analyzedphenotypes_save_tsv_data() is run with fake parameters
+   * and an example file and then
+   *   - it's checked that every line of the file became a record in chado.phenotype
+   *   - each record in chado.phenotype should be linked to the
+   *       - trait cvterm via phenotype.attr_id
+   *       - method cvterm via phenotype.assay_id
+   *       - unit cvterm via phenotype.unit_id
+   *       - project via phenotype.project_id
+   *       - germplasm assayed via phenotype.stock_id
+   *   - each record in chado.phenotype should have the following properties
+   *       - location
+   *       - year
+   *       - replicate
+   *       - data collector
+   *     using terms chosen by the administrator.
    */
   public function testUploadDataIntegrity() {
 
@@ -25,7 +157,7 @@ class dataIntegrityTest extends TripalTestCase {
       'SELECT count(*) FROM {phenotype} WHERE project_id=:project',
       array(':project' => $info['project']->project_id))->fetchField();
     $this->assertEquals(270, $num_records,
-      "The nunmber of records inserted does not match what we expected.");
+      "The number of records inserted does not match what we expected.");
 
     // Retrieve the types that should be used for each property.
     $sysvars = ap_get_variablenames(
@@ -69,6 +201,8 @@ class dataIntegrityTest extends TripalTestCase {
         // Compile the values to search on.
         $values = [];
         $values[':trait_id'] = $info['traits'][ $file['trait_name'] ];
+        $values[':method_id'] = $info['methods'][ $file['trait_name'] ];
+        $values[':unit_id'] = $info['units'][ $file['trait_name'] ];
         $values[':stock_id'] = $info['stocks'][ $file['stock_uniquename'] ];
         $values[':project_id'] = $info['project']->project_id;
         $values[':value'] = $file['value'];
@@ -77,6 +211,8 @@ class dataIntegrityTest extends TripalTestCase {
         $phenotype_records = chado_query(
           'SELECT phenotype_id FROM {phenotype} WHERE
               attr_id=:trait_id AND
+              assay_id = :method_id AND
+              unit_id = :unit_id AND
               stock_id=:stock_id AND
               project_id=:project_id AND
               value=:value',
@@ -110,6 +246,8 @@ class dataIntegrityTest extends TripalTestCase {
               SELECT json_build_object(
                 'phenotype_id', p.phenotype_id,
                 'trait_id', p.attr_id,
+                'method_id', p.assay_id,
+                'unit_id', p.unit_id,
                 'stock_id', p.stock_id,
                 'project_id', p.project_id,
                 'value', p.value,
@@ -197,6 +335,10 @@ class dataIntegrityTest extends TripalTestCase {
     else {
       $this->fail('Unable to read example file.');
     }
+
+    // Remove configuration.
+    variable_del('analyzedphenotypes_systemvar_'.$info['organism']->genus.'_cv');
+    variable_del('analyzedphenotypes_systemvar_'.$info['organism']->genus.'_db');
   }
 
   /**
@@ -205,7 +347,7 @@ class dataIntegrityTest extends TripalTestCase {
    * @param $file
    *   The full path to the file.
    */
-  function loadFile($file) {
+  public static function loadFile($file) {
     $faker = Factory::create();
     $info = [];
 
@@ -246,17 +388,25 @@ class dataIntegrityTest extends TripalTestCase {
     // @debug print "FID: $data_file_fid.\n";
 
     // Set/Create Trait IDs for our file.
-    $trait_name = 'Lorem ipsum (cm)';
-    $cvterm = ap_insert_cvterm(
-      array(
-        'name' => $trait_name,
-        'definition' => 'Lorem ipsum testing.',
-        'genus' => $organism->genus,
-      ),
-      array('return_inserted_id' => TRUE)
-    );
-    $trait_cvterm_ids = [ $trait_name => $cvterm ];
+    $trait_name = 'Lorem ipsum';
+    $results = ap_insert_trait([
+      'name' => $trait_name,
+      'definition' => $faker->sentences(2, true),
+      'method_title' => $faker->words(2, true),
+      'method' => $faker->sentences(5, true),
+      'unit' => $faker->word(true),
+      'genus' => $organism->genus,
+    ]);
+
+    // @debug print_r($results);
+
+    $trait_cvterm_ids = [ $trait_name => $results['trait']->cvterm_id ];
     $info['traits'] = $trait_cvterm_ids;
+    $method_cvterm_ids = [ $trait_name => $results['method']->cvterm_id ];
+    $info['methods'] = $method_cvterm_ids;
+    $unit_cvterm_ids = [ $trait_name => $results['unit']->cvterm_id ];
+    $info['units'] = $unit_cvterm_ids;
+    $info['trait_details'] = [ $results ];
 
     // Ensure the germplasm exists.
     $info['stocks'] = [];
@@ -281,7 +431,10 @@ class dataIntegrityTest extends TripalTestCase {
       'project_name' => $project->name,
       'project_genus' => $organism->genus,
       'data_file' => $data_file_fid,
-      'trait_cvterm' => $trait_cvterm_ids];
+      'trait_cvterm' => $trait_cvterm_ids,
+      'method_cvterm' => $method_cvterm_ids,
+      'unit_cvterm' => $unit_cvterm_ids,
+    ];
     analyzedphenotypes_save_tsv_data(serialize($dataset), 999999999);
     ob_end_clean();
 
