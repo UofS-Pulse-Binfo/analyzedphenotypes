@@ -391,7 +391,7 @@ class dataIntegrityTest extends TripalTestCase {
     $trait_name = 'Lorem ipsum';
     $results = ap_insert_trait([
       'name' => $trait_name,
-      'definition' => $faker->sentences(2, true),
+      'description' => $faker->sentences(2, true),
       'method_title' => $faker->words(2, true),
       'method' => $faker->sentences(5, true),
       'unit' => $faker->word(true),

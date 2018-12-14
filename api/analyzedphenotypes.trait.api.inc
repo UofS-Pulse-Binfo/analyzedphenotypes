@@ -119,24 +119,32 @@ function ap_insert_trait($data) {
   }
 
   // Relate Trait => Method
-  chado_insert_record('cvterm_relationship', array(
+  $values = array(
     'subject_id' => $trait_cvterm->cvterm_id,
     'type_id' => array(
       'cv_id' => array('name' => 'NCIT'), // @todo @config-needed
       'name' => 'method',
     ),
     'object_id' => $method_cvterm->cvterm_id,
-  ));
+  );
+  $exists = chado_select_record('cvterm_relationship', array('cvterm_relationship_id'), $values);
+  if (empty($exists)) {
+    chado_insert_record('cvterm_relationship', $values);
+  }
 
   // Relate Method => Unit
-  chado_insert_record('cvterm_relationship', array(
+  $values = array(
     'subject_id' => $method_cvterm->cvterm_id,
     'type_id' => array(
       'cv_id' => array('name' => 'uo'), // @todo @config-needed
       'name' => 'unit',
     ),
     'object_id' => $unit_cvterm->cvterm_id,
-  ));
+  );
+  $exists = chado_select_record('cvterm_relationship', array('cvterm_relationship_id'), $values);
+  if (empty($exists)) {
+    chado_insert_record('cvterm_relationship', $values);
+  }
 
   return array(
     'trait' => $trait_cvterm,
