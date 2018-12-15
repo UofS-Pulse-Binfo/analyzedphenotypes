@@ -9,6 +9,8 @@
 
       d3.json('http://knowpulse.usask.ca/dev/tripal/json/phenotypes/traitplot/'+experiment_id+'/'+trait_id, function(error, data) {
 
+          d3.selectAll('#tripal-ap-violin-plot .inner-wrapper').remove();
+
          // Ensure the datapoint is a number.
          data.forEach(function (d) {d.value = +d.value;});
 

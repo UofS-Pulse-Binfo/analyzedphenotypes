@@ -40,7 +40,6 @@ function analyzedphenotypes_traitplot_form($form, $form_state) {
   }
 
   $stage = ($experiment_id && $trait_id && $method_id && $unit_id) ? 2 : 1;
-  dpm($stage, 'stage');
 
   // Add needed JS for the chart.
   $module_path = drupal_get_path('module','analyzedphenotypes');
@@ -75,7 +74,7 @@ function analyzedphenotypes_traitplot_form($form, $form_state) {
     $unit_id = (isset($form_state['values']['unit_id'])) ? $form_state['values']['unit_id'] : 0;
   }
 
-  dpm(['exp' => $experiment_id, 'trait' => $trait_id, 'method' => $method_id, 'unit' => $unit_id], 'values');
+  // @debug dpm(['exp' => $experiment_id, 'trait' => $trait_id, 'method' => $method_id, 'unit' => $unit_id], 'values');
 
   // AJAX Wrapper.
   $form[$AJAX_wrapper] = array(
@@ -86,7 +85,7 @@ function analyzedphenotypes_traitplot_form($form, $form_state) {
     '#description' => 'This chart is meant to summarize the observed values for a specific trait in a particular phenotyping experiment.
       Since it is not always statistically correct to combine data across sites and years, this summary keeps the data seperate.
       This allows you to compare values across site-years.',
-    //'#weight' => 10,
+    '#weight' => 10,
   );
 
   $form[$AJAX_wrapper]['selection_path'] = array(
@@ -200,9 +199,7 @@ function analyzedphenotypes_traitplot_form($form, $form_state) {
     $form[$AJAX_wrapper]['trait_id']['#disabled'] = FALSE;
   }
 
-  dpm($traits, 'traits');
-
-  if ($trait_id and $experiment_id) {
+  if ($trait_id AND $experiment_id AND ($selection_path != 'none')) {
 
     $methods = array();
     $experiment_genus = 'Lens';
@@ -282,8 +279,19 @@ function analyzedphenotypes_traitplot_form($form, $form_state) {
     );
 
     // Construct chart text/wordings.
-    $experiment_name = (isset($experiments[ $experiment_id ])) ? $experiments[ $experiment_id ] : '';
-    $trait_name      = (isset($traits[ $trait_id ]))    ? $traitss[ $trait_id ]    : '';
+    if (isset($experiments[ $experiment_id ])) { 
+      $experiment_name = $experiments[ $experiment_id ];
+    }
+    else {
+      $experiment_name = chado_query('SELECT name FROM {project} WHERE project_id=:id', array(':id' => $experiment_id))->fetchField();  
+    }
+
+    if (isset($traits[ $trait_id ])) {
+      $trait_name = $traits[ $trait_id ];
+    }
+    else {
+      $trait_name = chado_query('SELECT name FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $trait_id))->fetchField();
+    }
 
     $form['figure']['legend']['title']['#markup'] = 'Figure: The Distribution of mean <em>'.$trait_name.'</em> per site year for <em>'.$experiment_name.'</em>.';
     $form['figure']['legend']['description']['#markup'] = 'This chart shows the distribution of means observered (y-axis) per site year (x-axis) with the width at a given mean representing the number of germplasm that mean was observed/measured in.
@@ -304,8 +312,8 @@ function analyzedphenotypes_traitplot_form_submit($form, &$form_state) {
   // Redirect to URL with experiment/trait in path to allow for bookmarking.
   $experiment_id = $form_state['values']['experiment_id'];
   $trait_id = $form_state['values']['trait_id'];
-  $method_id = $form_state['values']['method_id'];
-  $unit_id = $form_state['values']['unit_id'];
+  $method_id = (isset($form_state['values']['method_id'])) ? $form_state['values']['method_id'] : 0;
+  $unit_id = (isset($form_state['values']['unit_id'])) ? $form_state['values']['unit_id'] : 0;
 
   if ($unit_id > 0) {
     $redirect = $base_url . '/phenotypes/trait-distribution/' . $experiment_id . '/' . $trait_id . '/' . $method_id . '/' . $unit_id;
