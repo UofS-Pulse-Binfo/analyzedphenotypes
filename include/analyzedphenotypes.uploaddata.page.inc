@@ -453,8 +453,8 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               $form[$ap_fieldset]['ap_similar_trait_select_field' . $i] = array(
                 '#type' => 'select',
                 '#title' => t('Did you mean?'),
-                '#options' => array(-1 => '- Select -', 0 => 'None of these apply') + $cvterm_options,
-
+                '#options' => array(0 => 'None of these apply') + $cvterm_options,
+                '#empty_option' => '- Select -',
                 '#ajax' => array(
                   'event' => 'change',
                   'callback' => 'ap_send_ajaxrequest',
