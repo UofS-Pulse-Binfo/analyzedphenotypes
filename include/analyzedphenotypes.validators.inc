@@ -377,7 +377,9 @@ function analyzedphenotypes_validator_datafile($case, $dataset) {
         while(!feof($handle)) {
           $columns_row = fgets($handle);
 
-          if (!empty($column_row)) {
+          if (!empty($columns_row)) {
+            $file_columns = str_getcsv($columns_row, "\t");
+
             // Extract the first row which is the column headers row.
             $columns_noformat  = array_map('ap_noformat', $file_columns);
 
