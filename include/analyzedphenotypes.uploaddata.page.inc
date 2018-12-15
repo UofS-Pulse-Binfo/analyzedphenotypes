@@ -582,8 +582,10 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               // Add help for users if there are 2+ pre-existing methods for the current trait.
               if (!$traitprop['method'] && isset($methods)) {
                 $method_help = '<ul>';
+                $no_methods = TRUE;
                 foreach ($methods as $curr) {
                   $method_help .= '<li><pre>'.$curr.'</pre></li>';
+                  $no_methods = FALSE;
                 }
                 $method_help .= '</ul>';
                 $method_help .= '<p>If one of the above collection methods accurately describes how you collected your data then copy and paste it into the "Collection Method" space below. NOTE: Each pre-existing collection method is it\'s own bullet point.</p>';
@@ -592,6 +594,11 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                   '#title' => 'Existing Collection Methods for this Trait',
                   '#markup' => $method_help,
                 );
+
+                // make sure the help doesn't show up if there are no options.
+                if ($no_methods == TRUE) {
+                  unset($form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_method_help' . $i]);
+                }
               }
 
               // If there is only a single method for the supplied trait then use it for the default.
@@ -622,10 +629,12 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               if (!$traitprop['unit'] && isset($methods)) {
                 //
                 $unit_help = '<ul>';
+                $no_units = TRUE;
                 foreach ($methods as $curr_id => $curr) {
                   $units = ap_get_method_units($project_genus, $curr, [], $curr_id);
                   foreach ($units as $u) {
                     $unit_help .= '<li><pre>'.$u.'</pre></li>';
+                    $no_units = FALSE;
                   }
                 }
                 $unit_help .= '</ul>';
@@ -635,6 +644,11 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                   '#title' => 'Existing Units used for this Trait',
                   '#markup' => $unit_help,
                 );
+                
+                // make sure this section doesn't appear if there are no options.
+                if ($no_units == TRUE) {
+                  unset($form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_unit_help' . $i]);
+                }
               }
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_unit_text_field' . $i] = array(
                 '#type' => 'textfield',
