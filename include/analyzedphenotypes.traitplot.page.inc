@@ -5,13 +5,23 @@
  */
 
 /**
- * Violin Plot Page.
+ * Trait Distribution Single-Page Application.
  *
  * This page allows users to select an experiment + trait-method-unit
  * combination and visualize the data in violin plot form.
+ *
+ * @param $form
+ *   The initialized form.
+ * @param $form_state
+ *   The current state of the form.
+ * @return
+ *   The completed form.
  */
-function analyzedphenotypes_traitplot_form($form, $form_state) {
-  global $base_url;
+function analyzedphenotypes_traitplot_app_form($form, $form_state) {
+
+  // Add CSS for the chart.
+  $module_path = drupal_get_path('module','analyzedphenotypes');
+  $form['#attached']['css'][] = $module_path . '/theme/css/violinplot.chart.css';
 
   // Stage - Indicate when page is at Trait distribution summary or chart.
   // We would like ot show more intuitive form elements for the the first
@@ -41,23 +51,44 @@ function analyzedphenotypes_traitplot_form($form, $form_state) {
 
   $stage = ($experiment_id && $trait_id && $method_id && $unit_id) ? 2 : 1;
 
-  // Add needed JS for the chart.
-  $module_path = drupal_get_path('module','analyzedphenotypes');
-  $form['#attached']['js'][] = 'https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js';
-  $form['#attached']['js'][] = $module_path . '/theme/js/distroChart.js';
-  $form['#attached']['js'][] = $module_path . '/theme/js/violin.chart.js';
-  $form['#attached']['js'][] = array(
-    'type' => 'setting',
-    'data' => array('analyzedPhenotypes' => array(
-      'experiment_id' => $experiment_id,
-      'trait_id' => $trait_id,
-      'method' => $method_id,
-      'unit_id' => $unit_id,
-    )),
-  );
+  if ($stage == 1) {
+    analyzedphenotypes_traitplot_app_filter_form($form, $form_state, 
+      $trait_id, $experiment_id, $method_id, $unit_id);
+  }
+  else {
 
-  // Add CSS for the chart.
-  $form['#attached']['css'][] = $module_path . '/theme/css/violinplot.chart.css';
+    $form['link_back'] = array(
+      '#type' => 'item',
+      '#prefix' => '<span class="trait-app back-link">',
+      '#markup' => l('Select a different trait', '/phenotypes/trait-distribution'),
+      '#suffix' => '</span>',
+    );
+
+    analyzedphenotypes_traitplot_form($form, $form_state,
+      $trait_id, $experiment_id, $method_id, $unit_id);
+  }
+
+  return $form;
+}
+
+/**
+ * Trait Distribution Single-Page Application: Filter Form.
+ *
+ * @param $form
+ *   An initialized form.
+ * @param $form_state
+ *   The current state of the form. Used to determine defaults.
+ * @param $trait_id
+ *   The cvterm_id for the trait to show.
+ * @param $experiment_id
+ *   The project_id for the experiment.
+ * @param $method_id
+ *   The cvterm_id for the method.
+ * @param $unit_id
+ *   The cvterm_id for the unit.
+ */
+function analyzedphenotypes_traitplot_app_filter_form(&$form, &$form_state, 
+  $trait_id, $experiment_id, $method_id, $unit_id) {
 
   // Select Dataset form.
   //----------------------------------------
@@ -201,6 +232,11 @@ function analyzedphenotypes_traitplot_form($form, $form_state) {
 
   if ($trait_id AND $experiment_id AND ($selection_path != 'none')) {
 
+    unset($form[$AJAX_wrapper]['trait_id']['#prefix'],
+      $form[$AJAX_wrapper]['trait_id']['#suffix'],
+      $form[$AJAX_wrapper]['experiment_id']['#prefix'],
+      $form[$AJAX_wrapper]['experiment_id']['#suffix']);
+
     $methods = array();
     $experiment_genus = 'Lens';
     $methods = ap_get_trait_methods($experiment_genus, $traits[$trait_id], array(), $trait_id);
@@ -209,20 +245,29 @@ function analyzedphenotypes_traitplot_form($form, $form_state) {
       '#title' => 'Method',
       '#description' => 'Describes how the data was taken. Since it is often not valid to combine data taken using different methods, you need to select the method you are interested in here.',
       '#options' => $methods,
+      '#required' => TRUE,
       '#ajax' => array(
         'callback' => 'ajax_analyzedphenotypes_traitplot_page_nav_callback',
         'wrapper' => 'traitplot-nav',
         'method' => 'replace',
       ),
+      '#prefix' => '<span class="now-this">',
+      '#suffix' => '</span>',
     );
 
     if ($method_id) {
+      unset($form[$AJAX_wrapper]['method_id']['#prefix'],
+        $form[$AJAX_wrapper]['method_id']['#suffix']);
+
       $units = ap_get_method_units($experiment_genus, $methods[$method_id], array(), $method_id);
       $form[$AJAX_wrapper]['unit_id'] = array(
         '#type' => 'radios',
         '#title' => 'Unit',
         '#description' => 'The unit used to measure the data.',
         '#options' => $units,
+        '#required' => TRUE,
+        '#prefix' => '<span class="now-this">',
+        '#suffix' => '</span>',
       );
     }
 
@@ -240,18 +285,89 @@ function analyzedphenotypes_traitplot_form($form, $form_state) {
     '#weight' => 100,
   );
 
-  // STAGE 1: Selecting the dataset.
-  //----------------------------------------
-  if ($stage == 1) {
+  return $form;
+}
 
+/**
+ * TraitPlot Single Page Application: Submit Handler.
+ * 
+ * @param $form
+ *   The current form.
+ * @param $form_state
+ *   The current state of the form.
+ */
+function analyzedphenotypes_traitplot_app_form_submit($form, &$form_state) {
+  // Ensure the form saves its values when auto-submitted by select boxes. 
+  //$form_state["rebuild"] = TRUE;
+  global $base_url;
+  
+  // Redirect to URL with experiment/trait in path to allow for bookmarking.
+  $experiment_id = $form_state['values']['experiment_id'];
+  $trait_id = $form_state['values']['trait_id'];
+  $method_id = (isset($form_state['values']['method_id'])) ? $form_state['values']['method_id'] : 0;
+  $unit_id = (isset($form_state['values']['unit_id'])) ? $form_state['values']['unit_id'] : 0;
+  
+  if ($unit_id > 0) {
+    $redirect = $base_url . '/phenotypes/trait-distribution/' . $experiment_id . '/' . $trait_id . '/' . $method_id . '/' . $unit_id;
   }
-  // STAGE 2: Showing the chart.
-  //----------------------------------------
-  elseif ($stage == 2) {
+  else {
+    $redirect = $base_url . '/phenotypes/trait-distribution/';
+  } 
+  
+  $form_state['redirect'] = url($redirect);
+} 
 
-    $form[$AJAX_wrapper]['#title'] = 'Select New Dataset';
-    $form[$AJAX_wrapper]['#collapsible'] = TRUE;
-    $form[$AJAX_wrapper]['#collapsed'] = ($selection_path != 'none') ? FALSE : TRUE;
+/**
+ * AJAX Callback: Trait Distribution plot page navagation.
+ *
+ * @param $form
+ *   The current form.
+ * @param $form_state
+ *   The current state of the form.
+ * @return
+ *   The part of the form to render again.
+ */
+function ajax_analyzedphenotypes_traitplot_page_nav_callback($form, $form_state) {
+  return $form['nav'];
+} 
+
+/**
+ * Trait Distribution Form
+ *
+ * This form MUST be supplied the trait, experiment, method and unit.
+ * @param $form
+ *   An initialized form.
+ * @param $form_state
+ *   The current state of the form. Used to determine defaults.
+ * @param $trait_id
+ *   The cvterm_id for the trait to show.
+ * @param $experiment_id
+ *   The project_id for the experiment.
+ * @param $method_id
+ *   The cvterm_id for the method.
+ * @param $unit_id
+ *   The cvterm_id for the unit.
+ */
+function analyzedphenotypes_traitplot_form(&$form, &$form_state,
+      $trait_id, $experiment_id, $method_id, $unit_id) { 
+
+  // Add needed JS for the chart.
+  $module_path = drupal_get_path('module','analyzedphenotypes');
+  $form['#attached']['js'][] = 'https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js';
+  $form['#attached']['js'][] = $module_path . '/theme/js/distroChart.js';
+  $form['#attached']['js'][] = $module_path . '/theme/js/violin.chart.js';
+  $form['#attached']['js'][] = array(
+    'type' => 'setting',
+    'data' => array('analyzedPhenotypes' => array(
+      'experiment_id' => $experiment_id,
+      'trait_id' => $trait_id,
+      'method' => $method_id,
+      'unit_id' => $unit_id,
+    )),
+  );
+  
+  // Add CSS for the chart.
+  $form['#attached']['css'][] = $module_path . '/theme/css/violinplot.chart.css';
 
     // Add a canvas for the chart.
     $form['figure']['chart'] = array(
@@ -293,51 +409,31 @@ function analyzedphenotypes_traitplot_form($form, $form_state) {
       $trait_name = chado_query('SELECT name FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $trait_id))->fetchField();
     }
 
-    $form['figure']['legend']['title']['#markup'] = 'Figure: The Distribution of mean <em>'.$trait_name.'</em> per site year for <em>'.$experiment_name.'</em>.';
+    $form['figure']['legend']['title']['#markup'] = 'Figure: Comparison of <em>'.$trait_name.'</em> observed values between site year for <em>'.$experiment_name.'</em>.';
     $form['figure']['legend']['description']['#markup'] = 'This chart shows the distribution of means observered (y-axis) per site year (x-axis) with the width at a given mean representing the number of germplasm that mean was observed/measured in.
       Only the data for the <em>'.$experiment_name.'</em> phenotyping experiment is being shown.';
-  } //end of stage 2
 
   return $form;
 }
 
 /**
- * Beanplot Page: Submit Handler.
- */
-function analyzedphenotypes_traitplot_form_submit($form, &$form_state) {
-  // Ensure the form saves its values when auto-submitted by select boxes.
-  //$form_state["rebuild"] = TRUE;
-  global $base_url;
-
-  // Redirect to URL with experiment/trait in path to allow for bookmarking.
-  $experiment_id = $form_state['values']['experiment_id'];
-  $trait_id = $form_state['values']['trait_id'];
-  $method_id = (isset($form_state['values']['method_id'])) ? $form_state['values']['method_id'] : 0;
-  $unit_id = (isset($form_state['values']['unit_id'])) ? $form_state['values']['unit_id'] : 0;
-
-  if ($unit_id > 0) {
-    $redirect = $base_url . '/phenotypes/trait-distribution/' . $experiment_id . '/' . $trait_id . '/' . $method_id . '/' . $unit_id;
-  }
-  else {
-    $redirect = $base_url . '/phenotypes/trait-distribution/';
-  }
-
-  $form_state['redirect'] = url($redirect);
-}
-
-/**
- * AJAX Callback: Trait Distribution plot page navagation.
- */
-function ajax_analyzedphenotypes_traitplot_page_nav_callback($form, $form_state) {
-  return $form['nav'];
-}
-
-/**
- * Generates the CSV needed for the chart.
+ * Generates the JSON needed for the Trait Distribution chart.
  *
  * Specifically, this chart expects
- *   - the category for the X-axis (siteyear) and
- *   - the value measured.
+ *   - the category for the X-axis. This is the site-year.
+ *   - the value measured. This is the average for all replicates per site-year.
+ *
+ * @param $trait_id
+ *   The cvterm_id for the trait to show.
+ * @param $experiment_id
+ *   The project_id for the experiment.
+ * @param $method_id
+ *   The cvterm_id for the method.
+ * @param $unit_id
+ *   The cvterm_id for the unit.
+ *
+ * @return
+ *   The formatted json describing this dataset.
  */
 function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $unit_id) {
   $results = array();

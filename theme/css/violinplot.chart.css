@@ -1,8 +1,8 @@
 
 /** 
- *
+ * Trait Didtribution Singe-Page Application.
  */
-#analyzedphenotypes-traitplot-form .form-item {
+#analyzedphenotypes-traitplot-app-form .form-item {
   padding-left: 15px;
 }
 .now-this {
@@ -12,39 +12,13 @@
   border: 1px solid #be7;
 }
 
+select {
+  width: 500px;
+}
+
 /**
- * Bean Chart Page Elements
+ * Figure Legend.
  */
-#beanplot-container {
-  margin-top: 20px;
-}
-.beanplot-nav.condensed {
-  margin: 10px;
-  margin-left: 70px;
-}
-.beanplot-nav.condensed fieldset {
-  height: 35px;
-  top: 0;
-}
-.beanplot-nav.condensed legend {
-  position: absolute;
-  top: -1px;
-  width: 180px;
-  height: 45px;
-  padding-left: 7px;
-}
-.beanplot-nav.condensed span {
-  line-height: 45px;
-  margin: 0 0 0 20px;
-}
-.beanplot-nav.condensed .fieldset-wrapper {
-  margin-left: 200px;
-  margin-top: 10px;
-}
-.beanplot-nav.condensed .form-item {
-  display: inline;
-  padding: 0px 15px;
-}
 .legend {
   margin: 10px;
   margin-left: 50px;
@@ -56,12 +30,6 @@
 .legend .description {
   text-align: justify;
 }
-
-/* Select Field */
-.condensed select {
-  width: 40%;
-}
-
 
 /**
  * Primary Chart
