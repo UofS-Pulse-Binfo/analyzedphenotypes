@@ -361,7 +361,7 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
     'data' => array('analyzedPhenotypes' => array(
       'experiment_id' => $experiment_id,
       'trait_id' => $trait_id,
-      'method' => $method_id,
+      'method_id' => $method_id,
       'unit_id' => $unit_id,
     )),
   );
@@ -442,9 +442,17 @@ function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $
     $resource = chado_query(
       "SELECT location, year, stock_name, mean
         FROM chado.mview_phenotype
-        WHERE experiment_id=:project_id AND trait_id=:trait_id
+        WHERE experiment_id=:project_id 
+          AND trait_id=:trait_id
+          AND method_id= :method_id
+          AND unit_id=:unit_id
         ORDER BY year ASC, location ASC",
-      array(':project_id' => $project_id, 'trait_id' => $trait_id));
+      array(
+        ':project_id' => $project_id, 
+        ':trait_id' => $trait_id,
+        ':method_id' => $method_id,
+        ':unit_id' => $unit_id,
+    ));
     foreach($resource as $r) {
 
       $results[] = array(

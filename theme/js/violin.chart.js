@@ -6,8 +6,10 @@
       var chart;
       var experiment_id = Drupal.settings.analyzedPhenotypes.experiment_id;
       var trait_id = Drupal.settings.analyzedPhenotypes.trait_id;
+      var method_id = Drupal.settings.analyzedPhenotypes.method_id;
+      var unit_id = Drupal.settings.analyzedPhenotypes.unit_id;
 
-      d3.json('http://knowpulse.usask.ca/dev/tripal/json/phenotypes/traitplot/'+experiment_id+'/'+trait_id, function(error, data) {
+      d3.json('http://knowpulse.usask.ca/dev/tripal/json/phenotypes/traitplot/'+experiment_id+'/'+trait_id+'/'+method_id+'/'+unit_id, function(error, data) {
 
           d3.selectAll('#tripal-ap-violin-plot .inner-wrapper').remove();
 
@@ -24,10 +26,8 @@
                   margin:{top: 15, right: 60, bottom: 75, left: 75},
                   chartSize:{height:500, width:960},
                   constrainExtremes:false});
+
           // Render the plot.
-          // chart.renderViolinPlot({clamp:0, colors:['#314355']});
-
-
           chart.renderBoxPlot();
           chart.renderViolinPlot({
             clamp:0, 

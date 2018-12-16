@@ -63,10 +63,9 @@ function analyzedphenotypes_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
-  // @todo actually set the method and unit.
-  $items['json/phenotypes/traitplot/%/%'] = array(
+  $items['json/phenotypes/traitplot/%/%/%/%'] = array(
     'page callback' => 'analyzedphenotypes_traitplot_json',
-    'page arguments' => array(3, 4, '434','43'),
+    'page arguments' => array(3, 4, 5, 6),
     'access arguments' => array('access analyzed phenotypes'),
     'file' => 'include/analyzedphenotypes.traitplot.page.inc',
     'type' => MENU_CALLBACK,
