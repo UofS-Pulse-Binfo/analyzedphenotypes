@@ -34,6 +34,10 @@ function ap_construct_mview_phenotypesummary_query() {
       trait.name      AS trait_name,
       proj.project_id AS project_id,
       proj.name       AS project_name,
+      method.cvterm_id AS method_id,
+      method.name      AS method_name,
+      unit.cvterm_id   AS unit_id,
+      unit.name        AS unit_name,
       loc.value       AS location,
       yr.value        AS year,
       s.stock_id      AS germplasm_id,
@@ -42,6 +46,8 @@ function ap_construct_mview_phenotypesummary_query() {
     FROM {phenotype} p
       LEFT JOIN {cvterm} trait ON trait.cvterm_id=p.attr_id
       LEFT JOIN {project} proj USING(project_id)
+      LEFT JOIN {cvterm} method ON method.cvterm_id=p.assay_id
+      LEFT JOIN {cvterm} unit ON unit.cvterm_id=p.unit_id
       LEFT JOIN {stock} s USING(stock_id)
       LEFT JOIN {organism} o ON o.organism_id=s.organism_id
       LEFT JOIN {phenotypeprop} loc ON loc.phenotype_id=p.phenotype_id AND loc.type_id = %d
@@ -51,6 +57,10 @@ function ap_construct_mview_phenotypesummary_query() {
       trait.name,
       proj.project_id,
       proj.name,
+      method.cvterm_id,
+      method.name,
+      unit.cvterm_id,
+      unit.name,
       loc.value,
       yr.value,
       s.stock_id,
@@ -98,6 +108,25 @@ function ap_construct_mview_phenotypesummary_schema() {
       'experiment_name'  => array (
         'type' => 'text',
         'not null' => TRUE,
+      ),
+      'method_id' => array (
+        'size' => 'big',
+        'type' => 'int',
+        'not null' => true,
+      ),
+      'method_name' => array (
+        'type' => 'text',
+        'not null' => true,
+      ),
+     'unit_id' => array (
+        'size' => 'big',
+        'type' => 'int',
+        'not null' => true,
+      ),
+      'unit_name' => array (
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => true,
       ),
       'location'         => array (
         'type' => 'text',
