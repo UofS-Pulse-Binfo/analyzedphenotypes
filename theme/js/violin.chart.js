@@ -25,7 +25,24 @@
                   chartSize:{height:500, width:960},
                   constrainExtremes:false});
           // Render the plot.
-          chart.renderViolinPlot({clamp:0, colors:['#314355']});
+          // chart.renderViolinPlot({clamp:0, colors:['#314355']});
+
+
+          chart.renderBoxPlot();
+          chart.renderViolinPlot({
+            clamp:0, 
+            colors:['#314355']
+          });
+          chart.boxPlots.show({
+            reset:true, 
+            showWhiskers:false,
+            showOutliers:false,
+            boxWidth:10,
+            lineWidth:15,
+            colors:['#555']
+          });
+
+
       }); //end of get json.
 
   }}; // End of Drupal Behaviours and associated attach.
