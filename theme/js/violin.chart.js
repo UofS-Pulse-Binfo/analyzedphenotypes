@@ -22,7 +22,7 @@
                   xName:'category',
                   yName:'value',
                   axisLabels: {
-                    xAxis: Drupal.settings.analyzedPhenotypes.xaxis, 
+                    xAxis: Drupal.settings.analyzedPhenotypes.xaxis,
                     yAxis: Drupal.settings.analyzedPhenotypes.yaxis
                   },
                   selector:"#tripal-ap-violin-plot",
@@ -33,18 +33,17 @@
           // Render the plot.
           chart.renderBoxPlot();
           chart.renderViolinPlot({
-            clamp:0, 
+            clamp:0,
             colors:['#314355']
           });
           chart.boxPlots.show({
-            reset:true, 
+            reset:true,
             showWhiskers:true,
             showOutliers:false,
             boxWidth:10,
             lineWidth:15,
             colors:['#555']
           });
-
 
       }); //end of get json.
 

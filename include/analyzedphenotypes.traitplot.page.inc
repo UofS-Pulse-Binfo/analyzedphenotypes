@@ -52,7 +52,7 @@ function analyzedphenotypes_traitplot_app_form($form, $form_state) {
   $stage = ($experiment_id && $trait_id && $method_id && $unit_id) ? 2 : 1;
 
   if ($stage == 1) {
-    analyzedphenotypes_traitplot_app_filter_form($form, $form_state, 
+    analyzedphenotypes_traitplot_app_filter_form($form, $form_state,
       $trait_id, $experiment_id, $method_id, $unit_id);
   }
   else {
@@ -87,7 +87,7 @@ function analyzedphenotypes_traitplot_app_form($form, $form_state) {
  * @param $unit_id
  *   The cvterm_id for the unit.
  */
-function analyzedphenotypes_traitplot_app_filter_form(&$form, &$form_state, 
+function analyzedphenotypes_traitplot_app_filter_form(&$form, &$form_state,
   $trait_id, $experiment_id, $method_id, $unit_id) {
 
   // Select Dataset form.
@@ -151,7 +151,7 @@ function analyzedphenotypes_traitplot_app_filter_form(&$form, &$form_state,
     // Fetch only experiments measuring the given trait.
     $experiments = chado_query("SELECT t1.project_id, t1.name
       FROM {project} AS t1 INNER JOIN {phenotype} USING(project_id)
-      WHERE phenotype.attr_id=:trait_id 
+      WHERE phenotype.attr_id=:trait_id
       GROUP BY t1.project_id, t1.name ORDER BY t1.name ASC",
       array(':trait_id' => $trait_id))->fetchAllKeyed();
   }
@@ -189,7 +189,7 @@ function analyzedphenotypes_traitplot_app_filter_form(&$form, &$form_state,
   $traits = array();
   if ($selection_path == 'trait') {
     // Retrieve all traits.
-    $traits = chado_query('SELECT p.attr_id as trait_id, cvt.name FROM {phenotype} p 
+    $traits = chado_query('SELECT p.attr_id as trait_id, cvt.name FROM {phenotype} p
       LEFT JOIN {cvterm} cvt ON p.attr_id=cvt.cvterm_id
       GROUP BY p.attr_id, cvt.name')->fetchAllKeyed();
   }
@@ -290,32 +290,32 @@ function analyzedphenotypes_traitplot_app_filter_form(&$form, &$form_state,
 
 /**
  * TraitPlot Single Page Application: Submit Handler.
- * 
+ *
  * @param $form
  *   The current form.
  * @param $form_state
  *   The current state of the form.
  */
 function analyzedphenotypes_traitplot_app_form_submit($form, &$form_state) {
-  // Ensure the form saves its values when auto-submitted by select boxes. 
+  // Ensure the form saves its values when auto-submitted by select boxes.
   //$form_state["rebuild"] = TRUE;
   global $base_url;
-  
+
   // Redirect to URL with experiment/trait in path to allow for bookmarking.
   $experiment_id = $form_state['values']['experiment_id'];
   $trait_id = $form_state['values']['trait_id'];
   $method_id = (isset($form_state['values']['method_id'])) ? $form_state['values']['method_id'] : 0;
   $unit_id = (isset($form_state['values']['unit_id'])) ? $form_state['values']['unit_id'] : 0;
-  
+
   if ($unit_id > 0) {
     $redirect = $base_url . '/phenotypes/trait-distribution/' . $experiment_id . '/' . $trait_id . '/' . $method_id . '/' . $unit_id;
   }
   else {
     $redirect = $base_url . '/phenotypes/trait-distribution/';
-  } 
-  
+  }
+
   $form_state['redirect'] = url($redirect);
-} 
+}
 
 /**
  * AJAX Callback: Trait Distribution plot page navagation.
@@ -329,7 +329,7 @@ function analyzedphenotypes_traitplot_app_form_submit($form, &$form_state) {
  */
 function ajax_analyzedphenotypes_traitplot_page_nav_callback($form, $form_state) {
   return $form['nav'];
-} 
+}
 
 /**
  * Trait Distribution Form
@@ -349,20 +349,18 @@ function ajax_analyzedphenotypes_traitplot_page_nav_callback($form, $form_state)
  *   The cvterm_id for the unit.
  */
 function analyzedphenotypes_traitplot_form(&$form, &$form_state,
-      $trait_id, $experiment_id, $method_id, $unit_id) { 
+      $trait_id, $experiment_id, $method_id, $unit_id) {
 
   // Construct chart text/wordings.
   $experiment_name = chado_query('SELECT name FROM {project} WHERE project_id=:id', array(':id' => $experiment_id))->fetchField();
   $trait_name = chado_query('SELECT name FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $trait_id))->fetchField();
   $unit = chado_query('SELECT name FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $unit_id))->fetchField();
   $method = chado_query('SELECT definition FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $method_id))->fetchField();
-  $num_site_years = 3;
-  $num_reps = 3;
   // Actually pull it all together.
   $xaxis = 'Site-Year';
   $yaxis = $trait_name.' ('.$unit.')';
   $figtitle = "Comparison of $trait_name observed values between site year for $experiment_name.";
-  $figlegend = "$trait_name was measured in $unit for $num_site_years site years with $num_reps replicates each. "
+  $figlegend = "$trait_name was measured in $unit. "
    . $method . " Replicates were then averaged per germplasm within a single site-year."
    . " The chart shows the traditional box plot with the kernel density estimation flanking it."
    . " This visualizes both the structure (i.e. median, interquartile range, and 95% confidence interval) and distribution of the data.";
@@ -383,7 +381,7 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
       'yaxis' => $yaxis,
     )),
   );
-  
+
   // Add CSS for the chart.
   $form['#attached']['css'][] = $module_path . '/theme/css/violinplot.chart.css';
 
@@ -443,13 +441,13 @@ function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $
     $resource = chado_query(
       "SELECT location, year, stock_name, mean
         FROM chado.mview_phenotype
-        WHERE experiment_id=:project_id 
+        WHERE experiment_id=:project_id
           AND trait_id=:trait_id
           AND method_id= :method_id
           AND unit_id=:unit_id
         ORDER BY year ASC, location ASC",
       array(
-        ':project_id' => $project_id, 
+        ':project_id' => $project_id,
         ':trait_id' => $trait_id,
         ':method_id' => $method_id,
         ':unit_id' => $unit_id,

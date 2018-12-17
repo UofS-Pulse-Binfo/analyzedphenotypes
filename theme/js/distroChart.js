@@ -312,6 +312,20 @@ function makeDistroChart(settings) {
         chart.objs.g.select('.x.axis .label').attr("x", chart.width / 2);
         chart.objs.g.select('.x.axis').call(chart.objs.xAxis.innerTickSize(5));
 
+        // Fix the x-axis ticks.
+        chart.objs.g.selectAll(".x.axis .tick text")[0].forEach(function (d, i) {
+          text = d.__data__;
+          tmp = text.split(", ");
+          province = tmp[0];
+          tmp2 = tmp[1].split(" ");
+          year = tmp2.pop();
+          country = tmp2.join(" ");
+
+          d.innerHTML = "<tspan class=\"province\" dy=\".71em\" style=\"text-anchor: middle;\" y=\"8\" x=\"0\">"+province+"</tspan>"
+            +"<tspan class=\"country\" dy=\".71em\" style=\"text-anchor: middle;\" y=\"22\" x=\"0\">"+country+"</tspan>"
+            +"<tspan class=\"year\" dy=\".71em\" style=\"text-anchor: middle;\" y=\"36\" x=\"0\">"+year+"</tspan>";
+        });
+
         // Update y-axis.
         chart.objs.g.select('.y.axis').call(chart.objs.yAxis.innerTickSize(-chart.width));
         chart.objs.g.select('.y.axis .label').attr("x", (-chart.height / 2)+25);
@@ -357,7 +371,7 @@ function makeDistroChart(settings) {
             .append("text")
               .attr("class", "label")
               .attr("x", chart.height)
-              .attr("y", 50)
+              .attr("y", 70)
               .style("text-anchor", "middle")
               .text(chart.xAxisLable);
         chart.objs.axes.append("g")
@@ -379,7 +393,7 @@ function makeDistroChart(settings) {
             chart.groupObjs[cName].g.on("mouseover", function () {
                 chart.objs.tooltip
                     .style("display", null)
-                    .style("right", 0 + "px")
+                    .style("left", (chart.width + "px"))
                     .style("top", (chart.height + 150) + "px");
             }).on("mouseout", function () {
                 chart.objs.tooltip.style("display", "none");
@@ -986,7 +1000,7 @@ function makeDistroChart(settings) {
 
                 // Plot Whiskers (default show)
                 if (bOpts.showWhiskers) {
-                    var whiskerColor = "#d5d8dd";
+                    var whiskerColor = "#898E92";
                     cBoxPlot.objs.upperWhisker = {fence: null, line: null};
                     cBoxPlot.objs.lowerWhisker = {fence: null, line: null};
                     cBoxPlot.objs.upperWhisker.fence = cBoxPlot.objs.g.append("line")

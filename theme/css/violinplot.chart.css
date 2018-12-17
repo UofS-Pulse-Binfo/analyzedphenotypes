@@ -1,5 +1,5 @@
 
-/** 
+/**
  * Trait Didtribution Singe-Page Application.
  */
 #analyzedphenotypes-traitplot-app-form .form-item {
@@ -23,6 +23,7 @@ select {
   margin: 10px;
   margin-left: 50px;
   text-align: left;
+  max-width: 850px;
 }
 .legend .title {
   font-weight: bolder;
@@ -34,6 +35,13 @@ select {
 /**
  * Primary Chart
  */
+
+/* X-axis labels */
+.chart-wrapper .x.axis .tick text .country {
+  text-transform: none;
+  fill: #737373;
+  /*font-size: 0.9em;*/
+}
 
 /*Nested divs for responsiveness*/
 .chart-wrapper {
