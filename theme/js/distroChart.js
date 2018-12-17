@@ -138,7 +138,7 @@ function makeDistroChart(settings) {
      * @returns {Function} A function that provides the values for the tooltip
      */
     function tooltipHover(groupName, metrics) {
-        var tooltipString = "Group: " + groupName;
+        var tooltipString = "Site-year: " + groupName;
         tooltipString += "<br\>Max: " + formatAsFloat(metrics.max, 0.1);
         tooltipString += "<br\>Q3: " + formatAsFloat(metrics.quartile3);
         tooltipString += "<br\>Median: " + formatAsFloat(metrics.median);
@@ -307,8 +307,16 @@ function makeDistroChart(settings) {
             chart.yScale.domain(chart.range).nice().clamp(true);
         }
 
-        //Update axes
+        // Update x-axis.
+        chart.objs.g.select('.x.axis').attr("transform", "translate(0," + (chart.height) + ")");
+        chart.objs.g.select('.x.axis .label').attr("x", chart.width / 2);
+        chart.objs.g.select('.x.axis').call(chart.objs.xAxis.innerTickSize(5));
+
+        // Update y-axis.
         chart.objs.g.select('.y.axis').call(chart.objs.yAxis.innerTickSize(-chart.width));
+        chart.objs.g.select('.y.axis .label').attr("x", (-chart.height / 2)+25);
+
+        // Update chart size?
         chart.objs.chartDiv.select('svg').attr("width", chart.width + (chart.margin.left + chart.margin.right)).attr("height", chart.height + (chart.margin.top + chart.margin.bottom));
 
         return chart;
@@ -371,8 +379,8 @@ function makeDistroChart(settings) {
             chart.groupObjs[cName].g.on("mouseover", function () {
                 chart.objs.tooltip
                     .style("display", null)
-                    .style("left", (d3.event.pageX) + "px")
-                    .style("top", (d3.event.pageY - 28) + "px");
+                    .style("right", 0 + "px")
+                    .style("top", (chart.height + 150) + "px");
             }).on("mouseout", function () {
                 chart.objs.tooltip.style("display", "none");
             }).on("mousemove", tooltipHover(cName, chart.groupObjs[cName].metrics))
@@ -978,21 +986,22 @@ function makeDistroChart(settings) {
 
                 // Plot Whiskers (default show)
                 if (bOpts.showWhiskers) {
+                    var whiskerColor = "#d5d8dd";
                     cBoxPlot.objs.upperWhisker = {fence: null, line: null};
                     cBoxPlot.objs.lowerWhisker = {fence: null, line: null};
                     cBoxPlot.objs.upperWhisker.fence = cBoxPlot.objs.g.append("line")
                         .attr("class", "upper whisker")
-                        .style("stroke", chart.boxPlots.colorFunct(cName));
+                        .style("stroke", whiskerColor);
                     cBoxPlot.objs.upperWhisker.line = cBoxPlot.objs.g.append("line")
                         .attr("class", "upper whisker")
-                        .style("stroke", chart.boxPlots.colorFunct(cName));
+                        .style("stroke", whiskerColor);
 
                     cBoxPlot.objs.lowerWhisker.fence = cBoxPlot.objs.g.append("line")
                         .attr("class", "lower whisker")
-                        .style("stroke", chart.boxPlots.colorFunct(cName));
+                        .style("stroke", whiskerColor);
                     cBoxPlot.objs.lowerWhisker.line = cBoxPlot.objs.g.append("line")
                         .attr("class", "lower whisker")
-                        .style("stroke", chart.boxPlots.colorFunct(cName));
+                        .style("stroke", whiskerColor);
                 }
 
                 // Plot outliers (default show)

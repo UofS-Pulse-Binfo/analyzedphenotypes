@@ -351,6 +351,22 @@ function ajax_analyzedphenotypes_traitplot_page_nav_callback($form, $form_state)
 function analyzedphenotypes_traitplot_form(&$form, &$form_state,
       $trait_id, $experiment_id, $method_id, $unit_id) { 
 
+  // Construct chart text/wordings.
+  $experiment_name = chado_query('SELECT name FROM {project} WHERE project_id=:id', array(':id' => $experiment_id))->fetchField();
+  $trait_name = chado_query('SELECT name FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $trait_id))->fetchField();
+  $unit = chado_query('SELECT name FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $unit_id))->fetchField();
+  $method = chado_query('SELECT definition FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $method_id))->fetchField();
+  $num_site_years = 3;
+  $num_reps = 3;
+  // Actually pull it all together.
+  $xaxis = 'Site-Year';
+  $yaxis = $trait_name.' ('.$unit.')';
+  $figtitle = "Comparison of $trait_name observed values between site year for $experiment_name.";
+  $figlegend = "$trait_name was measured in $unit for $num_site_years site years with $num_reps replicates each. "
+   . $method . " Replicates were then averaged per germplasm within a single site-year."
+   . " The chart shows the traditional box plot with the kernel density estimation flanking it."
+   . " This visualizes both the structure (i.e. median, interquartile range, and 95% confidence interval) and distribution of the data.";
+
   // Add needed JS for the chart.
   $module_path = drupal_get_path('module','analyzedphenotypes');
   $form['#attached']['js'][] = 'https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js';
@@ -363,6 +379,8 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
       'trait_id' => $trait_id,
       'method_id' => $method_id,
       'unit_id' => $unit_id,
+      'xaxis' => $xaxis,
+      'yaxis' => $yaxis,
     )),
   );
   
@@ -385,33 +403,16 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
     $form['figure']['legend']['title'] = array(
       '#type' => 'markup',
       '#prefix' => '<div class="title">',
+      '#markup' => 'Figure: '. $figtitle,
       '#suffix' => '</div>',
     );
 
     $form['figure']['legend']['description'] = array(
       '#type' => 'markup',
       '#prefix' => '<div class="description">',
+      '#markup' => $figlegend,
       '#suffix' => '</div>',
     );
-
-    // Construct chart text/wordings.
-    if (isset($experiments[ $experiment_id ])) { 
-      $experiment_name = $experiments[ $experiment_id ];
-    }
-    else {
-      $experiment_name = chado_query('SELECT name FROM {project} WHERE project_id=:id', array(':id' => $experiment_id))->fetchField();  
-    }
-
-    if (isset($traits[ $trait_id ])) {
-      $trait_name = $traits[ $trait_id ];
-    }
-    else {
-      $trait_name = chado_query('SELECT name FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $trait_id))->fetchField();
-    }
-
-    $form['figure']['legend']['title']['#markup'] = 'Figure: Comparison of <em>'.$trait_name.'</em> observed values between site year for <em>'.$experiment_name.'</em>.';
-    $form['figure']['legend']['description']['#markup'] = 'This chart shows the distribution of means observered (y-axis) per site year (x-axis) with the width at a given mean representing the number of germplasm that mean was observed/measured in.
-      Only the data for the <em>'.$experiment_name.'</em> phenotyping experiment is being shown.';
 
   return $form;
 }

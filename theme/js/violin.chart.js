@@ -21,7 +21,10 @@
                   data:data,
                   xName:'category',
                   yName:'value',
-                  axisLabels: {xAxis: "The Number of Germplasm with a given mean per Site Year", yAxis: 'Mean Observed Values per Site Year'},
+                  axisLabels: {
+                    xAxis: Drupal.settings.analyzedPhenotypes.xaxis, 
+                    yAxis: Drupal.settings.analyzedPhenotypes.yaxis
+                  },
                   selector:"#tripal-ap-violin-plot",
                   margin:{top: 15, right: 60, bottom: 75, left: 75},
                   chartSize:{height:500, width:960},
@@ -35,7 +38,7 @@
           });
           chart.boxPlots.show({
             reset:true, 
-            showWhiskers:false,
+            showWhiskers:true,
             showOutliers:false,
             boxWidth:10,
             lineWidth:15,

@@ -93,11 +93,12 @@ select {
     text-align: left;
     padding: 3px;
     font: 12px sans-serif;
-    background: lightcyan;
-    border: 0px;
-    border-radius: 1px;
+    background: #ACB3BB;
+    border: 2px solid #314355;
+    border-radius: 3px;
     pointer-events: none;
     opacity: 0.7;
+    color: black;
 }
 
 /*Box Plot*/
