@@ -377,7 +377,9 @@ function analyzedphenotypes_validator_datafile($case, $dataset) {
         while(!feof($handle)) {
           $columns_row = fgets($handle);
 
-          if (!empty($column_row)) {
+          if (!empty($columns_row)) {
+            $file_columns = str_getcsv($columns_row, "\t");
+
             // Extract the first row which is the column headers row.
             $columns_noformat  = array_map('ap_noformat', $file_columns);
 
@@ -600,7 +602,9 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
             // Apply to all.
             foreach($data as $j => $value) {
               $value = trim($value, '"');
-              $result = call_user_func($callback, $case, $value, $columns_row[$j], $i, $trait_name, $dataset['project_genus']);
+              // @todo actually pass in the unit somehow here even though
+              // we don't yet know it because it's collected in the describe phase.
+              $result = call_user_func($callback, $case, $value, $columns_row[$j], $i, $trait_name, $dataset['project_genus'],' text');
 
               if ($result['type'] == 'failed') {
                 if ($arr_status[$key]['type'] == 'passed') {
@@ -629,8 +633,9 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
               $value = trim($data[$j], '"');
             }
 
-
-            $result = call_user_func($callback, $case, $value, $columns_required, $i, $trait_name, $dataset['project_genus']);
+            // @todo actually pass in the unit somehow here even though
+            // we don't yet know it because it's collected in the describe phase.
+            $result = call_user_func($callback, $case, $value, $columns_required, $i, $trait_name, $dataset['project_genus'], 'text');
 
             if ($result['type'] == 'failed') {
               if ($arr_status[$key]['type'] == 'passed') {
@@ -706,11 +711,13 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
  *  A value representing the trait name in a given row.
  * @param String $project_genus
  *  Genus to be used to restrict dataset to only those that matched this value.
+ * @param String $unit
+ *  The unit of the value in a given row.
  *
  * @return Array
  *   An associative array, indicating if a validator passed or failed the requirements.
  */
-function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait_name, $project_genus) {
+function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait_name, $project_genus, $unit) {
   $status = array(
     'type' => 'passed', // Passed or Failed. Default to passed.
     'details' => '',    // Include more information.
@@ -738,7 +745,7 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
         $column_data_type = $required_columns[$column];
         $column_names = array_keys($required_columns);
 
-        if (!empty($column_data_type) && $column_names[$column] != $column_names[6]) {
+        if (!empty($column_data_type) && $required_columns[$column] != $column_names[6]) {
 
           // Check if value matches the unit.
           $coltype_value_check = ap_validate_unitvalue($column_data_type, $value);
@@ -755,18 +762,13 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
     //
     case 'unit_data':
       if (!empty($value)) {
-        $unit = ap_format_traitname($trait_name, 'trait_unit');
-
-        // Fetch unit properties.
-        $unit_type = ap_define_datatypes();
-        $trait_unit_datatype = $unit_type[$unit]['type'];
 
         // Check value matches unit.
-        $trait_value_check = ap_validate_unitvalue($trait_unit_datatype, $value);
+        $trait_value_check = ap_validate_unitvalue($unit, $value);
 
         if (!$trait_value_check) {
           $status['type'] = 'failed';
-          $status['details'] = ' in ' . $column . ' line #' . $row . ' (' . $value . ' is not a valid ' . $unit . '/' . $unit_type[$unit]['name'] . ')';
+          $status['details'] = ' in ' . $column . ' line #' . $row . ' (' . $value . ' is not a valid ' . $unit . ')';
         }
       }
 
@@ -820,9 +822,12 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
  *
  * @param Array $dataset
  *  An associative array containing user provide values:
- *  - project_name  : Project/experiment selected.
- *  - project_genus : Project/experiment genus selected.
- *  - data_file     : Standard Drupal File Id Number (FID).
+ *  - project_name      : Project/experiment selected.
+ *  - project_genus     : Project/experiment genus selected.
+ *  - trait_cvterm_ids  : array of trait name => trait cvterm_ids for all traits in file
+ *  - method_cvterm_ids : array of trait name => method cvterm_ids for all traits in file
+ *  - unit_cvterm_ids   : array of trait name => unit cvterm_ids for all traits in file
+ *  - data_file         : Standard Drupal File Id Number (FID).
  * @param Integer $job_id
  *  - Registered Tripal Job Id number.
  */
@@ -832,7 +837,9 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
   // Dataset - datafile (FID).
   // Dataset - traits.
   $dataset = unserialize($dataset);
-  $trait_cvterm = $dataset['trait_cvterm'];
+  $trait_cvterm_ids = $dataset['trait_cvterm'];
+  $method_cvterm_ids = $dataset['method_cvterm'];
+  $unit_cvterm_ids = $dataset['unit_cvterm'];
 
   // # PROJECT.
   $projectprop = ap_match_projectname(
@@ -885,9 +892,6 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
       array('set' => 'terms')
     );
 
-    // Assay id : method/taken by eye.
-    $sysvar_method = variable_get($sysvars['ap_method']);
-
     $plantprop = array();
     $plantprop['Year'] = variable_get($sysvars['ap_year']);
     $plantprop['Location'] = variable_get($sysvars['ap_location']);
@@ -910,6 +914,11 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
       while(!feof($handle)) {
         $row = fgets($handle);
         $data = str_getcsv($row, "\t");
+        $data = array_map('trim', $data);
+        $data = array_map(function($element) {
+            $tmp = str_replace('"',"",$element);
+            return trim($tmp, "'");
+          }, $data);
 
         if (!empty($row) && $i == 0) {
           // Extract the first row which is the column headers row.
@@ -932,7 +941,7 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
           // # PHENOTYPES.
           $file_traitname = $data[ $col_index['Trait Name'] ];
           // cvterm_id used by this trait name from trait to cvterm_id in previous stage.
-          $cvterm_id = $trait_cvterm[$file_traitname];
+          $cvterm_id = $trait_cvterm_ids[$file_traitname];
 
           // Test cvterm id number if it matched a record.
           $trait_property = ap_get_cvterm(
@@ -960,7 +969,9 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
             exit(32);
           }
 
-          $trait_id = $trait_property[0]['cvterm_id'];
+          $trait_id = $trait_cvterm_ids[$file_traitname];
+          $method_id = $method_cvterm_ids[$file_traitname];
+          $unit_id = $unit_cvterm_ids[$file_traitname];
 
           $file_year = $data[ $col_index['Year'] ];
           $file_location = $data[ $col_index['Location'] ];
@@ -976,9 +987,10 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
             'uniquename'    => $uniquename,
             'observable_id' => null,
             'attr_id'       => $trait_id,
+            'assay_id'      => $method_id,
+            'unit_id'       => $unit_id,
             'value'         => $file_value,
             'cvalue_id'     => null,
-            'assay_id'      => $method,
             'project_id'    => $project_id,
             'stock_id'      => $stock_id,
           );
@@ -997,8 +1009,6 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
                 'phenotype_id' => $phenotype_id,
                 'type_id'   => $var_value,
                 'value'  => $file_property_value,
-                // NOTE: THIS FIELD HAS NOT-NULL CONSTRAINT.
-                'cvalue_id' => 1,
                 'rank' => 0,
               );
 

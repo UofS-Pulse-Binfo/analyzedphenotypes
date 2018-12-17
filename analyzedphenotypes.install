@@ -88,6 +88,7 @@ function analyzedphenotypes_enable() {
     'project_id' => array('table' => 'phenotype',     'ref' => 'project', 'ref_id' => 'project_id'),
     'stock_id' =>   array('table' => 'phenotype',     'ref' => 'stock',   'ref_id' => 'stock_id'),
     'cvalue_id' =>  array('table' => 'phenotypeprop', 'ref' => 'cvterm',  'ref_id' => 'cvterm_id'),
+    'unit_id' =>  array('table' => 'phenotype', 'ref' => 'cvterm',  'ref_id' => 'cvterm_id'),
   );
   foreach($arr_fields as $field => $items) {
     $exists = db_field_exists('chado.' . $items['table'], $field);
@@ -138,7 +139,7 @@ function analyzedphenotypes_enable() {
   foreach($sysvars['options'] as $v => $var) {
     variable_set($var, 1);
   }
-  
+
   $directories = ap_construct_datafile_destinationpath();
   foreach($directories as $dir) {
     file_prepare_directory($dir, FILE_CREATE_DIRECTORY);
@@ -151,7 +152,7 @@ function analyzedphenotypes_enable() {
  */
 function analyzedphenotypes_uninstall() {
   $sysvars = ap_construct_variablenames();
-  
+
   foreach($sysvars as $i => $vars) {
     foreach($vars as $var_name) {
       if ($i == 'cvdbon') {
@@ -164,7 +165,7 @@ function analyzedphenotypes_uninstall() {
       }
     }
   }
-  
+
   $mviews = array('mview_phenotype', 'mview_phenotype_summary');
   foreach($mviews as $mview) {
     $mview_id = tripal_get_mview_id($mview);
@@ -181,13 +182,13 @@ function analyzedphenotypes_uninstall() {
  */
 function analyzedpenotypes_requirements($phase) {
   $requirements = array();
-  
+
   if ($phase == 'install') {
     $directories = ap_construct_datafile_destinationpath();
-    
+
     foreach($directories as $dir) {
       $dir_exists = file_prepare_directory($dir);
-      
+
       if (!$dir_exists) {
         $requirements['file_directory' . $dir] = array(
           'severity' => REQUIREMENT_ERROR,
@@ -198,7 +199,7 @@ function analyzedpenotypes_requirements($phase) {
       }
     }
   }
-  
-  
+
+
   return $requirements;
 }

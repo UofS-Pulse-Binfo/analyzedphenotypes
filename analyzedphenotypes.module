@@ -13,6 +13,7 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.systemv
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
 
 // Include Tripal/Chado support API.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.trait.api');
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.cv.api');
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.genus.api');
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.projects.api');
