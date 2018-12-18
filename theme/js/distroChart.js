@@ -316,14 +316,27 @@ function makeDistroChart(settings) {
         chart.objs.g.selectAll(".x.axis .tick text")[0].forEach(function (d, i) {
           text = d.__data__;
           tmp = text.split(", ");
-          province = tmp[0];
-          tmp2 = tmp[1].split(" ");
-          year = tmp2.pop();
-          country = tmp2.join(" ");
+          if (tmp.length == 2) {
+            province = tmp[0];
+            tmp2 = tmp[1].split(" ");
+            year = tmp2.pop();
+            country = tmp2.join(" ");
+          }
+          else {
+            tmp = text.split(" ");
+            year = tmp.pop();
+            province = tmp.join(" ");
+            country = 0;
+          }
 
-          d.innerHTML = "<tspan class=\"province\" dy=\".71em\" style=\"text-anchor: middle;\" y=\"8\" x=\"0\">"+province+"</tspan>"
-            +"<tspan class=\"country\" dy=\".71em\" style=\"text-anchor: middle;\" y=\"22\" x=\"0\">"+country+"</tspan>"
-            +"<tspan class=\"year\" dy=\".71em\" style=\"text-anchor: middle;\" y=\"36\" x=\"0\">"+year+"</tspan>";
+          d.innerHTML = "<tspan class=\"province\" dy=\".71em\" style=\"text-anchor: middle;\" y=\"8\" x=\"0\">"+province+"</tspan>";
+          if (country != 0) {
+            d.innerHTML += "<tspan class=\"country\" dy=\".71em\" style=\"text-anchor: middle;\" y=\"22\" x=\"0\">"+country+"</tspan>";
+            d.innerHTML += "<tspan class=\"year\" dy=\".71em\" style=\"text-anchor: middle;\" y=\"36\" x=\"0\">"+year+"</tspan>";
+          }
+          else {
+            d.innerHTML += "<tspan class=\"year\" dy=\".71em\" style=\"text-anchor: middle;\" y=\"25\" x=\"0\">"+year+"</tspan>";
+          }
         });
 
         // Update y-axis.
