@@ -9,7 +9,7 @@
       var method_id = Drupal.settings.analyzedPhenotypes.method_id;
       var unit_id = Drupal.settings.analyzedPhenotypes.unit_id;
 
-      d3.json('http://knowpulse.usask.ca/dev/tripal/json/phenotypes/traitplot/'+experiment_id+'/'+trait_id+'/'+method_id+'/'+unit_id, function(error, data) {
+      d3.json(Drupal.settings.basePath+'/json/phenotypes/traitplot/'+experiment_id+'/'+trait_id+'/'+method_id+'/'+unit_id, function(error, data) {
 
           d3.selectAll('#tripal-ap-violin-plot .inner-wrapper').remove();
 
