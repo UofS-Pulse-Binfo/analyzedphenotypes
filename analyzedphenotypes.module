@@ -52,26 +52,24 @@ function analyzedphenotypes_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
-  // Main menu items for phenotypes: shows a beanplot -select trait and project.
+  // Violin Plot.
   $items['phenotypes/trait-distribution'] = array(
-    'title' => 'Trait Distribution Chart',
+    'title' => 'Trait Violin Plot',
     'description' => 'Summarizes phenotypic data for a given trait and project.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('analyzedphenotypes_beanplot_form'),
+    'page arguments' => array('analyzedphenotypes_traitplot_app_form'),
     'access arguments' => array('access analyzed phenotypes'),
-    'file' => 'include/analyzedphenotypes.beanplot.page.inc',
+    'file' => 'include/analyzedphenotypes.traitplot.page.inc',
     'type' => MENU_NORMAL_ITEM,
   );
 
-  // JSON for beanplot.
-  $items['json/phenotypes/beanplot/%/%'] = array(
-    'page callback' => 'analyzedphenotypes_beanplot_json',
-    'page arguments' => array(3, 4),
+  $items['json/phenotypes/traitplot/%/%/%/%'] = array(
+    'page callback' => 'analyzedphenotypes_traitplot_json',
+    'page arguments' => array(3, 4, 5, 6),
     'access arguments' => array('access analyzed phenotypes'),
-    'file' => 'include/analyzedphenotypes.beanplot.page.inc',
+    'file' => 'include/analyzedphenotypes.traitplot.page.inc',
     'type' => MENU_CALLBACK,
   );
-
 
   $tripal_extension_ap = 'admin/tripal/extension/analyzedphenotypes';
 
