@@ -114,8 +114,8 @@ function analyzedphenotypes_traitplot_app_filter_form(&$form, &$form_state,
     '#prefix' => '<div id="traitplot-nav" class="traitplot-nav expanded">',
     '#suffix' => '</div>',
     '#description' => 'This chart is meant to summarize the observed values for a specific trait in a particular phenotyping experiment.
-      Since it is not always statistically correct to combine data across sites and years, this summary keeps the data seperate.
-      This allows you to compare values across site-years.',
+      Since it is not always statistically correct to combine data across sites and years, the data is kept separate, which allows you
+      to compare values across site-years.',
     '#weight' => 10,
   );
 
@@ -162,7 +162,7 @@ function analyzedphenotypes_traitplot_app_filter_form(&$form, &$form_state,
     '#options' => $experiments,
     '#empty_option' => '- Select -',
     '#default_value' => $experiment_id,
-    '#description' => 'Show only phenotypic data from the selected project.',
+    '#description' => 'Show only phenotypic data from the selected experiment.',
     '#ajax' => array(
       'callback' => 'ajax_analyzedphenotypes_traitplot_page_nav_callback',
       'wrapper' => 'traitplot-nav',

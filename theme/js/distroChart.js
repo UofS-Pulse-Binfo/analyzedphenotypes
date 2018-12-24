@@ -270,6 +270,14 @@ function makeDistroChart(settings) {
             chart.range = d3.extent(chart.data, function (d) {return d[chart.settings.yName];});
         }
 
+        // Pad the range to ensure violin's have room to close.
+        // How much we want to pad depends on the size of the range...
+        rangeSize = chart.range[1] - chart.range[0];
+        rangePadding = Math.ceil(rangeSize / 15);
+        chart.range[0] -= rangePadding;
+        chart.range[1] += rangePadding;
+
+        // Colour function.
         chart.colorFunct = getColorFunct(chart.settings.colors);
 
         // Build Scale functions
