@@ -42,7 +42,7 @@ function ap_construct_mview_phenotypesummary_query() {
       yr.value        AS year,
       s.stock_id      AS germplasm_id,
       s.name          AS germplasm_name,
-      avg( CAST(p.value as FLOAT) ) AS mean
+      array_to_json(array_agg(p.value)) AS values
     FROM {phenotype} p
       LEFT JOIN {cvterm} trait ON trait.cvterm_id=p.attr_id
       LEFT JOIN {project} proj USING(project_id)
@@ -146,8 +146,9 @@ function ap_construct_mview_phenotypesummary_schema() {
         'length' => '255',
         'not null' => TRUE,
       ),
-      'mean'             => array (
-        'type' => 'float',
+      'values'           => array (
+        'type' => 'text',
+        'pg_type' => 'jsonb',
       ),
     ),
 

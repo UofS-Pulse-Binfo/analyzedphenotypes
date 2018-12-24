@@ -439,7 +439,7 @@ function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $
 
   if ($project_id && $trait_id && $method_id && $unit_id) {
     $resource = chado_query(
-      "SELECT location, year, stock_name, mean
+      "SELECT location, year, stock_name, values
         FROM chado.mview_phenotype
         WHERE experiment_id=:project_id
           AND trait_id=:trait_id
@@ -454,9 +454,17 @@ function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $
     ));
     foreach($resource as $r) {
 
+      $values = json_decode($r->values);
+      if (is_numeric($values[0])) {
+        $mean = array_sum($values) / count($values);
+      }
+      else {
+        $mean = implode('/', array_unique($values));
+      }
       $results[] = array(
         'category' => $r->location . ' ' . $r->year,
-        'value' => $r->mean,
+        'values' => $values,
+        'value' => $mean,
       );
     }
   }
