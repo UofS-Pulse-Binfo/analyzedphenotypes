@@ -365,11 +365,26 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
    . " The chart shows the traditional box plot with the kernel density estimation flanking it."
    . " This visualizes both the structure (i.e. median, interquartile range, and 95% confidence interval) and distribution of the data.";
 
+  // Determine the type of chart to show.
+  // It should be stored as a property of the unit cvterm.
+  $phenotype_type = chado_query(
+    "SELECT value FROM {cvtermprop} 
+    WHERE cvterm_id=:id AND 
+      type_id IN (SELECT cvterm_id FROM {cvterm} WHERE name='additionalType')",
+    array(':id' => $unit_id))->fetchField();
+  if ($phenotype_type == 'quantitative') {
+    $chart_type = 'violin';
+  }
+  else {
+    $chart_type = 'multibar';
+  }
+  dpm($chart_type, 'chart type');
+
   // Add needed JS for the chart.
   $module_path = drupal_get_path('module','analyzedphenotypes');
   $form['#attached']['js'][] = 'https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js';
   $form['#attached']['js'][] = $module_path . '/theme/js/distroChart.js';
-  $form['#attached']['js'][] = $module_path . '/theme/js/violin.chart.js';
+  $form['#attached']['js'][] = $module_path . "/theme/js/$chart_type.chart.js";
   $form['#attached']['js'][] = array(
     'type' => 'setting',
     'data' => array('analyzedPhenotypes' => array(
@@ -383,7 +398,7 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
   );
 
   // Add CSS for the chart.
-  $form['#attached']['css'][] = $module_path . '/theme/css/violinplot.chart.css';
+  $form['#attached']['css'][] = $module_path . '/theme/css/'.$chart_type."plot.chart.css";
 
     // Add a canvas for the chart.
     $form['figure']['chart'] = array(
