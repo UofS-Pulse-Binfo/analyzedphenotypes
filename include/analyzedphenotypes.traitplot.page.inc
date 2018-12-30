@@ -378,7 +378,7 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
   else {
     $chart_type = 'multibar';
   }
-  dpm($chart_type, 'chart type');
+  // @debug dpm($chart_type, 'chart type');
 
   // Add needed JS for the chart.
   $module_path = drupal_get_path('module','analyzedphenotypes');
