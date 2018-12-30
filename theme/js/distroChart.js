@@ -394,6 +394,7 @@ function makeDistroChart(settings) {
               .attr("x", chart.height)
               .attr("y", 70)
               .style("text-anchor", "middle")
+              .style('font-weight','bold')
               .text(chart.xAxisLable);
         chart.objs.axes.append("g")
             .attr("class", "y axis")
@@ -405,6 +406,7 @@ function makeDistroChart(settings) {
               .attr("x", (-chart.height / 2) + 25)
               .attr("dy", ".71em")
               .style("text-anchor", "middle")
+              .style('font-weight','bold')
               .text(chart.yAxisLable);
 
         // Create tooltip div

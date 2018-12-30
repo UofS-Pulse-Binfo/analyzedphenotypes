@@ -474,7 +474,9 @@ function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $
         $mean = array_sum($values) / count($values);
       }
       else {
-        $mean = implode('/', array_unique($values));
+        $values = array_unique($values);
+        sort($values);
+        $mean = implode('/', $values);
       }
       $results[] = array(
         'category' => $r->location . ' ' . $r->year,

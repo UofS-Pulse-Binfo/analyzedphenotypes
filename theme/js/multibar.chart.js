@@ -24,15 +24,16 @@
 
       var xAxis = d3.svg.axis()
         .scale(x0)
-        .tickSize(0)
         .orient("bottom");
 
       var yAxis = d3.svg.axis()
         .scale(y)
+        .outerTickSize(0)
+        .innerTickSize(-width + margin.right)
         .orient("left");
 
       var color = d3.scale.ordinal()
-        .range(["#BBC7BD","#0C6758","#7AB318","#253443", "#21597D"]);
+        .range(["#BBC7BD","#0C6758","#7AB318","#253443", "#21597D", "#090C0E", "#D5D4E6", "#CCCCCC", "#9FA7A3"]);
 
       // Create the canvas.
       var svg = d3.select("#tripal-ap-violin-plot").append("svg")
@@ -99,7 +100,9 @@
 
         x0.domain(categoryNames);
         x1.domain(seriesNames).rangeRoundBands([0, x0.rangeBand()]);
-        y.domain([0, ymax]);
+
+        var ypadding = Math.ceil(ymax / 15);
+        y.domain([0, ymax + ypadding]);
 
         // X-Axis
         svg.append("g")
