@@ -911,6 +911,12 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
         $method = $form_state['values']['ap_method_text_field' . $i];
         $unit = $form_state['values']['ap_unit_text_field' . $i];
 
+        // Determine whether this trait is qualitative or quantitative.
+        $type = 'quant';
+        if (preg_match('/[Ss]cale/', $unit)) {
+          $type = 'qual';
+        }
+
         // Insert new term. Inserted term id is required.
         // When alternate trait available use it over original trait.
         $result = ap_insert_trait(array(
@@ -919,6 +925,7 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
           'method' => $method,
           'unit' => $unit,
           'genus' => $project_genus,
+          'type' => $type,
         ));
 
         // Save the values in the array for the tripal job.

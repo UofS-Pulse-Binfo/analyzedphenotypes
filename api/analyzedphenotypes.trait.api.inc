@@ -18,6 +18,7 @@
  *   - method: a description of the method used to collect the phenotypic data
  *      (e.g. measured 5 plants from the plot and then averaged them.)
  *   - unit: the full word describing the unit used in the method (e.g. centimeters)
+ *   - type: one of "qual" or "quant" for qualitative and quantitative respectively.
  *
  * @return
  *   An array with the following keys where each value is the new cvterm:
@@ -45,6 +46,11 @@ function ap_insert_trait($data) {
   }
   if (!isset($data['unit'])) {
     tripal_report_error('ap_trait', TRIPAL_ERROR, '"unit" is required to insert a trait.');
+  }
+
+  // Defaults.
+  if (!isset($data['type'])) {
+    $data['type'] = 'qual';
   }
 
   // Grab necessary system config.
@@ -116,6 +122,22 @@ function ap_insert_trait($data) {
   $unit_cvterm = tripal_insert_cvterm($unit_cvterm);
   if (!$unit_cvterm) {
     tripal_report_error('ap_trait', TRIPAL_ERROR, 'Unable to create unit when the following is supplied: '.print_r($data,TRUE));
+  }
+
+  // Add type property to the unit.
+  $unit_type = array(
+    'cvterm_id' => $unit_cvterm->cvterm_id,
+    'type_id' => array('name' => 'additionalType', 'cv_id' => array('name' => 'schema')),
+  );
+  $exists = chado_select_record('cvtermprop', array('cvtermprop_id'), $unit_type);
+  if (empty($exists)) {
+    if ($data['type'] == 'quant') {
+      $unit_type['value'] = 'quantitative';
+    }
+    else {
+      $unit_type['value'] = 'qualitative';
+    }
+    chado_insert_record('cvtermprop', $unit_type);
   }
 
   // Relate Trait => Method
