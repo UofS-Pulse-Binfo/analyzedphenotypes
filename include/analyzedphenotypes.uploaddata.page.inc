@@ -399,7 +399,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
           // Individual cell.
           $value = str_getcsv($row, "\t");
           // Trait name value in the trait column.
-          $trait_name_value = $value[ $trait_name_index ];
+          $trait_name_value = trim($value[ $trait_name_index ]);
 
           if (in_array($trait_name_value, $arr_trait_describe)) {
             // Check if current trait name in array of traits to describe
@@ -841,7 +841,16 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                   $avg = array_sum($syvalues[$sy]) / count($syvalues[$sy]);
                   $sdv = ap_calculate_standard_deviation($syvalues[$sy]);
 
-                  $table_rows[] = array($sy, $min, $max, round($avg, 2), round($sdv, 2));
+                  if (!is_numeric($syvalues[$sy][0]) OR preg_match('/[Ss]cale/',$traitprop['unit'])) {
+                    $avg = 'n/a';
+                    $sdv = 'n/a';
+                  }
+                  else {
+                    $avg = round($avg, 2);
+                    $sdv = round($sdv, 2);
+                  }
+
+                  $table_rows[] = array($sy, $min, $max, $avg, $sdv);
                 }
 
                 $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_summary_table' . $i]['#markup'] = theme('table',
