@@ -453,8 +453,8 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               $form[$ap_fieldset]['ap_similar_trait_select_field' . $i] = array(
                 '#type' => 'select',
                 '#title' => t('Did you mean?'),
-                '#options' => array(-1 => '- Select -', 0 => 'None of these apply') + $cvterm_options,
-
+                '#options' => array(0 => 'None of these apply') + $cvterm_options,
+                '#empty_option' => '- Select -',
                 '#ajax' => array(
                   'event' => 'change',
                   'callback' => 'ap_send_ajaxrequest',
@@ -582,8 +582,10 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               // Add help for users if there are 2+ pre-existing methods for the current trait.
               if (!$traitprop['method'] && isset($methods)) {
                 $method_help = '<ul>';
+                $no_methods = TRUE;
                 foreach ($methods as $curr) {
                   $method_help .= '<li><pre>'.$curr.'</pre></li>';
+                  $no_methods = FALSE;
                 }
                 $method_help .= '</ul>';
                 $method_help .= '<p>If one of the above collection methods accurately describes how you collected your data then copy and paste it into the "Collection Method" space below. NOTE: Each pre-existing collection method is it\'s own bullet point.</p>';
@@ -592,6 +594,11 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                   '#title' => 'Existing Collection Methods for this Trait',
                   '#markup' => $method_help,
                 );
+
+                // make sure the help doesn't show up if there are no options.
+                if ($no_methods == TRUE) {
+                  unset($form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_method_help' . $i]);
+                }
               }
 
               // If there is only a single method for the supplied trait then use it for the default.
@@ -622,10 +629,12 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               if (!$traitprop['unit'] && isset($methods)) {
                 //
                 $unit_help = '<ul>';
+                $no_units = TRUE;
                 foreach ($methods as $curr_id => $curr) {
                   $units = ap_get_method_units($project_genus, $curr, [], $curr_id);
                   foreach ($units as $u) {
                     $unit_help .= '<li><pre>'.$u.'</pre></li>';
+                    $no_units = FALSE;
                   }
                 }
                 $unit_help .= '</ul>';
@@ -635,6 +644,11 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                   '#title' => 'Existing Units used for this Trait',
                   '#markup' => $unit_help,
                 );
+                
+                // make sure this section doesn't appear if there are no options.
+                if ($no_units == TRUE) {
+                  unset($form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_unit_help' . $i]);
+                }
               }
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_unit_text_field' . $i] = array(
                 '#type' => 'textfield',
@@ -893,18 +907,24 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
         // Retrieve the cvterm_id of the trait.
         $cvterm_id = $form_state['values']['ap_similar_trait_select_field' . $i];
 
-	      // Retrieve the cvterm_id of the method given the cvterm.definition.
+        // Use the values entered or prefilled in the field since unit is editable.
         $method = $form_state['values']['ap_method_text_field' . $i];
-        $method_id = ap_get_method_id($project_genus, $method);
-
-        // Retrieve the cvterm_id of the unit given the cvterm.name.
         $unit = $form_state['values']['ap_unit_text_field' . $i];
-        $unit_id = ap_get_unit_id($project_genus, $unit);
+
+        // Insert new term. Inserted term id is required.
+        // When alternate trait available use it over original trait.
+        $result = ap_insert_trait(array(
+          'trait_id' => $form_state['values']['ap_similar_trait_select_field' . $i],
+          'method_title' => uniqid(),
+          'method' => $method,
+          'unit' => $unit,
+          'genus' => $project_genus,
+        ));
 
         // Save the values in the array for the tripal job.
-        $arr_traitname_cvtermid[$trait] = $cvterm_id;
-        $arr_method_cvtermid[$trait] = $method_id;
-        $arr_unit_cvtermid[$trait] = $unit_id;
+        $arr_traitname_cvtermid[$trait] = $result['trait']->cvterm_id;
+        $arr_method_cvtermid[$trait] = $result['method']->cvterm_id;
+        $arr_unit_cvtermid[$trait] = $result['unit']->cvterm_id;
       }
       else {
         // Use the values entered or prefilled in the field since unit is editable.
@@ -963,7 +983,6 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
             array('cvterm_id' => $cvterm_id, 'photo' => array($photo_1, $photo_2)),
             array('scaleto' => 400)
           );
-
 
           // Save the values in the array for the tripal job.
           $arr_traitname_cvtermid[$trait] = $result['trait']->cvterm_id;

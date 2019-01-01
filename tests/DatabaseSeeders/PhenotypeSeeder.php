@@ -74,7 +74,7 @@ class PhenotypeSeeder extends Seeder {
 
       $traits[] = ap_insert_trait([
         'name' => $trait_name,
-        'definition' => $trait_description,
+        'description' => $trait_description,
         'method_title' => $faker->words(2, true),
         'method' => $faker->sentences(5, true),
         'unit' => $faker->word(true),
