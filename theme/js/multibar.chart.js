@@ -98,9 +98,13 @@
           });
         });
 
+        // Sort the categories.
+        categoryNames.sort(function (a,b) {
+          if (a > b) { return 1; } else { return -1; }});
+
+        // Set up the scales based on the values of the axis'.
         x0.domain(categoryNames);
         x1.domain(seriesNames).rangeRoundBands([0, x0.rangeBand()]);
-
         var ypadding = Math.ceil(ymax / 15);
         y.domain([0, ymax + ypadding]);
 
