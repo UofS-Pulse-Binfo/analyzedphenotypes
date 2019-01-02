@@ -243,7 +243,7 @@ function analyzedphenotypes_traitplot_app_filter_form(&$form, &$form_state,
     $form[$AJAX_wrapper]['method_id'] = array(
       '#type' => 'radios',
       '#title' => 'Method',
-      '#description' => 'Describes how the data was taken. Since it is often not valid to combine data taken using different methods, you need to select the method you are interested in here.',
+      '#description' => 'Describes how the data was taken in <b>full sentences</b>. Since it is often not valid to combine data taken using different methods, you need to select the method you are interested in here.',
       '#options' => $methods,
       '#required' => TRUE,
       '#ajax' => array(
@@ -263,7 +263,7 @@ function analyzedphenotypes_traitplot_app_filter_form(&$form, &$form_state,
       $form[$AJAX_wrapper]['unit_id'] = array(
         '#type' => 'radios',
         '#title' => 'Unit',
-        '#description' => 'The unit used to measure the data.',
+        '#description' => 'The unit used to measure the data. For scales, please enter "Scale [description of scale members]" (e.g. "scale 1-5, where 1 is upright and 5 is fully lodged", "scale; R:red, P:pink, W:white")',
         '#options' => $units,
         '#required' => TRUE,
         '#prefix' => '<span class="now-this">',
@@ -385,7 +385,8 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
     $figlegend = "$trait_name was measured as a $unit. "
      . $method . " Replicates were then averaged per germplasm within a single site-year."
      . " The chart shows the number of germplasm with a specific $trait_name where site-years are "
-     . "shown as different coloured bars.";
+     . "shown as different coloured bars. Germplasm exhibiting multiple $trait_name values are shown "
+     . "as [first value]/[second value] where order is not meaningful.";
   }
   // @debug dpm($chart_type, 'chart type');
 
