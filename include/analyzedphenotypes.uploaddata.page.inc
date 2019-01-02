@@ -638,13 +638,13 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                   }
                 }
                 $unit_help .= '</ul>';
-                $unit_help .= '<p>If you used one of the above units when collecting your data then copy and paste it into the "Unit" space below. NOTE: Each unit is it\'s own bullet point.</p>';
+                $unit_help .= '<p>The method with which you collected the data in <b>full sentences</b>. If you used one of the above units when collecting your data then copy and paste it into the "Unit" space below. NOTE: Each unit is it\'s own bullet point.</p>';
                 $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_unit_help' . $i] = array(
                   '#type' => 'item',
                   '#title' => 'Existing Units used for this Trait',
                   '#markup' => $unit_help,
                 );
-                
+
                 // make sure this section doesn't appear if there are no options.
                 if ($no_units == TRUE) {
                   unset($form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_unit_help' . $i]);
@@ -657,7 +657,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                 '#default_value' => $traitprop['unit'],
                 '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/traitunit/units',
                 '#element_validate' => array('analyzedphenotypes_validate_field_required'),
-                '#description' => t('The <strong>full name</strong> of the unit used to measure this trait.'),
+                '#description' => t('The <strong>full name</strong> of the unit used to measure this trait. For scales, please enter "Scale [description of scale members]" (e.g. "scale 1-5, where 1 is upright and 5 is fully lodged", "scale; R:red, P:pink, W:white")'),
                 '#attributes' => array('class' => array('ap-allow-revert')),
                 '#id' => 'ap-unit-text-field' . $i,
                 '#prefix' => '<div class="ap-field-unit-container">',
