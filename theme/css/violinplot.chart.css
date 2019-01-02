@@ -23,7 +23,7 @@ select {
   margin: 10px;
   margin-left: 50px;
   text-align: left;
-  max-width: 850px;
+  width: 885px;
 }
 .legend .title {
   font-weight: bolder;
