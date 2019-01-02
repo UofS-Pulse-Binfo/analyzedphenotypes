@@ -54,7 +54,7 @@ function analyzedphenotypes_menu() {
 
   // Violin Plot.
   $items['phenotypes/trait-distribution'] = array(
-    'title' => 'Trait Violin Plot',
+    'title' => 'Trait Distribution Plot',
     'description' => 'Summarizes phenotypic data for a given trait and project.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_traitplot_app_form'),

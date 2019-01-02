@@ -356,27 +356,36 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
   $trait_name = chado_query('SELECT name FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $trait_id))->fetchField();
   $unit = chado_query('SELECT name FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $unit_id))->fetchField();
   $method = chado_query('SELECT definition FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $method_id))->fetchField();
-  // Actually pull it all together.
-  $xaxis = 'Site-Year';
-  $yaxis = $trait_name.' ('.$unit.')';
-  $figtitle = "Comparison of $trait_name observed values between site year for $experiment_name.";
-  $figlegend = "$trait_name was measured in $unit. "
-   . $method . " Replicates were then averaged per germplasm within a single site-year."
-   . " The chart shows the traditional box plot with the kernel density estimation flanking it."
-   . " This visualizes both the structure (i.e. median, interquartile range, and 95% confidence interval) and distribution of the data.";
 
   // Determine the type of chart to show.
   // It should be stored as a property of the unit cvterm.
   $phenotype_type = chado_query(
-    "SELECT value FROM {cvtermprop} 
-    WHERE cvterm_id=:id AND 
+    "SELECT value FROM {cvtermprop}
+    WHERE cvterm_id=:id AND
       type_id IN (SELECT cvterm_id FROM {cvterm} WHERE name='additionalType')",
     array(':id' => $unit_id))->fetchField();
   if ($phenotype_type == 'quantitative') {
     $chart_type = 'violin';
+
+    $xaxis = 'Site-Year';
+    $yaxis = $trait_name.' ('.$unit.')';
+    $figtitle = "Comparison of observed $trait_name between site years for <em>$experiment_name</em>.";
+    $figlegend = "$trait_name was measured in $unit. "
+     . $method . " Replicates were then averaged per germplasm within a single site-year."
+     . " The chart shows the traditional box plot with the kernel density estimation flanking it."
+     . " Thus $trait_name values in a wider section of the plot represent higher probability that "
+     . "members of the sampled germplasm collection will show that phenotype.";
   }
   else {
     $chart_type = 'multibar';
+
+    $xaxis = 'Site-Year';
+    $yaxis = $trait_name.' ('.$unit.')';
+    $figtitle = "Comparison of observed $trait_name between site years for <em>$experiment_name</em>.";
+    $figlegend = "$trait_name was measured as a $unit. "
+     . $method . " Replicates were then averaged per germplasm within a single site-year."
+     . " The chart shows the number of germplasm with a specific $trait_name where site-years are "
+     . "shown as different coloured bars.";
   }
   // @debug dpm($chart_type, 'chart type');
 
