@@ -364,7 +364,7 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
     WHERE cvterm_id=:id AND
       type_id IN (SELECT cvterm_id FROM {cvterm} WHERE name='additionalType')",
     array(':id' => $unit_id))->fetchField();
-  if ($phenotype_type == 'quantitative') {
+  if ($phenotype_type == 'quantitative' OR empty($phenotype_type)) {
     $chart_type = 'violin';
 
     $xaxis = 'Site-Year';
