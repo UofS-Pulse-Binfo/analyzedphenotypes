@@ -356,20 +356,45 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
   $trait_name = chado_query('SELECT name FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $trait_id))->fetchField();
   $unit = chado_query('SELECT name FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $unit_id))->fetchField();
   $method = chado_query('SELECT definition FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $method_id))->fetchField();
-  // Actually pull it all together.
-  $xaxis = 'Site-Year';
-  $yaxis = $trait_name.' ('.$unit.')';
-  $figtitle = "Comparison of $trait_name observed values between site year for $experiment_name.";
-  $figlegend = "$trait_name was measured in $unit. "
-   . $method . " Replicates were then averaged per germplasm within a single site-year."
-   . " The chart shows the traditional box plot with the kernel density estimation flanking it."
-   . " This visualizes both the structure (i.e. median, interquartile range, and 95% confidence interval) and distribution of the data.";
+
+  // Determine the type of chart to show.
+  // It should be stored as a property of the unit cvterm.
+  $phenotype_type = chado_query(
+    "SELECT value FROM {cvtermprop}
+    WHERE cvterm_id=:id AND
+      type_id IN (SELECT cvterm_id FROM {cvterm} WHERE name='additionalType')",
+    array(':id' => $unit_id))->fetchField();
+  if ($phenotype_type == 'quantitative' OR empty($phenotype_type)) {
+    $chart_type = 'violin';
+
+    $xaxis = 'Site-Year';
+    $yaxis = $trait_name.' ('.$unit.')';
+    $figtitle = "Comparison of observed $trait_name between site years for <em>$experiment_name</em>.";
+    $figlegend = "$trait_name was measured in $unit. "
+     . $method . " Replicates were then averaged per germplasm within a single site-year."
+     . " The chart shows the traditional box plot with the kernel density estimation flanking it."
+     . " Thus $trait_name values in a wider section of the plot represent higher probability that "
+     . "members of the sampled germplasm collection will show that phenotype.";
+  }
+  else {
+    $chart_type = 'multibar';
+
+    $xaxis = 'Site-Year';
+    $yaxis = $trait_name.' ('.$unit.')';
+    $figtitle = "Comparison of observed $trait_name between site years for <em>$experiment_name</em>.";
+    $figlegend = "$trait_name was measured as a $unit. "
+     . $method . " Replicates were then averaged per germplasm within a single site-year."
+     . " The chart shows the number of germplasm with a specific $trait_name where site-years are "
+     . "shown as different coloured bars. Germplasm exhibiting multiple $trait_name values are shown "
+     . "as [first value]/[second value] where order is not meaningful.";
+  }
+  // @debug dpm($chart_type, 'chart type');
 
   // Add needed JS for the chart.
   $module_path = drupal_get_path('module','analyzedphenotypes');
   $form['#attached']['js'][] = 'https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js';
   $form['#attached']['js'][] = $module_path . '/theme/js/distroChart.js';
-  $form['#attached']['js'][] = $module_path . '/theme/js/violin.chart.js';
+  $form['#attached']['js'][] = $module_path . "/theme/js/$chart_type.chart.js";
   $form['#attached']['js'][] = array(
     'type' => 'setting',
     'data' => array('analyzedPhenotypes' => array(
@@ -383,7 +408,7 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
   );
 
   // Add CSS for the chart.
-  $form['#attached']['css'][] = $module_path . '/theme/css/violinplot.chart.css';
+  $form['#attached']['css'][] = $module_path . '/theme/css/'.$chart_type."plot.chart.css";
 
     // Add a canvas for the chart.
     $form['figure']['chart'] = array(
@@ -439,7 +464,7 @@ function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $
 
   if ($project_id && $trait_id && $method_id && $unit_id) {
     $resource = chado_query(
-      "SELECT location, year, stock_name, mean
+      "SELECT location, year, stock_name, values
         FROM chado.mview_phenotype
         WHERE experiment_id=:project_id
           AND trait_id=:trait_id
@@ -454,9 +479,19 @@ function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $
     ));
     foreach($resource as $r) {
 
+      $values = json_decode($r->values);
+      if (is_numeric($values[0])) {
+        $mean = array_sum($values) / count($values);
+      }
+      else {
+        $values = array_unique($values);
+        sort($values);
+        $mean = implode('/', $values);
+      }
       $results[] = array(
         'category' => $r->location . ' ' . $r->year,
-        'value' => $r->mean,
+        'values' => $values,
+        'value' => $mean,
       );
     }
   }

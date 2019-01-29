@@ -399,7 +399,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
           // Individual cell.
           $value = str_getcsv($row, "\t");
           // Trait name value in the trait column.
-          $trait_name_value = $value[ $trait_name_index ];
+          $trait_name_value = trim($value[ $trait_name_index ]);
 
           if (in_array($trait_name_value, $arr_trait_describe)) {
             // Check if current trait name in array of traits to describe
@@ -638,13 +638,13 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                   }
                 }
                 $unit_help .= '</ul>';
-                $unit_help .= '<p>If you used one of the above units when collecting your data then copy and paste it into the "Unit" space below. NOTE: Each unit is it\'s own bullet point.</p>';
+                $unit_help .= '<p>The method with which you collected the data in <b>full sentences</b>. If you used one of the above units when collecting your data then copy and paste it into the "Unit" space below. NOTE: Each unit is it\'s own bullet point.</p>';
                 $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_unit_help' . $i] = array(
                   '#type' => 'item',
                   '#title' => 'Existing Units used for this Trait',
                   '#markup' => $unit_help,
                 );
-                
+
                 // make sure this section doesn't appear if there are no options.
                 if ($no_units == TRUE) {
                   unset($form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_unit_help' . $i]);
@@ -657,7 +657,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                 '#default_value' => $traitprop['unit'],
                 '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/traitunit/units',
                 '#element_validate' => array('analyzedphenotypes_validate_field_required'),
-                '#description' => t('The <strong>full name</strong> of the unit used to measure this trait.'),
+                '#description' => t('The <strong>full name</strong> of the unit used to measure this trait. For scales, please enter "Scale [description of scale members]" (e.g. "scale 1-5, where 1 is upright and 5 is fully lodged", "scale; R:red, P:pink, W:white")'),
                 '#attributes' => array('class' => array('ap-allow-revert')),
                 '#id' => 'ap-unit-text-field' . $i,
                 '#prefix' => '<div class="ap-field-unit-container">',
@@ -841,7 +841,16 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                   $avg = array_sum($syvalues[$sy]) / count($syvalues[$sy]);
                   $sdv = ap_calculate_standard_deviation($syvalues[$sy]);
 
-                  $table_rows[] = array($sy, $min, $max, round($avg, 2), round($sdv, 2));
+                  if (!is_numeric($syvalues[$sy][0]) OR preg_match('/[Ss]cale/',$traitprop['unit'])) {
+                    $avg = 'n/a';
+                    $sdv = 'n/a';
+                  }
+                  else {
+                    $avg = round($avg, 2);
+                    $sdv = round($sdv, 2);
+                  }
+
+                  $table_rows[] = array($sy, $min, $max, $avg, $sdv);
                 }
 
                 $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_summary_table' . $i]['#markup'] = theme('table',
@@ -911,6 +920,12 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
         $method = $form_state['values']['ap_method_text_field' . $i];
         $unit = $form_state['values']['ap_unit_text_field' . $i];
 
+        // Determine whether this trait is qualitative or quantitative.
+        $type = 'quant';
+        if (preg_match('/[Ss]cale/', $unit)) {
+          $type = 'qual';
+        }
+
         // Insert new term. Inserted term id is required.
         // When alternate trait available use it over original trait.
         $result = ap_insert_trait(array(
@@ -919,6 +934,7 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
           'method' => $method,
           'unit' => $unit,
           'genus' => $project_genus,
+          'type' => $type,
         ));
 
         // Save the values in the array for the tripal job.
