@@ -72,6 +72,20 @@ function ap_insert_trait($data) {
   ));
   $cv_name = $cvprop['name'];
 
+  //  - Method Controlled Vocabulary (cv). Used in the cv_name in cvterm property array below.
+  $sysvar_genus_method = variable_get($sysvar['method']);
+  $cvprop = ap_get_cv(array(
+    'cv_id' => $sysvar_genus_method
+  ));
+  $method_cvname = $cvprop['name'];
+
+  //  - Unit Controlled Vocabulary (cv). Used in the cv_name in cvterm property array below.
+  $sysvar_genus_unit = variable_get($sysvar['unit']);
+  $cvprop = ap_get_cv(array(
+    'cv_id' => $sysvar_genus_unit
+  ));
+  $unit_cvname = $cvprop['name'];
+
   // Insert the trait cvterm
   if (!isset($data['trait_id'])) {
     $trait_cvterm = array(
@@ -98,7 +112,7 @@ function ap_insert_trait($data) {
   if (!$exists) {
     // Insert the method cvterm
     $method_cvterm = array(
-      'cv_name' => $cv_name, // @todo we shouldnt use the same cv... @config-needed
+      'cv_name' => $method_cvname,
       'id' => trim($db_name) . ':' . $data['method_title'],
       'name' => $data['method_title'],
       'definition' => $data['method'],
@@ -114,7 +128,7 @@ function ap_insert_trait($data) {
 
   // Insert the unit cvterm
   $unit_cvterm = array(
-    'cv_name' => $cv_name, // @todo we shouldnt use the same cv... @config-needed
+    'cv_name' => $unit_cvname,
     'id' => trim($db_name) . ':' . $data['unit'],
     'name' => $data['unit'],
     'definition' => '',
@@ -250,7 +264,7 @@ function ap_get_method_units($project_genus, $method, $options = [], $method_id 
 
   // If we don't have the trait cvterm_id then look it up.
   if (!$method_id) {
-    $method_id = ap_get_method_id($method);
+    $method_id = ap_get_method_id($project_genus, $method);
   }
 
   // Now look up all method cvterm_ids for that trait using the relationship.
@@ -293,7 +307,7 @@ function ap_get_method_id($project_genus, $method) {
     // @todo @config-needed
     $sysvar = ap_get_variablenames(
       array('variablename' => $project_genus),
-      array('set' => 'cvdbon', 'suffix' => 'cv')
+      array('set' => 'cvdbon', 'suffix' => 'method')
     );
     $cv_id = variable_get($sysvar);
 
@@ -325,7 +339,7 @@ function ap_get_unit_id($project_genus, $unit) {
     // @todo @config-needed
     $sysvar = ap_get_variablenames(
       array('variablename' => $project_genus),
-      array('set' => 'cvdbon', 'suffix' => 'cv')
+      array('set' => 'cvdbon', 'suffix' => 'unit')
     );
     $cv_id = variable_get($sysvar);
 

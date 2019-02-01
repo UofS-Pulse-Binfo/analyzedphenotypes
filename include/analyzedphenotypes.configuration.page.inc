@@ -365,7 +365,6 @@ function system_settings_form_validate($form, &$form_state) {
     array('variablename' => 'varset'),
     array('set' => 'cvdbon')
   );
-  dpm($cvdbon, '$cvdbon');
 
   foreach($cvdbon as $i => $vars) {
     $var_ctr = 0;
