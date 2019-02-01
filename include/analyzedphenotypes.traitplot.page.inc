@@ -354,6 +354,7 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
   // Construct chart text/wordings.
   $experiment_name = chado_query('SELECT name FROM {project} WHERE project_id=:id', array(':id' => $experiment_id))->fetchField();
   $trait_name = chado_query('SELECT name FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $trait_id))->fetchField();
+  $definition = chado_query('SELECT definition FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $trait_id))->fetchField();
   $unit = chado_query('SELECT name FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $unit_id))->fetchField();
   $method = chado_query('SELECT definition FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $method_id))->fetchField();
 
@@ -370,10 +371,10 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
     $xaxis = 'Site-Year';
     $yaxis = $trait_name.' ('.$unit.')';
     $figtitle = "Comparison of observed $trait_name between site years for <em>$experiment_name</em>.";
-    $figlegend = "$trait_name was measured in $unit. "
+    $figlegend = "$trait_name was measured in $unit. $definition"
      . $method . " Replicates were then averaged per germplasm within a single site-year."
      . " The chart shows the traditional box plot with the kernel density estimation flanking it."
-     . " Thus $trait_name values in a wider section of the plot represent higher probability that "
+     . " Thus values in a wider section of the plot represent higher probability that "
      . "members of the sampled germplasm collection will show that phenotype.";
   }
   else {
@@ -464,12 +465,14 @@ function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $
 
   if ($project_id && $trait_id && $method_id && $unit_id) {
     $resource = chado_query(
-      "SELECT location, year, stock_name, values
-        FROM chado.mview_phenotype
-        WHERE experiment_id=:project_id
-          AND trait_id=:trait_id
-          AND method_id= :method_id
-          AND unit_id=:unit_id
+      "SELECT mview.location, mview.year, mview.stock_name, mview.values, prop.value as chart_type
+        FROM chado.mview_phenotype mview
+        LEFT JOIN {cvtermprop} prop ON prop.cvterm_id=mview.unit_id
+        WHERE mview.experiment_id=:project_id
+          AND mview.trait_id=:trait_id
+          AND mview.method_id= :method_id
+          AND mview.unit_id=:unit_id
+          AND prop.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE name='additionalType')
         ORDER BY year ASC, location ASC",
       array(
         ':project_id' => $project_id,
@@ -480,7 +483,7 @@ function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $
     foreach($resource as $r) {
 
       $values = json_decode($r->values);
-      if (is_numeric($values[0])) {
+      if ($r->chart_type == 'quantitative') {
         $mean = array_sum($values) / count($values);
       }
       else {
