@@ -37,7 +37,7 @@ function ap_construct_variablenames() {
   // NOTE: each item must be in lowercase and spaces should be replaced with underscore.
   $var_suffix = array(
     $var_set['options'] => array('allownew'),
-    $var_set['cvdbon'] => array('cv', 'db', 'ontology'),
+    $var_set['cvdbon'] => array('cv', 'db', 'ontology', 'method', 'unit'),
     $var_set['terms'] => array('genus', 'year', 'method', 'related', 'location', 'replicate', 'collector')
 
     // To register system variables in a set, add here.
@@ -58,6 +58,8 @@ function ap_construct_variablenames() {
       // This set is linked to each genus such that
       // a genus would have a cv, db and on (ontology) variable name.
       // eg. LENS: cv - analyzedphenotypes_systemvar_lens_cv.
+      //           method - analyzedphenotypes_systemvar_lens_method.
+      //           unit - analyzedphenotypes_systemvar_lens_unit.
       //           db - analyzedphenotypes_systemvar_lens_db.
       //           on - analyzedphenotypes_systemvar_lens_ontology.
       $result = chado_query(
@@ -83,7 +85,7 @@ function ap_construct_variablenames() {
       }
     }
   }
-  
+
 
   return $systemvars;
 }

@@ -365,6 +365,7 @@ function system_settings_form_validate($form, &$form_state) {
     array('variablename' => 'varset'),
     array('set' => 'cvdbon')
   );
+  dpm($cvdbon, '$cvdbon');
 
   foreach($cvdbon as $i => $vars) {
     $var_ctr = 0;
@@ -382,8 +383,18 @@ function system_settings_form_validate($form, &$form_state) {
     if ($var_ctr > 0) {
       // Field set.
       if ($form_state['values'][$vars['cv']] <= 0) {
-        // Controlled vocabulary.
-        form_set_error($vars['cv'], 'Please select Controlled Vocabulary for ' . $var_key . ' genus.');
+        // Trait Controlled vocabulary.
+        form_set_error($vars['cv'], 'Please select Trait Vocabulary for ' . $var_key . ' genus.');
+      }
+
+      if ($form_state['values'][$vars['method']] <= 0) {
+        // Method Controlled vocabulary.
+        form_set_error($vars['method'], 'Please select Method Vocabulary for ' . $var_key . ' genus.');
+      }
+
+      if ($form_state['values'][$vars['unit']] <= 0) {
+        // Unit Controlled vocabulary.
+        form_set_error($vars['unit'], 'Please select Unit Vocabulary for ' . $var_key . ' genus.');
       }
 
       if ($form_state['values'][$vars['db']] <= 0) {
