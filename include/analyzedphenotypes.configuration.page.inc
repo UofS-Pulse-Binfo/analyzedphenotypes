@@ -234,10 +234,16 @@ function analyzedphenotypes_configuration_form($form, &$form_state) {
         adding a "genus" property to it.'),
     ),
     'Method' => array(
-      'title' => 'Method',
+      'title' => 'Trait => Method',
       'default' => '',
       'field_name' => $term_vars['ap_method'],
-      'description'  => t('This term indicates that a given trait propery describes the method with which the data was taken.'),
+      'description'  => t('This term describes the relationship between your trait vocabulary term and the method with which the data was taken.'),
+    ),
+    'Unit' => array(
+      'title' => 'Method => Unit',
+      'default' => '',
+      'field_name' => $term_vars['ap_unit'],
+      'description'  => t('This term describes the relationship between your method and the unit with which it was measured.'),
     ),
     'Related' => array(
       'title' => 'Related',

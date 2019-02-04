@@ -38,7 +38,7 @@ function ap_construct_variablenames() {
   $var_suffix = array(
     $var_set['options'] => array('allownew'),
     $var_set['cvdbon'] => array('cv', 'db', 'ontology', 'method', 'unit'),
-    $var_set['terms'] => array('genus', 'year', 'method', 'related', 'location', 'replicate', 'collector')
+    $var_set['terms'] => array('genus', 'year', 'method', 'unit', 'related', 'location', 'replicate', 'collector')
 
     // To register system variables in a set, add here.
     //
