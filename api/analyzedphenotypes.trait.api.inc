@@ -155,12 +155,14 @@ function ap_insert_trait($data) {
   }
 
   // Relate Trait => Method
+  $sysvar = ap_get_variablenames(
+    array('variablename' => 'method'),
+    array('set' => 'terms')
+  );
+  $type_id = variable_get($sysvar);
   $values = array(
     'subject_id' => $trait_cvterm->cvterm_id,
-    'type_id' => array(
-      'cv_id' => array('name' => 'NCIT'), // @todo @config-needed
-      'name' => 'method',
-    ),
+    'type_id' => $type_id,
     'object_id' => $method_cvterm->cvterm_id,
   );
   $exists = chado_select_record('cvterm_relationship', array('cvterm_relationship_id'), $values);
@@ -169,12 +171,14 @@ function ap_insert_trait($data) {
   }
 
   // Relate Method => Unit
+  $sysvar = ap_get_variablenames(
+    array('variablename' => 'unit'),
+    array('set' => 'terms')
+  );
+  $type_id = variable_get($sysvar);
   $values = array(
     'subject_id' => $method_cvterm->cvterm_id,
-    'type_id' => array(
-      'cv_id' => array('name' => 'uo'), // @todo @config-needed
-      'name' => 'unit',
-    ),
+    'type_id' => $type_id,
     'object_id' => $unit_cvterm->cvterm_id,
   );
   $exists = chado_select_record('cvterm_relationship', array('cvterm_relationship_id'), $values);
@@ -226,13 +230,15 @@ function ap_get_trait_methods($project_genus, $trait_name, $options = [], $trait
   }
 
   // Now look up all method cvterm_ids for that trait using the relationship.
+  $sysvar = ap_get_variablenames(
+    array('variablename' => 'method'),
+    array('set' => 'terms')
+  );
+  $type_id = variable_get($sysvar);
   $results = chado_select_record('cvterm_relationship', array('object_id'),
     array(
       'subject_id' => $trait_id,
-      'type_id' => array(
-        'cv_id' => array('name' => 'NCIT'), // @todo @config-needed
-        'name' => 'method',
-      ),
+      'type_id' => $type_id,
     )
   );
 
@@ -268,13 +274,15 @@ function ap_get_method_units($project_genus, $method, $options = [], $method_id 
   }
 
   // Now look up all method cvterm_ids for that trait using the relationship.
+  $sysvar = ap_get_variablenames(
+    array('variablename' => 'unit'),
+    array('set' => 'terms')
+  );
+  $type_id = variable_get($sysvar);
   $results = chado_select_record('cvterm_relationship', array('object_id'),
     array(
       'subject_id' => $method_id,
-      'type_id' => array(
-        'cv_id' => array('name' => 'uo'), // @todo @config-needed
-        'name' => 'unit',
-      ),
+      'type_id' => $type_id,
     )
   );
 
@@ -304,7 +312,6 @@ function ap_get_method_id($project_genus, $method) {
 
     // Retrieve the CV the traits are stored in.
     // Currently we are using the same cv as the trait...
-    // @todo @config-needed
     $sysvar = ap_get_variablenames(
       array('variablename' => $project_genus),
       array('set' => 'cvdbon', 'suffix' => 'method')
@@ -336,7 +343,6 @@ function ap_get_unit_id($project_genus, $unit) {
 
     // Retrieve the CV the traits are stored in.
     // Currently we are using the same cv as the trait...
-    // @todo @config-needed
     $sysvar = ap_get_variablenames(
       array('variablename' => $project_genus),
       array('set' => 'cvdbon', 'suffix' => 'unit')
