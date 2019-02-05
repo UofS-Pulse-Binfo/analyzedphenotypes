@@ -186,12 +186,14 @@ class dataIntegrityTest extends TripalTestCase {
         // Grab values to test from file.
         $file = [
          'trait_name' => $line[0],
-         'stock_uniquename' => $line[1],
-         'year' => $line[3],
-         'location' => $line[4],
-         'replicate' => $line[5],
-         'value' => $line[6],
-         'data_collector' => $line[7],
+         'method_name' => $line[1],
+         'unit' => $line[2],
+         'stock_uniquename' => $line[3],
+         'year' => $line[5],
+         'location' => $line[6],
+         'replicate' => $line[7],
+         'value' => $line[8],
+         'data_collector' => $line[9],
         ];
 
         // Try to pull the expected record out of the db.
@@ -219,7 +221,7 @@ class dataIntegrityTest extends TripalTestCase {
           $values)->fetchAll();
 
         $this->assertNotEmpty($phenotype_records,
-          "There trait/stock/project/value combination in the following line was not saved to the chado phenotype table.\n"
+          "The trait/stock/project/value combination in the following line was not saved to the chado phenotype table.\n"
           ."  Failed Line ($line_num) : '"
           .implode("\t",$file)."'\n"
           ."  Selected Values: ".print_r($values,TRUE)."\n");
@@ -389,12 +391,14 @@ class dataIntegrityTest extends TripalTestCase {
 
     // Set/Create Trait IDs for our file.
     $trait_name = 'Lorem ipsum';
+    $method_name = 'dolor sit amet';
+    $unit = 'metris';
     $results = ap_insert_trait([
       'name' => $trait_name,
       'description' => $faker->sentences(2, true),
-      'method_title' => $faker->words(2, true),
+      'method_title' => $method_name,
       'method' => $faker->sentences(5, true),
-      'unit' => $faker->word(true),
+      'unit' => $unit,
       'genus' => $organism->genus,
     ]);
 
