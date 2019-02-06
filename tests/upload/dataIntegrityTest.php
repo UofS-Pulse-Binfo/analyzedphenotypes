@@ -155,7 +155,7 @@ class dataIntegrityTest extends TripalTestCase {
       'method_name' =>'dolor sit amet',
       'unit' => 'metris',
     );
-    $info = \APFileUploadHelper::loadFile('AnalyzedPhenotypes-TestData-1trait3loc2yr3rep.txt', $traits_in_file);
+    $info = \APFileUploadHelper::loadFile('TestData-1trait3loc2yr3rep.tsv', $traits_in_file);
     // @debug print "Info: ".print_r($info,TRUE)."\n";
 
     // Retrieve the phenotype records.
