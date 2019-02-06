@@ -3,8 +3,9 @@ namespace Tests\upload;
 
 use StatonLab\TripalTestSuite\DBTransaction;
 use StatonLab\TripalTestSuite\TripalTestCase;
-use  Tests\DatabaseSeeders\PhenotypeSeeder;
+use Tests\DatabaseSeeders\PhenotypeSeeder;
 use Faker\Factory;
+require_once 'APFileUploadHelper.php';
 
 class dataIntegrityTest extends TripalTestCase {
   // Uncomment to auto start and rollback db transactions per test method.
@@ -148,7 +149,13 @@ class dataIntegrityTest extends TripalTestCase {
    */
   public function testUploadDataIntegrity() {
 
-    $info = $this->loadFile('AnalyzedPhenotypes-TestData-1trait3loc2yr3rep.txt');
+    $traits_in_file = array();
+    $traits_in_file[] = array(
+      'trait_name' => 'Lorem ipsum',
+      'method_name' =>'dolor sit amet',
+      'unit' => 'metris',
+    );
+    $info = \APFileUploadHelper::loadFile('AnalyzedPhenotypes-TestData-1trait3loc2yr3rep.txt', $traits_in_file);
     // @debug print "Info: ".print_r($info,TRUE)."\n";
 
     // Retrieve the phenotype records.
@@ -343,108 +350,6 @@ class dataIntegrityTest extends TripalTestCase {
     variable_del('analyzedphenotypes_systemvar_'.$info['organism']->genus.'_db');
   }
 
-  /**
-   * HELPER: Load Data in specified file.
-   *
-   * @param $file
-   *   The full path to the file.
-   */
-  public static function loadFile($file) {
-    $faker = Factory::create();
-    $info = [];
 
-    $path = drupal_get_path('module', 'analyzedphenotypes');
-    $file = DRUPAL_ROOT . '/' . $path . '/tests/example_files/' . $file;
-    $info['file'] = $file;
-
-    $project = $info['project'] = factory('chado.project')->create();
-    $organism = $info['organism'] = factory('chado.organism')->create();
-
-    // Configure Module for this organism
-    // Set the line in the config page for the fake organism.
-    // Variables are analyzedphenotypes_systemvar_[genus]_[cv/db/ontology]
-    $trait_cv = $info['trait_cv'] = factory('chado.cv')->create();
-    variable_set('analyzedphenotypes_systemvar_'.$organism->genus.'_cv', $trait_cv->cv_id);
-    $trait_db = $info['trait_db'] = factory('chado.db')->create();
-    variable_set('analyzedphenotypes_systemvar_'.$organism->genus.'_db', $trait_db->db_id);
-
-    // Attach organism to the project.
-    chado_insert_record('projectprop', [
-      'project_id' => $project->project_id,
-      'type_id' => ['name' => 'genus', 'cv_id' => ['name' => 'taxonomic_rank']],
-      'value' => $organism->genus,
-    ]);
-
-    // Add our file to the managed file system.
-    $fakefilename = 'temporary://'.$faker->uuid();
-    file_unmanaged_copy($file, $fakefilename);
-    $managed_file = new \stdClass();
-    $managed_file->fid = NULL;
-    $managed_file->uri = $fakefilename;
-    $managed_file->filename = drupal_basename($fakefilename);
-    $managed_file->filemime = file_get_mimetype($fakefilename);
-    $managed_file->uid = 1;
-    $managed_file->status = FILE_STATUS_PERMANENT;
-    file_save($managed_file);
-    $data_file_fid = $managed_file->fid;
-    // @debug print "FID: $data_file_fid.\n";
-
-    // Set/Create Trait IDs for our file.
-    $trait_name = 'Lorem ipsum';
-    $method_name = 'dolor sit amet';
-    $unit = 'metris';
-    $results = ap_insert_trait([
-      'name' => $trait_name,
-      'description' => $faker->sentences(2, true),
-      'method_title' => $method_name,
-      'method' => $faker->sentences(5, true),
-      'unit' => $unit,
-      'genus' => $organism->genus,
-    ]);
-
-    // @debug print_r($results);
-
-    $trait_cvterm_ids = [ $trait_name => $results['trait']->cvterm_id ];
-    $info['traits'] = $trait_cvterm_ids;
-    $method_cvterm_ids = [ $trait_name => $results['method']->cvterm_id ];
-    $info['methods'] = $method_cvterm_ids;
-    $unit_cvterm_ids = [ $trait_name => $results['unit']->cvterm_id ];
-    $info['units'] = $unit_cvterm_ids;
-    $info['trait_details'] = [ $results ];
-
-    // Ensure the germplasm exists.
-    $info['stocks'] = [];
-    $stock_type = factory('chado.cvterm')->create();
-    for ($i=1; $i <= 15; $i++) {
-      $stock = [
-        'name' => 'GERM'.$i,
-        'uniquename' => 'ID:'.$i,
-        'type_id' => $stock_type->cvterm_id,
-        'organism_id' => $organism->organism_id,
-      ];
-      $stock = chado_insert_record(
-        'stock',
-        $stock
-      );
-      $info['stocks'][ 'ID:'.$i ] = $stock['stock_id'];
-    }
-
-    // Load the data
-    ob_start();
-    $dataset = [
-      'project_name' => $project->name,
-      'project_genus' => $organism->genus,
-      'data_file' => $data_file_fid,
-      'trait_cvterm' => $trait_cvterm_ids,
-      'method_cvterm' => $method_cvterm_ids,
-      'unit_cvterm' => $unit_cvterm_ids,
-    ];
-    analyzedphenotypes_save_tsv_data(serialize($dataset), 999999999);
-    ob_end_clean();
-
-    // Return any fake variables to the parent function.
-    return $info;
-
-  }
 
 }
