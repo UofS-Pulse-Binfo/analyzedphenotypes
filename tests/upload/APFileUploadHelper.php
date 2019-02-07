@@ -24,8 +24,12 @@ class APFileUploadHelper {
     $file = DRUPAL_ROOT . '/' . $path . '/tests/example_files/' . $file;
     $info['file'] = $file;
 
-    $project = $info['project'] = factory('chado.project')->create();
-    $organism = $info['organism'] = factory('chado.organism')->create();
+    $project = $info['project'] = factory('chado.project')->create([
+      'name' => $faker->unique->word . ' ' . uniqid(),
+    ]);
+    $organism = $info['organism'] = factory('chado.organism')->create([
+      'genus' => $faker->unique->word . uniqid(),
+    ]);
 
     // Configure Module for this organism
     // Set the line in the config page for the fake organism.
@@ -74,8 +78,8 @@ class APFileUploadHelper {
       // @debug print_r($results);
 
       $trait_cvterm_ids[ $d['trait_name'] ] = $results['trait']->cvterm_id;
-      $method_cvterm_ids[ $d['trait_name'] ] = $results['method']->cvterm_id;
-      $unit_cvterm_ids[ $d['trait_name'] ] = $results['unit']->cvterm_id;
+      $method_cvterm_ids[ $d['method_name'] ] = $results['method']->cvterm_id;
+      $unit_cvterm_ids[ $d['unit'] ] = $results['unit']->cvterm_id;
       $info['trait_details'][] = $results;
     }
 

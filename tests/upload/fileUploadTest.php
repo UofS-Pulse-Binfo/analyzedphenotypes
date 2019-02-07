@@ -10,6 +10,8 @@ class fileUploadTest extends TripalTestCase {
 
   /**
    * Test uploading a simple file with a single trait/method/unit combination.
+   * @group upload
+   * @group file-tests
    */
   public function testSingleTrait() {
 
@@ -45,7 +47,7 @@ class fileUploadTest extends TripalTestCase {
       array(':project' => $info['project']->project_id))->fetchAll();
     $this->assertEquals(1, sizeof($records),
       "We did not get the number of methods we expected.");
-    $this->assertEquals($info['methods']['Lorem ipsum'], $records[0]->assay_id,
+    $this->assertEquals($info['methods']['dolor sit amet'], $records[0]->assay_id,
       "We did not get the method cvterm_id we expected.");
 
     // Check that there is a single unit.
@@ -54,13 +56,14 @@ class fileUploadTest extends TripalTestCase {
       array(':project' => $info['project']->project_id))->fetchAll();
     $this->assertEquals(1, sizeof($records),
       "We did not get the number of units we expected.");
-    $this->assertEquals($info['units']['Lorem ipsum'], $records[0]->unit_id,
+    $this->assertEquals($info['units']['metris'], $records[0]->unit_id,
       "We did not get the unit cvterm_id we expected.");
   }
 
   /**
    * Test uploading a simple file with a single trait/method/unit combination.
-   * @group lacey-wip
+   * @group upload
+   * @group file-tests
    */
   public function testTwoMethodsPerTrait() {
 

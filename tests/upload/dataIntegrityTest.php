@@ -130,6 +130,7 @@ class dataIntegrityTest extends TripalTestCase {
    *
    * @group data-integrity
    * @group upload
+   * @group lacey-wip
    *
    * Specifically, analyzedphenotypes_save_tsv_data() is run with fake parameters
    * and an example file and then
@@ -210,8 +211,8 @@ class dataIntegrityTest extends TripalTestCase {
         // Compile the values to search on.
         $values = [];
         $values[':trait_id'] = $info['traits'][ $file['trait_name'] ];
-        $values[':method_id'] = $info['methods'][ $file['trait_name'] ];
-        $values[':unit_id'] = $info['units'][ $file['trait_name'] ];
+        $values[':method_id'] = $info['methods'][ $file['method_name'] ];
+        $values[':unit_id'] = $info['units'][ $file['unit'] ];
         $values[':stock_id'] = $info['stocks'][ $file['stock_uniquename'] ];
         $values[':project_id'] = $info['project']->project_id;
         $values[':value'] = $file['value'];

@@ -931,6 +931,9 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
             $j = array_search($col, $columns);
             $col_index[$col] = $j;
           }
+          // @debug print_r($col_index);
+          // @debug print_r($method_cvterm_ids);
+          // @debug print_r($unit_cvterm_ids);
 
           unset($columnsprop);
         }
@@ -940,6 +943,10 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
           // Data rows.
           // # PHENOTYPES.
           $file_traitname = $data[ $col_index['Trait Name'] ];
+          $file_methodname = $data[ $col_index['Method Name'] ];
+          // @debug print "METHOD: ".$file_methodname."\n";
+          $file_unitname = $data[ $col_index['Unit'] ];
+          // @debug print "UNIT: ".$file_unitname."\n";
           // cvterm_id used by this trait name from trait to cvterm_id in previous stage.
           $cvterm_id = $trait_cvterm_ids[$file_traitname];
 
@@ -970,8 +977,10 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
           }
 
           $trait_id = $trait_cvterm_ids[$file_traitname];
-          $method_id = $method_cvterm_ids[$file_traitname];
-          $unit_id = $unit_cvterm_ids[$file_traitname];
+          $method_id = $method_cvterm_ids[$file_methodname];
+          // @debug print "METHOD ID:$method_id ($file_methodname)\n";
+          $unit_id = $unit_cvterm_ids[$file_unitname];
+          // @debug print "UNIT ID: $unit_id ($file_unitname)\n";
 
           $file_year = $data[ $col_index['Year'] ];
           $file_location = $data[ $col_index['Location'] ];
