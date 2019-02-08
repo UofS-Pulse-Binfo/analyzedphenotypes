@@ -111,7 +111,7 @@ function analyzedphenotypes_menu() {
   );
 
   // DOWNLOAD DATA.
-  $items['phenotype/download'] = array(
+  $items['phenotypes/download'] = array(
     'title' => 'Download Analyzed Phenotypic Data',
     'description' => 'Download Analyzed Phenotypic Data.',
     'page callback' => 'drupal_get_form',

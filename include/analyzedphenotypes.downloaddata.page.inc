@@ -806,7 +806,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
     $form[$AJAX_wrapper][$ap_fieldset_1]['ap_' . $fld_species . '_field'] = array(
       '#type' => 'checkboxes',
       '#required' => TRUE,
-      '#default_value' => $field_prop[$fld_species]['default'],
+      '#default_value' => isset($field_prop[$fld_species]['default']) ? $field_prop[$fld_species]['default'] : NULL,
       '#options'       => $field_prop[$fld_species]['options'],
       '#disabled'      => $field_prop[$fld_species]['disabled'],
 
@@ -818,6 +818,8 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
     + analyzedphenotypes_wrapcheckbox(70, count($field_prop[$fld_species]['options']));
 
     // Select all options when many experiments selected.
+    if (!isset($field_prop[$fld_species]['default'])) { 
+      $field_prop[$fld_species]['default'] = NULL; } 
     if ($field_prop[$fld_species]['default'][0] > 0 || !empty($field_prop[$fld_species]['default'][0])) {
       foreach($field_prop[$fld_species]['default'] as $o) {
         $form[$AJAX_wrapper][$ap_fieldset_1][ $fldname[$fld_species]['field'] ][$o]['#attributes']
