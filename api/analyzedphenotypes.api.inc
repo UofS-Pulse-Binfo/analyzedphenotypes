@@ -260,10 +260,12 @@ function ap_create_summarytable($file, $column_row, $traitname) {
   $columns = array_keys($c);
 
   // Reference index number of headers in the column rows.
-  $index_trait = array_search($columns[0], $column_row);
-  $index_value = array_search($columns[6], $column_row);
-  $index_year  = array_search($columns[3], $column_row);
-  $index_site  = array_search($columns[4], $column_row);
+  $index_trait  = array_search($columns[0], $column_row);
+  $index_method = array_search($columns[1], $column_row);
+  $index_unit   = array_search($columns[2], $column_row);
+  $index_value  = array_search($columns[8], $column_row);
+  $index_year   = array_search($columns[5], $column_row);
+  $index_site   = array_search($columns[6], $column_row);
 
   $arr_siteyear = array();
   $arr_values = array();

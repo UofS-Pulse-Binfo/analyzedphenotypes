@@ -194,6 +194,28 @@ function ap_insert_trait($data) {
 }
 
 /**
+ * Retrieve the method details based on the name.
+ *
+ * @param $project_genus
+ *   The organism genus the trait is measured in.
+ * @param $method_name
+ *   The full name of the trait.
+ * @param $options
+ *   An array with the following possible keys:
+ *    [NONE YET SUPPORTED]
+ */
+function ap_get_method($project_genus, $method_name, $options = []) {
+
+  // @todo restrict this by the project genus.
+
+  // Now lookup the details for the specified method.
+  $method = chado_select_record('cvterm', array('cvterm_id', 'name', 'definition'),
+      array('name' => $method_name));
+
+  return $method[0];
+}
+
+/**
  * Retrieve the collection methods based on the name of the trait.
  *
  * @param $project_genus

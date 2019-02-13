@@ -3,12 +3,8 @@
  * @file
  * Contains administrative interfaces of this module.
  */
-
-
-
 // Ontology.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontology.api');
-
 
 /**
  * Implements hook_form().
@@ -16,10 +12,6 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontolog
  */
 function analyzedphenotypes_uploaddata_form($form, &$form_state) {
   drupal_session_start();
-
-  // @debug TESTING
-  //$form_state = variable_get('laceystesting', $form_state);
-  //$current_stage = 'describe';
 
   if (!isset($form_state['stage'])) {
     // Default loader to upload stage.
@@ -371,16 +363,22 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
       // all traits to be described.
       $columns_row = fgets($handle);
 
+      // Retrieve the column names for trait/method/unit combo.
       $expected_columns = ap_create_columnheaders('columns_datatype');
       $trait_name = array_keys($expected_columns)[0];
-
+      $method_name = array_keys($expected_columns)[1];
+      $unit_name = array_keys($expected_columns)[2];
       unset($expected_columns);
 
-      // Find the trait nane column from the file.
+      // Find the trait/method/unit columns from the file.
       $c = str_getcsv($columns_row, "\t");
       $columns = array_map('trim', $c);
       // Column # where the trait name column is.
       $trait_name_index = array_search($trait_name, $columns);
+      // Column # where the method name column is.
+      $method_name_index = array_search($method_name, $columns);
+      // Column # where the unit column is.
+      $unit_name_index = array_search($unit_name, $columns);
 
       // Line counter.
       $i = 0;
@@ -398,8 +396,13 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
         if (!empty($row)) {
           // Individual cell.
           $value = str_getcsv($row, "\t");
-          // Trait name value in the trait column.
-          $trait_name_value = trim($value[ $trait_name_index ]);
+          // Retrieve the values for our trait/method/unit combo.
+          $uniq_value = array(
+            trim($value[ $trait_name_index ]),
+            trim($value[ $method_name_index ]),
+            trim($value[ $unit_name_index ]),
+          );
+          $trait_name_value = implode('; ',$uniq_value);
 
           if (in_array($trait_name_value, $arr_trait_describe)) {
             // Check if current trait name in array of traits to describe
@@ -433,7 +436,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
             // Try to match the trait name with existing name and suggest to user.
             // Limit the search to genus configuration of genus selected.
             // Cvterm Id passed on to callback.
-            $traitprop['name'] = $trait_name_value;
+            $traitprop['name'] = trim($value[ $trait_name_index ]);
 
             $similar_cvterm = ap_get_cvterm(
               array('keyword' => $traitprop['name'], 'genus' => $project_genus),
@@ -511,20 +514,10 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                     $traitprop['photos'] = ap_download_cvtermphoto($exists[0]['cvterm_id']);
                     // Method.
                     $trait_id = (isset($traitprop['cvterm_id'])) ? $traitprop['cvterm_id'] : NULL;
-                    $methods = ap_get_trait_methods($project_genus, $trait_name_value, array(), $trait_id);
                     $traitprop['method'] = NULL;
-                    if (sizeof($methods) == 1) {
-                      $method_ids = array_keys($methods);
-                      $method_id = array_pop($method_ids);
-                      $traitprop['method'] = $methods[$method_id];
-                      // Unit.
-                      // If there is only a single unit for the supplied method then use it for the default.
-                      // Note: there must also be only one method.
-                      $units = ap_get_method_units($project_genus, $traitprop['method'], array(), $method_id);
-                      $traitprop['unit'] = NULL;
-                      if (sizeof($units) == 1) {
-                        $traitprop['unit'] = array_pop($units);
-                      }
+                    $file_method = ap_get_method($project_genus, trim($value[ $method_name_index ]));
+                    if ($file_method) {
+                      $traitprop['method'] = $file_method->definition;
                     }
                   }
                 }
@@ -561,7 +554,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                 '#type' => 'textfield',
                 '#title' => t('Name'),
                 '#disabled' => TRUE,
-                '#default_value' => $traitprop['name'],
+                '#default_value' => trim($value[ $trait_name_index ]),
                 '#description' => t('A Concise human-readable label for the trait. This should not include abbreviations.'),
                 '#id' => 'ap-name-text-field' . $i,
               );
@@ -579,32 +572,19 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               );
 
               // -- Method.
-              // Add help for users if there are 2+ pre-existing methods for the current trait.
-              if (!$traitprop['method'] && isset($methods)) {
-                $method_help = '<ul>';
-                $no_methods = TRUE;
-                foreach ($methods as $curr) {
-                  $method_help .= '<li><pre>'.$curr.'</pre></li>';
-                  $no_methods = FALSE;
-                }
-                $method_help .= '</ul>';
-                $method_help .= '<p>If one of the above collection methods accurately describes how you collected your data then copy and paste it into the "Collection Method" space below. NOTE: Each pre-existing collection method is it\'s own bullet point.</p>';
-                $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_method_help' . $i] = array(
-                  '#type' => 'item',
-                  '#title' => 'Existing Collection Methods for this Trait',
-                  '#markup' => $method_help,
-                );
-
-                // make sure the help doesn't show up if there are no options.
-                if ($no_methods == TRUE) {
-                  unset($form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_method_help' . $i]);
-                }
-              }
+              // Save the method name from the file.
+              $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_method_name_text_field' . $i] = array(
+                '#type' => 'textfield',
+                '#title' => 'Collection Method Name',
+                '#description' => 'The method name is set based on your file.',
+                '#default_value' => trim($value[ $method_name_index ]),
+                '#disabled' => TRUE,
+              );
 
               // If there is only a single method for the supplied trait then use it for the default.
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_method_text_field' . $i] = array(
                 '#type' => 'textarea',
-                '#title' => t('Collection Method'),
+                '#title' => t('Collection Method Description'),
                 '#disabled' => FALSE,
                 '#default_value' => $traitprop['method'],
                 '#description' => t('Describe how you collected the data. Ensure you include all information needed for an unskilled labourer to reproduce your work.'),
@@ -621,40 +601,17 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               // thus apply a validation below for this field.
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_orig_unit_field' . $i] = array(
                 '#type' => 'hidden',
-                '#value' => $traitprop['unit'],
+                '#value' => trim($value[ $unit_name_index ]),
                 '#attributes' => array('id' => 'ap-orig-unit-field' . $i),
               );
 
               // Add help for users if there are multiple units already used.
-              if (!$traitprop['unit'] && isset($methods)) {
-                //
-                $unit_help = '<ul>';
-                $no_units = TRUE;
-                foreach ($methods as $curr_id => $curr) {
-                  $units = ap_get_method_units($project_genus, $curr, [], $curr_id);
-                  foreach ($units as $u) {
-                    $unit_help .= '<li><pre>'.$u.'</pre></li>';
-                    $no_units = FALSE;
-                  }
-                }
-                $unit_help .= '</ul>';
-                $unit_help .= '<p>The method with which you collected the data in <b>full sentences</b>. If you used one of the above units when collecting your data then copy and paste it into the "Unit" space below. NOTE: Each unit is it\'s own bullet point.</p>';
-                $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_unit_help' . $i] = array(
-                  '#type' => 'item',
-                  '#title' => 'Existing Units used for this Trait',
-                  '#markup' => $unit_help,
-                );
-
-                // make sure this section doesn't appear if there are no options.
-                if ($no_units == TRUE) {
-                  unset($form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_unit_help' . $i]);
-                }
-              }
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_unit_text_field' . $i] = array(
                 '#type' => 'textfield',
                 '#title' => t('Unit'),
                 '#disabled' => FALSE,
-                '#default_value' => $traitprop['unit'],
+                '#default_value' => trim($value[ $unit_name_index ]),
+                '#disabled' => TRUE,
                 '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/traitunit/units',
                 '#element_validate' => array('analyzedphenotypes_validate_field_required'),
                 '#description' => t('The <strong>full name</strong> of the unit used to measure this trait. For scales, please enter "Scale [description of scale members]" (e.g. "scale 1-5, where 1 is upright and 5 is fully lodged", "scale; R:red, P:pink, W:white")'),
@@ -917,6 +874,7 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
         $cvterm_id = $form_state['values']['ap_similar_trait_select_field' . $i];
 
         // Use the values entered or prefilled in the field since unit is editable.
+        $method_name = $form_state['values']['ap_method_name_text_field' . $i];
         $method = $form_state['values']['ap_method_text_field' . $i];
         $unit = $form_state['values']['ap_unit_text_field' . $i];
 
@@ -930,7 +888,7 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
         // When alternate trait available use it over original trait.
         $result = ap_insert_trait(array(
           'trait_id' => $form_state['values']['ap_similar_trait_select_field' . $i],
-          'method_title' => uniqid(),
+          'method_title' => $form_state['values']['ap_method_name_text_field' . $i],
           'method' => $method,
           'unit' => $unit,
           'genus' => $project_genus,
@@ -938,15 +896,17 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
         ));
 
         // Save the values in the array for the tripal job.
-        $arr_traitname_cvtermid[$trait] = $result['trait']->cvterm_id;
-        $arr_method_cvtermid[$trait] = $result['method']->cvterm_id;
-        $arr_unit_cvtermid[$trait] = $result['unit']->cvterm_id;
+        $trait_name = $result['trait']->name;
+        $arr_traitname_cvtermid[$trait_name] = $result['trait']->cvterm_id;
+        $arr_method_cvtermid[$method_name] = $result['method']->cvterm_id;
+        $arr_unit_cvtermid[$unit] = $result['unit']->cvterm_id;
       }
       else {
         // Use the values entered or prefilled in the field since unit is editable.
         $traitname = $form_state['values']['ap_name_text_field' . $i];
         $description = $form_state['values']['ap_description_text_field' . $i];
         $method = $form_state['values']['ap_method_text_field' . $i];
+        $method_name = $form_state['values']['ap_method_name_text_field' . $i];
         $unit = $form_state['values']['ap_unit_text_field' . $i];
 
         // Insert new term. Inserted term id is required.
@@ -954,7 +914,7 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
         $result = ap_insert_trait(array(
           'name' => $traitname,
           'description' => $description,
-          'method_title' => uniqid(),
+          'method_title' => $method_name,
           'method' => $method,
           'unit' => $unit,
           'genus' => $project_genus,
@@ -1001,9 +961,9 @@ function analyzedphenotypes_uploaddata_form_save($form, &$form_state) {
           );
 
           // Save the values in the array for the tripal job.
-          $arr_traitname_cvtermid[$trait] = $result['trait']->cvterm_id;
-          $arr_method_cvtermid[$trait] = $result['method']->cvterm_id;
-          $arr_unit_cvtermid[$trait] = $result['unit']->cvterm_id;
+          $arr_traitname_cvtermid[$traitname] = $result['trait']->cvterm_id;
+          $arr_method_cvtermid[$method_name] = $result['method']->cvterm_id;
+          $arr_unit_cvtermid[$unit] = $result['unit']->cvterm_id;
 
         }
       }
