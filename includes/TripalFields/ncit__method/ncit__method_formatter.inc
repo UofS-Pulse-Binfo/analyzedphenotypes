@@ -49,11 +49,12 @@ class ncit__method_formatter extends ChadoFieldFormatter {
       }
       $element[$i] = array(
         '#type' => 'markup',
-	'#markup' => '<p class="definition">'.$item['value']['IAO:0000115'].'</p>'
-	. '<p class="unit-statement">Measured in '
-	. '<span class="unit">'.implode(' OR ', $units).'</span></p>',
+	      '#markup' => '<h4>'.$item['value']['schema:name'].'</h4>'
+        . '<p class="definition">'.$item['value']['IAO:0000115'].'</p>'
+	      . '<p class="unit-statement">Measured in '
+	      . '<span class="unit">'.implode(' OR ', $units).'</span></p>',
         '#prefix' => '<div class="method">',
-	'#suffix' => '</div>',
+	      '#suffix' => '</div>',
       );
     }
   }

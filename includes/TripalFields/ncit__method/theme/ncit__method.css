@@ -3,6 +3,9 @@
   padding: 0px;
   padding-bottom: 25px;
 }
+.field-type-ncit--method .method h4 {
+  font-weight: bold;
+}
 .field-type-ncit--method .method p {
   margin-bottom: 5px;
 }

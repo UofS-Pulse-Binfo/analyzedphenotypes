@@ -111,7 +111,7 @@ class ncit__method extends ChadoField {
     // additional data to be used in the display, you should add it here.
     parent::load($entity);
 
-    // First, retrieve the chado cvterm_id/trait_id for the current 
+    // First, retrieve the chado cvterm_id/trait_id for the current
     // Tripal Content, as we requested.
     $trait_id = $entity->ncit__method['und'][0]['chado-cvterm__cvterm_id'];
 
@@ -136,17 +136,17 @@ class ncit__method extends ChadoField {
       $method_r = chado_select_record('cvterm', array('cvterm_id', 'name', 'definition'),
         array('cvterm_id' => $r->object_id));
       $method = array(
-	'schema:name' => $method_r[0]->name,
-	'IAO:0000115' => $method_r[0]->definition,
+	      'schema:name' => $method_r[0]->name,
+	      'IAO:0000115' => $method_r[0]->definition,
       );
 
       // Next get the unit.
       // NOTE: the API function will not use the project genus if the method_id is supplied.
       $units = ap_get_method_units('UNKNOWN', $method_r[0]->definition, [], $method_r[0]->cvterm_id);
       foreach ($units as $u) {
-	$method['UO:unit'][] = array(
+	      $method['UO:unit'][] = array(
           'schema:name' => $u,
-	);
+	      );
       }
 
       // Finally add it to the field.
@@ -175,7 +175,7 @@ class ncit__method extends ChadoField {
   /**
    * @see ChadoField::elementInfo()
    *
-   */ 
+   */
   public function elementInfo() {
     $field_term = $this->getFieldTermID();
     return array(
@@ -188,5 +188,3 @@ class ncit__method extends ChadoField {
   }
 
 }
-
-
