@@ -10,7 +10,7 @@
         xAxisLabel = Drupal.settings.analyzedPhenotypes.yaxis,
         yAxisLabel = "Number of Germplasm";
 
-      var margin = {top: 100, right: 20, bottom: 50, left: 50},
+      var margin = {top: 100, right: 20, bottom: 60, left: 50},
         width = 960 - margin.left - margin.right,
         height = 600 - margin.top - margin.bottom;
 
@@ -58,7 +58,7 @@
         var ymax = 0;
 
         // For each datapoint, add to the count for the correct category/series combo.
-        rawdata.forEach(function(e) { 
+        rawdata.forEach(function(e) {
           // If we've never seen this category then initialize it.
           if (!categoryIndex.hasOwnProperty(e.value)) {
             data[ categoryI ] = { category: e.value, values: [] };
@@ -85,7 +85,7 @@
 
           // Check to see if this is the max num of germplasm we've seen...
           if (data[ ci ].values[ si ].value > ymax) {
-            ymax = data[ ci ].values[ si ].value; 
+            ymax = data[ ci ].values[ si ].value;
           }
         });
 
@@ -119,7 +119,14 @@
               .attr("x", width/2)
               .style("text-anchor", "middle")
               .style('font-weight','bold')
-              .text(xAxisLabel);
+              .append('tspan')
+                .attr('x', width/2)
+                .attr('dy', "1.2em")
+                .text(xAxisLabel.split(' (')[0])
+              .append('tspan')
+                .attr('x', width/2)
+                .attr('dy', "1.2em")
+                .text('('+xAxisLabel.split(' (')[1]);
 
         // Y-Axis.
         svg.append("g")
@@ -144,10 +151,10 @@
         slice.selectAll("rect")
               .data(function(d) { return d.values; })
           .enter().append("rect")
-              .attr("width", x1.rangeBand())
+              .attr("width", x1.rangeBand()-1)
               .attr("x", function(d) { return x1(d.series); })
               .style("fill", function(d) { return color(d.series) })
-              .attr("y", function(d) { return y(d.value); })
+              .attr("y", function(d) { return y(d.value)-1; })
               .attr("height", function(d) { return height - y(d.value); })
               .on("mouseover", function(d) {
                 d3.select(this).style("fill", d3.rgb(color(d.series)).darker(2));
