@@ -38,15 +38,14 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
   // property of the bundle to determine if this bundle is really the one
   // we want the field to be associated with.
   if (isset($bundle->data_table) AND ($bundle->data_table == 'cvterm')) {
-    // First add my term.
+
+    // Trait Method Field.
     tripal_insert_cvterm(array(
       'id' => 'NCIT:C71460',
       'name' => 'method',
       'cv_name' => 'NCIT',
       'definition' => 'A means, manner of procedure, or systematic course of action that have to be performed in order to accomplish a particular goal.',
     ));
-
-    // Then describe the field defined by that term.
     $field_name = 'ncit__method';
     $field_type = 'ncit__method';
     $fields[$field_name] = array(
@@ -56,6 +55,25 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
       'locked' => FALSE,
       'storage' => array(
         'type' => 'field_chado_storage',
+      ),
+    );
+
+    // Trait Experiments Field.
+    tripal_insert_cvterm(array(
+      'id' => 'SIO:001066',
+      'name' => 'study',
+      'cv_name' => 'SIO',
+      'definition' => 'A study is a process that realizes the steps of a study design.',
+    ));
+    $field_name = 'sio__study';
+    $field_type = 'sio__study';
+    $fields[$field_name] = array(
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => 1,
+      'locked' => FALSE,
+      'storage' => array(
+	'type' => 'field_chado_storage',
       ),
     );
   }
@@ -89,6 +107,8 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
   $instances = array();
 
   if (isset($bundle->data_table) AND ($bundle->data_table == 'cvterm')) {
+
+    // Trait Methods Field.
     $field_name = 'ncit__method';
     $field_type = 'ncit__method';
     $instances[$field_name] =  array(
@@ -115,6 +135,38 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         'default' => array(
           'label' => 'hidden',
           'type' => 'ncit__method_formatter',
+          'settings' => array(),
+        ),
+      ),
+    );
+
+    // Trait Experiments Field.
+    $field_name = 'sio__study';
+    $field_type = 'sio__study';
+    $instances[$field_name] =  array(
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Phenotyping Experiments',
+      'description' => 'Lists experiments measuring the given trait.',
+      'required' => FALSE,
+      'settings' => array(
+        'term_vocabulary' => 'SIO',
+        'term_name' => 'study',
+        'term_accession' => '001066',
+        'auto_attach' => FALSE,
+        'chado_table' => $bundle->data_table,
+        'chado_column' => 'organism_id',
+        'base_table' => $bundle->data_table,
+      ),
+      'widget' => array(
+        'type' => 'sio__study_widget',
+        'settings' => array(),
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'sio__study_formatter',
           'settings' => array(),
         ),
       ),
