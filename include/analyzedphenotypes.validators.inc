@@ -124,8 +124,8 @@ function analyzedphenotypes_ap_validators($all_scope = NULL) {
   );
 
   $germplasm = array(
-    $expected_columns[1],
-    $expected_columns[2],
+    $expected_columns[3],
+    $expected_columns[4],
   );
 
   $validators['VALUE_germplasm_recognized'] = array(
@@ -781,11 +781,11 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
         $e = ap_create_columnheaders('columns_datatype');
         $expected_columns = array_keys($e);
 
-        $stock_id_check = ap_match_germplasm($value[ $expected_columns[2] ], $value[ $expected_columns[1] ], $project_genus);
+        $stock_id_check = ap_match_germplasm($value[ $expected_columns[4] ], $value[ $expected_columns[3] ], $project_genus);
 
         if (!$stock_id_check) {
           $status['type'] = 'failed';
-          $status['details'] = ' in ' . implode(', ', $column) . ' line #' . $row . '(' . $value[$expected_columns[1]] . ' - ' . $value[$expected_columns[2]] . ')';
+          $status['details'] = ' in ' . implode(', ', $column) . ' line #' . $row . '(' . $value[$expected_columns[3]] . ' - ' . $value[$expected_columns[4]] . ')';
         }
       }
 
