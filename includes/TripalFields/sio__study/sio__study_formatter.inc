@@ -44,7 +44,8 @@ class sio__study_formatter extends ChadoFieldFormatter {
     drupal_add_library('system', 'drupal.collapse');
 
     // @debug dpm($items, 'items');
-    // For eaxh experiment...
+    // For each experiment...
+    $collapse = (sizeof($items) > 1) ? TRUE : FALSE;
     foreach ($items as $delta => $item) {
 
       // Add a containing element for this experiment.
@@ -53,10 +54,13 @@ class sio__study_formatter extends ChadoFieldFormatter {
         '#title' => 'Experiment: '.$item['value']['schema:name'],
         '#attributes' => array (
           'class' => array(
-            'collapsible', 'collapsed'
+            'collapsible',
           )
         ),
       );
+      if ($collapse && ($delta != 1)) {
+        $element[$delta]['#attributes']['class'][] = 'collapse';
+      }
 
       // Summarize the methodology used for this experiment.
       $methods = array();
