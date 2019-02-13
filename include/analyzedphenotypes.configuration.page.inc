@@ -57,9 +57,11 @@ function analyzedphenotypes_configuration_form($form, &$form_state) {
   // System vars basename.
   $basename = 'analyzedphenotypes_systemvar_';
   $var_token = array(
-    1 => array('cv', 'Select Vocabulary'),
-    2 => array('db', 'Select Database'),
-    3 => array('ontology', 'Select Crop Ontology'),
+    1 => array('cv', 'Select Trait Vocabulary'),
+    2 => array('method', 'Select Method Vocabulary'),
+    3 => array('unit', 'Select Unit Vocabulary'),
+    4 => array('db', 'Select Database'),
+    5 => array('ontology', 'Select Crop Ontology'),
   );
 
   // Fetch all Controlled Vocabulary.
@@ -89,49 +91,58 @@ function analyzedphenotypes_configuration_form($form, &$form_state) {
 
     // Each genus requires 4 columns - genus title, cv, db and ontology.
     $j = 0;
-    while ($j < 4) {
+    while ($j <= 5) {
       if ($j == 0) {
         // If 0 or column genus of the table - print the genus text.
-        $field_prop = array(
+        $field_name = $genus_key . '_title';
+        $fields[ 'ap_field_row_' . $i ][0][$field_name] = array(
           '#type' => 'item',
           '#title' => t(ucfirst($g)),
         );
 
-        $field_name = $genus_key . '_title';
       }
+      // Else, construct a select box.
       else {
-        // Else, construct a select box.
-        $field_options = ($j == 2) ? $db_options : $cv_options;
 
-        // Find if a config has been set.
+        // Set the options for this specific select box.
+        // Options for column 2 are databases but all other are c. vocabs.
+        $field_options = ($j == 4) ? $db_options : $cv_options;
 
+        // Find if a config has been set and set it as the default.
         $var_value = variable_get($basename . $genus_key . '_' . $var_token[$j][0]);
+        $field_default = NULL;
         if (isset($var_value)) {
           $field_default = $var_value;
         }
 
-        $is_disabled = FALSE;
-        if ($j == 1 AND is_integer($field_default)) {
-          // Inspect if this genus has data attached to it and disable it.
-          $has_data = chado_query($sql, array(':cv_id' => $field_default))
-            ->fetchAll();
+        // Inspect if this genus has data attached to it and disable it.
+        if ($j == 1) {
+          $is_disabled = FALSE;
+          if ($j == 1 AND is_integer($field_default)) {
 
-          $is_disabled = ($has_data) ? TRUE : FALSE;
+            $has_data = chado_query($sql, array(':cv_id' => $field_default))
+              ->fetchAll();
+            $is_disabled = ($has_data) ? TRUE : FALSE;
+          }
         }
 
-        $field_prop = array(
+        $col = 1;
+        if ($j == 4) { $col = 2; }
+        if ($j == 5) { $col = 3; }
+
+        // Finally, the select box!
+        $field_name = $basename . $genus_key . '_' . $var_token[$j][0];
+        $fields[ 'ap_field_row_' . $i ][$col][$field_name] = array(
           '#type' => 'select',
           '#title' => '',
-          '#options' => array(0 => $var_token[$j][1]) + $field_options,
+          '#empty_option' => $var_token[$j][1],
+          '#options' => $field_options,
           '#attributes' => array('class' => array('ap-table-select-field')),
           '#default_value' => $field_default,
           '#disabled' => $is_disabled,
         );
 
-        $field_name = $basename . $genus_key . '_' . $var_token[$j][0];
       }
-
-      $fields[ 'ap_field_row_' . $i ][$field_name] = $field_prop;
 
       $j++;
     }
@@ -142,7 +153,7 @@ function analyzedphenotypes_configuration_form($form, &$form_state) {
 
   $form[$frameset_to]['ap_formfield_table'] = array(
     '#theme' => 'analyzedphenotypes_form_table',
-    '#header' => array(t('<b>Genus</b>'), t('Trait Vocabulary'), t('Associated Database'), t('Crop Ontology')),
+    '#header' => array(t('<b>Genus</b>'), t('Trait Vocabularies'), t('Associated Database'), t('Crop Ontology')),
     'rows' => array(
       '#tree' => FALSE,
     ) + $fields,
@@ -223,10 +234,16 @@ function analyzedphenotypes_configuration_form($form, &$form_state) {
         adding a "genus" property to it.'),
     ),
     'Method' => array(
-      'title' => 'Method',
+      'title' => 'Trait => Method',
       'default' => '',
       'field_name' => $term_vars['ap_method'],
-      'description'  => t('This term indicates that a given trait propery describes the method with which the data was taken.'),
+      'description'  => t('This term describes the relationship between your trait vocabulary term and the method with which the data was taken.'),
+    ),
+    'Unit' => array(
+      'title' => 'Method => Unit',
+      'default' => '',
+      'field_name' => $term_vars['ap_unit'],
+      'description'  => t('This term describes the relationship between your method and the unit with which it was measured.'),
     ),
     'Related' => array(
       'title' => 'Related',
@@ -371,8 +388,18 @@ function system_settings_form_validate($form, &$form_state) {
     if ($var_ctr > 0) {
       // Field set.
       if ($form_state['values'][$vars['cv']] <= 0) {
-        // Controlled vocabulary.
-        form_set_error($vars['cv'], 'Please select Controlled Vocabulary for ' . $var_key . ' genus.');
+        // Trait Controlled vocabulary.
+        form_set_error($vars['cv'], 'Please select Trait Vocabulary for ' . $var_key . ' genus.');
+      }
+
+      if ($form_state['values'][$vars['method']] <= 0) {
+        // Method Controlled vocabulary.
+        form_set_error($vars['method'], 'Please select Method Vocabulary for ' . $var_key . ' genus.');
+      }
+
+      if ($form_state['values'][$vars['unit']] <= 0) {
+        // Unit Controlled vocabulary.
+        form_set_error($vars['unit'], 'Please select Unit Vocabulary for ' . $var_key . ' genus.');
       }
 
       if ($form_state['values'][$vars['db']] <= 0) {

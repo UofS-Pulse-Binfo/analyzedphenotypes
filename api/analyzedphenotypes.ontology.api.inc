@@ -29,6 +29,7 @@ function ap_define_defaultontology() {
     'genus'     => 'genus',
     'year'      => 'Year',
     'method'    => 'method',
+    'unit'      => 'unit',
     'related'   => 'related',
     'location'  => 'location',
     'replicate' => 'replicate',
@@ -86,7 +87,24 @@ function ap_define_defaultontology() {
     )
   );
 
-  // METHOD, LOCATION, REPLICATE, COLLECTED BY - NCIT:
+  // METHOD => UNIT - UNIT
+  $ontology['uo'] = array(
+    'name' => 'uo',
+    'definition' => 'Units of Measurement Ontology.',
+    'all terms' => FALSE,
+
+    'terms' => array(
+      array(
+        'id'     => 'UO:0000000',
+        'name'     => 'unit',
+        'definition' => '',
+      ),
+
+      // Additional terms here.
+    )
+  );
+
+  // TRAIT => METHOD, LOCATION, REPLICATE, COLLECTED BY - NCIT:
   $ontology['NCIT'] = array(
     'name' => 'NCIT',
     'definition' => 'The NCIT OBO Edition project aims to increase integration of the NCIt with OBO Library ontologies
@@ -168,7 +186,7 @@ function ap_load_defaultontology() {
         // Term not in chado.cvterm. Insert!
         // #1. Controlled vocabulary.
         if (function_exists('chado_insert_cv')) {
-          $ins_cv = chado_insert_cv($details['name'], $details['definition']);          
+          $ins_cv = chado_insert_cv($details['name'], $details['definition']);
         }
         else {
           $ins_cv = tripal_insert_cv($details['name'], $details['definition']);
