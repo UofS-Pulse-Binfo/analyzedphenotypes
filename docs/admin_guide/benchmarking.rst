@@ -34,7 +34,7 @@ Timings were done on July 18,2017
 Datasets
 --------
 
-The queries were tested on two phenotypic datasets with different composition. Both datasets were generated using the [Generate Tripal Data Drush module](https://github.com/UofS-Pulse-Binfo/generate_trpdata); specifically, the drush generate-phenotypes command. While the data is computationally derived, it does attempt to simulate real data by choosing the range of values for each trait and then generating quantitative values along a normal distribution. Furthermore, it is ensures that replicate values are within 3 units of each other.
+The queries were tested on two phenotypic datasets with different composition. Both datasets were generated using the `Generate Tripal Data Drush module <https://github.com/UofS-Pulse-Binfo/generate_trpdata>`_; specifically, the drush generate-phenotypes command. While the data is computationally derived, it does attempt to simulate real data by choosing the range of values for each trait and then generating quantitative values along a normal distribution. Furthermore, it is ensures that replicate values are within 3 units of each other.
 
 +------------+-------+-----------+-----------+-------------------------------------+
 | Name       | Trait | SiteYears | Germplasm | Measurements (Averaged across reps) |
