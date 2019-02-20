@@ -1,0 +1,271 @@
+Trait Name	Method Name	Unit	Germplasm Accession	Germplasm Name	Year	Location	Replicate	Value	Data Collector
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	2015	"Neither up, nor Down"	1	5.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	2015	"Neither up, nor Down"	1	2.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	2015	"Neither up, nor Down"	1	4.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	2015	"Neither up, nor Down"	1	2.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	2015	"Neither up, nor Down"	1	5.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	2015	"Neither up, nor Down"	1	4.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	2015	"Neither up, nor Down"	1	4.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	2015	"Neither up, nor Down"	1	4.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	2015	"Neither up, nor Down"	1	5.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	2015	"Neither up, nor Down"	1	4.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	2015	"Neither up, nor Down"	1	5.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	2015	"Neither up, nor Down"	1	2.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	2015	"Neither up, nor Down"	1	4.8	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	2015	"Neither up, nor Down"	1	4.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	2015	"Neither up, nor Down"	1	2.4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	2015	"Neither up, nor Down"	2	5.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	2015	"Neither up, nor Down"	2	3.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	2015	"Neither up, nor Down"	2	3.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	2015	"Neither up, nor Down"	2	2.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	2015	"Neither up, nor Down"	2	5.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	2015	"Neither up, nor Down"	2	4.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	2015	"Neither up, nor Down"	2	2.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	2015	"Neither up, nor Down"	2	5.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	2015	"Neither up, nor Down"	2	4.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	2015	"Neither up, nor Down"	2	3.4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	2015	"Neither up, nor Down"	2	4.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	2015	"Neither up, nor Down"	2	2.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	2015	"Neither up, nor Down"	2	2.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	2015	"Neither up, nor Down"	2	2.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	2015	"Neither up, nor Down"	2	2.4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	2015	"Neither up, nor Down"	3	3.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	2015	"Neither up, nor Down"	3	5.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	2015	"Neither up, nor Down"	3	3.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	2015	"Neither up, nor Down"	3	3.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	2015	"Neither up, nor Down"	3	2.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	2015	"Neither up, nor Down"	3	3.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	2015	"Neither up, nor Down"	3	5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	2015	"Neither up, nor Down"	3	5.4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	2015	"Neither up, nor Down"	3	5.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	2015	"Neither up, nor Down"	3	3.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	2015	"Neither up, nor Down"	3	3.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	2015	"Neither up, nor Down"	3	2.4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	2015	"Neither up, nor Down"	3	3.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	2015	"Neither up, nor Down"	3	5.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	2015	"Neither up, nor Down"	3	5.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	2015	There	1	5.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	2015	There	1	3.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	2015	There	1	4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	2015	There	1	4.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	2015	There	1	3.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	2015	There	1	3.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	2015	There	1	5.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	2015	There	1	5.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	2015	There	1	4.8	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	2015	There	1	2.8	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	2015	There	1	5.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	2015	There	1	2.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	2015	There	1	4.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	2015	There	1	3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	2015	There	1	6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	2015	There	2	2.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	2015	There	2	4.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	2015	There	2	2.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	2015	There	2	5.8	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	2015	There	2	4.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	2015	There	2	5.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	2015	There	2	5.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	2015	There	2	2.4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	2015	There	2	2.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	2015	There	2	2.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	2015	There	2	2.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	2015	There	2	3.4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	2015	There	2	3.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	2015	There	2	5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	2015	There	2	3.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	2015	There	3	4.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	2015	There	3	2.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	2015	There	3	2.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	2015	There	3	2.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	2015	There	3	5.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	2015	There	3	5.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	2015	There	3	5.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	2015	There	3	6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	2015	There	3	2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	2015	There	3	3.8	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	2015	There	3	2.4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	2015	There	3	2.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	2015	There	3	4.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	2015	There	3	5.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	2015	There	3	3.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	2015	Here	1	5.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	2015	Here	1	3.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	2015	Here	1	4.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	2015	Here	1	5.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	2015	Here	1	3.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	2015	Here	1	2.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	2015	Here	1	3.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	2015	Here	1	4.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	2015	Here	1	3.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	2015	Here	1	2.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	2015	Here	1	3.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	2015	Here	1	2.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	2015	Here	1	4.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	2015	Here	1	5.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	2015	Here	1	3.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	2015	Here	2	2.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	2015	Here	2	2.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	2015	Here	2	3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	2015	Here	2	2.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	2015	Here	2	3.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	2015	Here	2	4.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	2015	Here	2	3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	2015	Here	2	4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	2015	Here	2	3.8	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	2015	Here	2	3.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	2015	Here	2	4.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	2015	Here	2	5.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	2015	Here	2	4.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	2015	Here	2	4.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	2015	Here	2	3.4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	2015	Here	3	3.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	2015	Here	3	2.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	2015	Here	3	6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	2015	Here	3	6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	2015	Here	3	4.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	2015	Here	3	4.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	2015	Here	3	4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	2015	Here	3	5.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	2015	Here	3	2.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	2015	Here	3	5.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	2015	Here	3	2.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	2015	Here	3	4.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	2015	Here	3	5.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	2015	Here	3	2.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	2015	Here	3	2.8	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	1984	"Neither up, nor Down"	1	3.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	1984	"Neither up, nor Down"	1	4.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	1984	"Neither up, nor Down"	1	5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	1984	"Neither up, nor Down"	1	3.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	1984	"Neither up, nor Down"	1	3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	1984	"Neither up, nor Down"	1	3.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	1984	"Neither up, nor Down"	1	5.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	1984	"Neither up, nor Down"	1	2.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	1984	"Neither up, nor Down"	1	5.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	1984	"Neither up, nor Down"	1	5.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	1984	"Neither up, nor Down"	1	5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	1984	"Neither up, nor Down"	1	2.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	1984	"Neither up, nor Down"	1	5.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	1984	"Neither up, nor Down"	1	5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	1984	"Neither up, nor Down"	1	5.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	1984	"Neither up, nor Down"	2	5.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	1984	"Neither up, nor Down"	2	2.8	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	1984	"Neither up, nor Down"	2	5.4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	1984	"Neither up, nor Down"	2	2.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	1984	"Neither up, nor Down"	2	4.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	1984	"Neither up, nor Down"	2	5.4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	1984	"Neither up, nor Down"	2	4.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	1984	"Neither up, nor Down"	2	2.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	1984	"Neither up, nor Down"	2	4.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	1984	"Neither up, nor Down"	2	3.8	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	1984	"Neither up, nor Down"	2	3.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	1984	"Neither up, nor Down"	2	2.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	1984	"Neither up, nor Down"	2	3.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	1984	"Neither up, nor Down"	2	4.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	1984	"Neither up, nor Down"	2	3.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	1984	"Neither up, nor Down"	3	3.8	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	1984	"Neither up, nor Down"	3	2.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	1984	"Neither up, nor Down"	3	5.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	1984	"Neither up, nor Down"	3	5.8	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	1984	"Neither up, nor Down"	3	4.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	1984	"Neither up, nor Down"	3	3.4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	1984	"Neither up, nor Down"	3	3.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	1984	"Neither up, nor Down"	3	4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	1984	"Neither up, nor Down"	3	2.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	1984	"Neither up, nor Down"	3	4.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	1984	"Neither up, nor Down"	3	4.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	1984	"Neither up, nor Down"	3	5.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	1984	"Neither up, nor Down"	3	3.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	1984	"Neither up, nor Down"	3	2.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	1984	"Neither up, nor Down"	3	5.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	1984	There	1	4.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	1984	There	1	5.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	1984	There	1	4.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	1984	There	1	5.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	1984	There	1	3.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	1984	There	1	4.8	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	1984	There	1	3.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	1984	There	1	5.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	1984	There	1	4.4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	1984	There	1	5.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	1984	There	1	5.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	1984	There	1	6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	1984	There	1	3.4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	1984	There	1	3.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	1984	There	1	3.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	1984	There	2	3.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	1984	There	2	2.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	1984	There	2	6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	1984	There	2	3.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	1984	There	2	5.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	1984	There	2	3.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	1984	There	2	3.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	1984	There	2	5.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	1984	There	2	2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	1984	There	2	2.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	1984	There	2	2.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	1984	There	2	5.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	1984	There	2	5.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	1984	There	2	2.8	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	1984	There	2	5.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	1984	There	3	5.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	1984	There	3	4.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	1984	There	3	2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	1984	There	3	3.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	1984	There	3	5.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	1984	There	3	2.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	1984	There	3	4.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	1984	There	3	3.4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	1984	There	3	4.8	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	1984	There	3	4.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	1984	There	3	4.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	1984	There	3	5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	1984	There	3	3.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	1984	There	3	3.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	1984	There	3	4.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	1984	Here	1	5.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	1984	Here	1	3.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	1984	Here	1	4.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	1984	Here	1	5.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	1984	Here	1	3.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	1984	Here	1	2.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	1984	Here	1	3.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	1984	Here	1	4.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	1984	Here	1	3.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	1984	Here	1	2.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	1984	Here	1	3.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	1984	Here	1	2.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	1984	Here	1	4.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	1984	Here	1	5.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	1984	Here	1	3.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	1984	Here	2	2.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	1984	Here	2	2.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	1984	Here	2	3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	1984	Here	2	2.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	1984	Here	2	3.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	1984	Here	2	4.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	1984	Here	2	3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	1984	Here	2	4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	1984	Here	2	3.8	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	1984	Here	2	3.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	1984	Here	2	4.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	1984	Here	2	5.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	1984	Here	2	4.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	1984	Here	2	4.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	1984	Here	2	3.4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:1	GERM1	1984	Here	3	3.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:2	GERM2	1984	Here	3	2.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:3	GERM3	1984	Here	3	6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:4	GERM4	1984	Here	3	6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:5	GERM5	1984	Here	3	4.9	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:6	GERM6	1984	Here	3	4.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:7	GERM7	1984	Here	3	4	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:8	GERM8	1984	Here	3	5.1	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:9	GERM9	1984	Here	3	2.6	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:10	GERM10	1984	Here	3	5.7	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:11	GERM11	1984	Here	3	2.3	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:12	GERM12	1984	Here	3	4.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:13	GERM13	1984	Here	3	5.2	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:14	GERM14	1984	Here	3	2.5	Lacey Sanderson
+Lorem ipsum	dolor sit amet	metris	ID:15	GERM15	1984	Here	3	2.8	Lacey Sanderson

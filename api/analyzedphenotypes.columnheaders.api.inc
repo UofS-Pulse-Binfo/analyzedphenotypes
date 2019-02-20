@@ -5,9 +5,9 @@
  * API: COLUMN HEADERS/TRAITS.
  * Manage property and operation pertaining column headers.
  */
- 
- 
- 
+
+
+
 /**
  * DATA SOURCE
  * Prepare column headers used in forms, validators and data exporter.
@@ -26,13 +26,15 @@ function ap_create_columnheaders($set) {
   // STANDARD COLUMN HEADERS EXPECTED IN A FILE.
   $cols = array(
     'Trait Name',                 // #0
-    'Germplasm Accession',        // #1
-    'Germplasm Name',             // #2
-    'Year',                       // #3
-    'Location',                   // #4
-    'Replicate',                  // #5
-    'Value',                      // #6
-    'Data Collector',             // #7
+    'Method Name',                // #1
+    'Unit',                       // #2
+    'Germplasm Accession',        // #3      #1
+    'Germplasm Name',             // #4      #2
+    'Year',                       // #5      #3
+    'Location',                   // #6      #4
+    'Replicate',                  // #7      #5
+    'Value',                      // #8      #6
+    'Data Collector',             // #9      #7
 
     // Define column header here...
   );
@@ -46,13 +48,15 @@ function ap_create_columnheaders($set) {
     // @see dataype.api for handling of each data type.
     $columnheaders = array(
       $cols[0] => 'trait',        // Trait name - trait type.
-      $cols[1] => 'alphanumeric', // Germplasm Accession name - text and numbers.
-      $cols[2] => 'alphenumeric', // Gemplasm Name - text and numbers.
-      $cols[3] => 'year',         // Yer - year YYYYY.
-      $cols[4] => 'text',         // Location - text.
-      $cols[5] => 'number',       // Replicate - number.
-      $cols[6] => '',             // Value - to be determined by unit in trait name.
-      $cols[7] => 'text',         // Data Collector - text.
+      $cols[1] => 'alphanumeric', // Method name - text and numbers.
+      $cols[2] => 'alphanumeric', // Unit - text and numbers.
+      $cols[3] => 'alphanumeric', // Germplasm Accession name - text and numbers.
+      $cols[4] => 'alphanumeric', // Gemplasm Name - text and numbers.
+      $cols[5] => 'year',         // Yer - year YYYYY.
+      $cols[6] => 'text',         // Location - text.
+      $cols[7] => 'number',       // Replicate - number.
+      $cols[8] => '',             // Value - to be determined by unit in trait name.
+      $cols[9] => 'text',         // Data Collector - text.
     );
   }
   elseif ($set == 'columns_combination') {
@@ -60,10 +64,12 @@ function ap_create_columnheaders($set) {
     // Trait Name + Germplasm Accession + Year + Location + Replicate.
     $columnheaders = array(
       $cols[0],                   // Trait Name.
-      $cols[1],                   // Germplasm Accession.
-      $cols[3],                   // Year.
-      $cols[4],                   // Location.
-      $cols[5],                   // Replicate.
+      $cols[1],                   // Method Name.
+      $cols[2],                   // Unit.
+      $cols[3],                   // Germplasm Accession.
+      $cols[5],                   // Year.
+      $cols[6],                   // Location.
+      $cols[7],                   // Replicate.
     );
   }
   elseif ($set == 'columns_downloadable' || $set == 'columns_downloadable_tofield') {
@@ -74,11 +80,11 @@ function ap_create_columnheaders($set) {
     $downloadable_columns = array(
       'Experiment',               // Extra : Experiment.
       $cols[0],                   // Trait Name.
-      $cols[2],                   // Germplasm Name.
-      $cols[3],                   // Year.
-      $cols[4],                   // Location.
-      $cols[5],                   // Replicate.
-      $cols[7],                   // Data Collector.
+      $cols[4],                   // Germplasm Name.
+      $cols[5],                   // Year.
+      $cols[6],                   // Location.
+      $cols[7],                   // Replicate.
+      $cols[9],                   // Data Collector.
       'Country of Origin',        // Extra : Country of Origin.
     );
 
@@ -148,10 +154,10 @@ function ap_match_columncombination($datarow) {
        year.type_id = :year_cvterm
        AND location.type_id  = :location_cvterm
        AND replicate.type_id = :replicate_cvterm
-       
+
        AND trait_name.name = :trait
        AND germplasm_accession.uniquename = :uniquename
-       AND year.value = :year 
+       AND year.value = :year
        AND location.value = :location
        AND replicate.value = :rep"
     ,
@@ -161,7 +167,7 @@ function ap_match_columncombination($datarow) {
       ':replicate_cvterm' => $sysvar_terms['ap_replicate'],
 
       // Trait name, Germplasm Accession, Year, Location and Replicate.
-      ':trait'            => $datarow[ $combination_columns[0] ], 
+      ':trait'            => $datarow[ $combination_columns[0] ],
       ':uniquename'       => $datarow[ $combination_columns[1] ],
       ':year'             => $datarow[ $combination_columns[2] ],
       ':location'         => $datarow[ $combination_columns[3] ],
@@ -234,7 +240,7 @@ function ap_convert_rcolumnheader($columnheader) {
       }
     }
   }
-  
+
 
   // Final transformation is replacing all spaces to dots/period (.)
   return ucfirst(implode('.', $rfriendly));
