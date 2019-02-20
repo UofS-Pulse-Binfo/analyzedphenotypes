@@ -31,8 +31,9 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.formfie
 // Unit and data types.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.datatype.api');
 // Validators.
-module_load_include('inc', 'analyzedphenotypes', 'include/analyzedphenotypes.validators');
-
+module_load_include('inc', 'analyzedphenotypes', 'includes/analyzedphenotypes.validators');
+// Fields.
+module_load_include('inc','analyzedphenotypes','includes/TripalFields/analyzedphenotypes.fields');
 
 /**
  * Implements hook_menu().
@@ -48,7 +49,7 @@ function analyzedphenotypes_menu() {
     'description' => 'Summarizes phenotypic data available.',
     'page callback' => 'analyzed_phenotypes_all_data_summary_page',
     'access arguments' => array('access analyzed phenotypes'),
-    'file' => 'include/analyzedphenotypes.summary.page.inc',
+    'file' => 'includes/analyzedphenotypes.summary.page.inc',
     'type' => MENU_NORMAL_ITEM,
   );
 
@@ -59,7 +60,7 @@ function analyzedphenotypes_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_traitplot_app_form'),
     'access arguments' => array('access analyzed phenotypes'),
-    'file' => 'include/analyzedphenotypes.traitplot.page.inc',
+    'file' => 'includes/analyzedphenotypes.traitplot.page.inc',
     'type' => MENU_NORMAL_ITEM,
   );
 
@@ -67,7 +68,7 @@ function analyzedphenotypes_menu() {
     'page callback' => 'analyzedphenotypes_traitplot_json',
     'page arguments' => array(3, 4, 5, 6),
     'access arguments' => array('access analyzed phenotypes'),
-    'file' => 'include/analyzedphenotypes.traitplot.page.inc',
+    'file' => 'includes/analyzedphenotypes.traitplot.page.inc',
     'type' => MENU_CALLBACK,
   );
 
@@ -89,7 +90,7 @@ function analyzedphenotypes_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_configuration_form'),
     'access arguments' => array('administer tripal'),
-    'file' => 'include/analyzedphenotypes.configuration.page.inc',
+    'file' => 'includes/analyzedphenotypes.configuration.page.inc',
     'weight' => 2,
     'type' => MENU_NORMAL_ITEM,
   );
@@ -105,7 +106,7 @@ function analyzedphenotypes_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_uploaddata_form'),
     'access arguments' => array('upload analyzed phenotypes'),
-    'file' => 'include/analyzedphenotypes.uploaddata.page.inc',
+    'file' => 'includes/analyzedphenotypes.uploaddata.page.inc',
     'weight' => 1,
     'type' => MENU_NORMAL_ITEM,
   );
@@ -117,7 +118,7 @@ function analyzedphenotypes_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('analyzedphenotypes_downloaddata_form'),
     'access arguments' => array('access administration pages'),
-    'file' => 'include/analyzedphenotypes.downloaddata.page.inc',
+    'file' => 'includes/analyzedphenotypes.downloaddata.page.inc',
     'weight' => 2,
     'type' => MENU_NORMAL_ITEM,
   );
