@@ -482,9 +482,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
             else {
               // Load describe form since no match found.
               $describeform_show = 'yes';
-            }
-
-            // @debug TESTING $form_state['values']['ap_similar_trait_select_field' . $i] = 3768;
+      }
 
             // User has picked a trait from suggestions.
             // With cvterm suggestion above, load and set fields default to term properties.
@@ -512,13 +510,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                     $traitprop['crop_ontology'] = $exists[0]['crop_ontology'];
                     // Term photo.
                     $traitprop['photos'] = ap_download_cvtermphoto($exists[0]['cvterm_id']);
-                    // Method.
                     $trait_id = (isset($traitprop['cvterm_id'])) ? $traitprop['cvterm_id'] : NULL;
-                    $traitprop['method'] = NULL;
-                    $file_method = ap_get_method($project_genus, trim($value[ $method_name_index ]));
-                    if ($file_method) {
-                      $traitprop['method'] = $file_method->definition;
-                    }
                   }
                 }
 
@@ -582,6 +574,8 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
               );
 
               // If there is only a single method for the supplied trait then use it for the default.
+              $method = ap_get_method($project_genus, trim($value[ $method_name_index ]));
+              $traitprop['method'] = (is_object($method)) ? $method->definition : '';
               $form[$ap_fieldset]['ap_AJAX_wrapper_describeform' . $i]['ap_method_text_field' . $i] = array(
                 '#type' => 'textarea',
                 '#title' => t('Collection Method Description'),
