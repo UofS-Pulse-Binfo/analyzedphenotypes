@@ -585,6 +585,7 @@ function analyzedphenotypes_uploaddata_form_describe($form, &$form_state) {
                 '#element_validate' => array('analyzedphenotypes_validate_field_required'),
                 '#attributes' => array('class' => array($class)),
                 '#id' => 'ap-method-text-field' . $i,
+                '#disabled' => (empty($traitprop['method'])) ? FALSE : TRUE,
               );
 
               // -- Unit.
