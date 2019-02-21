@@ -50,7 +50,13 @@ function ap_insert_trait($data) {
 
   // Defaults.
   if (!isset($data['type'])) {
-    $data['type'] = 'qual';
+    $data['type'] = 'qualitative';
+  }
+  if ($data['type'] == 'qual') {
+    $data['type'] = 'qualitative';
+  }
+  if ($data['type'] == 'quant') {
+    $data['type'] = 'quantitative';
   }
 
   // Grab necessary system config.
@@ -145,12 +151,7 @@ function ap_insert_trait($data) {
   );
   $exists = chado_select_record('cvtermprop', array('cvtermprop_id'), $unit_type);
   if (empty($exists)) {
-    if ($data['type'] == 'quant') {
-      $unit_type['value'] = 'quantitative';
-    }
-    else {
-      $unit_type['value'] = 'qualitative';
-    }
+    $unit_type['value'] = $data['type'];
     chado_insert_record('cvtermprop', $unit_type);
   }
 
