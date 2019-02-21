@@ -1,7 +1,9 @@
 
 .field-type-ncit--method .method {
   padding: 0px;
-  padding-bottom: 25px;
+}
+.field-type-ncit--method fieldset.method.collapsed {
+  height: auto;
 }
 .field-type-ncit--method .method h4 {
   font-weight: bold;

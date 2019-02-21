@@ -51,7 +51,7 @@ class sio__study_formatter extends ChadoFieldFormatter {
       // Add a containing element for this experiment.
       $element[$delta] = array(
         '#type' => 'fieldset',
-        '#title' => 'Experiment: '.$item['value']['schema:name'],
+        '#title' => $item['value']['schema:name'],
         '#attributes' => array (
           'class' => array(
             'collapsible',
@@ -68,8 +68,8 @@ class sio__study_formatter extends ChadoFieldFormatter {
         $methods[] = $m['schema:name'] . ' (' . implode(',', $m['uo:unit']). ')';
       }
       $statement = '<p>'
-        .'This experiment was measured using '
-        .'<em class="method">'.implode(', ', $methods).'</em>'
+        .'This experiment was measured using the following method(s): '
+        .'<em class="method">'.implode(' OR ', $methods).'</em>'
         .'.</p>';
       $element[$delta]['methods'] = array(
         '#type' => 'markup',
@@ -77,7 +77,7 @@ class sio__study_formatter extends ChadoFieldFormatter {
       );
 
       // Then summarize the site-years in a table.
-      $caption = 'Table '.($delta+1).': Site-years for '.$item['value']['schema:name'].'.';
+      $caption = 'Table '.($delta+1).': Site-years for '.$item['value']['schema:name'];
       $header = array('Location', 'Years');
       $rows = array();
       foreach ($item['value']['ncit:location'] as $loc) {

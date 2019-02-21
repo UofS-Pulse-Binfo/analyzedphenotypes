@@ -42,19 +42,37 @@ class ncit__method_formatter extends ChadoFieldFormatter {
     $path = drupal_get_path('module','analyzedphenotypes') . '/includes/TripalFields/ncit__method/theme';
     $element['#attached']['css'][] = $path . '/ncit__method.css';
 
-    foreach ($items as $i => $item) {
+    foreach ($items as $delta => $item) {
+
+      // Set up a container for the current method.
+      $element[$delta] = array(
+        '#type' => 'fieldset',
+        '#title' => $item['value']['schema:name'],
+        '#attributes' => array (
+          'class' => array(
+            'collapsible',
+	    'method',
+	    'collapsed',
+          )
+        ),
+      );
+
+      // Add the definition.
+      $element[$delta]['definition'] = array(
+        '#type' => 'markup',
+        '#markup' => '<p class="definition">'.$item['value']['IAO:0000115'].'</p>',
+      );
+
+      // Add the unit
+      // Process the units for display.
       $units = array();
       foreach ($item['value']['UO:unit'] as $u) {
         $units[] = $u['schema:name'];
       }
-      $element[$i] = array(
+      $element[$delta]['unit'] = array(
         '#type' => 'markup',
-	      '#markup' => '<h4>'.$item['value']['schema:name'].'</h4>'
-        . '<p class="definition">'.$item['value']['IAO:0000115'].'</p>'
-	      . '<p class="unit-statement">Measured in '
-	      . '<span class="unit">'.implode(' OR ', $units).'</span></p>',
-        '#prefix' => '<div class="method">',
-	      '#suffix' => '</div>',
+        '#markup' => '<p class="unit-statement">Measured in '.
+          '<span class="unit">'.implode(' OR ',$units).'</span></p>',
       );
     }
   }
