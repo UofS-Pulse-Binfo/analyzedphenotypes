@@ -63,7 +63,7 @@ class TraitImporter extends TripalImporter {
       <li><strong>Unit:</strong> The full name of the unit used (e.g. days, centimeters)</li>
       <li><strong>Type:</strong> One of "Qualitative" or "Quantitative".</li>
     </ol>
-    <p>NOTE: The order of the above columns is important!
+    <p>NOTE: The order of the above columns is important and your file <strong>must include a header</strong>!
        If you have a single trait measured in more then one way (i.e. with multiple collection
        methods), then you should have one line per collection method with the trait repeated.</p>';
 
