@@ -254,16 +254,18 @@ function ap_calculate_standard_deviation(array $values, $sample = FALSE) {
  * @return
  *   An array of values, summarized by site and year.
  */
-function ap_create_summarytable($file, $column_row, $traitname) {
+function ap_create_summarytable($file, $column_row, $trait_key) {
   // Fetch expected column headers and data type for each.
   $c = ap_create_columnheaders('columns_datatype');
   $columns = array_keys($c);
 
   // Reference index number of headers in the column rows.
-  $index_trait = array_search($columns[0], $column_row);
-  $index_value = array_search($columns[6], $column_row);
-  $index_year  = array_search($columns[3], $column_row);
-  $index_site  = array_search($columns[4], $column_row);
+  $index_trait  = array_search($columns[0], $column_row);
+  $index_method = array_search($columns[1], $column_row);
+  $index_unit   = array_search($columns[2], $column_row);
+  $index_value  = array_search($columns[8], $column_row);
+  $index_year   = array_search($columns[5], $column_row);
+  $index_site   = array_search($columns[6], $column_row);
 
   $arr_siteyear = array();
   $arr_values = array();
@@ -285,7 +287,8 @@ function ap_create_summarytable($file, $column_row, $traitname) {
             return trim($tmp, "'");
           }, $data);
 
-        if ($data[$index_trait] == $traitname) {
+        $file_unique_key = implode('; ', array($data[$index_trait], $data[$index_method], $data[$index_unit]));
+        if ($file_unique_key == $trait_key) {
           // Each row in trait name.
           $value = $data[$index_value];
           $is_number = ap_validate_unitvalue('number', $value);

@@ -815,6 +815,7 @@
         },
         {
             "name": "phpunit/php-timer",
+<<<<<<< HEAD
             "version": "2.1.1",
             "source": {
                 "type": "git",
@@ -825,6 +826,18 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/sebastianbergmann/php-timer/zipball/8b389aebe1b8b0578430bda0c7c95a829608e059",
                 "reference": "8b389aebe1b8b0578430bda0c7c95a829608e059",
+=======
+            "version": "2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastianbergmann/php-timer.git",
+                "reference": "8b8454ea6958c3dee38453d3bd571e023108c91f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-timer/zipball/8b8454ea6958c3dee38453d3bd571e023108c91f",
+                "reference": "8b8454ea6958c3dee38453d3bd571e023108c91f",
+>>>>>>> ca721c3884f830770960b554966dfe5dfeab92f8
                 "shasum": ""
             },
             "require": {
@@ -836,7 +849,11 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
+<<<<<<< HEAD
                     "dev-master": "2.1-dev"
+=======
+                    "dev-master": "2.0-dev"
+>>>>>>> ca721c3884f830770960b554966dfe5dfeab92f8
                 }
             },
             "autoload": {
@@ -860,7 +877,11 @@
             "keywords": [
                 "timer"
             ],
+<<<<<<< HEAD
             "time": "2019-02-20T10:12:59+00:00"
+=======
+            "time": "2018-02-01T13:07:23+00:00"
+>>>>>>> ca721c3884f830770960b554966dfe5dfeab92f8
         },
         {
             "name": "phpunit/php-token-stream",
@@ -913,6 +934,7 @@
         },
         {
             "name": "phpunit/phpunit",
+<<<<<<< HEAD
             "version": "7.5.6",
             "source": {
                 "type": "git",
@@ -923,6 +945,18 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/09c85e14994df92e5ff1f5ec0b481bdb7d3d3df9",
                 "reference": "09c85e14994df92e5ff1f5ec0b481bdb7d3d3df9",
+=======
+            "version": "7.5.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastianbergmann/phpunit.git",
+                "reference": "2cb759721e53bc05f56487f628c6b9fbb6c18746"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/2cb759721e53bc05f56487f628c6b9fbb6c18746",
+                "reference": "2cb759721e53bc05f56487f628c6b9fbb6c18746",
+>>>>>>> ca721c3884f830770960b554966dfe5dfeab92f8
                 "shasum": ""
             },
             "require": {
@@ -993,7 +1027,11 @@
                 "testing",
                 "xunit"
             ],
+<<<<<<< HEAD
             "time": "2019-02-18T09:24:50+00:00"
+=======
+            "time": "2019-02-01T05:24:07+00:00"
+>>>>>>> ca721c3884f830770960b554966dfe5dfeab92f8
         },
         {
             "name": "psr/http-message",
@@ -1884,7 +1922,7 @@
                 },
                 {
                     "name": "Gert de Pagter",
-                    "email": "BackEndTea@gmail.com"
+                    "email": "backendtea@gmail.com"
                 }
             ],
             "description": "Symfony polyfill for ctype functions",
