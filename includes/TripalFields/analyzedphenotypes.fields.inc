@@ -78,6 +78,30 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
     );
   }
 
+  // Trait Distribution Chart Field.
+  if (isset($bundle->data_table) AND
+    (($bundle->data_table == 'cvterm') OR ($bundle->data_table == 'project') OR ($bundle->data_table == 'stock'))) {
+
+    tripal_insert_cvterm(array(
+      'id' => 'HP:0003812',
+      'name' => 'phenotypic variability',
+      'cv_name' => 'HP',
+      'definition' => 'A variability of phenotypic features.',
+    ));
+
+    $field_name = 'hp__phenotypic_variability';
+    $field_type = 'hp__phenotypic_variability';
+    $fields[$field_name] = array(
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => 1,
+      'locked' => FALSE,
+      'storage' => array(
+        'type' => 'field_chado_storage',
+      ),
+    );
+  }
+
   return $fields;
 }
 
@@ -167,6 +191,42 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         'default' => array(
           'label' => 'hidden',
           'type' => 'sio__study_formatter',
+          'settings' => array(),
+        ),
+      ),
+    );
+  }
+
+  // Trait Distribution Plot Field.
+  if (isset($bundle->data_table) AND
+    (($bundle->data_table == 'cvterm') OR ($bundle->data_table == 'project') OR ($bundle->data_table == 'stock'))) {
+
+    $field_name = 'hp__phenotypic_variability';
+    $field_type = 'hp__phenotypic_variability';
+    $instances[$field_name] =  array(
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Trait Distribution Plot',
+      'description' => 'Embed the Phenotypic Trait distribution plot in Tripal content pages.',
+      'required' => FALSE,
+      'settings' => array(
+        'term_vocabulary' => 'HP',
+        'term_name' => 'phenotypic variability',
+        'term_accession' => '0003812',
+        'auto_attach' => FALSE,
+        'chado_table' => $bundle->data_table,
+        'chado_column' => 'organism_id',
+        'base_table' => $bundle->data_table,
+      ),
+      'widget' => array(
+        'type' => 'hp__phenotypic_variability_widget',
+        'settings' => array(),
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'hp__phenotypic_variability_formatter',
           'settings' => array(),
         ),
       ),
