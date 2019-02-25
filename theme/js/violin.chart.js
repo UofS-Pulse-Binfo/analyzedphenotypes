@@ -31,7 +31,7 @@
                   },
                   selector:"#"+elementID,
                   margin:{top: 15, right: 60, bottom: 75, left: 75},
-                  chartSize:{height:500, width:960},
+                  chartSize:{height:500, width:800},
                   constrainExtremes:false});
 
           // Render the plot.
