@@ -311,7 +311,8 @@ function analyzedphenotypes_hp_phenotypic_variability_single_chart_form(&$form, 
       drupal_add_js($module_path . "/theme/js/$chart_type.chart.js", ['weight' => -3]);
       $data['analyzedPhenotypes'] = array();
       $data['analyzedPhenotypes'][] = array(
-          'id' => 'tripal-ap-violin-plot-'.$key,
+	  'type' => $chart_type,
+          'id' => 'tripal-ap-'.$chart_type.'-plot-'.$key,
           'experiment_id' => $experiment_id,
           'trait_id' => $trait_id,
           'method_id' => $method_id,
@@ -326,7 +327,7 @@ function analyzedphenotypes_hp_phenotypic_variability_single_chart_form(&$form, 
 
       $form['charts'][$key]['figure']['chart'] = array(
         '#type' => 'item',
-        '#markup' => '<div class="chart-wrapper" id="tripal-ap-violin-plot-'.$key.'"></div>'
+        '#markup' => '<div class="chart-wrapper" id="tripal-ap-'.$chart_type.'-plot-'.$key.'"></div>'
       );
 
       $form['charts'][$key]['figure']['legend'] = array(

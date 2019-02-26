@@ -2,16 +2,20 @@
   Drupal.behaviors.analyzedPhenotypesQualPlot = {
     attach: function (context, settings) {
 
+    Drupal.settings.analyzedPhenotypes.forEach(function (apSettings) {
+    if (apSettings.type === 'multibar') {
+
       // Prepare variables.
-      var experiment_id = Drupal.settings.analyzedPhenotypes.experiment_id,
-        trait_id = Drupal.settings.analyzedPhenotypes.trait_id,
-        method_id = Drupal.settings.analyzedPhenotypes.method_id,
-        unit_id = Drupal.settings.analyzedPhenotypes.unit_id,
-        xAxisLabel = Drupal.settings.analyzedPhenotypes.yaxis,
-        yAxisLabel = "Number of Germplasm";
+      var experiment_id = apSettings.experiment_id,
+        trait_id = apSettings.trait_id,
+        method_id = apSettings.method_id,
+        unit_id = apSettings.unit_id,
+        xAxisLabel = apSettings.yaxis,
+        yAxisLabel = "Number of Germplasm",
+        id = apSettings.id;
 
       var margin = {top: 100, right: 20, bottom: 60, left: 50},
-        width = 960 - margin.left - margin.right,
+        width = 800 - margin.left - margin.right,
         height = 600 - margin.top - margin.bottom;
 
       var x0 = d3.scale.ordinal()
@@ -36,7 +40,8 @@
         .range(["#BBC7BD","#0C6758","#7AB318","#253443", "#21597D", "#090C0E", "#D5D4E6", "#CCCCCC", "#9FA7A3"]);
 
       // Create the canvas.
-      var svg = d3.select("#tripal-ap-violin-plot").append("svg")
+      d3.select("#"+id+" svg").remove();
+      var svg = d3.select("#"+id).append("svg")
           .attr("width", width + margin.left + margin.right)
           .attr("height", height + margin.top + margin.bottom)
         .append("g")
@@ -185,6 +190,6 @@
               .text(function(d) {return d; });
 
       }); //end of get json.
-
+    }});
   }}; // End of Drupal Behaviours and associated attach.
 })(jQuery);
