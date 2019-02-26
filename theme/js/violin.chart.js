@@ -16,7 +16,7 @@
         d3.json(Drupal.settings.basePath+'/json/phenotypes/traitplot/'+experiment_id+'/'+trait_id+'/'+method_id+'/'+unit_id, function(error, data) {
 
           d3.selectAll('#'+elementID+' .inner-wrapper').remove();
-console.log(apSettings);
+
          // Ensure the datapoint is a number.
          data.forEach(function (d) {d.value = +d.value;});
 

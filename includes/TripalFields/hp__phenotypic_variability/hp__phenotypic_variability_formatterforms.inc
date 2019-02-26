@@ -323,7 +323,7 @@ function analyzedphenotypes_hp_phenotypic_variability_single_chart_form(&$form, 
       drupal_add_js($data, 'setting');
       
       // Add the CSS for the chart.
-      drupal_add_css($module_path . '/theme/css/'.$chart_type."plot.chart.css");
+      drupal_add_css($module_path . '/theme/css/violinplot.chart.css');
 
       $form['charts'][$key]['figure']['chart'] = array(
         '#type' => 'item',
