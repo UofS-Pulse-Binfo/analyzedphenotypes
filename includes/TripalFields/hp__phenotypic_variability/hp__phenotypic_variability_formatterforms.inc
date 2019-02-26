@@ -60,6 +60,187 @@ function analyzedphenotypes_hp_phenotypic_variability_traits_form($form, $form_s
   // For each item for the current experiment, draw a chart.
   foreach ($items as $i) {
     if ($i['value']['SIO:001066']['data:2091'] == $experiment_id) {
+      analyzedphenotypes_hp_phenotypic_variability_single_chart_form($form, $form_state, $i);
+    }
+  }
+
+  return $form;
+}
+
+/** 
+ * AJAX-enabled form for hp__phenotypic_variability field
+ * Specifically, for germ plasm pages.
+ */
+function analyzedphenotypes_hp_phenotypic_variability_germplasm_form($form, $form_state, $items) {
+
+  // @debug dpm($items, 'items');
+
+  // Add JS.
+  $module_path = drupal_get_path('module','analyzedphenotypes');
+  $form['#attached']['js'][] = 'https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js';
+  $form['#attached']['js'][] = $module_path . '/theme/js/distroChart.js';
+
+  // EXPERIMENT
+  // ------------
+  // Determine the experiment_id, if set.
+  $experiment_id = NULL;
+  if (isset($form_state['values']) AND isset($form_state['values']['experiment_id'])) {
+    $experiment_id = $form_state['values']['experiment_id'];
+  }
+
+  // Get a unique list of experiments.
+  $expopt = array();
+  foreach ($items as $i) {
+    $exp_id = $i['value']['SIO:001066']['data:2091'];
+    $exp_name = $i['value']['SIO:001066']['schema:name'];
+    $expopt[ $exp_id ] = $exp_name;
+  }
+
+  // Ensure that if there is only one option, then we just draw it!
+  if (sizeof($expopt) == 1) { 
+    $experiment_id = key($expopt);
+  }
+
+  $form['experiment_id'] = array(
+    '#type' => 'select',
+    '#title' => 'Experiment',
+    '#options' => $expopt,
+    '#default_value' => $experiment_id,
+    '#empty_option' => '- Experiment -',
+    '#description' => 'Select the experiment you are insterested in.',
+    '#ajax' => array(
+      'callback' => 'hp_phenotypic_variability_ajax_callback',
+      'wrapper' => 'distribution-charts',
+    ), 
+  );
+
+  // TRAIT
+  // ---------
+  // Determine the trait_id, if set.
+  $trait_id = NULL;
+  if (isset($form_state['values']) AND isset($form_state['values']['trait_id'])) {
+    $trait_id = $form_state['values']['trait_id'];
+  }
+
+  // Get a unique list of traits.
+  $traitopts = array();
+  foreach($items as $i) {
+    $id = $i['value']['NCIT:C85496']['data:2091'];
+    $name = $i['value']['NCIT:C85496']['schema:name'];
+    $traitopts[ $id ] = $name;
+  }
+
+  // Ensure that if there is only one options, then we just select it!
+  if (sizeof($traitopts) == 1) {
+    $trait_id = key($traitopts);
+  }
+
+  $form['trait_id'] = array(
+    '#type' => 'select',
+    '#title' => 'Trait',
+    '#options' => $traitopts,
+    '#default_value' => $trait_id,
+    '#empty_option' => '- Trait -',
+    '#description' => 'Select the trait you are interested in.',
+    '#ajax' => array(
+      'callback' => 'hp_phenotypic_variability_ajax_callback',
+      'wrapper' => 'distribution-charts',
+    ),
+  );
+
+  // CHARTS.
+  // --------
+  $form['charts'] = array(
+    '#prefix' => '<div id="distribution-charts">',
+    '#suffix' => '</div>',
+  );
+
+  // For each item for the current experiment, draw a chart.
+  foreach ($items as $i) {
+    if (($i['value']['SIO:001066']['data:2091'] == $experiment_id) AND ($i['value']['NCIT:C85496']['data:2091'] == $trait_id)) {
+      analyzedphenotypes_hp_phenotypic_variability_single_chart_form($form, $form_state, $i);
+    }
+  }
+
+  return $form;
+}
+
+/**
+ * AJAX-enabled form for hp__phenotypic_variability field
+ * Specifically, for experiment pages.
+ */
+function analyzedphenotypes_hp_phenotypic_variability_experiment_form($form, $form_state, $items) {
+
+  // @debug dpm($items, 'items');
+
+  // Add JS.
+  $module_path = drupal_get_path('module','analyzedphenotypes');
+  $form['#attached']['js'][] = 'https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js';
+  $form['#attached']['js'][] = $module_path . '/theme/js/distroChart.js';
+
+  // TRAIT
+  // ---------
+  // Determine the trait_id, if set.
+  $trait_id = NULL;
+  if (isset($form_state['values']) AND isset($form_state['values']['trait_id'])) {
+    $trait_id = $form_state['values']['trait_id'];
+  }
+
+  // Get a unique list of traits.
+  $traitopts = array();
+  foreach($items as $i) {
+    $id = $i['value']['NCIT:C85496']['data:2091'];
+    $name = $i['value']['NCIT:C85496']['schema:name'];
+    $traitopts[ $id ] = $name;
+  }
+
+  // Ensure that if there is only one options, then we just select it!
+  if (sizeof($traitopts) == 1) {
+    $trait_id = key($traitopts);
+  }
+
+  $form['trait_id'] = array(
+    '#type' => 'select',
+    '#title' => 'Trait',
+    '#options' => $traitopts,
+    '#default_value' => $trait_id,
+    '#empty_option' => '- Trait -',
+    '#description' => 'Select the trait you are interested in.',
+    '#ajax' => array(
+      'callback' => 'hp_phenotypic_variability_ajax_callback',
+      'wrapper' => 'distribution-charts',
+    ),
+  );
+
+  // CHARTS.
+  // --------
+  $form['charts'] = array(
+    '#prefix' => '<div id="distribution-charts">',
+    '#suffix' => '</div>',
+  );
+
+  // For each item for the current experiment, draw a chart.
+  foreach ($items as $i) {
+    if ($i['value']['NCIT:C85496']['data:2091'] == $trait_id) {
+      analyzedphenotypes_hp_phenotypic_variability_single_chart_form($form, $form_state, $i);
+    }
+  }
+
+  return $form;
+}
+
+/**
+ * Build the form for a single chart.
+ *
+ * @param $form
+ *   The full form so far.
+ * @param $form_state
+ *   The state of the form.
+ * @param $i
+ *   The current item.
+ */
+function analyzedphenotypes_hp_phenotypic_variability_single_chart_form(&$form, $form_state, $i) {
+      $module_path = drupal_Get_path('module', 'analyzedphenotypes');
 
       $key = $i['value']['NCIT:C71460']['data:2091'] . '-' . $i['value']['uo:unit']['data:2091'];
       $name = $i['value']['NCIT:C71460']['schema:name'] . ' (' . $i['value']['uo:unit']['schema:name'] . ')';
@@ -69,6 +250,7 @@ function analyzedphenotypes_hp_phenotypic_variability_traits_form($form, $form_s
       );
 
       // First get all the constituent parts...
+      $experiment_id = $i['value']['SIO:001066']['data:2091'];
       $experiment_name = $i['value']['SIO:001066']['schema:name'];
       $trait_name = $i['value']['NCIT:C85496']['schema:name'];
       $trait_id = $i['value']['NCIT:C85496']['data:2091'];
@@ -147,12 +329,8 @@ function analyzedphenotypes_hp_phenotypic_variability_traits_form($form, $form_s
         '#markup' => $figlegend,
         '#suffix' => '</div>',
       );
-
-    }
-  }
-
-  return $form;
 }
+
 
 /**
  * AJAX CALLBACK: refreshes charts on hp__phenotypic_variability charts.

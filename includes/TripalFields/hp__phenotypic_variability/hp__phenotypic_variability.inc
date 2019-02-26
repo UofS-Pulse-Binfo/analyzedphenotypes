@@ -144,6 +144,7 @@ class hp__phenotypic_variability extends ChadoField {
       array(':id' => $trait_id));
     while ($r = $resource->fetchObject()) {
       $data[] = array(
+        'type' => 'trait',
         'value' => array(
           // Trait.
           'NCIT:C85496' => array(
@@ -169,6 +170,98 @@ class hp__phenotypic_variability extends ChadoField {
         ),
       );
     }
+    return $data;
+  }
+
+  /**
+   * Load all trait/experiment/method/unit combinations
+   * for the given germplasm.
+   */
+  function loadForGermplasm(&$entity) {
+    $germplasm_id = $entity->chado_record_id;
+    $data = array();
+
+    $resource = chado_query(
+      'SELECT trait_id, trait_name, experiment_id, experiment_name, method_id, method_name, unit_id, unit_name 
+       FROM {mview_phenotype}
+       WHERE stock_id = :id
+       GROUP BY trait_id, trait_name, experiment_id, experiment_name, method_id, method_name, unit_id, unit_name',
+      array(':id' => $germplasm_id));
+    while ($r = $resource->fetchObject()) {
+      $data[] = array(
+        'type' => 'germplasm',
+        'value' => array(
+          // Trait.
+          'NCIT:C85496' => array(
+            'data:2091' => $r->trait_id,
+            'schema:name' => $r->trait_name,
+          ),
+          // Experiment.
+          'SIO:001066' => array(
+            'data:2091' => $r->experiment_id,
+            'schema:name' => $r->experiment_name,
+          ),
+          // Method.
+          'NCIT:C71460' => array(
+            'data:2091' => $r->method_id,
+            'schema:name' => $r->method_name,
+          ),
+          // Unit.
+          'uo:unit' => array(
+            'data:2091' => $r->unit_id,
+            'schema:name' => $r->unit_name,
+          ),
+          'schema:url' => 'json/phenotypes/traitplot/'.$r->trait_id.'/'.$r->experiment_id.'/'.$r->method_id.'/'.$r->unit_id,
+        ),
+      );
+    }
+
+    return $data;
+  }
+
+  /**
+   * Load all trait/experiment/method/unit combinations
+   * for the given experiment.
+   */
+  function loadForExperiment(&$entity) {
+    $experiment_id = $entity->chado_record_id;
+    $data = array();
+
+    $resource = chado_query(
+      'SELECT trait_id, trait_name, experiment_id, experiment_name, method_id, method_name, unit_id, unit_name 
+       FROM {mview_phenotype}
+       WHERE experiment_id = :id
+       GROUP BY trait_id, trait_name, experiment_id, experiment_name, method_id, method_name, unit_id, unit_name',
+      array(':id' => $experiment_id));
+    while ($r = $resource->fetchObject()) {
+      $data[] = array(
+        'type' => 'experiment',
+        'value' => array(
+          // Trait.
+          'NCIT:C85496' => array(
+            'data:2091' => $r->trait_id,
+            'schema:name' => $r->trait_name,
+          ),
+          // Experiment.
+          'SIO:001066' => array(
+            'data:2091' => $r->experiment_id,
+            'schema:name' => $r->experiment_name,
+          ),
+          // Method.
+          'NCIT:C71460' => array(
+            'data:2091' => $r->method_id,
+            'schema:name' => $r->method_name,
+          ),
+          // Unit.
+          'uo:unit' => array(
+            'data:2091' => $r->unit_id,
+            'schema:name' => $r->unit_name,
+          ),
+          'schema:url' => 'json/phenotypes/traitplot/'.$r->trait_id.'/'.$r->experiment_id.'/'.$r->method_id.'/'.$r->unit_id,
+        ),
+      );
+    }
+
     return $data;
   }
 

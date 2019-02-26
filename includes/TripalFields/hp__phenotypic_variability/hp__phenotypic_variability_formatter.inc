@@ -36,7 +36,19 @@ class hp__phenotypic_variability_formatter extends ChadoFieldFormatter {
     // Get the settings
     $settings = $display['settings'];
 
-    $form = drupal_get_form('analyzedphenotypes_hp_phenotypic_variability_traits_form', $items);
+    // Grab the correct form based on the type of page we are on. 
+    switch($items[0]['type']) {
+      case 'trait':
+        $form = drupal_get_form('analyzedphenotypes_hp_phenotypic_variability_traits_form', $items);
+        break;
+      case 'germplasm':
+        $form = drupal_get_form('analyzedphenotypes_hp_phenotypic_variability_germplasm_form', $items);
+	break;
+      case 'experiment':
+        $form = drupal_get_form('analyzedphenotypes_hp_phenotypic_variability_experiment_form', $items);
+        break;
+    }
+
     $content = drupal_render($form);
     $element[] = array(
       '#type' => 'markup',
