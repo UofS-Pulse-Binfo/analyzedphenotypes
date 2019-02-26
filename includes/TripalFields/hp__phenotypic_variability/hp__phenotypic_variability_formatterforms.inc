@@ -15,6 +15,11 @@ function analyzedphenotypes_hp_phenotypic_variability_traits_form($form, $form_s
 
   // @debug dpm($items, 'items');
 
+  $form['msg'] = array(
+    '#type' => 'item',
+    '#markup' => '<p>The phenotypic data is best summarized in a trait distribution chart. To see the summary for your experiment of interest, select it from the drop-down below. If the trait was measured with multiple methods in this experiment, you will see each method displayed in it\'s own chart.</p>',
+  );
+
   // Add JS.
   $module_path = drupal_get_path('module','analyzedphenotypes');
   $form['#attached']['js'][] = 'https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js';
@@ -74,6 +79,11 @@ function analyzedphenotypes_hp_phenotypic_variability_traits_form($form, $form_s
 function analyzedphenotypes_hp_phenotypic_variability_germplasm_form($form, $form_state, $items) {
 
   // @debug dpm($items, 'items');
+
+  $form['msg'] = array(
+    '#type' => 'item',
+    '#markup' => '<p>The phenotypic data is best summarized in a trait distribution chart. To see the summary for a trait/experiment of interest, select them from the drop-downs below. If the trait was measured with multiple methods in a given experiment, you will see each method displayed in it\'s own chart.</p>',
+  );
 
   // Add JS.
   $module_path = drupal_get_path('module','analyzedphenotypes');
@@ -173,6 +183,11 @@ function analyzedphenotypes_hp_phenotypic_variability_experiment_form($form, $fo
 
   // @debug dpm($items, 'items');
 
+  $form['msg'] = array(
+    '#type' => 'item',
+    '#markup' => '<p>The phenotypic data is best summarized in a trait distribution chart. To see the summary for your trait of interest, select it from the drop-down below. If the trait was measured with multiple methods in this experiment, you will see each method displayed in it\'s own chart.</p>',
+  );
+
   // Add JS.
   $module_path = drupal_get_path('module','analyzedphenotypes');
   $form['#attached']['js'][] = 'https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js';
@@ -246,7 +261,9 @@ function analyzedphenotypes_hp_phenotypic_variability_single_chart_form(&$form, 
       $name = $i['value']['NCIT:C71460']['schema:name'] . ' (' . $i['value']['uo:unit']['schema:name'] . ')';
       $form['charts'][$key] = array(
         '#type' => 'fieldset',
-        '#title' => $name,
+	'#title' => $name,
+	'#collapsible' => TRUE,
+	'#collpased' => FALSE,
       );
 
       // First get all the constituent parts...
