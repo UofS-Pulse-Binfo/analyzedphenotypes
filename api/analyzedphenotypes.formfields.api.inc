@@ -237,35 +237,30 @@ function ap_populate_fieldspecies($identifiers) {
 function ap_populate_fieldtraits($identifiers) {
   $values = null;
 
+  $sql = "
+    SELECT t1.name, t2.name AS method, t3.name AS unit,
+      t1.cvterm_id AS name_id, t2.cvterm_id AS method_id, t3.cvterm_id AS unit_id
+    FROM {phenotype}
+      LEFT JOIN {cvterm} AS t1 ON attr_id = t1.cvterm_id
+      LEFT JOIN {cvterm} AS t2 ON assay_id = t2.cvterm_id
+      LEFT JOIN {cvterm} AS t3 ON unit_id = t3.cvterm_id
+    WHERE project_id IN (:project_id) %s
+    GROUP BY t1.name, t2.name, t3.name,
+      t1.cvterm_id, t2.cvterm_id, t3.cvterm_id
+    ORDER BY t1.name ASC";
+
+
   if (isset($identifiers['project_id']) && count($identifiers['project_id']) > 1) {
     // 2 or more experiments - fields genus and species field value become all
     // indicating all species and all genus.
-    $sql = "
-      SELECT t1.cvterm_id, t1.name
-      FROM {cvterm} AS t1 INNER JOIN {phenotype} ON t1.cvterm_id = attr_id
-      WHERE project_id IN (:project_id)
-      GROUP BY t1.cvterm_id, t1.name
-      ORDER BY t1.name ASC";
-
     $args = array(':project_id' => $identifiers['project_id']);
 
-    $query = chado_query($sql, $args);
-    $values = ($query->rowCount()) ? $query->fetchAllKeyed() : $values;
+    $query = chado_query(sprintf($sql, ''), $args);
   }
   else {
     // 1 and only experiment.
     if (isset($identifiers['project_id']) && $identifiers['project_id'] > 0
       && !empty($identifiers['genus']) && !empty($identifiers['species'])) {
-
-      $sql = "
-        SELECT cvterm_id, name FROM {cvterm}
-        WHERE cvterm_id IN (SELECT attr_id FROM {phenotype}
-          WHERE
-            project_id = :project_id
-            AND stock_id IN (SELECT stock_id FROM {stock}
-              WHERE organism_id IN (SELECT organism_id FROM {organism}
-                WHERE LOWER(genus) = LOWER(:genus) AND LOWER(species) IN(:species))))
-        ORDER BY name ASC";
 
       $args = array(
         ':project_id' => $identifiers['project_id'],
@@ -274,13 +269,16 @@ function ap_populate_fieldtraits($identifiers) {
         ':species' => array_map('strtolower', $identifiers['species']),
       );
 
-      $query = chado_query($sql, $args);
-      $values = ($query->rowCount()) ? $query->fetchAllKeyed() : $values;
+      $filter_genus = "AND stock_id IN (
+        SELECT stock_id FROM {stock} WHERE organism_id IN
+          (SELECT organism_id FROM {organism} WHERE LOWER(genus) = LOWER(:genus) AND LOWER(species) IN(:species)))";
+
+      $query = chado_query(sprintf($sql, $filter_genus), $args);
     }
   }
 
 
-  return $values;
+  return ($query && $query->rowCount() > 0) ? $query->fetchAll() : $values;
 }
 
 
@@ -306,6 +304,9 @@ function ap_populate_fieldyear($identifiers) {
     && !empty($identifiers['genus']) && !empty($identifiers['species'])
     && isset($identifiers['traits'])) {
 
+    // Convert the check traits to trait id, method id and unit id.
+    $trait_method_unit = ap_extract_trait_method_unit_id($identifiers['traits'], $identifiers['trait_method_unit_id']);
+
     $sysvar = ap_get_variablenames(
       array('variablename' => 'year'),
       array('set' => 'terms')
@@ -316,7 +317,7 @@ function ap_populate_fieldyear($identifiers) {
     $sql = "
       SELECT value, value FROM {phenotypeprop} WHERE type_id = :year_property
       AND phenotype_id IN (SELECT phenotype_id FROM {phenotype}
-        WHERE project_id IN (:project_id) AND attr_id IN (:traits)
+        WHERE project_id IN (:project_id) AND CONCAT(attr_id, ',', assay_id, ',', unit_id) IN (:traits)
           AND stock_id IN (SELECT stock_id FROM {stock}
             WHERE organism_id IN (SELECT organism_id FROM {organism}
               WHERE LOWER(genus) = LOWER(:genus) AND LOWER(species) IN(:species))))
@@ -326,7 +327,7 @@ function ap_populate_fieldyear($identifiers) {
     $args = array(
       ':year_property' => $sysvar_year,
       ':project_id' => $identifiers['project_id'],
-      ':traits' => $identifiers['traits'],
+      ':traits' => $trait_method_unit,
 
       ':genus' => $identifiers['genus'],
       ':species' => array_map('strtolower', $identifiers['species']),
@@ -361,6 +362,9 @@ function ap_populate_fieldyear($identifiers) {
 function ap_populate_fieldlocation($identifiers) {
   $values = null;
 
+  // Convert the check traits to trait id, method id and unit id.
+  $trait_method_unit = ap_extract_trait_method_unit_id($identifiers['traits'], $identifiers['trait_method_unit_id']);
+
   $sysvar = ap_get_variablenames(
     array('variablename' => 'varset'),
     array('set' => 'terms')
@@ -375,14 +379,14 @@ function ap_populate_fieldlocation($identifiers) {
       INNER JOIN {phenotypeprop} AS t2 USING (phenotype_id)
     WHERE
       project_id IN (:project_id)
-      AND attr_id IN (:traits)
+      AND CONCAT(attr_id, ',', assay_id, ',', unit_id) IN (:traits)
       AND t2.value IN (:year)
       AND t2.type_id = :year_property
       AND t1.type_id = :location_property";
 
   $args = array(
     ':project_id' => $identifiers['project_id'],
-    ':traits' => $identifiers['traits'],
+    ':traits' => $trait_method_unit,
     ':year' => $identifiers['year'],
 
     ':year_property' => $sysvar_year,
@@ -430,6 +434,9 @@ function ap_populate_fieldlocation($identifiers) {
 function ap_populate_fieldgermplasmtype($identifiers) {
   $values = null;
 
+  // Convert the check traits to trait id, method id and unit id.
+  $trait_method_unit = ap_extract_trait_method_unit_id($identifiers['traits'], $identifiers['trait_method_unit_id']);
+
   $sysvar = ap_get_variablenames(
     array('variablename' => 'varset'),
     array('set' => 'terms')
@@ -445,7 +452,7 @@ function ap_populate_fieldgermplasmtype($identifiers) {
       INNER JOIN {phenotypeprop} AS t2 USING (phenotype_id)
       WHERE
         project_id IN (:project_id)
-        AND attr_id IN (:traits)
+        AND CONCAT(attr_id, ',', assay_id, ',', unit_id) IN (:traits)
         AND t2.value IN (:year)
         AND t1.value IN (:location)
         AND t2.type_id = :year_property
@@ -453,7 +460,7 @@ function ap_populate_fieldgermplasmtype($identifiers) {
 
   $args = array(
     ':project_id' => $identifiers['project_id'],
-    ':traits' => $identifiers['traits'],
+    ':traits' => $trait_method_unit,
     ':year' => $identifiers['year'],
     ':location' => $identifiers['location'],
 
@@ -532,8 +539,12 @@ function ap_populate_fieldgermplasmlist($identifiers) {
 
     if (isset($identifiers['traits']) && !empty($identifiers['traits'])) {
       // Traits.
-      $where_clause[] = 'attr_id IN (:traits)';
-      $args[':traits'] = $identifiers['traits'];
+      $where_clause[] = 'CONCAT(attr_id, \',\', assay_id, \',\', unit_id) IN (:traits)';
+
+      // Convert the check traits to trait id, method id and unit id.
+      $trait_method_unit = ap_extract_trait_method_unit_id($identifiers['traits'], $identifiers['trait_method_unit_id']);
+
+      $args[':traits'] = $trait_method_unit;
     }
 
     if (isset($identifiers['year']) && !empty($identifiers['year'])) {
@@ -588,4 +599,30 @@ function ap_populate_fieldgermplasmlist($identifiers) {
 
 
   return $values;
+}
+
+
+/**
+ * Map check traits to trait id, method id and unit id.
+ *
+ * @param $check_trait
+ *   Array, the value corresponds to index number in the trait method unit id array.
+ * @param $trait_method_unit_id
+ *   Array containing trait id, method id and unit id. Index corresponds to the index
+ *   in the $check_trait.
+ *
+ * @return array
+ *   A multidimentional array, an array for trait ids, method ids and unit ids corresponding
+ *   to the checked traits.
+ */
+function ap_extract_trait_method_unit_id($check_trait, $trait_method_unit_id) {
+  $ids = array();
+
+  foreach($trait_method_unit_id as $i => $item) {
+    if (in_array($i, $check_trait)) {
+      $ids[] = $item;
+    }
+  }
+
+  return $ids;
 }

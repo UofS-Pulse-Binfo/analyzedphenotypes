@@ -114,6 +114,10 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
   // when this variable is set to 1.
   $btn_ok = 0;
 
+  // Manage trait information variables.
+  $t_options = array();
+  $trait_method_unit_id = array();
+
 
   // Handle AJAX. form state values has values.
   if (isset($form_state['values'])) {
@@ -166,10 +170,17 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         ));
 
         if ($options) {
-          $field_values[$fld_traits] = array_keys($options);
+          foreach($options as $i => $w) {
+            // Trait Name (Short Method Name; Unit)
+            $t_options[ ($i + 1) ] = $w->name . ' (' . $w->method . '; ' . $w->unit . ')';
+            // Trait Name Id, Short Method Name Id, Unit Id.
+            $trait_method_unit_id[ ($i + 1) ] = $w->name_id . ',' . $w->method_id . ',' . $w->unit_id;
+          }
+
+          $field_values[$fld_traits] = array_keys($t_options);
 
           $field_prop[$fld_traits]['default'] = $field_values[$fld_traits];
-          $field_prop[$fld_traits]['options'] = $options;
+          $field_prop[$fld_traits]['options'] = $t_options;
           $field_prop[$fld_traits]['disabled'] = FALSE;
 
           // #Year.
@@ -177,6 +188,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
           $options = ap_populate_fieldyear(array(
             'project_id' => $field_values[$fld_experiment],
             'traits' => $field_values[$fld_traits],
+            'trait_method_unit_id' => $trait_method_unit_id,
             'genus' => $all_genus,
             'species' => $all_species
           ));
@@ -193,6 +205,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
             $options = ap_populate_fieldlocation(array(
               'project_id' => $field_values[$fld_experiment],
               'traits' => $field_prop[$fld_traits]['default'],
+              'trait_method_unit_id' => $trait_method_unit_id,
               'year' => $field_prop[$fld_year]['default']
             ));
 
@@ -208,6 +221,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
               $options = ap_populate_fieldgermplasmtype(array(
                 'project_id' => $field_values[$fld_experiment],
                 'traits' => $field_prop[$fld_traits]['default'],
+                'trait_method_unit_id' => $trait_method_unit_id,
                 'year' => $field_prop[$fld_year]['default'],
                 'location' => $field_prop[$fld_location]['default']
               ));
@@ -250,8 +264,8 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
         $field_values[$fld_experiment] = current($field_values[$fld_experiment]);
 
-        // Experiment is optional with single project.
-        if ($field_values[$fld_experiment] > 0) {
+        // Experiment is optional with single project and not average rep.
+        if ($field_values[$fld_experiment] > 0 && $form_state['values'][ $fldname[$fld_averagerep]['field'] ] == 0) {
           unset($default_headers['Experiment']);
           $optional_headers['Experiment'] = 'Experiment';
         }
@@ -310,9 +324,16 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
             // #Traits.
             if ($options) {
-              $field_prop[$fld_traits]['options'] = $options;
+              foreach($options as $i => $w) {
+                // Trait Name (Short Method Name; Unit)
+                $t_options[ ($i + 1) ] = $w->name . ' (' . $w->method . '; ' . $w->unit . ')';
+                // Trait Name Id, Short Method Name Id, Unit Id.
+                $trait_method_unit_id[ ($i + 1) ] = $w->name_id . ',' . $w->method_id . ',' . $w->unit_id;
+              }
+
+              $field_prop[$fld_traits]['options'] = $t_options;
               $field_prop[$fld_traits]['disabled'] = FALSE;
-              $field_values[$fld_traits] = array_keys($options);
+              $field_values[$fld_traits] = array_keys($t_options);
 
               if (count($field_values[$fld_species]) > 1) {
                 // Many species selected.
@@ -324,6 +345,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                 $options = ap_populate_fieldyear(array(
                   'project_id' => $field_values[$fld_experiment],
                   'traits' => $field_values[$fld_traits],
+                  'trait_method_unit_id' => $trait_method_unit_id,
                   'genus' => $field_values[$fld_genus],
                   'species' => $field_values[$fld_species]
                 ));
@@ -340,6 +362,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                     'genus' => $field_values[$fld_genus],
                     'species' => $field_values[$fld_species],
                     'traits' => $field_values[$fld_traits],
+                    'trait_method_unit_id' => $trait_method_unit_id,
                     'year' => $field_values[$fld_year],
                   ));
 
@@ -355,6 +378,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                       'genus' => $field_values[$fld_genus],
                       'species' => $field_values[$fld_species],
                       'traits' => $field_values[$fld_traits],
+                      'trait_method_unit_id' => $trait_method_unit_id,
                       'year' => $field_values[$fld_year],
                       'location' => $field_values[$fld_location]
                     ));
@@ -393,6 +417,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                   $options = ap_populate_fieldyear(array(
                     'project_id' => $field_values[$fld_experiment],
                     'traits' => $field_values[$fld_traits],
+                    'trait_method_unit_id' => $trait_method_unit_id,
                     'genus' => $field_values[$fld_genus],
                     'species' => $field_values[$fld_species]
                   ));
@@ -412,6 +437,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                         'genus' => $field_values[$fld_genus],
                         'species' => $field_values[$fld_species],
                         'traits' => $field_values[$fld_traits],
+                        'trait_method_unit_id' => $trait_method_unit_id,
                         'year' => $field_values[$fld_year]
                       ));
 
@@ -427,6 +453,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                           'genus' => $field_values[$fld_genus],
                           'species' => $field_values[$fld_species],
                           'traits' => $field_values[$fld_traits],
+                          'trait_method_unit_id' => $trait_method_unit_id,
                           'year' => $field_values[$fld_year],
                           'location' => $field_values[$fld_location]
                         ));
@@ -469,6 +496,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                           'genus' => $field_values[$fld_genus],
                           'species' => $field_values[$fld_species],
                           'traits' => $field_values[$fld_traits],
+                          'trait_method_unit_id' => $trait_method_unit_id,
                           'year' => $field_values[$fld_year]
                         ));
 
@@ -487,6 +515,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                               'genus' => $field_values[$fld_genus],
                               'species' => $field_values[$fld_species],
                               'traits' => $field_values[$fld_traits],
+                              'trait_method_unit_id' => $trait_method_unit_id,
                               'year' => $field_values[$fld_year],
                               'location' => $field_values[$fld_location]
                             ));
@@ -528,6 +557,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                                 'genus' => $field_values[$fld_genus],
                                 'species' => $field_values[$fld_species],
                                 'traits' => $field_values[$fld_traits],
+                                'trait_method_unit_id' => $trait_method_unit_id,
                                 'year' => $field_values[$fld_year],
                                 'location' => $field_values[$fld_location]
                               ));
@@ -547,6 +577,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
                                     'genus' => $field_values[$fld_genus],
                                     'species' => $field_values[$fld_species],
                                     'traits' => $field_values[$fld_traits],
+                                    'trait_method_unit_id' => $trait_method_unit_id,
                                     'year' => $field_values[$fld_year],
                                     'location' => $field_values[$fld_location]
                                   ));
@@ -654,6 +685,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
           'genus' => $field_values[$fld_genus],
           'species' => $field_values[$fld_species],
           'traits' => $field_values[$fld_traits],
+          'trait_method_unit_id' => $trait_method_unit_id,
           'year' => $field_values[$fld_year],
           'location' => $field_values[$fld_location],
           'germplasmtype' => $field_values[$fld_germplasmtype],
@@ -681,7 +713,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
           }
         }
 
-        $traits_list = implode(', ', $s);
+        $traits_list = implode($delimiter, $s);
 
         $default_headers['Trait Name'] = $traits_list;
       }
@@ -818,8 +850,8 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
     + analyzedphenotypes_wrapcheckbox(70, count($field_prop[$fld_species]['options']));
 
     // Select all options when many experiments selected.
-    if (!isset($field_prop[$fld_species]['default'])) { 
-      $field_prop[$fld_species]['default'] = NULL; } 
+    if (!isset($field_prop[$fld_species]['default'])) {
+      $field_prop[$fld_species]['default'] = NULL; }
     if ($field_prop[$fld_species]['default'][0] > 0 || !empty($field_prop[$fld_species]['default'][0])) {
       foreach($field_prop[$fld_species]['default'] as $o) {
         $form[$AJAX_wrapper][$ap_fieldset_1][ $fldname[$fld_species]['field'] ][$o]['#attributes']
@@ -872,6 +904,12 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
       '#type' => 'hidden',
       '#value' => (isset($reset_traits)) ? 1 : 0,
       '#attributes' => array('id' => 'ap-reset-traits'),
+    );
+
+    $form[$AJAX_wrapper]['ap_trait_method_unit_id'] = array(
+      '#type' => 'hidden',
+      '#value' => (isset($trait_method_unit_id)) ? implode('~', $trait_method_unit_id) : '',
+      '#attributes' => array('id' => 'ap-trait-method-unit-id'),
     );
     ///////
 
@@ -1390,6 +1428,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
       $id = 'ap-default-row-' . $i;
 
       // Load the RFriendly version of headers.
+      $def = str_replace($delimiter, ', ', $def);
       $rfriendly = ap_convert_rcolumnheader($def);
       // Comma separate trait list.
       $rfriendly = ucwords(str_replace(',.', ', ', $rfriendly));
@@ -1479,16 +1518,11 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
     //
     // STORE VALUES OF COLUMN HEADERS.
-    if (isset($form_state['values'])) {
-      $headers = $form_state['values'][ $fldname[$fld_columnheaders]['field'] ];
-    }
-    else {
-      $headers = implode($delimiter, $default_headers);
-    }
+    $headers = implode($delimiter, $default_headers);
 
-    $form[$AJAX_wrapper][$ap_fieldset_3]['ap_column_header_picker_container'][ $fldname[$fld_columnheaders]['field'] ] = array(
+    $form[$AJAX_wrapper][ $fldname[$fld_columnheaders]['field'] ] = array(
      '#type' => 'hidden',
-     '#default_value' => $headers,
+     '#value' => $headers,
      '#attributes' => array('id' => $fldname[$fld_columnheaders]['field-id']),
     );
 
@@ -1547,6 +1581,19 @@ function analyzedphenotypes_downloaddata_form_submit($form, &$form_state) {
       $field_values[ $f['base'] ] = $f['base'] . '=' . $entered_value;
     }
   }
+
+  // Lastly, extract trait ids.
+  // Choices
+  $ids = $form_state['values']['ap_trait_method_unit_id'];
+  $tmp = explode($delimiter, $ids);
+  $trait_method_unit_id = array_combine(range(1, count($tmp)), array_values($tmp));
+  // Chosen
+  $trait_field = $form_state['values']['ap_traits_field'];
+  $selected = analyzedphenotypes_checkboxesvalue($trait_field);
+
+  // Id of chosen.
+  $traits = ap_extract_trait_method_unit_id($selected, $trait_method_unit_id);
+  $field_values['traits'] = 'traits=' . implode($delimiter, $traits);
 
   // Prepare query string.
   $querystring = implode('&', $field_values);
