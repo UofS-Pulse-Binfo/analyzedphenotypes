@@ -837,7 +837,7 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
         // Limit rows to project, trait, year, location, germplasm type and germplasm.
         $column = array(
           $fldname['experiment']['base']    => 'project_id',
-          $fldname['traits']['base']        => 'cvterm_id',
+          $fldname['traits']['base']        => 'CONCAT(t1.attr_id, \',\', t1.assay_id, \',\', t1.unit_id)',
           $fldname['germplasmtype']['base'] => 't3.type_id',
           $fldname['year']['base']          => 't7.value',
           $fldname['location']['base']      => 't8.value',
@@ -862,14 +862,18 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
         $sql = sprintf("
           SELECT
             t2.project_id, t1.phenotype_id, t2.name AS %s, t3.name AS %s,
-            STRING_AGG(t4.value, '') AS %s, t5.name AS %s, t1.value AS %s, t6.value AS %s,
-            t7.value AS %s, t8.value AS %s, t9.value AS %s
+            STRING_AGG(t4.value, '') AS %s, CONCAT(t5.name, ' (', t5a.name, '; ', t5b.name, ')') AS %s,
+            t1.value AS %s, t6.value AS %s, t7.value AS %s, t8.value AS %s, t9.value AS %s
           FROM
             {phenotype}                AS t1
             INNER JOIN {project}       AS t2 USING(project_id)
             INNER JOIN {stock}         AS t3 USING(stock_id)
             LEFT  JOIN {stockprop}     AS t4 ON t3.stock_id = t4.stock_id AND t4.type_id = :term_origin
+
             INNER JOIN {cvterm}        AS t5 ON t1.attr_id = t5.cvterm_id
+            INNER JOIN {cvterm}        AS t5a ON t1.assay_id = t5a.cvterm_id
+            INNER JOIN {cvterm}        AS t5b ON t1.unit_id = t5b.cvterm_id
+
             INNER JOIN {phenotypeprop} AS t6 USING(phenotype_id)
             INNER JOIN {phenotypeprop} AS t7 USING(phenotype_id)
             INNER JOIN {phenotypeprop} AS t8 USING(phenotype_id)
@@ -879,7 +883,8 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
             AND t8.type_id = :term_location AND t9.type_id = :term_collector
             %s
           GROUP BY
-            t2.project_id, t1.phenotype_id, t2.name, t3.name, t5.name, t1.value, t6.value, t7.value, t8.value, t9.value
+            t2.project_id, t1.phenotype_id, t2.name, t3.name, t5.name, t5a.name, t5b.name,
+            t1.value, t6.value, t7.value, t8.value, t9.value
           ORDER BY t2.name, t3.name, t7.value, t8.value ASC",
             $fldname['experiment']['base'],
             $fldname['germplasm']['base'],
@@ -1078,7 +1083,7 @@ function analyzedphenotypes_trpdownload_writefile($filename, $data_rows, $file_t
       include_once $xlsx_writer['library path'] . '/'. $xlsx_writer['files'][0];
 
       $writer = new XLSXWriter();
-      @$writer->writeSheet($data_rows);
+      @$writer->writeSheet($data_rows, 'measurements', array(), array());
       $writer->writeToFile($filepath);
 
       break;
