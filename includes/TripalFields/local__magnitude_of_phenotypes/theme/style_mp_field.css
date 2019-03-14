@@ -1,0 +1,124 @@
+/**
+ * @file
+ * Style magnitude of phenotypes field.
+ */
+
+/**
+ * Field wrapper
+ */
+#field-magnitude-of-phenotypes-wrapper ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Magnitude */
+#field-magnitude-of-phenotypes-wrapper-magnitude {
+  background: #F9F9F9;
+  border: 1px solid #D0D0D0;
+  margin: 15px 0 0 0;
+  padding: 20px;
+}
+
+#field-magnitude-of-phenotypes-wrapper-magnitude ul li {
+  display: inline-block;
+  margin: 0;
+  font-size: 1.4em;
+}
+
+#field-magnitude-of-phenotypes-wrapper-magnitude ul li span {
+  border-right: 1px solid #000000;
+  display: inline-block;
+  line-height: 15px;
+  margin: 0;
+  padding: 0 10px 0 5px;
+}
+
+#field-magnitude-of-phenotypes-wrapper-magnitude ul li:last-child span {
+  border: none;
+}
+
+#field-magnitude-of-phenotypes-wrapper-magnitude ul li span a {
+  font-size: 0.7em;
+}
+
+
+/* Phenotypes */
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+
+#list-magnitude-of-phenotypes-field {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+#list-magnitude-of-phenotypes-field li {
+  display: inline-block;
+  margin-right: 2%;
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+.magnitude-of-phenotypes-clear-float {
+  clear: both;
+  height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+#list-magnitude-of-phenotypes-field li span {
+  font-family: georgia serif;
+  font-size: 2.5em;
+  display: block;
+  padding: 0;
+  line-height: 35px;
+  margin: 0;
+  text-align: center;
+}
+*/
+
+
+/* Phenotypes */
+#list-of-phenotypes-field {
+  list-style-type: none;
+  margin: 20px 0 0 0;
+  padding: 0;
+}
+
+
+#list-of-phenotypes-field li {
+  background: url(icon-leaf.gif) left top no-repeat;
+  float: left;
+  width: 20%;
+  height: 110px;
+  padding-left: 35px;
+  font-size: 1.2em;
+}
+
+
+#list-of-phenotypes-field li span {
+  color: #666666;
+  display: block;
+  font-family: sans-serif;
+  font-size: 12px;
+  font-weight: 300;
+}
+
+#list-of-phenotypes-field li small {
+  color: #3a7f21;
+  display: block;
+  font-size: 10px;
+  margin: 0 0 5px 0;
+}
