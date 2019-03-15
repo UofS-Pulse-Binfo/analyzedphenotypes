@@ -76,14 +76,14 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
 	'type' => 'field_chado_storage',
       ),
     );
-    
+
     // Magnitude of Phenotypes
     tripal_insert_cvterm(array(
       'id' => 'local:magnitude_of_phenotypes',
-      'name' => 'magnitude_of_phenotypes',
+      'name' => 'magnitude of phenotypes',
       'cv_name' => 'local',
       'definition' => 'Magnitude of Phenotypes.',
-    ));    
+    ));
     $field_name = 'local__magnitude_of_phenotypes';
     $field_type = 'local__magnitude_of_phenotypes';
     $fields[$field_name] = array(
@@ -190,7 +190,7 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         ),
       ),
     );
-    
+
     // Magnitude of phenotypes Field.
     $field_name = 'local__magnitude_of_phenotypes';
     $field_type = 'local__magnitude_of_phenotypes';
@@ -222,7 +222,7 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         ),
       ),
     );
-    
+
   }
 
   return $instances;
