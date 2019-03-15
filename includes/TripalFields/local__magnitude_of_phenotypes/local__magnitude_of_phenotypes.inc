@@ -125,7 +125,7 @@ class local__magnitude_of_phenotypes extends TripalField {
 
     // Create a summary of phenotyopes for this stock.
     $result = chado_query("
-      SELECT COUNT(attr_id) AS magnitude, t2.name, t2.definition
+      SELECT attr_id AS id, COUNT(attr_id) AS magnitude, t2.name, t2.definition
       FROM {phenotype} INNER JOIN {cvterm} AS t2 ON attr_id = t2.cvterm_id
       WHERE stock_id = :stock_id
       GROUP BY attr_id, t2.name, t2.definition
@@ -134,6 +134,7 @@ class local__magnitude_of_phenotypes extends TripalField {
 
     $data = array();
     $trait_count = $result->rowCount();
+    $magnitude_of_phenotypes = array();
 
     // We need the field name to ensure we save the data in the correct field!
     $field_name = $this->instance['field_name'];
@@ -143,15 +144,22 @@ class local__magnitude_of_phenotypes extends TripalField {
 
     if ($trait_count > 0) {
       $result = $result->fetchAll();
-
+      $result = array_map(function($d) { return (array) $d; },$result);
+      
+      // Magnitude of datapoints.
       $mg = array_column($result, 'magnitude');
       $data_count = array_sum($mg);
       $url = $GLOBALS['base_url'] . '/phenotypes/trait-distribution';
-
-      $data['magnitude']  = array('Phenotypes' => $trait_count, 'Data Count' => number_format($data_count), 'Trait Distribution Plot' => $url);
+      $data['magnitude']  = array(
+        'Phenotypes' => number_format($trait_count), 
+        'Data Count' => number_format($data_count), 
+        'Trait Distribution Plot' => $url
+      );
+      
+      // # of phenotypes.
+      $entity_ids = array_column($result, 'id');
       $data['phenotypes'] = array_column($result, 'definition', 'name');
 
-      $magnitude_of_phenotypes = array();
       foreach($mofp as $m => $config) {
         if ($config) {
           $magnitude_of_phenotypes[$m] = $data[$m];
@@ -160,6 +168,17 @@ class local__magnitude_of_phenotypes extends TripalField {
     }
     
     $entity->{$field_name}['und'][0]['value']['local:magnitude of phenotypes'] = $magnitude_of_phenotypes;
+    
+    if ($mofp['phenotypes']) {
+      // When phenotypes were requested, perform this additional process to fetch entity id
+      // so it will make trait name linkable to trait page.
+      foreach($entity_ids as $i => $d) {
+        $entity_id = mofp_get_trait_entity_id($id);
+        $entity_ids[$i] = $entity_id;
+      }
+
+      $entity->{$field_name}['und'][0]['vars'] = array('entity_id' => $entity_ids);
+    }
   }
 
   /**
@@ -195,3 +214,42 @@ class local__magnitude_of_phenotypes extends TripalField {
     return $element;
   }
 }
+
+
+  
+  /**
+   * Function fetch entity id number of a trait.
+   * The id will be used to construct link to Tripal 3 page for a trait.
+   * 
+   * @param $trait_id
+   *   Integer, a number corresponding to cverm_id in chado.cvterm table.
+   * 
+   * @return
+   *   Integer, a number corresponding to a entity id in tripal_bundle table.
+   */
+  function mofp_get_trait_entity_id($trait_id) {
+    $m = db_query('SELECT t2.name
+      FROM {tripal_term} AS t1 INNER JOIN {tripal_bundle} AS t2 ON t1.id = t2.term_id
+      WHERE t1.accession = (
+        SELECT t3.accession
+        FROM chado.dbxref AS t3 INNER JOIN chado.cvterm AS t4 USING(dbxref_id)
+        WHERE t4.cvterm_id = :trait_id)', array(':trait_id' => $trait_id))
+      ->fetchField();
+    
+    $entity_id = '#';
+    
+    if ($m) {
+      $chado_bundle = 'chado_' . $m;
+      
+      $sql = sprintf('SELECT t1.entity_id FROM %s AS t1 INNER JOIN {stock} AS t2 ON t1.record_id = t2.stock_id
+        WHERE stock_id = :stock_id LIMIT 1', $chado_bundle);
+      
+      $result = chado_query($sql, array(':stock_id' => $stock_id));
+
+      if ($result->rowCount() > 0) {
+        $entity_id = $result->fetchField();
+      }
+    }  
+    
+    return $entity_id;
+  }

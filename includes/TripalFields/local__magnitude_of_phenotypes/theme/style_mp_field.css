@@ -4,15 +4,19 @@
  */
 
 /**
- * Field wrapper
+ * Global
  */
-#field-magnitude-of-phenotypes-wrapper ul {
-  list-style-type: none;
+#field-magnitude-of-phenotypes-wrapper ul,
+#field-magnitude-of-phenotypes-wrapper ul li {
+  list-style-type: none;  
   margin: 0;
   padding: 0;
 }
 
-/* Magnitude */
+
+/**
+ * Magnitude of phenotypes:
+ */
 #field-magnitude-of-phenotypes-wrapper-magnitude {
   background: #F9F9F9;
   border: 1px solid #D0D0D0;
@@ -22,7 +26,7 @@
 
 #field-magnitude-of-phenotypes-wrapper-magnitude ul li {
   display: inline-block;
-  margin: 0;
+  margin: 0 10px 0 0;
   font-size: 1.4em;
 }
 
@@ -31,11 +35,12 @@
   display: inline-block;
   line-height: 15px;
   margin: 0;
-  padding: 0 10px 0 5px;
+  padding: 0 10px 0 0;
 }
 
 #field-magnitude-of-phenotypes-wrapper-magnitude ul li:last-child span {
   border: none;
+  margin-right: 0;
 }
 
 #field-magnitude-of-phenotypes-wrapper-magnitude ul li span a {
@@ -43,82 +48,68 @@
 }
 
 
-/* Phenotypes */
 
-
-
-
-
-
-
-
-
-
-
-
-/*
-
-#list-magnitude-of-phenotypes-field {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
+/**
+ * Phenotypes:
+ */
+#field-magnitude-of-phenotypes-wrapper-phenotypes {
+  margin: 20px 0 30px 0;
+  overflow-y: hidden;
+  
+  min-height: 250px;
+  max-height: 250px;
+  
+  -webkit-transition: max-height 0.5s ease-in-out;
+  -moz-transition: max-height 0.5s ease-in-out;
+  -ms-transition: max-height 0.5s ease-in-out;
+  -o-transition: max-height 0.5s ease-in-out;
+  transition: max-height 0.5s ease-in-out;
 }
 
-#list-magnitude-of-phenotypes-field li {
-  display: inline-block;
-  margin-right: 2%;
-  font-style: italic;
-  font-size: 0.9em;
-}
-
-.magnitude-of-phenotypes-clear-float {
-  clear: both;
-  height: 0;
-  margin: 0;
-  padding: 0;
-}
-
-#list-magnitude-of-phenotypes-field li span {
-  font-family: georgia serif;
-  font-size: 2.5em;
-  display: block;
-  padding: 0;
-  line-height: 35px;
-  margin: 0;
-  text-align: center;
-}
-*/
-
-
-/* Phenotypes */
-#list-of-phenotypes-field {
-  list-style-type: none;
-  margin: 20px 0 0 0;
-  padding: 0;
-}
-
-
-#list-of-phenotypes-field li {
+#field-magnitude-of-phenotypes-wrapper-phenotypes ul li {
   background: url(icon-leaf.gif) left top no-repeat;
-  float: left;
-  width: 20%;
-  height: 110px;
+  display: inline-block;
+  margin: 0 10px 20px 0;
   padding-left: 35px;
   font-size: 1.2em;
 }
 
-
-#list-of-phenotypes-field li span {
-  color: #666666;
+#field-magnitude-of-phenotypes-wrapper-phenotypes ul li span {
   display: block;
-  font-family: sans-serif;
-  font-size: 12px;
+  font-size: 0.8em;
   font-weight: 300;
+  line-height: 15px;
+  margin: 0;
+  padding: 0 10px 0 0;
+  text-align: left;
+  width: 200px;
 }
 
-#list-of-phenotypes-field li small {
+#field-magnitude-of-phenotypes-wrapper-phenotypes ul li small {
   color: #3a7f21;
   display: block;
-  font-size: 10px;
-  margin: 0 0 5px 0;
+  margin-top: 5px;
+}
+
+#magnitude-of-phenotypes-btn-reveal {
+  border-top: 1px solid #CCCCCC;
+  width: 100%;  
+}
+
+#magnitude-of-phenotypes-btn-reveal div {  
+  cursor: pointer;
+  color: #CCCCCC;
+  border: 1px solid #CCCCCC;
+  border-radius: 50%;
+  margin: -12px auto 0 auto;
+  text-align: center;
+  width: 20px;
+}
+
+.magnitude-of-phenotypes-phenotypes-reveal-off {
+  background: #F0F0F0 no-repeat url('arrow-sprite.gif') 2px 2px;
+}
+
+.magnitude-of-phenotypes-phenotypes-reveal-on {
+  background: #F0F0F0 no-repeat url('arrow-sprite.gif') 2px -12px;
 }
