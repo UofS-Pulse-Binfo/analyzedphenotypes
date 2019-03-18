@@ -15,6 +15,12 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontolog
 // Materialized View API.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.materializedview.api');
 
+// Genus API.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.genus.api');
+
+// API.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
+
 
 /**
  * Implements hook_enable().
@@ -126,11 +132,14 @@ function analyzedphenotypes_enable() {
     variable_set($var, $default_ontology[$v]);
   }
 
-  // Other system variables.
-  // Genus - cv, db and ontology.
-  foreach($sysvars['cvdbon'] as $v => $var) {
-    foreach($var as $h) {
-      variable_set($h, 'not set');
+  $has_organism = ap_get_genus();
+  if ($has_organism) {
+    // Other system variables.
+    // Genus - cv, db and ontology.
+    foreach($sysvars['cvdbon'] as $v => $var) {
+      foreach($var as $h) {
+        variable_set($h, 'not set');
+      }
     }
   }
 
@@ -180,7 +189,7 @@ function analyzedphenotypes_uninstall() {
 /**
  * Implements hook_requirements().
  */
-function analyzedpenotypes_requirements($phase) {
+function analyzedphenotypes_requirements($phase) {
   $requirements = array();
 
   if ($phase == 'install') {
@@ -192,7 +201,7 @@ function analyzedpenotypes_requirements($phase) {
       if (!$dir_exists) {
         $requirements['file_directory' . $dir] = array(
           'severity' => REQUIREMENT_ERROR,
-          'description' => $t('File directory !dir is not writable. Please update directory permission and try again.',
+          'description' => t('File directory !dir is not writable. Please update directory permission and try again.',
             array('!dir' => $dir)
           )
         );
