@@ -114,36 +114,40 @@ function analyzedphenotypes_enable() {
     'warning');
 
 
-  // Initialize Variables:
-  // Load default ontology terms for method, location, replicate, collector, genus, related and year
-  // in AP configuration page.
-  $default_ontology = ap_load_defaultontology();
+  $has_organism = ap_get_genus();
 
-  // All system variables, groupped by options, cvdbon and terms.
-  $sysvars = ap_construct_variablenames();
+  if ($has_organism) {
+    // Initialize Variables:
+    // Load default ontology terms for method, location, replicate, collector, genus, related and year
+    // in AP configuration page.
+    $default_ontology = ap_load_defaultontology();
 
-  // Set default.
-  // Terms.
-  foreach($sysvars['terms'] as $v => $var) {
-    // Set the variable to default ontology term.
-    // base terms: location, replicate, year ...
-    $v = trim(str_replace('ap_', '', $v));
+    // All system variables, groupped by options, cvdbon and terms.
+    $sysvars = ap_construct_variablenames();
 
-    variable_set($var, $default_ontology[$v]);
-  }
+    // Set default.
+    // Terms.
+    foreach($sysvars['terms'] as $v => $var) {
+      // Set the variable to default ontology term.
+      // base terms: location, replicate, year ...
+      $v = trim(str_replace('ap_', '', $v));
 
-  // Other system variables.
-  // Genus - cv, db and ontology.
-  foreach($sysvars['cvdbon'] as $v => $var) {
-    foreach($var as $h) {
-      variable_set($h, 'not set');
+      variable_set($var, $default_ontology[$v]);
     }
-  }
 
-  // Allow new traits.
-  // Default to allow new traits to be added.
-  foreach($sysvars['options'] as $v => $var) {
-    variable_set($var, 1);
+    // Other system variables.
+    // Genus - cv, db and ontology.
+    foreach($sysvars['cvdbon'] as $v => $var) {
+      foreach($var as $h) {
+        variable_set($h, 'not set');
+      }
+    }
+
+    // Allow new traits.
+    // Default to allow new traits to be added.
+    foreach($sysvars['options'] as $v => $var) {
+      variable_set($var, 1);
+    }
   }
 
   $directories = ap_construct_datafile_destinationpath();
@@ -203,15 +207,6 @@ function analyzedphenotypes_requirements($phase) {
           )
         );
       }
-    }
-
-    // Check that chado orgnism table has at least a record (genus ie lens, lotus and cicer).
-    $has_organism = ap_get_genus();
-    if ($has_organism == 0) {
-      $requirements['no_genus'] = array(
-        'severity' => REQUIREMENT_ERROR,
-        'description' => t('No genus/organism found. Please ensure that organism table contains at least 1 record.')
-      );
     }
   }
 

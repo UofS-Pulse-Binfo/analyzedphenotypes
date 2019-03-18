@@ -16,6 +16,21 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontolog
  * Construct module configuration page.
  */
 function analyzedphenotypes_configuration_form($form, &$form_state) {
+  // Check that chado orgnism table has at least a record (genus ie lens, lotus and cicer).
+  $has_organism = ap_get_genus();
+  if ($has_organism == 0) {
+    drupal_set_message(t('No genus or organism found.'), 'warning');
+
+    $link_to_organism = l('Add organism', $GLOBALS['base_url'] . '/node/add/chado-organism');
+    $warning = tripal_set_message('Administrators, check to ensure that organism table contains at least a record. Please click '. $link_to_organism .' to add genus/organism.', TRIPAL_INFO, array('return_html' => TRUE));
+
+    $form['warning'] = array(
+      '#markup' => $warning,
+    );
+
+    return $form;
+  }
+
   //
   // #FRAMESET TRAIT ONTOLOGIES.
   $frameset_to = 'ap_frameset_ontology';
