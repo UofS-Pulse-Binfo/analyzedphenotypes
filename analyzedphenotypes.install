@@ -151,7 +151,7 @@ function analyzedphenotypes_enable() {
 
   $directories = ap_construct_datafile_destinationpath();
   foreach($directories as $dir) {
-    file_prepare_directory($dir, FILE_CREATE_DIRECTORY);
+    file_prepare_directory($dir, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
   }
 }
 
@@ -196,7 +196,7 @@ function analyzedphenotypes_requirements($phase) {
     $directories = ap_construct_datafile_destinationpath();
 
     foreach($directories as $dir) {
-      $dir_exists = file_prepare_directory($dir);
+      $dir_exists = file_prepare_directory($dir, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
 
       if (!$dir_exists) {
         $requirements['file_directory' . $dir] = array(
