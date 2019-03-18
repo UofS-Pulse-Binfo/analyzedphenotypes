@@ -15,6 +15,12 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontolog
 // Materialized View API.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.materializedview.api');
 
+// Genus API.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.genus.api');
+
+// API.
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.api');
+
 
 /**
  * Implements hook_enable().
@@ -180,7 +186,7 @@ function analyzedphenotypes_uninstall() {
 /**
  * Implements hook_requirements().
  */
-function analyzedpenotypes_requirements($phase) {
+function analyzedphenotypes_requirements($phase) {
   $requirements = array();
 
   if ($phase == 'install') {
@@ -192,11 +198,20 @@ function analyzedpenotypes_requirements($phase) {
       if (!$dir_exists) {
         $requirements['file_directory' . $dir] = array(
           'severity' => REQUIREMENT_ERROR,
-          'description' => $t('File directory !dir is not writable. Please update directory permission and try again.',
+          'description' => t('File directory !dir is not writable. Please update directory permission and try again.',
             array('!dir' => $dir)
           )
         );
       }
+    }
+
+    // Check that chado orgnism table has at least a record (genus ie lens, lotus and cicer).
+    $has_organism = ap_get_genus();
+    if ($has_organism == 0) {
+      $requirements['no_genus'] = array(
+        'severity' => REQUIREMENT_ERROR,
+        'description' => t('No genus/organism found. Please ensure that organism table contains at least 1 record.')
+      );
     }
   }
 
