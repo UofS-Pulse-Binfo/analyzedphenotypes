@@ -49,11 +49,11 @@ class local__magnitude_of_phenotypes_formatter extends TripalFieldFormatter {
     drupal_add_css(drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/local__magnitude_of_phenotypes/theme/style_mp_field.css');
     // Data to render:
     $data = $items[0]['value']['local:magnitude of phenotypes'];
-    
+
     if ($items[0]['vars']['entity_id']) {
       $entity_ids = $items[0]['vars']['entity_id'];
     }
-    
+
     // Array to hold processed data before rendering.
     $render = array();
     // Themed data.
@@ -68,30 +68,30 @@ class local__magnitude_of_phenotypes_formatter extends TripalFieldFormatter {
       $btn_reveal = '<div id="magnitude-of-phenotypes-btn-reveal">
         <div class="magnitude-of-phenotypes-phenotypes-reveal-on" title="Click to show more or less phenotypes">&nbsp;</div>
       </div>';
-      
+
       // With the reveal button on, add listner for click to reveal more phenotypes.
       drupal_add_js($base_url . '/' . drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/local__magnitude_of_phenotypes/theme/script.js',
         array(
           'type' => 'file',   // An external file scrip.js in theme/
           'scope' => 'footer' // At foot of DOM to ensure document is ready (container width set).
         )
-      ); 
+      );
     }
 
     foreach($data as $i => $d) {
       $ctr = 0;
-      foreach($d as $m => $value) { 
-        $note = '<small>*Phenotype of interest for this cultivar</small>';
-        
+      foreach($d as $m => $value) {
+        $note = ''; //'<small>*Phenotype of interest for this cultivar</small>';
+
         // Trait definition might be long, we want just the 100 chars for layout pupose
         // so that all items will be on a unified height. Link is provided to view full details of trait.
         $value = ($i == 'phenotypes') ? truncate_utf8($value, 130, TRUE, TRUE) . $note : $value;
         $value = ($m == 'Trait Distribution Plot') ? l($m, $value) : $value;
 
         $m     = ($m == 'Trait Distribution Plot') ? '' : $m . ':';
-        $m     = ($i == 'phenotypes' && $entity_ids[$ctr] != '#') ? l($m,  $base_url . '/bio_data/' . $entity_ids[$ctr]) : $m; 
+        $m     = ($i == 'phenotypes' && $entity_ids[$ctr] != '#') ? l($m,  $base_url . '/bio_data/' . $entity_ids[$ctr]) : $m;
         $render[$i][] = $m . '<span>' . $value . '</span>';
-      
+
         $ctr++;
       }
 

@@ -8,7 +8,7 @@
  */
 #field-magnitude-of-phenotypes-wrapper ul,
 #field-magnitude-of-phenotypes-wrapper ul li {
-  list-style-type: none;  
+  list-style-type: none;
   margin: 0;
   padding: 0;
 }
@@ -55,10 +55,10 @@
 #field-magnitude-of-phenotypes-wrapper-phenotypes {
   margin: 20px 0 30px 0;
   overflow-y: hidden;
-  
+
   min-height: 250px;
   max-height: 250px;
-  
+
   -webkit-transition: max-height 0.5s ease-in-out;
   -moz-transition: max-height 0.5s ease-in-out;
   -ms-transition: max-height 0.5s ease-in-out;
@@ -69,20 +69,21 @@
 #field-magnitude-of-phenotypes-wrapper-phenotypes ul li {
   background: url(icon-leaf.gif) left top no-repeat;
   display: inline-block;
-  margin: 0 10px 20px 0;
+  margin: 0 10px 30px 0;
   padding-left: 35px;
   font-size: 1.2em;
+  width: 250px;
 }
 
 #field-magnitude-of-phenotypes-wrapper-phenotypes ul li span {
   display: block;
   font-size: 0.8em;
+  font-family: sans-serif;
   font-weight: 300;
   line-height: 15px;
   margin: 0;
   padding: 0 10px 0 0;
   text-align: left;
-  width: 200px;
 }
 
 #field-magnitude-of-phenotypes-wrapper-phenotypes ul li small {
@@ -93,10 +94,10 @@
 
 #magnitude-of-phenotypes-btn-reveal {
   border-top: 1px solid #CCCCCC;
-  width: 100%;  
+  width: 100%;
 }
 
-#magnitude-of-phenotypes-btn-reveal div {  
+#magnitude-of-phenotypes-btn-reveal div {
   cursor: pointer;
   color: #CCCCCC;
   border: 1px solid #CCCCCC;

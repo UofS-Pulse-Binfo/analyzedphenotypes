@@ -145,17 +145,17 @@ class local__magnitude_of_phenotypes extends TripalField {
     if ($trait_count > 0) {
       $result = $result->fetchAll();
       $result = array_map(function($d) { return (array) $d; },$result);
-      
+
       // Magnitude of datapoints.
       $mg = array_column($result, 'magnitude');
       $data_count = array_sum($mg);
       $url = $GLOBALS['base_url'] . '/phenotypes/trait-distribution';
       $data['magnitude']  = array(
-        'Phenotypes' => number_format($trait_count), 
-        'Data Count' => number_format($data_count), 
+        'Phenotypes' => number_format($trait_count),
+        'Data Count' => number_format($data_count),
         'Trait Distribution Plot' => $url
       );
-      
+
       // # of phenotypes.
       $entity_ids = array_column($result, 'id');
       $data['phenotypes'] = array_column($result, 'definition', 'name');
@@ -166,9 +166,9 @@ class local__magnitude_of_phenotypes extends TripalField {
         }
       }
     }
-    
+
     $entity->{$field_name}['und'][0]['value']['local:magnitude of phenotypes'] = $magnitude_of_phenotypes;
-    
+
     if ($mofp['phenotypes']) {
       // When phenotypes were requested, perform this additional process to fetch entity id
       // so it will make trait name linkable to trait page.
@@ -216,14 +216,14 @@ class local__magnitude_of_phenotypes extends TripalField {
 }
 
 
-  
+
   /**
    * Function fetch entity id number of a trait.
    * The id will be used to construct link to Tripal 3 page for a trait.
-   * 
+   *
    * @param $trait_id
    *   Integer, a number corresponding to cverm_id in chado.cvterm table.
-   * 
+   *
    * @return
    *   Integer, a number corresponding to a entity id in tripal_bundle table.
    */
@@ -235,21 +235,21 @@ class local__magnitude_of_phenotypes extends TripalField {
         FROM chado.dbxref AS t3 INNER JOIN chado.cvterm AS t4 USING(dbxref_id)
         WHERE t4.cvterm_id = :trait_id)', array(':trait_id' => $trait_id))
       ->fetchField();
-    
+
     $entity_id = '#';
-    
+
     if ($m) {
       $chado_bundle = 'chado_' . $m;
-      
+
       $sql = sprintf('SELECT t1.entity_id FROM %s AS t1 INNER JOIN {stock} AS t2 ON t1.record_id = t2.stock_id
         WHERE stock_id = :stock_id LIMIT 1', $chado_bundle);
-      
+
       $result = chado_query($sql, array(':stock_id' => $stock_id));
 
       if ($result->rowCount() > 0) {
         $entity_id = $result->fetchField();
       }
-    }  
-    
+    }
+
     return $entity_id;
   }
