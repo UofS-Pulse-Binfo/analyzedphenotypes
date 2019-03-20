@@ -301,8 +301,8 @@ function makeDistroChart(settings) {
      */
     chart.update = function () {
         // Update chart size based on view port size
-        //chart.width = parseInt(chart.objs.chartDiv.style("width"), 10) - (chart.margin.left + chart.margin.right);
-        //chart.height = parseInt(chart.objs.chartDiv.style("height"), 10) - (chart.margin.top + chart.margin.bottom);
+        chart.width = parseInt(chart.objs.chartDiv.style("width"), 10) - (chart.margin.left + chart.margin.right);
+        chart.height = parseInt(chart.objs.chartDiv.style("height"), 10) - (chart.margin.top + chart.margin.bottom);
 
         // Update scale functions
         chart.xScale.rangeBands([0, chart.width]);
@@ -363,8 +363,7 @@ function makeDistroChart(settings) {
     !function prepareChart() {
         // Build main div and chart div
         chart.objs.mainDiv = d3.select(chart.settings.selector)
-            .style("width", chart.divWidth + "px")
-            .style("height", chart.divHeight + "px");
+            .style("max-width", chart.divWidth + "px");
         // Add all the divs to make it centered and responsive
         chart.objs.mainDiv.append("div")
             .attr("class", "inner-wrapper")
