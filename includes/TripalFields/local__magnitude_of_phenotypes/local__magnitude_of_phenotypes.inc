@@ -151,7 +151,7 @@ class local__magnitude_of_phenotypes extends TripalField {
       $data_count = array_sum($mg);
       $url = $GLOBALS['base_url'] . '/phenotypes/trait-distribution';
       $data['magnitude']  = array(
-        'Phenotypes' => number_format($trait_count),
+        'Traits' => number_format($trait_count),
         'Data Count' => number_format($data_count),
         'Trait Distribution Plot' => $url
       );
@@ -169,11 +169,11 @@ class local__magnitude_of_phenotypes extends TripalField {
 
     $entity->{$field_name}['und'][0]['value']['local:magnitude of phenotypes'] = $magnitude_of_phenotypes;
 
-    if ($mofp['phenotypes']) {
+    if ($mofp['phenotypes'] && $trait_count > 0) {
       // When phenotypes were requested, perform this additional process to fetch entity id
       // so it will make trait name linkable to trait page.
       foreach($entity_ids as $i => $d) {
-        $entity_id = mofp_get_trait_entity_id($id);
+        $entity_id = mofp_get_trait_entity_id($d);
         $entity_ids[$i] = $entity_id;
       }
 
@@ -215,8 +215,6 @@ class local__magnitude_of_phenotypes extends TripalField {
   }
 }
 
-
-
   /**
    * Function fetch entity id number of a trait.
    * The id will be used to construct link to Tripal 3 page for a trait.
@@ -228,22 +226,18 @@ class local__magnitude_of_phenotypes extends TripalField {
    *   Integer, a number corresponding to a entity id in tripal_bundle table.
    */
   function mofp_get_trait_entity_id($trait_id) {
-    $m = db_query('SELECT t2.name
-      FROM {tripal_term} AS t1 INNER JOIN {tripal_bundle} AS t2 ON t1.id = t2.term_id
-      WHERE t1.accession = (
-        SELECT t3.accession
-        FROM chado.dbxref AS t3 INNER JOIN chado.cvterm AS t4 USING(dbxref_id)
-        WHERE t4.cvterm_id = :trait_id)', array(':trait_id' => $trait_id))
+    $m = chado_query("
+      SELECT bundle_id FROM chado_bundle WHERE type_value = (
+        SELECT CAST(cv_id AS text) FROM {cvterm} WHERE cvterm_id = :trait_id
+      )", array(':trait_id' => $trait_id))
       ->fetchField();
 
     $entity_id = '#';
 
     if ($m) {
-      $chado_bundle = 'chado_' . $m;
+      $chado_bundle = 'chado_bio_data_' . $m;
 
-      $sql = sprintf('SELECT t1.entity_id FROM %s AS t1 INNER JOIN {cvterm} AS t2 ON t1.record_id = t2.cvterm_id
-        WHERE t2.cvterm_id = :trait_id LIMIT 1', $chado_bundle);
-
+      $sql = sprintf('SELECT entity_id FROM %s WHERE record_id = :trait_id LIMIT 1', $chado_bundle);
       $result = chado_query($sql, array(':trait_id' => $trait_id));
 
       if ($result->rowCount() > 0) {

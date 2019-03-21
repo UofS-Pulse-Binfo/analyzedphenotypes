@@ -50,7 +50,7 @@ class local__magnitude_of_phenotypes_formatter extends TripalFieldFormatter {
     // Data to render:
     $data = $items[0]['value']['local:magnitude of phenotypes'];
 
-    if ($items[0]['vars']['entity_id']) {
+    if (isset($items[0]['vars']['entity_id']) && $items[0]['vars']['entity_id']) {
       $entity_ids = $items[0]['vars']['entity_id'];
     }
 
@@ -60,11 +60,8 @@ class local__magnitude_of_phenotypes_formatter extends TripalFieldFormatter {
     $markup_data = '';
     $wrap_data = '<div id="field-magnitude-of-phenotypes-wrapper-%s">%s</div>%s';
 
-    // Estimate if there are more phenotypes to render in which case show more/less button
-    // will be required so as not to overwhelm the frontend.
-    // On average 6 traits would already take up half the pane height.
     $btn_reveal = '';
-    if (count($data['phenotypes']) >= 6) {
+    if (isset($data['phenotypes']) && $data['phenotypes']) {
       $btn_reveal = '<div id="magnitude-of-phenotypes-btn-reveal">
         <div class="magnitude-of-phenotypes-phenotypes-reveal-on" title="Click to show more or less phenotypes">&nbsp;</div>
       </div>';
