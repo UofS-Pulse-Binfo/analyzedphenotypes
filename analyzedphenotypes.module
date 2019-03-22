@@ -33,7 +33,8 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.datatyp
 // Validators.
 module_load_include('inc', 'analyzedphenotypes', 'includes/analyzedphenotypes.validators');
 // Fields.
-module_load_include('inc','analyzedphenotypes','includes/TripalFields/analyzedphenotypes.fields');
+module_load_include('inc', 'analyzedphenotypes', 'includes/TripalFields/analyzedphenotypes.fields');
+module_load_include('inc', 'analyzedphenotypes', 'includes/TripalFields/hp__phenotypic_variability/hp__phenotypic_variability_formatterforms');
 
 /**
  * Implements hook_menu().

@@ -2,16 +2,20 @@
   Drupal.behaviors.analyzedPhenotypesViolinPlot = {
     attach: function (context, settings) {
 
+    Drupal.settings.analyzedPhenotypes.forEach(function(apSettings) {
+
       // Draw the chart.
       var chart;
-      var experiment_id = Drupal.settings.analyzedPhenotypes.experiment_id;
-      var trait_id = Drupal.settings.analyzedPhenotypes.trait_id;
-      var method_id = Drupal.settings.analyzedPhenotypes.method_id;
-      var unit_id = Drupal.settings.analyzedPhenotypes.unit_id;
+      var experiment_id = apSettings.experiment_id;
+      var trait_id = apSettings.trait_id;
+      var method_id = apSettings.method_id;
+      var unit_id = apSettings.unit_id;
+      var elementID = apSettings.id;
 
-      d3.json(Drupal.settings.basePath+'/json/phenotypes/traitplot/'+experiment_id+'/'+trait_id+'/'+method_id+'/'+unit_id, function(error, data) {
+      if (apSettings.type === 'violin') {
+        d3.json(Drupal.settings.basePath+'/json/phenotypes/traitplot/'+experiment_id+'/'+trait_id+'/'+method_id+'/'+unit_id, function(error, data) {
 
-          d3.selectAll('#tripal-ap-violin-plot .inner-wrapper').remove();
+          d3.selectAll('#'+elementID+' .inner-wrapper').remove();
 
          // Ensure the datapoint is a number.
          data.forEach(function (d) {d.value = +d.value;});
@@ -25,9 +29,9 @@
                     xAxis: Drupal.settings.analyzedPhenotypes.xaxis,
                     yAxis: Drupal.settings.analyzedPhenotypes.yaxis
                   },
-                  selector:"#tripal-ap-violin-plot",
+                  selector:"#"+elementID,
                   margin:{top: 15, right: 60, bottom: 75, left: 75},
-                  chartSize:{height:500, width:960},
+                  chartSize:{height:500, width:800},
                   constrainExtremes:false});
 
           // Render the plot.
@@ -45,7 +49,8 @@
             colors:['#555']
           });
 
-      }); //end of get json.
-
+        }); //end of get json.
+      }
+    });
   }}; // End of Drupal Behaviours and associated attach.
 })(jQuery);
