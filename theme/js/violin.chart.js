@@ -15,6 +15,7 @@
       if (apSettings.type === 'violin') {
         d3.json(Drupal.settings.basePath+'/json/phenotypes/traitplot/'+experiment_id+'/'+trait_id+'/'+method_id+'/'+unit_id, function(error, data) {
 
+		console.log(data);
           d3.selectAll('#'+elementID+' .inner-wrapper').remove();
 
          // Ensure the datapoint is a number.
@@ -30,8 +31,8 @@
                     yAxis: Drupal.settings.analyzedPhenotypes.yaxis
                   },
                   selector:"#"+elementID,
-                  margin:{top: 15, right: 60, bottom: 75, left: 75},
-                  chartSize:{height:800, width:1200},
+                  margin:{top: 15, right: 15, bottom: 40, left: 55},
+                  chartSize:{height:1300, width:2000},
                   constrainExtremes:false});
 
           // Render the plot.

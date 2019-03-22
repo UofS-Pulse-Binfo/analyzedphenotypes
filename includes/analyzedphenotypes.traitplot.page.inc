@@ -371,7 +371,7 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
     $xaxis = 'Site-Year';
     $yaxis = $trait_name.' ('.$unit.')';
     $figtitle = "Comparison of observed $trait_name between site years for <em>$experiment_name</em>.";
-    $figlegend = "$trait_name was measured in $unit. $definition"
+    $figlegend = "$trait_name was measured in $unit. "
      . $method . " Replicates were then averaged per germplasm within a single site-year."
      . " The chart shows the traditional box plot with the kernel density estimation flanking it."
      . " Thus values in a wider section of the plot represent higher probability that "
@@ -396,16 +396,22 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
   $form['#attached']['js'][] = 'https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js';
   $form['#attached']['js'][] = $module_path . '/theme/js/distroChart.js';
   $form['#attached']['js'][] = $module_path . "/theme/js/$chart_type.chart.js";
-  $form['#attached']['js'][] = array(
-    'type' => 'setting',
-    'data' => array('analyzedPhenotypes' => array(
+
+  $data = array();
+  $data['analyzedPhenotypes'] = array();
+  $data['analyzedPhenotypes'][] = array(
       'experiment_id' => $experiment_id,
       'trait_id' => $trait_id,
       'method_id' => $method_id,
       'unit_id' => $unit_id,
       'xaxis' => $xaxis,
       'yaxis' => $yaxis,
-    )),
+      'id' => 'tripal-ap-violin-plot',
+      'type' => $chart_type,
+  );
+  $form['#attached']['js'][] = array(
+    'type' => 'setting',
+    'data' => $data,
   );
 
   // Add CSS for the chart.
@@ -414,7 +420,7 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
     // Add a canvas for the chart.
     $form['figure']['chart'] = array(
       '#type' => 'item',
-      '#markup' => '<div class="chart-wrapper" id="tripal-ap-violin-plot"></div>'
+      '#markup' => '<div class="chart-wrapper full-size" id="tripal-ap-violin-plot"></div>'
     );
 
     // Figure Legend.

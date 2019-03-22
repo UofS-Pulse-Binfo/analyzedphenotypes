@@ -339,8 +339,8 @@ function makeDistroChart(settings) {
 
           d.innerHTML = "<tspan class=\"province\" dy=\".71em\" style=\"text-anchor: middle;\" y=\"8\" x=\"0\">"+province+"</tspan>";
           if (country != 0) {
-            d.innerHTML += "<tspan class=\"country\" dy=\".71em\" style=\"text-anchor: middle;\" y=\"22\" x=\"0\">"+country+"</tspan>";
-            d.innerHTML += "<tspan class=\"year\" dy=\".71em\" style=\"text-anchor: middle;\" y=\"36\" x=\"0\">"+year+"</tspan>";
+            d.innerHTML += "<tspan class=\"country\" dy=\".71em\" style=\"text-anchor: middle;\" y=\"18\" x=\"0\">"+country+"</tspan>";
+            d.innerHTML += "<tspan class=\"year\" dy=\".71em\" style=\"text-anchor: middle;\" y=\"30\" x=\"0\">"+year+"</tspan>";
           }
           else {
             d.innerHTML += "<tspan class=\"year\" dy=\".71em\" style=\"text-anchor: middle;\" y=\"25\" x=\"0\">"+year+"</tspan>";
