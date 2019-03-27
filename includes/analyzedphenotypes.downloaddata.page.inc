@@ -1329,6 +1329,10 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
     // End if germplasm_count.
     }
 
+    
+    /*
+    // NOT IMPLEMENTED:
+    // Commented out, this field does not have any effect on the exported data.
     //
     // FIELD: MAX MISSING DATA.
     $form[$AJAX_wrapper][$ap_fieldset_2][ $fldname[$fld_missingdata]['field'] ] = array(
@@ -1341,7 +1345,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
       '#description' => t('Enter the percent (%) missing data per germplasm that you would like to allow. For example, a value of 20% will ensure that all germplasm exported have values for at least 20% of site-years this trait was observed in. If you further restrict the site-year exported using other filter criteria, this filter will be applied to the restricted dataset.'),
       '#id' => $fldname[$fld_missingdata]['field-id'],
     );
-
+    */
 
 
   //
