@@ -1233,7 +1233,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
             }
             else {
               // Bad name, does not exists.
-              $error[$id] = '<small class="ap-germplasmfield-error">*The germplasm name/stock name you entered is invalid or does not exists.</small>';
+              $error[$id] = '<small class="ap-germplasmfield-error">*The germplasm name/stock name you entered is invalid or does not exist.</small>';
             }
           }
           else {
@@ -1329,10 +1329,10 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
     // End if germplasm_count.
     }
 
-    
     /*
     // NOT IMPLEMENTED:
     // Commented out, this field does not have any effect on the exported data.
+    // *Corresponding behaviours in js if this is enabled.
     //
     // FIELD: MAX MISSING DATA.
     $form[$AJAX_wrapper][$ap_fieldset_2][ $fldname[$fld_missingdata]['field'] ] = array(

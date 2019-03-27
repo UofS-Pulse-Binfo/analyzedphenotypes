@@ -105,6 +105,7 @@
 
       // MAXIMUM ALLOWED MISSING DATA:
 
+      /* Enable field on the front end.
       // Insert % symbol for user and auto select value previously entered
       // to ease updating of value.
       $('#ap-missingdata-field-id').change(function() {
@@ -117,6 +118,7 @@
       .focusin(function() {
         $(this).select();
       });
+      */
 
       // FILE TYPE:
 
