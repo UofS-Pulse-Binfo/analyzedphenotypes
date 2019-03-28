@@ -76,6 +76,25 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
 	'type' => 'field_chado_storage',
       ),
     );
+
+    // Magnitude of Phenotypes
+    tripal_insert_cvterm(array(
+      'id' => 'local:magnitude_of_phenotypes',
+      'name' => 'magnitude of phenotypes',
+      'cv_name' => 'local',
+      'definition' => 'Magnitude of Phenotypes.',
+    ));
+    $field_name = 'local__magnitude_of_phenotypes';
+    $field_type = 'local__magnitude_of_phenotypes';
+    $fields[$field_name] = array(
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => 1,
+      'locked' => FALSE,
+      'storage' => array(
+	      'type' => 'field_chado_storage',
+      ),
+    );
   }
 
   // Trait Distribution Chart Field.
@@ -195,6 +214,39 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         ),
       ),
     );
+
+    // Magnitude of phenotypes Field.
+    $field_name = 'local__magnitude_of_phenotypes';
+    $field_type = 'local__magnitude_of_phenotypes';
+    $instances[$field_name] =  array(
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Magnitude of Phenotypes',
+      'description' => 'Magnitude of phenotypic data.',
+      'required' => FALSE,
+      'settings' => array(
+        'term_vocabulary' => 'local',
+        'term_name' => 'magnitude of phenotypes',
+        'term_accession' => 'magnitude_of_phenotypes',
+        'auto_attach' => FALSE,
+        'chado_table' => $bundle->data_table,
+        'chado_column' => 'cvterm_id',
+        'base_table' => $bundle->data_table,
+      ),
+      'widget' => array(
+        'type' => 'local__magnitude_of_phenotypes_widget',
+        'settings' => array(),
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'local__magnitude_of_phenotypes_formatter',
+          'settings' => array(),
+        ),
+      ),
+    );
+
   }
 
   // Trait Distribution Plot Field.
