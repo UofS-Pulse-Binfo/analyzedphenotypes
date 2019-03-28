@@ -199,7 +199,7 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         'term_accession' => '001066',
         'auto_attach' => FALSE,
         'chado_table' => $bundle->data_table,
-        'chado_column' => 'organism_id',
+        'chado_column' => 'project_id',
         'base_table' => $bundle->data_table,
       ),
       'widget' => array(
@@ -268,7 +268,7 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         'term_accession' => '0003812',
         'auto_attach' => FALSE,
         'chado_table' => $bundle->data_table,
-        'chado_column' => 'organism_id',
+        'chado_column' => 'project_id',
         'base_table' => $bundle->data_table,
       ),
       'widget' => array(

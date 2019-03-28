@@ -152,7 +152,7 @@ class local__magnitude_of_phenotypes extends TripalField {
       $url = $GLOBALS['base_url'] . '/phenotypes/trait-distribution';
       $data['magnitude']  = array(
         'Traits' => number_format($trait_count),
-        'Data Count' => number_format($data_count),
+        'Measurements' => number_format($data_count),
         'Trait Distribution Plot' => $url
       );
 
