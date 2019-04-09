@@ -268,7 +268,7 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         'term_accession' => '0003812',
         'auto_attach' => FALSE,
         'chado_table' => $bundle->data_table,
-        'chado_column' => 'project_id',
+        'chado_column' => $bundle->data_table . '_id',
         'base_table' => $bundle->data_table,
       ),
       'widget' => array(
