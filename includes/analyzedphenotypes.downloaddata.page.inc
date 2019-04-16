@@ -838,7 +838,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
     $form[$AJAX_wrapper][$ap_fieldset_1]['ap_' . $fld_species . '_field'] = array(
       '#type' => 'checkboxes',
       '#required' => TRUE,
-      '#default_value' => isset($field_prop[$fld_species]['default']) ? $field_prop[$fld_species]['default'] : NULL,
+      '#default_value' => isset($field_prop[$fld_species]['default']) ? $field_prop[$fld_species]['default'] : array(),
       '#options'       => $field_prop[$fld_species]['options'],
       '#disabled'      => $field_prop[$fld_species]['disabled'],
 

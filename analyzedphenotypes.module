@@ -1022,77 +1022,75 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
             }
           }
 
-          
-          // Need to average? Additonal data processing.
-          if ($filter_value[ $fldname['averagerep']['base'] ]) {
-            // Ensure that all averaged data are groupped correctly - in constrast to key combo averaging above
-            // this block uses experimant, germplasm, year and location as the key.
 
-            // The difference is here we dropped the trait from the key.
+          // Organize datapoints, rows and columns.
+          // Ensure that all averaged data are groupped correctly - in constrast to key combo averaging above
+          // this block uses experiment, germplasm, year and location as the key.
 
-            // This will resolve situations in the following 2 lines.
-            // Experiment TraitA TraitB Germ Year Location
-            // PRJ A	n/a	  146	Germ1	2016	Location A
-            // PRJ A	24.33	n/a	Germ1	2016	Location A
-            // Should be:
-            // PRJ A	24.33	146	Germ1	2016	Location A
-            $key = null;
+          // The difference is here we dropped the trait from the key.
 
-            // Which column is key columns.
-            // Experiment
-            // Germplasm
-            // Year
-            // Location
-            $i_expt = array_search('Experiment', $to_file[0]);
-            $i_germ = array_search('Germplasm Name', $to_file[0]);
-            $i_year = array_search('Year', $to_file[0]);
-            $i_locn = array_search('Location', $to_file[0]);
+          // This will resolve situations in the following 2 lines.
+          // Experiment TraitA TraitB Germ Year Location
+          // PRJ A	n/a	  146	Germ1	2016	Location A
+          // PRJ A	24.33	n/a	Germ1	2016	Location A
+          // Should be:
+          // PRJ A	24.33	146	Germ1	2016	Location A
+          $key = null;
 
-            foreach($to_file as $i => $f) {
-              if ($i == 0) {
-                // This is the column header row.
-                continue;
-              }
+          // Which column is key columns.
+          // Experiment
+          // Germplasm
+          // Year
+          // Location
+          $i_expt = array_search('Experiment', $to_file[0]);
+          $i_germ = array_search('Germplasm Name', $to_file[0]);
+          $i_year = array_search('Year', $to_file[0]);
+          $i_locn = array_search('Location', $to_file[0]);
 
-              if ($key == null) {
-                $key = $f[ $i_expt ] . $f[ $i_germ ] . $f[ $i_year ] . $f[ $i_locn ];
-                $i_key = $i;
+          foreach($to_file as $i => $f) {
+            if ($i == 0) {
+              // This is the column header row.
+              continue;
+            }
 
-                // Move to the next line.
-                continue;
-              }
+            if ($key == null) {
+              $key = $f[ $i_expt ] . $f[ $i_germ ] . $f[ $i_year ] . $f[ $i_locn ];
+              $i_key = $i;
 
-              if ($f[ $i_expt ] . $f[ $i_germ ] . $f[ $i_year ] . $f[ $i_locn ] == $key) {
-                // Same key combination.
-                // What got na-ed the previous row?
-                $nas = array_keys($to_file[ $i_key ], $na);
-              
-                if ($nas) {
-                  foreach($nas as $n) {
-                    // If it is na in the previous row, see if this row with same
-                    // has some value in the same column.
-                    if ($f[ $n ] != $na) {
-                      // Move this value to the previous row.
-                      $to_file[ $i_key ][ $n ] = $f[ $n ];
-                  
-                      // Let's remove this line.
-                      unset($to_file[ $i ]);
-                      break;
-                    }
+              // Move to the next line.
+              continue;
+            }
+
+            if ($f[ $i_expt ] . $f[ $i_germ ] . $f[ $i_year ] . $f[ $i_locn ] == $key) {
+              // Same key combination.
+              // What got na-ed the previous row?
+              $nas = array_keys($to_file[ $i_key ], $na);
+
+              if ($nas) {
+                foreach($nas as $n) {
+                  // If it is na in the previous row, see if this row with same
+                  // has some value in the same column.
+                  if ($f[ $n ] != $na) {
+                    // Move this value to the previous row.
+                    $to_file[ $i_key ][ $n ] = $f[ $n ];
+
+                    // Let's remove this line.
+                    unset($to_file[ $i ]);
+                    break;
                   }
                 }
               }
-              else {
-                // Change the key.
-                $key = $f[ $i_expt ] . $f[ $i_germ ] . $f[ $i_year ] . $f[ $i_locn ];
-                $i_key = $i;
-              }
             }
-          
+            else {
+              // Change the key.
+              $key = $f[ $i_expt ] . $f[ $i_germ ] . $f[ $i_year ] . $f[ $i_locn ];
+              $i_key = $i;
+            }
+
             // Re-arrange index.
             $to_file = array_values($to_file);
           }
-  
+
           // DEBUG:
           // dpm($to_file);
 
