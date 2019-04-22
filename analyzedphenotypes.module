@@ -1047,6 +1047,9 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
           $i_year = array_search('Year', $to_file[0]);
           $i_locn = array_search('Location', $to_file[0]);
 
+          // When not avg replicate, include replicate (rep) in the sorting criteria.
+          $i_repl = array_search('Replicate', $to_file[0]);
+
           foreach($to_file as $i => $f) {
             if ($i == 0) {
               // This is the column header row.
@@ -1055,13 +1058,24 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
 
             if ($key == null) {
               $key = $f[ $i_expt ] . $f[ $i_germ ] . $f[ $i_year ] . $f[ $i_locn ];
+
+              // No avg rep, include rep.
+              if (!$filter_value[ $fldname['averagerep']['base'] ]) {
+                $key .= $f[ $i_repl ];
+              }
+
               $i_key = $i;
 
               // Move to the next line.
               continue;
             }
 
-            if ($f[ $i_expt ] . $f[ $i_germ ] . $f[ $i_year ] . $f[ $i_locn ] == $key) {
+
+            if (($f[ $i_expt ] . $f[ $i_germ ] . $f[ $i_year ] . $f[ $i_locn ] == $key && $filter_value[ $fldname['averagerep']['base'] ])
+              || $f[ $i_expt ] . $f[ $i_germ ] . $f[ $i_year ] . $f[ $i_locn ] . $f[ $i_repl ] == $key && !$filter_value[ $fldname['averagerep']['base'] ]) {
+              // Average rep explude rep but include it when not avg rep.
+
+
               // Same key combination.
               // What got na-ed the previous row?
               $nas = array_keys($to_file[ $i_key ], $na);
@@ -1075,7 +1089,9 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
                     $to_file[ $i_key ][ $n ] = $f[ $n ];
 
                     // Let's remove this line.
-                    unset($to_file[ $i ]);
+                    // by marking it instead of removing an shift the indexing
+                    // that could cause wrong element that gets deleted.
+                    $to_file[ $i ][] = 'delete';
                     break;
                   }
                 }
@@ -1084,10 +1100,25 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
             else {
               // Change the key.
               $key = $f[ $i_expt ] . $f[ $i_germ ] . $f[ $i_year ] . $f[ $i_locn ];
+
+              // No avg rep, include rep.
+              if (!$filter_value[ $fldname['averagerep']['base'] ]) {
+                $key .= $f[ $i_repl ];
+              }
+
               $i_key = $i;
             }
+          }
 
-            // Re-arrange index.
+          // Delete rows marked for deletion.
+          foreach($to_file as $i => $t) {
+            if (in_array('delete', $t)) {
+              unset($to_file[$i]);
+            }
+          }
+
+          // Rearrange index.
+          if (!$filter_value[ $fldname['averagerep']['base'] ]) {
             $to_file = array_values($to_file);
           }
 
