@@ -501,6 +501,7 @@ function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $
         'category' => $r->location . ' ' . $r->year,
         'values' => $values,
         'value' => $mean,
+        'germ' => $r->stock_name,
       );
     }
   }

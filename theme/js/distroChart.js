@@ -1583,3 +1583,108 @@ function makeDistroChart(settings) {
 
     return chart;
 }
+
+
+ /**
+  * Highlight germplasm in the violin plot.
+  */
+ highlightGermplasm = function(data, germplasm) {
+   // Add div window used by the tool tip window.
+   // But, first, ensure that it wasn't previously add, then no
+   // need to reappend the element.
+   var hasWindow = d3.select('#highlight-germplasm-window').empty();
+   if (hasWindow) {
+     d3.select('body')
+       .append('div')
+       .attr('id', 'highlight-germplasm-window');
+   }
+
+
+   // Group data by location (category) and germ.
+   // This should end up with the same # of categories in x axis.
+   var germ = data.filter(function(v) {
+     if (v.germ == germplasm) {
+       return v.value;
+     }
+   });
+
+   // This is the scale.
+   var xAxis = d3.select('.y .domain').node().getBBox();
+
+   d3.selectAll('.violin-plot').each(function(d, i) {
+
+     if (germ[i]) {
+     var germValue = germ[i].value;
+
+
+
+     // Highlight wrapper.
+     var highlight = d3.select(this).append('g');
+     var gBox  = d3.select(this).node().getBBox();
+
+     var plotX = gBox.x;
+     var plotY = gBox.y;
+     var gBoxWidth = Math.floor(gBox.width);
+
+     // Position this wrapper in where the violin plot is.
+     highlight.attr('transform', function() {
+       var x = highlightFindYAxis(germValue);
+       return 'translate(' + plotX + ',' + x + ')';
+     });
+
+
+     // Line it.
+     highlight.attr('id', 'break-line')
+       .append('polyline')
+       .attr('fill', 'none')
+       .attr('stroke', '#72AB4D')
+       .attr('shape-rendering', 'geometricPrecision')
+       .attr('points', -5 + ',' + 0 +' '+ (gBoxWidth + 5) + ',' + 0 + ' ' + (gBoxWidth + 10) + ',' + -10);
+
+     // Place active handle to the end of the line.
+     highlight
+       .append('g')
+         .style('cursor', 'pointer')
+         .on('mouseover', function() {
+           var infoBox = d3.select('#highlight-germplasm-window');
+
+           infoBox.transition().style('opacity', 0.88);
+           infoBox
+             .html(germplasm + '<br />' + Math.round(germValue))
+             .style('left', (d3.event.pageX + 10) + 'px')
+             .style('top', (d3.event.pageY) + 'px');
+
+             d3.selectAll('.tooltip').style('visibility', 'hidden');
+
+         })
+         .on('mouseout', function() {
+           var infoBox = d3.select('#highlight-germplasm-window');
+
+           infoBox.transition().style('opacity', 0);
+           d3.selectAll('.tooltip').style('visibility', '');
+          })
+       .append('circle')
+       .attr('r', 5)
+       .attr('cx', (gBoxWidth + 10))
+       .attr('cy', -10)
+       .attr('fill', '#72AB4D');
+     }});
+ }
+
+
+ highlightFindYAxis = function(germValue) {
+   var curY = d3.select('.y path.domain').node().getBBox();
+
+   // Lower and higher range.
+   var lowerRange = d3.selectAll('.y .tick:first-child').select('text').text();
+   var upperRange = d3.selectAll('.y .tick:last-of-type').select('text').text();
+
+   var scale = d3.scale
+     .linear()
+     .domain([lowerRange, upperRange])
+     .range([curY.height, lowerRange]);
+
+   return scale(germValue);
+ }
+
+

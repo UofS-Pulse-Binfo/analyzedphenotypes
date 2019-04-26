@@ -192,3 +192,26 @@ select {
 @media (max-width:500px){
     .chart-options p {display: block;}
 }
+
+
+/**
+ * Highlight style
+ */
+#highlight-germplasm-window {
+  background: #72AB4D;
+  font-family: sans-serif;
+  font-size: 0.7em;
+  font-weight: 300;
+  cursor: pointer;
+  color: #000000;
+  opacity: 0;
+  padding: 5px;
+  position: absolute;
+  text-align: center;
+  width: 70px;
+
+  border-radius: 3px 3px 3px 3px;
+  -moz-border-radius: 3px 3px 3px 3px;
+  -webkit-border-radius: 3px 3px 3px 3px;
+  border: 1px solid #000000;
+}

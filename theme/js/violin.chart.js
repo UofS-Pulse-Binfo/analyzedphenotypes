@@ -50,6 +50,9 @@
             colors:['#555']
           });
 
+          // Highlight germplasm.
+          highlightGermplasm(data, 'GERM257');
+
         }); //end of get json.
       }
     });
