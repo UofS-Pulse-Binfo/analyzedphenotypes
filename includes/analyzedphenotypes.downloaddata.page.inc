@@ -1386,19 +1386,6 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
       '#id' => 'ap-filetype-warning',
     );
 
-
-    //
-    // INCLUDE ALL REPLICATES
-    $form[$AJAX_wrapper][$ap_fieldset_3][ $fldname[$fld_averagerep ]['field'] ] = array(
-      '#title' => t('Average Replicates per Site-Year'),
-      '#type' => 'checkbox',
-      '#default_value' => 1,
-      '#disabled' => $field_prop[$fld_averagerep]['disabled'],
-      '#description' => t('By default, all replicates in a single site-year will be averaged. Please specify if you would like all replicates to be included. To export the value of each replicate, uncheck this option.'),
-      '#id' => $fldname[$fld_averagerep]['field-id'],
-    )
-    + $AJAX_callback;
-
     //
     // RFRIENDLY HEADERS.
     $form[$AJAX_wrapper][$ap_fieldset_3][ $fldname[$fld_rfriendly]['field'] ] = array(
