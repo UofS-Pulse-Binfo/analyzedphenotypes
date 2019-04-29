@@ -718,10 +718,6 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         $default_headers['Trait Name'] = $traits_list;
       }
 
-      // Add Replicate to Default headers when user does not want to average data.
-      if ($form_state['values'][ $fldname[$fld_averagerep]['field'] ] == 0) {
-        $default_headers['Replicate'] = 'Replicate';
-      }
     ///
     }
   //

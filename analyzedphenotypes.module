@@ -910,7 +910,7 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
             // 2) initialize it.
             $cur_row_key = $result_key;
             $cur_row = $blank_row;
-            $cur_row[$i_expt] = $r->experiment_name;
+            if ($i_expt !== FALSE) { $cur_row[$i_expt] = $r->experiment_name; }
             $cur_row[$i_germ] = $r->stock_name;
             $cur_row[$i_locn] = $r->location;
             $cur_row[$i_year] = $r->year;
