@@ -736,20 +736,13 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
   $delimiter = '~';
 
   $code = '';
-  foreach($vars as $l => $v) {
-    if(is_array($v)) {
-      foreach($v as $j => $m) {
-        if ($j == 'code') {
-          $code = $m;
-          break;
-        }
-      }
-    }
-
-    if ($l == 'filename') {
-      $filename = $v;
+  foreach($vars['q'] as $j => $m) {
+    if ($j == 'code') {
+      $code = $m;
+      break;
     }
   }
+  $filename = $vars['filename'];
 
   // Start extracting filters.
   if (empty($code) && empty($filename)) {
@@ -870,6 +863,10 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
           }
         }
         $limit['limit'] = implode(' AND ', $limit['limit']);
+
+        // If the user selected optional columns then we need to add them to the query...
+        // (e.g. origin, data collector).
+        // @todo currently the column headers functionality seems broken...
 
         // Get ready to compile the file.
         // Each row from the following SQL query is a trait-value cell in the resulting file.
