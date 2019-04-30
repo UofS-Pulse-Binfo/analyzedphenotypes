@@ -3,7 +3,6 @@
     attach: function (context, settings) {
 
     Drupal.settings.analyzedPhenotypes.forEach(function(apSettings) {
-
       // Draw the chart.
       var chart;
       var experiment_id = apSettings.experiment_id;
@@ -15,7 +14,8 @@
       if (apSettings.type === 'violin') {
         d3.json(Drupal.settings.basePath+'/json/phenotypes/traitplot/'+experiment_id+'/'+trait_id+'/'+method_id+'/'+unit_id, function(error, data) {
 
-		console.log(data);
+          // Debug
+		      // console.log(data);
           d3.selectAll('#'+elementID+' .inner-wrapper').remove();
 
          // Ensure the datapoint is a number.
@@ -50,8 +50,10 @@
             colors:['#555']
           });
 
-          // Highlight germplasm.
-          highlightGermplasm(data, 'GERM257');
+          if (apSettings.germplasm) {
+            // Highlight germplasm.
+            highlightGermplasm(data, apSettings.germplasm);
+          }
 
         }); //end of get json.
       }

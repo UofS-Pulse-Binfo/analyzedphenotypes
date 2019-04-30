@@ -501,6 +501,8 @@ function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $
         'category' => $r->location . ' ' . $r->year,
         'values' => $values,
         'value' => $mean,
+        // This will tag this data point using the name of germplasm
+        // that will allow JS to highlight in the violin plot.
         'germ' => $r->stock_name,
       );
     }
