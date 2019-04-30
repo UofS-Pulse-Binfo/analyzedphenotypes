@@ -50,7 +50,7 @@ function ap_insert_trait($data) {
 
   // Defaults.
   if (!isset($data['type'])) {
-    $data['type'] = 'qualitative';
+    $data['type'] = 'quantitative';
   }
   if ($data['type'] == 'qual') {
     $data['type'] = 'qualitative';

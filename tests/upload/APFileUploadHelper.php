@@ -73,6 +73,7 @@ class APFileUploadHelper {
         'method' => $faker->sentences(5, true),
         'unit' => $d['unit'],
         'genus' => $organism->genus,
+        'type' => $d['type'],
       ]);
 
       // @debug print_r($results);
