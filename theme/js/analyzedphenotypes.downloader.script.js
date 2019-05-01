@@ -324,6 +324,9 @@
         $(this).click(function(e) {
         e.preventDefault();
 
+        apHeadersCache();
+        apHeadersPreview();
+
         var previewTable = $('#ap-table-preview-headers-container');
         var baseWidth = $('.fieldset-wrapper').width();
 
