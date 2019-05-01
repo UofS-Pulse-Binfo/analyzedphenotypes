@@ -806,7 +806,7 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
         $coli = array_flip( $column_headers_picked );
 
         // Make a blank row.
-        $blank_row = array_keys($column_headers_picked); 
+        $blank_row = array_keys($column_headers_picked);
         foreach($blank_row as $k => $v) { $blank_row[$k] = ''; }
 
         // Make a clone copy of this array.
@@ -832,7 +832,7 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
         }
 
         // The first item to write are the column headers.
-        $to_write['header'] = $column_headers_picked;
+        $to_write[] = $column_headers_picked;
 
         // Fetch dataset for a given filters.
         $filters = $filter_value;
@@ -877,7 +877,7 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
         $cur_row_key = NULL;
         // Finally, our query uses the phenotype mview for better performance.
         $sql = "
-          SELECT 
+          SELECT
             mp.experiment_id, mp.experiment_name,
             mp.trait_id||','||mp.method_id||','||mp.unit_id as trait_key,
             mp.trait_name, mp.method_name, mp.unit_name,
@@ -885,7 +885,7 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
             mp.location, mp.year,
             mp.values
           FROM {mview_phenotype} mp
-	  LEFT JOIN {stock} s ON s.stock_id=mp.stock_id
+	          LEFT JOIN {stock} s ON s.stock_id=mp.stock_id
           WHERE " . $limit['limit'] . "
           ORDER BY experiment_id ASC, location ASC, year ASC, stock_name ASC
         ";
