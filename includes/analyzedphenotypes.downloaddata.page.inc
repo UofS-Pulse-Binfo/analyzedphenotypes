@@ -1509,7 +1509,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
     $form[$AJAX_wrapper][ $fldname[$fld_columnheaders]['field'] ] = array(
      '#type' => 'hidden',
-     '#value' => $headers,
+     '#defalut_value' => $headers,
      '#attributes' => array('id' => $fldname[$fld_columnheaders]['field-id']),
     );
 
