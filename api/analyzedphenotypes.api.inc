@@ -399,7 +399,7 @@ function ap_construct_datafile_destinationpath() {
 
   // Construct relative/absolute path eg. public://tripal/analzedphenotypes/spreadsheet
   // - for data file
-  $file_dir[$dir] = $drupal_public . $ap_root_dir;
+  $file_dir[$ap_root_dir] = $drupal_public . $ap_root_dir;
   foreach($directory as $dir) {
     $file_dir[$dir] = $drupal_public . $ap_root_dir . $dir;
   }
