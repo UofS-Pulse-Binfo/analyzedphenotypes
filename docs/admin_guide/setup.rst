@@ -44,6 +44,8 @@ Method #2 (Recommended)
 
 4. Configure each genus with the controlled vocabularies you created in step #1 and the database you created in step #3. If you loaded a genus-specific ontology, select it under "Crop Ontology". Click the "Save Ontology Configuration" button.
 
+.. image:: setup.1.traitontologies.png
+
 .. note::
 
   You can also configure whether you would like new controlled vocabulary terms to be added during upload of phenotypic data using the checkbox directly above the "Save Ontology Configuration" button. If you want to control the names of traits, I suggest un-clicking this checkbox and loading your trait dictionary using Admin > Tripal > Data Loaders > Phenotypic Trait Importer. If you do not have an admin with enough time or expertise to do this then I suggest leaving it checked and allowing traits to be created as needed.
@@ -51,8 +53,12 @@ Method #2 (Recommended)
 Controlled Vocabulary Terms
 -----------------------------
 
-Chado uses controlled vocabulary extensively to allow for flexible storing of data. As such this module supports that flexibility to ensure that regardless of the types used for your data, this module will still be able to navigate the necessary relationships and interpret the data.
+Chado uses controlled vocabularies extensively to allow for flexible storing of data. As such this module supports that flexibility to ensure that regardless of the types used for your data, this module will still be able to navigate the necessary relationships and interpret the data.
 
 To provide ease of use, we have already chosen a set of controlled vocabulary terms and inserted them by default. This makes this portion of the set-up optional.
+
+.. image:: setup.2.cvterms.png
+
+If you would like to change the above controlled vocabulary terms simply type the term you would like to use instead in the autocomplete box and then select it from the list. Once you have done this for all terms you would like to change, click the "Save Term Configuration" button.
 
 .. warning:: Once you upload data, you can no longer change these terms.
