@@ -1,5 +1,5 @@
-Uploading of Analyzed Phenotypic Data
-=====================================
+Uploading Phenotypic Data
+==========================
 
 Upload File Format
 -------------------
@@ -34,49 +34,60 @@ The following is a short example:
 
 You can see a full example of this file distributed with the module: ``tests/example_files/AnalyzedPhenotypes-TestData-1trait3loc2yr3rep.txt``.
 
-Upload Process
----------------
+Stage 1: Upload File
+----------------------
 
-The upload process is divided into 4 stages.
-
-.. image:: loading.1.upload-stage-indicators.png
-
-Figure 1: Stage Indicator in Upload Page.
-
-Stage 1: Upload
-^^^^^^^^^^^^^^^^^
-
-Basic compliance tests on the file level are performed to ensure that requirements outlined are met. For instance, file must be a valid .tsv file and experiment has been selected.
+The trusted researcher enters the experiment they would like to associate phenotypic data with. This experiment must already exist. They then choose the genus of the germplasm phenotyped and upload the associated phenotypic data file. This upload page supports both "drag and drop" functionality as well as manual upload.
 
 .. image:: loading.2.stage-1.png
 
-.. image:: loading.3.drag-and-drop-feature.png
+.. image:: loading.3.stage-1.drag-drop.png
 
-Figure 2: Upload Page Supports Drag and Drop File Upload, as well as Manual Upload.
+Basic compliance tests at the file level are performed to ensure that requirements outlined are met. For instance, the file must be a valid tab-delimited file following the format outlined above, the genus must be configured for phenotypic data and the experiment must be selected.
 
-Stage 2: Validate
-^^^^^^^^^^^^^^^^^^
+Stage 2: Validate File
+------------------------
 
-In this stage, the file undergoes a data level validation where data in rows and columns are tested against a set of validation rules to ensure that a value meets a set of conditions and requirements.
+In this stage, the file undergoes a data level validation. The entire file is tested against a set of validation rules to ensure that the phenotypic data is compliant. The following is checked:
+  - File complies with the format specified above
+  - If "Allow new traits..." has been unchecked in configuration, ensure all traits already exist.
+  - All columns have a value
+  - All metadata columns have the correct data type (e.g. integer for replicates)
+  - Each value matches the expected data type, based on the unit
+  - All germplasm must already exist in the site and matches to the file must be exact
+  - Trait, method, unit, germplasm, location, year, replicate combination must be unique in the file
+
+While validation is ongoing, the user is presented with a friendly progress bar.
 
 .. image:: loading.4.stage-2.png
 
-Figure 3: Validate Stage shows progress bar to show user the status of data validation process.
+.. warning::
+  Administrators are urged to setup the Tripal Daemon since validation occurs during a Tripal Job.
 
-Stage 3: Describe
-^^^^^^^^^^^^^^^^^^
+Once validation is complete, the trusted researcher is shown a list of green checkmarks detailing which criteria passed. If any criteria were not met, a red stop symbol will be shown with helpful information on how to fix the problem.
 
-The file is further examined for all the unique traits in the Trait Name column. Information is then requested from the user for each trait detected.
+Stage 3: Describe Traits
+--------------------------
 
-.. image:: loading.5.stage-3.png
+Each unique trait in the file is described in this step.
 
-Figure 4: Describe Stage showing data form requesting user to provide information about the trait detected in data file.
+.. image:: loading.5.stage-3.intro.png
 
-Stage 4: Save
-^^^^^^^^^^^^^^
+If the trait already exists, the trusted researcher will be shown the trait name, method and unit details existing in the system. This allows them to confirm they have chosen the right values for their file. If the trait does not already exist and the system has been configured to allow entry of traits on upload, the trusted researcher will be asked to describe their trait, data collection method and units.
 
-File and data are stored.
+.. image:: loading.6.stage-3.trait.png
 
-.. image:: loading.6.stage-4.png
+The trusted researcher also has the ability to upload images describing a trait. For example, an image showing the scale is particularly helpful!
 
-Figure 5: Show the final stage of the upload process. Similar to validate stage, a progress bar shows the status of saving process.
+.. image:: loading.7.stage-3.photo.png
+
+Finally, the data in the file for a given trait is summarized. This can help the researcher pick out problems such as outliers with the data before they upload it. Furthermore, it can be used to confirm the correct file was uploaded.
+
+.. image:: loading.8.stage-3.summary.png
+
+Stage 4: Save Phenotypic Data
+------------------------------
+
+The original file i saved and phenotypic data is processed before being saved in the database. This step does not require any input from the trusted researcher and will not be interrupted if the researcher leaves the page before it is complete.
+
+.. image:: loading.9.stage-4.png
