@@ -736,20 +736,13 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
   $delimiter = '~';
 
   $code = '';
-  foreach($vars as $l => $v) {
-    if(is_array($v)) {
-      foreach($v as $j => $m) {
-        if ($j == 'code') {
-          $code = $m;
-          break;
-        }
-      }
-    }
-
-    if ($l == 'filename') {
-      $filename = $v;
+  foreach($vars['q'] as $j => $m) {
+    if ($j == 'code') {
+      $code = $m;
+      break;
     }
   }
+  $filename = $vars['filename'];
 
   // Start extracting filters.
   if (empty($code) && empty($filename)) {
@@ -775,6 +768,7 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
         // Field name = Value selected.
         $filter_value[$filter] = $value;
       }
+      print "Parameters include: " . print_r($filter_value, TRUE);
 
       // Global/standard field names used in form, submit etc.
       // experiment, genus, species, traits, year, location, germplasmtype,
@@ -804,11 +798,21 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
         $g = explode($delimiter, $h);
         $column_headers_picked = array_map('trim', $g);
 
+        // Save indicies of important columns.
+        $i_expt = array_search('Experiment', $column_headers_picked);
+        $i_germ = array_search('Germplasm Name', $column_headers_picked);
+        $i_year = array_search('Year',  $column_headers_picked);
+        $i_locn = array_search('Location',  $column_headers_picked);
+        $coli = array_flip( $column_headers_picked );
+
+        // Make a blank row.
+        $blank_row = array_keys($column_headers_picked);
+        foreach($blank_row as $k => $v) { $blank_row[$k] = ''; }
+
         // Make a clone copy of this array.
         $tmp_column_headers_picked = $column_headers_picked;
 
-        // Does user want it RFriendly-ied.
-
+        // Does user want it RFriendly-ied?
         // FILTER/FIELD NAME: rfriendly.
         if ($filter_value[ $fldname['rfriendly']['base'] ]) {
           $column_headers_picked_rfriendly = array();
@@ -828,22 +832,21 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
         }
 
         // The first item to write are the column headers.
-        $to_write['header'] = $column_headers_picked;
+        $to_write[] = $column_headers_picked;
 
-        // Next... the Rows and rows and more rows.
         // Fetch dataset for a given filters.
         $filters = $filter_value;
 
         // Match field to actual chado column names.
         // Limit rows to project, trait, year, location, germplasm type and germplasm.
         $column = array(
-          $fldname['experiment']['base']    => 'project_id',
-          $fldname['traits']['base']        => 'CONCAT(t1.attr_id, \',\', t1.assay_id, \',\', t1.unit_id)',
-          $fldname['germplasmtype']['base'] => 't3.type_id',
-          $fldname['year']['base']          => 't7.value',
-          $fldname['location']['base']      => 't8.value',
+          $fldname['experiment']['base']    => 'mp.experiment_id',
+          $fldname['traits']['base']        => "mp.trait_id||','||mp.method_id||','||mp.unit_id",
+          $fldname['germplasmtype']['base'] => 's.type_id',
+          $fldname['year']['base']          => 'mp.year',
+          $fldname['location']['base']      => 'mp.location',
           // As entered in the germplasm field.
-          $fldname['germplasm']['base']     => "CONCAT(t3.name, ' (', t3.uniquename, ')')",
+          $fldname['germplasm']['base']     => "CONCAT(s.name, ' (', s.uniquename, ')')",
         );
 
         $limit = array();
@@ -855,188 +858,84 @@ function analyzedphenotypes_trpdownload_generate_file($vars, $job_id = NULL) {
           if ($filter_val != 'all') {
             $placeholder = ':' . $filter;
 
-            $limit['limit'] .= ' AND ' . $col . ' IN (' . $placeholder . ')';
+            $limit['limit'][] = $col . ' IN (' . $placeholder . ')';
             $limit['args'][$placeholder] = explode($delimiter, $filter_val);
           }
         }
+        $limit['limit'] = implode(' AND ', $limit['limit']);
 
-        $sql = sprintf("
+        // If the user selected optional columns then we need to add them to the query...
+        // (e.g. origin, data collector).
+        // @todo currently the column headers functionality seems broken...
+
+        // Get ready to compile the file.
+        // Each row from the following SQL query is a trait-value cell in the resulting file.
+        // As such we need to loop over multiple results to compile a single row...
+        // The query is sorted to allow us to do this.
+        // Variable to hold the current row as we compile it.
+        $cur_row = $blank_row;
+        $cur_row_key = NULL;
+        // Finally, our query uses the phenotype mview for better performance.
+        $sql = "
           SELECT
-            t2.project_id, t1.phenotype_id, t2.name AS %s, t3.name AS %s,
-            STRING_AGG(t4.value, '') AS %s, CONCAT(t5.name, ' (', t5a.name, '; ', t5b.name, ')') AS %s,
-            t1.value AS %s, t6.value AS %s, t7.value AS %s, t8.value AS %s, t9.value AS %s
-          FROM
-            {phenotype}                AS t1
-            INNER JOIN {project}       AS t2 USING(project_id)
-            INNER JOIN {stock}         AS t3 USING(stock_id)
-            LEFT  JOIN {stockprop}     AS t4 ON t3.stock_id = t4.stock_id AND t4.type_id = :term_origin
+            mp.experiment_id, mp.experiment_name,
+            mp.trait_id||','||mp.method_id||','||mp.unit_id as trait_key,
+            mp.trait_name, mp.method_name, mp.unit_name,
+            s.stock_id, mp.stock_name,
+            mp.location, mp.year,
+            mp.values
+          FROM {mview_phenotype} mp
+	          LEFT JOIN {stock} s ON s.stock_id=mp.stock_id
+          WHERE " . $limit['limit'] . "
+          ORDER BY experiment_id ASC, location ASC, year ASC, stock_name ASC
+        ";
+        $result = chado_query($sql, $limit['args']);
+        // Now, for each result from the query...
+        foreach($result as $r) {
 
-            INNER JOIN {cvterm}        AS t5 ON t1.attr_id = t5.cvterm_id
-            INNER JOIN {cvterm}        AS t5a ON t1.assay_id = t5a.cvterm_id
-            INNER JOIN {cvterm}        AS t5b ON t1.unit_id = t5b.cvterm_id
+          // Is this a new row?
+          $result_key = implode($delimiter, array($r->experiment,$r->stock_id,$r->location,$r->year));
+          // If it is a new row then we need to...
+          if ($cur_row_key !== $result_key) {
 
-            INNER JOIN {phenotypeprop} AS t6 USING(phenotype_id)
-            INNER JOIN {phenotypeprop} AS t7 USING(phenotype_id)
-            INNER JOIN {phenotypeprop} AS t8 USING(phenotype_id)
-            INNER JOIN {phenotypeprop} AS t9 USING(phenotype_id)
-          WHERE
-            t6.type_id = :term_replicate AND t7.type_id = :term_year
-            AND t8.type_id = :term_location AND t9.type_id = :term_collector
-            %s
-          GROUP BY
-            t2.project_id, t1.phenotype_id, t2.name, t3.name, t5.name, t5a.name, t5b.name,
-            t1.value, t6.value, t7.value, t8.value, t9.value
-          ORDER BY t2.name, t3.name, t7.value, t8.value ASC",
-            $fldname['experiment']['base'],
-            $fldname['germplasm']['base'],
-            $fldname['origin']['base'],
-            $fldname['traits']['base'],
-            $fldname['value']['base'],
-            $fldname['replicate']['base'],
-            $fldname['year']['base'],
-            $fldname['location']['base'],
-            $fldname['collector']['base'],
-            $limit['limit']
-        );
+            // 1) Save the last row...
+            if ($cur_row != $blank_row) {
+              ksort($cur_row);
+              $to_write[] = $cur_row;
+            }
 
-        // Plant property (replicate, year, location, data collector) cvterms;
-        $sysvar = ap_get_variablenames(
-          array('variablename' => 'varset'),
-          array('set' => 'terms')
-        );
-
-        $dataset = chado_query(
-          $sql,
-          $limit['args'] + array(
-            // Plant property terms.
-            ':term_replicate' => variable_get($sysvar['ap_replicate']),
-            ':term_year'      => variable_get($sysvar['ap_year']),
-            ':term_origin'    => variable_get($sysvar['ap_origin']),
-            ':term_location'  => variable_get($sysvar['ap_location']),
-            ':term_collector' => variable_get($sysvar['ap_collector']),
-          )
-        );
-
-        if ($dataset->rowCount()) {
-          // Have something to write to file.
-
-          $dataset = $dataset->fetchAll();
-
-          // SQL query uses alias to reference field. Use alias to access piece of data.
-          $field_alias = ap_create_columnheaders('columns_downloadable_tofield');
-
-          // Begin.
-          $column_headers_data = array();
-
-          foreach($dataset as $data) {
-            $data = (array)$data;
-
-            unset($data['project_id'], $data['phenotype_id']);
-
-            // Group dataset by this key. Later, whey user checked off average rep option
-            // values can be averaged easily.
-            $key = $data[ $field_alias['Experiment'] ]     .
-                   $data[ $field_alias['Germplasm Name'] ] .
-                   $data[ $field_alias['Location'] ]       .
-                   $data[ $field_alias['Year'] ]           .
-                   $data[ $fldname['traits']['base'] ];
-
-            $to_write['data'][$key][] = $data;
+            // 2) initialize it.
+            $cur_row_key = $result_key;
+            $cur_row = $blank_row;
+            if ($i_expt !== FALSE) { $cur_row[$i_expt] = $r->experiment_name; }
+            $cur_row[$i_germ] = $r->stock_name;
+            $cur_row[$i_locn] = $r->location;
+            $cur_row[$i_year] = $r->year;
           }
 
-          // Need to average?
-          if ($filter_value[ $fldname['averagerep']['base'] ]) {
-            // All keys.
-            $k = array_keys($to_write['data']);
-            $unique_keys = array_unique($k);
+          // Add the current trait to the row.
+          // The values are storaged as a JSON array so first convert them.
+          $values = json_decode($r->values);
+          if (is_array($values)) {
+            $value = array_sum($values)/count($values);
+            $value = round($value, 2);
 
-            foreach($unique_keys as $u_k) {
-              $all_values = array_column($to_write['data'][$u_k], $fldname['value']['base']);
-              $v_count = count($all_values);
-              $v_sum   = array_sum($all_values);
-              $v_avg   = round($v_sum / $v_count, 2);
-
-              // Collate all data collector into a comma separated value to
-              // account all entries after doing the average.
-              // Only when data collector column was reqested.
-
-              // Summarize all datapoints into one by using the first item and add the
-              // average value and data collectors.
-              $first_item = $to_write['data'][$u_k][0];
-              $first_item[ $fldname['value']['base'] ] = $v_avg;
-
-              // No need to do this to replicate - since rep is omitted when averaged.
-              if (array_search('Data Collector', $tmp_column_headers_picked)) {
-                $all_collector = array_column($to_write['data'][$u_k], $fldname['collector']['base']);
-                $unique_collector = array_unique($all_collector);
-                $csv_collector = implode(',', $unique_collector);
-
-                $first_item[ $fldname['collector']['base'] ] = $csv_collector;
-              }
-
-              // Add this line with key avg.
-              $to_write['data'][$u_k]['avg'] = $first_item;
-            }
+            $full_trait_name = $r->trait_name.' ('.$r->method_name.'; '.$r->unit_name.')';
+            $i_trait = $coli[$full_trait_name];
+            $cur_row[$i_trait] = $value;
           }
-
-          // Write to file.
-
-          // Start off with the header.
-          $to_file[] = $to_write['header'];
-
-          // Rows.
-          $all_keys = array_keys($to_write['data']);
-          $unique_keys = array_unique($all_keys);
-
-          foreach($unique_keys as $u_key) {
-            $source = array();
-
-            if ($filter_value[ $fldname['averagerep']['base'] ]) {
-              $source['avg'] = $to_write['data'][$u_key]['avg'];
-            }
-            else {
-              unset($to_write['data'][$u_key]['avg']);
-              $source = $to_write['data'][$u_key];
-            }
-
-            // Each line in the dataset.
-            foreach($source as $s_i => $s_data) {
-              $data_row = array();
-
-              // Sort data into the right column header.
-              foreach($tmp_column_headers_picked as $col) {
-                if (isset($field_alias[$col])) {
-                  // Column header has a corresponding field alias.
-                  $data_row[] = ($s_data[ $field_alias[$col] ]) ?
-                    $s_data[ $field_alias[$col] ] : 'n/a';
-                }
-                else {
-                  // Could be the trait measured.
-                  $data_row[] = ($s_data[ $fldname['traits']['base'] ] == $col)
-                    ? $source[$s_i]['value'] : 'n/a';
-                }
-              }
-
-              $to_file[] = $data_row;
-            }
-          }
-
-          // DEBUG:
-          // dpm($to_file);
-
-          // CREATE FILE.
-          if ($to_file) {
-            analyzedphenotypes_trpdownload_writefile($filename, $to_file, $file_type);
+          else {
+            // @todo  add an error message here.
           }
         }
-        else {
-          // File type not supported.
-          die('Could not generate file. Query returned 0 rows.');
+
+        if ($to_write) {
+          analyzedphenotypes_trpdownload_writefile($filename, $to_write, $file_type);
         }
       }
       else {
         // File type not supported.
-        die('Could not generate file. File type no supported.');
+        die('Could not generate file. File type not supported.');
       }
     //
     }
