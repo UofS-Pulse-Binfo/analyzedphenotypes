@@ -17,7 +17,7 @@ function analyzedphenotypes_config_form($form, $form_state) {
   $form['watermark'] = array(
     '#type' => 'fieldset',
     '#title' => 'Watermark Charts',
-    '#description' => 'This allows you to add a partially transparent image of your choice in front of phenotypic data charts provided by this module. The intent is to provide data protection by preventing people from sharing screenshots without attribution. That said, people with advanced HTML/CSS knowledge will be able to remove the watermark. Please take additional steps to protect data if you are concerned.'
+    '#description' => 'This allows you to add a partially transparent image of your choice in front of phenotypic data charts provided by this module. The intent is to provide data protection by preventing people from sharing screenshots without attribution. <em>That said, people with advanced HTML/CSS knowledge will be able to remove the watermark. Please take additional steps to protect data if you are concerned.</em>'
   );
 
   $form['watermark']['watermark_what'] = array(
