@@ -5,7 +5,7 @@ package = Tripal Extensions
 dependencies[] = dragndrop_upload_element
 dependencies[] = tripal
 dependencies[] = trpdownload_api
+dependencies[] = tripald3
 
 core = 7.x
 configure = admin/tripal/extension/analyzedphenotypes/settings
-

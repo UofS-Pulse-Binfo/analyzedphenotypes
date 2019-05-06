@@ -307,6 +307,18 @@ function analyzedphenotypes_hp_phenotypic_variability_single_chart_form(&$form, 
         . "as [first value]/[second value] where order is not meaningful.";
       }
 
+      // Do we want to add a watermark?
+      $add_watermark = variable_get('ap_config_watermark_what', 'all');
+      if ($add_watermark == 'all') {
+        tripald3_load_libraries();
+        $watermark_url = variable_get('ap_config_watermark_url', FALSE);
+        $add_watermark = TRUE;
+      }
+      else {
+        $add_watermark = FALSE;
+        $watermark_url = FALSE;
+      }
+
       // Add the needed JS for the chart.
       drupal_add_js($module_path . "/theme/js/$chart_type.chart.js", ['weight' => -3]);
       $data['analyzedPhenotypes'] = array();
@@ -319,6 +331,8 @@ function analyzedphenotypes_hp_phenotypic_variability_single_chart_form(&$form, 
           'unit_id' => $unit_id,
           'xaxis' => $xaxis,
           'yaxis' => $yaxis,
+          'addWatermark' => $add_watermark,
+          'watermarkURL' => $watermark_url,
       );
       drupal_add_js($data, 'setting');
       

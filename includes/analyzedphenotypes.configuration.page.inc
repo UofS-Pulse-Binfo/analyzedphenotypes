@@ -5,7 +5,63 @@
  * Contains configuration interface of this module.
  */
 
+/**
+ * Configure Display.
+ */
 
+/**
+ * Configuration: form.
+ */
+function analyzedphenotypes_config_form($form, $form_state) {
+
+  $form['watermark'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Watermark Charts',
+    '#description' => 'This allows you to add a partially transparent image of your choice in front of phenotypic data charts provided by this module. The intent is to provide data protection by preventing people from sharing screenshots without attribution. <em>That said, people with advanced HTML/CSS knowledge will be able to remove the watermark. Please take additional steps to protect data if you are concerned.</em>'
+  );
+
+  $form['watermark']['watermark_what'] = array(
+    '#type' => 'radios',
+    '#title' => 'Choose which charts should be watermarked.',
+    '#options' => array(
+      'all' => 'Watermark all charts',
+      'none' => 'Do not watermark any charts',
+    ),
+    '#default_value' => variable_get('ap_config_watermark_what', 'all'),
+  );
+
+  $form['watermark']['watermark_url'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Watermark Image URL',
+    '#description' => 'Upload your watermark to the public files directory and then provide the URL here (e.g. https://mysite.com/sites/default/files/mywatermark.png)',
+    '#default_value' => variable_get('ap_config_watermark_url', ''),
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Save',
+  );
+
+  return $form;
+}
+
+/**
+ * Configuration: Validate.
+ */
+function analyzedphenotypes_config_form_validate($form, $form_state) { }
+
+/**
+ * Configuration: Submit.
+ */
+function analyzedphenotypes_config_form_submit($form, $form_state) {
+
+  variable_set('ap_config_watermark_what', $form_state['values']['watermark_what']);
+  variable_set('ap_config_watermark_url', $form_state['values']['watermark_url']);
+}
+
+/**
+ * SET-UP Ontologies.
+ */
 
 // Ontologies API.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontology.api');
@@ -15,7 +71,7 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontolog
  * Implements hook_form().
  * Construct module configuration page.
  */
-function analyzedphenotypes_configuration_form($form, &$form_state) {
+function analyzedphenotypes_setup_form($form, &$form_state) {
   // Check that chado orgnism table has at least a record (genus ie lens, lotus and cicer).
   $has_organism = ap_get_genus();
   if ($has_organism == 0) {

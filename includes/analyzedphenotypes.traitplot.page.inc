@@ -397,6 +397,18 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
   $form['#attached']['js'][] = $module_path . '/theme/js/distroChart.js';
   $form['#attached']['js'][] = $module_path . "/theme/js/$chart_type.chart.js";
 
+  // Do we want to add a watermark?
+  $add_watermark = variable_get('ap_config_watermark_what', 'all');
+  if ($add_watermark == 'all') {
+    tripald3_load_libraries();
+    $watermark_url = variable_get('ap_config_watermark_url', FALSE);
+    $add_watermark = TRUE;
+  }
+  else {
+    $add_watermark = FALSE;
+    $watermark_url = FALSE;
+  }
+
   $data = array();
   $data['analyzedPhenotypes'] = array();
   $data['analyzedPhenotypes'][] = array(
@@ -408,6 +420,8 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
       'yaxis' => $yaxis,
       'id' => 'tripal-ap-violin-plot',
       'type' => $chart_type,
+      'addWatermark' => $add_watermark,
+      'watermarkURL' => $watermark_url,
   );
   $form['#attached']['js'][] = array(
     'type' => 'setting',

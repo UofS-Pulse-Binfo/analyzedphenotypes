@@ -50,6 +50,15 @@
             colors:['#555']
           });
 
+          if (apSettings.addWatermark) {
+            if (apSettings.watermarkURL !== false) {
+              tripalD3.placeWatermark({'watermark' : apSettings.watermarkURL});
+            }
+            else {
+              tripalD3.placeWatermark();
+            }
+          }
+
         }); //end of get json.
       }
     });
