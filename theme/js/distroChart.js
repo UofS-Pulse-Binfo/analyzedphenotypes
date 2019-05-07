@@ -1583,3 +1583,166 @@ function makeDistroChart(settings) {
 
     return chart;
 }
+
+
+ /**
+  * Highlight germplasm in the violin plot.
+  *
+  * @param data
+  *   JSON object.
+  * @param germplasm
+  *  Sting, germplasm name that will be highlighted in the chart.
+  */
+ highlightGermplasm = function(data, germplasm) {
+   // No germplasm.
+   if (germplasm == '') return;
+
+
+   var toolTipWindowId = 'ap-highlight-germplasm-tooltip-window';
+   // Reference tip window.
+   var tipWindow = d3.select('#' + toolTipWindowId);
+
+   // Add div window used as the tool tip window.
+   // But, first, ensure that it wasn't previously added, then no
+   // need to reappend the element.
+   var hasWindow = tipWindow.empty();
+   if (hasWindow) {
+     d3.select('body')
+       .append('div')
+       .attr('id', toolTipWindowId);
+   }
+
+   // Short list data to only those where germplasm was included.
+   var germ = data.filter(function(v) {
+     // Location - not in camel case.
+     return v.germ == germplasm;
+   });
+
+   // Extract all location in the x axis.
+   var allLoc = new Array();
+   d3.selectAll('.x .tick').each(function(d, i) {
+     // No commas and no spaces - camel case.
+     allLoc[i] = d3.select(this).text();
+   });
+
+
+   // Read each violin plots, In the order it appears in the x axis (matching location array above).
+   // On each pass, find germplasm and mark it.
+   d3.selectAll('.violin-plot').each(function(d, i) {
+     // Find the value for germplasm.
+     var germValue = null;
+     for (var d = 0; d < germ.length; d++) {
+       if (germ[d].category.replace(/[, ]+/g, '').trim() == allLoc[i]) {
+         germValue = germ[d].value;
+         break;
+       }
+     }
+
+     // FOUND:
+     if (germValue && germValue != null) {
+       // Highlight.
+       // Main highlight wrapper.
+       if (d3.select(this).select('.ap-highlight-germplasm').empty()) {
+         // No repeated appending... only when this class is not in DOM.
+
+         var highlight = d3.select(this)
+           .append('g')
+           .attr('class', 'ap-highlight-germplasm');
+
+
+         // Violin plot profile object. The height, width, x and y...
+         var gBox  = d3.select(this).node().getBBox();
+         var gBoxWidth = Math.floor(gBox.width);
+
+         // Position this wrapper in where the violin plot is.
+         // X is where the violin plot and Y where the value of germplasm in reference to the scale.
+         highlight.attr('transform', function() {
+           var y = highlightFindYAxis(germValue);
+           return 'translate(' + gBox.x + ',' + y + ')';
+         });
+
+         // Add the line and active handle.
+         // Line it. ___/O
+         highlight
+           .append('polyline')
+           .attr('points', -5 + ',' + 0 +' '+ (gBoxWidth + 5) + ',' + 0 + ' ' + (gBoxWidth + 10) + ',' + -10);
+
+         // Place active handle to the end of the line.
+         // Appending another g to handle event.
+         highlight
+           .append('g')
+             .on('mouseover', function() {
+               tipWindow
+                 // Showing germplasm name and the value.
+                 .html(germplasm + '<br />' + germValue.toFixed(2))
+                 .style('left', (d3.event.pageX + 10) + 'px')
+                 .style('top' , (d3.event.pageY) + 'px');
+
+                 tipWindow.transition().style('opacity', 0.88);
+                 // Try to implement one window at a time.
+                 d3.selectAll('.tooltip').style('visibility', 'hidden');
+             })
+             .on('mouseout', function() {
+               tipWindow
+                 .transition().style('opacity', 0)
+                 .style('left', 0)
+                 .style('top' , 0);
+
+               // Try to implement one window at a time.
+               d3.selectAll('.tooltip').style('visibility', '');
+             })
+           .append('circle')
+           .attr('r', 6)
+           .attr('cx', (gBoxWidth + 10))
+           // Riser. ___/
+           .attr('cy', -10);
+         }
+       }
+     });
+
+
+   // Listen to window resize and reapply highlight.
+   var resizeId;
+   window.addEventListener('resize', function() {
+     // Remove elements so no blinking effect while resizing.
+     d3.selectAll('.ap-highlight-germplasm').remove();
+
+     clearTimeout(resizeId);
+     resizeId = setTimeout(function() {
+       // Wait till resize is done.
+       // Credits to: vanilla JS.
+       highlightGermplasm(data, germplasm);
+     }, 500);
+   });
+ }
+
+
+ /**
+  * Function: position a value in relation to the y axis.
+  *
+  * @param: germValue
+  *  Number, the germplasm value.
+  *
+  * @return
+  *  Number, the pixel value in relation to the y axis.
+  */
+ highlightFindYAxis = function(germValue) {
+   // Height of the Y axis.
+   var curY = d3.select('.y path.domain').node().getBBox();
+   var noTicks = d3.selectAll('.y .tick').size();
+
+   // Lower and higher range form the scale.
+   var lowerRange = d3.selectAll('.y .tick:first-child') .select('text').text();
+   var upperRange = d3.selectAll('.y .tick:last-of-type').select('text').text();
+
+   // Find the value of germplasm in reference to the scale.
+   var scale = d3.scale
+     .linear()
+     .domain([lowerRange, upperRange])
+     .range([curY.height - 2, 0]);
+
+   // Just to be sure that there are same scale as the existing.
+   scale.ticks(noTicks);
+   return scale(germValue);
+ }
+

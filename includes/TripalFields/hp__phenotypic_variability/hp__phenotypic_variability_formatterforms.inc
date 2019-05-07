@@ -7,7 +7,7 @@
  * the field is on (e.g. trait, germplasm, project).
  */
 
-/** 
+/**
  * AJAX-enabled form for hp__phenotypic_variability field.
  * Specifically, for trait pages.
  */
@@ -40,7 +40,7 @@ function analyzedphenotypes_hp_phenotypic_variability_traits_form($form, $form_s
   }
 
   // Ensure that if there is only one option, then we just draw it!
-  if (sizeof($expopt) == 1) { 
+  if (sizeof($expopt) == 1) {
     $experiment_id = key($expopt);
   }
 
@@ -54,7 +54,7 @@ function analyzedphenotypes_hp_phenotypic_variability_traits_form($form, $form_s
     '#ajax' => array(
       'callback' => 'hp_phenotypic_variability_ajax_callback',
       'wrapper' => 'distribution-charts',
-    ), 
+    ),
   );
 
   $form['charts'] = array(
@@ -72,7 +72,7 @@ function analyzedphenotypes_hp_phenotypic_variability_traits_form($form, $form_s
   return $form;
 }
 
-/** 
+/**
  * AJAX-enabled form for hp__phenotypic_variability field
  * Specifically, for germ plasm pages.
  */
@@ -107,7 +107,7 @@ function analyzedphenotypes_hp_phenotypic_variability_germplasm_form($form, $for
   }
 
   // Ensure that if there is only one option, then we just draw it!
-  if (sizeof($expopt) == 1) { 
+  if (sizeof($expopt) == 1) {
     $experiment_id = key($expopt);
   }
 
@@ -121,7 +121,7 @@ function analyzedphenotypes_hp_phenotypic_variability_germplasm_form($form, $for
     '#ajax' => array(
       'callback' => 'hp_phenotypic_variability_ajax_callback',
       'wrapper' => 'distribution-charts',
-    ), 
+    ),
   );
 
   // TRAIT
@@ -255,112 +255,119 @@ function analyzedphenotypes_hp_phenotypic_variability_experiment_form($form, $fo
  *   The current item.
  */
 function analyzedphenotypes_hp_phenotypic_variability_single_chart_form(&$form, $form_state, $i) {
-      $module_path = drupal_Get_path('module', 'analyzedphenotypes');
 
-      $key = $i['value']['NCIT:C71460']['data:2091'] . '-' . $i['value']['uo:unit']['data:2091'];
-      $name = $i['value']['NCIT:C71460']['schema:name'] . ' (' . $i['value']['uo:unit']['schema:name'] . ')';
-      $form['charts'][$key] = array(
-        '#type' => 'fieldset',
-	'#title' => $name,
-	'#collapsible' => TRUE,
-	'#collpased' => FALSE,
-      );
+  $module_path = drupal_get_path('module', 'analyzedphenotypes');
 
-      // First get all the constituent parts...
-      $experiment_id = $i['value']['SIO:001066']['data:2091'];
-      $experiment_name = $i['value']['SIO:001066']['schema:name'];
-      $trait_name = $i['value']['NCIT:C85496']['schema:name'];
-      $trait_id = $i['value']['NCIT:C85496']['data:2091'];
-      $definition = chado_query('SELECT definition FROM {cvterm} WHERE cvterm_id=:id', 
-        array(':id' => $trait_id))->fetchField();
-      $unit = $i['value']['uo:unit']['schema:name']; 
-      $method_id = $i['value']['NCIT:C71460']['data:2091'];
-      $method_name = $i['value']['NCIT:C71460']['schema:name'];
-      $method = chado_query('SELECT definition FROM {cvterm} WHERE cvterm_id=:id', 
-        array(':id' => $method_id))->fetchField();
-      $unit_id = $i['value']['uo:unit']['data:2091'];
-      $phenotype_type = chado_query("SELECT value FROM {cvtermprop}
-        WHERE cvterm_id=:id AND type_id IN (SELECT cvterm_id FROM {cvterm} WHERE name='additionalType')",
-        array(':id' => $unit_id))->fetchField();
+  $key = $i['value']['NCIT:C71460']['data:2091'] . '-' . $i['value']['uo:unit']['data:2091'];
+  $name = $i['value']['NCIT:C71460']['schema:name'] . ' (' . $i['value']['uo:unit']['schema:name'] . ')';
+  $form['charts'][$key] = array(
+    '#type' => 'fieldset',
+	  '#title' => $name,
+	  '#collapsible' => TRUE,
+	  '#collpased' => FALSE,
+  );
 
-      // Then form the figure legend based on those parts.
-      if ($phenotype_type == 'quantitative' OR empty($phenotype_type)) {
-        $chart_type = 'violin';
-        $xaxis = 'Site-Year';
-        $yaxis = $trait_name.' ('.$unit.')';
-        $figtitle = "Comparison of observed $trait_name ($method_name) between site years for <em>$experiment_name</em>.";
-        $figlegend = "$trait_name was measured in $unit."
-        . $method . " Replicates were then averaged per germplasm within a single site-year."
-        . " The chart shows the traditional box plot with the kernel density estimation flanking it."
-        . " Thus values in a wider section of the plot represent higher probability that "
-        . "members of the sampled germplasm collection will show that phenotype.";
-      }
-      else {
-        $chart_type = 'multibar';
-        $xaxis = 'Site-Year';
-        $yaxis = $trait_name.' ('.$unit.')';
-        $figtitle = "Comparison of observed $trait_name ($method_name) between site years for <em>$experiment_name</em>.";
-        $figlegend = "$trait_name was measured as a $unit. "
-        . $method . " Replicates were then averaged per germplasm within a single site-year."
-        . " The chart shows the number of germplasm with a specific $trait_name where site-years are "
-        . "shown as different coloured bars. Germplasm exhibiting multiple $trait_name values are shown "
-        . "as [first value]/[second value] where order is not meaningful.";
-      }
+  // First get all the constituent parts...
+  $experiment_id = $i['value']['SIO:001066']['data:2091'];
+  $experiment_name = $i['value']['SIO:001066']['schema:name'];
+  $trait_name = $i['value']['NCIT:C85496']['schema:name'];
+  $trait_id = $i['value']['NCIT:C85496']['data:2091'];
+  $definition = chado_query('SELECT definition FROM {cvterm} WHERE cvterm_id=:id',
+    array(':id' => $trait_id))->fetchField();
 
-      // Do we want to add a watermark?
-      $add_watermark = variable_get('ap_config_watermark_what', 'all');
-      if ($add_watermark == 'all') {
-        tripald3_load_libraries();
-        $watermark_url = variable_get('ap_config_watermark_url', FALSE);
-        $add_watermark = TRUE;
-      }
-      else {
-        $add_watermark = FALSE;
-        $watermark_url = FALSE;
-      }
+  $unit = $i['value']['uo:unit']['schema:name'];
+  $method_id = $i['value']['NCIT:C71460']['data:2091'];
+  $method_name = $i['value']['NCIT:C71460']['schema:name'];
+  $method = chado_query('SELECT definition FROM {cvterm} WHERE cvterm_id=:id',
+    array(':id' => $method_id))->fetchField();
 
-      // Add the needed JS for the chart.
-      drupal_add_js($module_path . "/theme/js/$chart_type.chart.js", ['weight' => -3]);
-      $data['analyzedPhenotypes'] = array();
-      $data['analyzedPhenotypes'][] = array(
+  $unit_id = $i['value']['uo:unit']['data:2091'];
+  $phenotype_type = chado_query("SELECT value FROM {cvtermprop}
+    WHERE cvterm_id=:id AND type_id IN (SELECT cvterm_id FROM {cvterm} WHERE name='additionalType')",
+    array(':id' => $unit_id))->fetchField();
+
+  // Then form the figure legend based on those parts.
+  if ($phenotype_type == 'quantitative' OR empty($phenotype_type)) {
+    $germplasm_name = $i['name'];
+    $chart_type = 'violin';
+    $xaxis = 'Site-Year';
+    $yaxis = $trait_name.' ('.$unit.')';
+    $figtitle = "Comparison of observed $trait_name ($method_name) between site years for <em>$experiment_name</em>.";
+    $figlegend = "$trait_name was measured in $unit."
+      . $method . " Replicates were then averaged per germplasm within a single site-year."
+      . " The chart shows the traditional box plot with the kernel density estimation flanking it."
+      . " Thus values in a wider section of the plot represent higher probability that "
+      . "members of the sampled germplasm collection will show that phenotype.";
+  }
+  else {
+    $chart_type = 'multibar';
+    $xaxis = 'Site-Year';
+    $yaxis = $trait_name.' ('.$unit.')';
+    $figtitle = "Comparison of observed $trait_name ($method_name) between site years for <em>$experiment_name</em>.";
+    $figlegend = "$trait_name was measured as a $unit. "
+    . $method . " Replicates were then averaged per germplasm within a single site-year."
+    . " The chart shows the number of germplasm with a specific $trait_name where site-years are "
+    . "shown as different coloured bars. Germplasm exhibiting multiple $trait_name values are shown "
+    . "as [first value]/[second value] where order is not meaningful.";
+  }
+  
+  // Do we want to add a watermark?
+  $add_watermark = variable_get('ap_config_watermark_what', 'all');
+  if ($add_watermark == 'all') {
+    tripald3_load_libraries();
+    $watermark_url = variable_get('ap_config_watermark_url', FALSE);
+    $add_watermark = TRUE;
+  }
+  else {
+    $add_watermark = FALSE;
+    $watermark_url = FALSE;
+  }
+  
+  // Add the needed JS for the chart.
+  drupal_add_js($module_path . "/theme/js/$chart_type.chart.js", ['weight' => -3]);
+  $data['analyzedPhenotypes'] = array();
+  $data['analyzedPhenotypes'][] = array(
 	  'type' => $chart_type,
-          'id' => 'tripal-ap-'.$chart_type.'-plot-'.$key,
-          'experiment_id' => $experiment_id,
-          'trait_id' => $trait_id,
-          'method_id' => $method_id,
-          'unit_id' => $unit_id,
-          'xaxis' => $xaxis,
-          'yaxis' => $yaxis,
-          'addWatermark' => $add_watermark,
-          'watermarkURL' => $watermark_url,
-      );
-      drupal_add_js($data, 'setting');
-      
-      // Add the CSS for the chart.
-      drupal_add_css($module_path . '/theme/css/violinplot.chart.css');
+    'id' => 'tripal-ap-'.$chart_type.'-plot-'.$key,
+    'experiment_id' => $experiment_id,
+    'trait_id' => $trait_id,
+    'method_id' => $method_id,
+    'unit_id' => $unit_id,
+    'xaxis' => $xaxis,
+    'yaxis' => $yaxis,
+    'germplasm' => $germplasm_name,
+    'addWatermark' => $add_watermark,
+    'watermarkURL' => $watermark_url,
+  );
+  drupal_add_js($data, 'setting');
 
-      $form['charts'][$key]['figure']['chart'] = array(
-        '#type' => 'item',
-        '#markup' => '<div class="chart-wrapper" id="tripal-ap-'.$chart_type.'-plot-'.$key.'"></div>'
-      );
+  // Add the CSS for the chart.
+  drupal_add_css($module_path . '/theme/css/violinplot.chart.css');
 
-      $form['charts'][$key]['figure']['legend'] = array(
-        '#type' => 'markup',
-        '#prefix' => '<div class="legend">',
-        '#suffix' => '</div>',
-      );
-      $form['charts'][$key]['figure']['legend']['title'] = array(
-        '#type' => 'markup',
-        '#prefix' => '<div class="title">',
-        '#markup' => 'Figure: '. $figtitle,
-        '#suffix' => '</div>',
-      );
-      $form['charts'][$key]['figure']['legend']['description'] = array(
-        '#type' => 'markup',
-        '#prefix' => '<div class="description">',
-        '#markup' => $figlegend,
-        '#suffix' => '</div>',
-      );
+  $form['charts'][$key]['figure']['chart'] = array(
+    '#type' => 'item',
+    '#markup' => '<div class="chart-wrapper" id="tripal-ap-'.$chart_type.'-plot-'.$key.'"></div>'
+  );
+
+  $form['charts'][$key]['figure']['legend'] = array(
+    '#type' => 'markup',
+    '#prefix' => '<div class="legend">',
+    '#suffix' => '</div>',
+  );
+
+  $form['charts'][$key]['figure']['legend']['title'] = array(
+    '#type' => 'markup',
+    '#prefix' => '<div class="title">',
+    '#markup' => 'Figure: '. $figtitle,
+    '#suffix' => '</div>',
+  );
+
+  $form['charts'][$key]['figure']['legend']['description'] = array(
+    '#type' => 'markup',
+    '#prefix' => '<div class="description">',
+    '#markup' => $figlegend,
+    '#suffix' => '</div>',
+  );
 }
 
 

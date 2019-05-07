@@ -137,7 +137,7 @@ class hp__phenotypic_variability extends ChadoField {
     $data = array();
 
     $resource = chado_query(
-      'SELECT trait_id, trait_name, experiment_id, experiment_name, method_id, method_name, unit_id, unit_name 
+      'SELECT trait_id, trait_name, experiment_id, experiment_name, method_id, method_name, unit_id, unit_name
        FROM {mview_phenotype}
        WHERE trait_id = :id
        GROUP BY trait_id, trait_name, experiment_id, experiment_name, method_id, method_name, unit_id, unit_name',
@@ -182,7 +182,7 @@ class hp__phenotypic_variability extends ChadoField {
     $data = array();
 
     $resource = chado_query(
-      'SELECT trait_id, trait_name, experiment_id, experiment_name, method_id, method_name, unit_id, unit_name 
+      'SELECT trait_id, trait_name, experiment_id, experiment_name, method_id, method_name, unit_id, unit_name
        FROM {mview_phenotype}
        WHERE stock_id = :id
        GROUP BY trait_id, trait_name, experiment_id, experiment_name, method_id, method_name, unit_id, unit_name',
@@ -190,6 +190,7 @@ class hp__phenotypic_variability extends ChadoField {
     while ($r = $resource->fetchObject()) {
       $data[] = array(
         'type' => 'germplasm',
+        'name' => $entity->chado_record->name,
         'value' => array(
           // Trait.
           'NCIT:C85496' => array(
@@ -228,7 +229,7 @@ class hp__phenotypic_variability extends ChadoField {
     $data = array();
 
     $resource = chado_query(
-      'SELECT trait_id, trait_name, experiment_id, experiment_name, method_id, method_name, unit_id, unit_name 
+      'SELECT trait_id, trait_name, experiment_id, experiment_name, method_id, method_name, unit_id, unit_name
        FROM {mview_phenotype}
        WHERE experiment_id = :id
        GROUP BY trait_id, trait_name, experiment_id, experiment_name, method_id, method_name, unit_id, unit_name',
@@ -283,7 +284,7 @@ class hp__phenotypic_variability extends ChadoField {
   /**
    * @see ChadoField::elementInfo()
    *
-   */  
+   */
   public function elementInfo() {
     $field_term = $this->getFieldTermID();
     return array(
