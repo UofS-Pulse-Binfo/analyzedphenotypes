@@ -21,6 +21,7 @@ class fileUploadTest extends TripalTestCase {
       'trait_name' => 'Lorem ipsum',
       'method_name' =>'dolor sit amet',
       'unit' => 'metris',
+      'type' => 'quantitative',
     );
     $info = \APFileUploadHelper::loadFile('SHORT-TestData-1trait1method.tsv', $traits_in_file);
 
@@ -58,6 +59,12 @@ class fileUploadTest extends TripalTestCase {
       "We did not get the number of units we expected.");
     $this->assertEquals($info['units']['metris'], $records[0]->unit_id,
       "We did not get the unit cvterm_id we expected.");
+
+    // Test the method is of the correct type: qualitative or quantitative.
+    $type = chado_query("SELECT value FROM {cvtermprop} WHERE cvterm_id=:id AND type_id IN (SELECT cvterm_id FROM {cvterm} WHERE name='additionalType')",
+      array(':id' => $info['units']['metris']))->fetchField();
+    $this->assertEquals('quantitative',$type,
+      "The unit metris was not quantitative.");
   }
 
   /**
@@ -73,11 +80,13 @@ class fileUploadTest extends TripalTestCase {
       'trait_name' => 'Lorem ipsum',
       'method_name' =>'dolor sit amet',
       'unit' => 'metris',
+      'type' => 'qualitative',
     );
     $traits_in_file[] = array(
       'trait_name' => 'Lorem ipsum',
       'method_name' =>'vitae aliquet arcu',
       'unit' => 'metris',
+      'type' => 'qualitative',
     );
     $info = \APFileUploadHelper::loadFile('SHORT-TestData-1trait2methods.tsv', $traits_in_file);
 
@@ -98,7 +107,7 @@ class fileUploadTest extends TripalTestCase {
     $this->assertEquals($info['traits']['Lorem ipsum'], $records[0]->attr_id,
       "We did not get the trait cvterm_id we expected.");
 
-    // Check that there is only a single method.
+    // Check that there are two methods.
     $records = chado_query(
       'SELECT DISTINCT assay_id FROM {phenotype} WHERE project_id=:project',
       array(':project' => $info['project']->project_id))->fetchAll();
@@ -111,5 +120,12 @@ class fileUploadTest extends TripalTestCase {
       array(':project' => $info['project']->project_id))->fetchAll();
     $this->assertEquals(1, sizeof($records),
       "We did not get the number of units we expected.");
+
+    // Test the method is of the correct type: qualitative or quantitative.
+    $type = chado_query("SELECT value FROM {cvtermprop} WHERE cvterm_id=:id AND type_id IN (SELECT cvterm_id FROM {cvterm} WHERE name='additionalType')",
+      array(':id' => $info['units']['metris']))->fetchField();
+    $this->assertEquals('qualitative',$type,
+      "The unit metris was not qualitative.");
+
   }
 }

@@ -49,10 +49,20 @@
             lineWidth:15,
             colors:['#555']
           });
-
+          
+          // Highlight germplasm, if current germplasm is known.
           if (apSettings.germplasm) {
-            // Highlight germplasm.
             highlightGermplasm(data, apSettings.germplasm);
+          }
+          
+          // Place watermark, if configured.
+          if (apSettings.addWatermark) {
+            if (apSettings.watermarkURL !== false) {
+              tripalD3.placeWatermark({'watermark' : apSettings.watermarkURL});
+            }
+            else {
+              tripalD3.placeWatermark();
+            }
           }
 
         }); //end of get json.

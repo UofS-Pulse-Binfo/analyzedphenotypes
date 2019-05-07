@@ -1,5 +1,5 @@
-Download of Analyzed Phenotypic Data
-====================================
+Downloading Phenotypic Data
+=============================
 
 Download data page is where user can download a subset of analyzed phenotypes data, as well as, the full set. Data generated in this page can be xlxs, tsv and csv file format.
 

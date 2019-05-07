@@ -189,6 +189,14 @@
               .style("text-anchor", "end")
               .text(function(d) {return d; });
 
+         if (apSettings.addWatermark) {
+           if (apSettings.watermarkURL !== false) {
+             tripalD3.placeWatermark({'watermark' : apSettings.watermarkURL});
+           }
+           else {
+             tripalD3.placeWatermark();
+           }
+         }
       }); //end of get json.
     }});
   }}; // End of Drupal Behaviours and associated attach.

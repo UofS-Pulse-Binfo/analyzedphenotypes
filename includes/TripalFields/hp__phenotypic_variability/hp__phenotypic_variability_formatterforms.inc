@@ -255,7 +255,8 @@ function analyzedphenotypes_hp_phenotypic_variability_experiment_form($form, $fo
  *   The current item.
  */
 function analyzedphenotypes_hp_phenotypic_variability_single_chart_form(&$form, $form_state, $i) {
-  $module_path = drupal_Get_path('module', 'analyzedphenotypes');
+
+  $module_path = drupal_get_path('module', 'analyzedphenotypes');
 
   $key = $i['value']['NCIT:C71460']['data:2091'] . '-' . $i['value']['uo:unit']['data:2091'];
   $name = $i['value']['NCIT:C71460']['schema:name'] . ' (' . $i['value']['uo:unit']['schema:name'] . ')';
@@ -309,7 +310,19 @@ function analyzedphenotypes_hp_phenotypic_variability_single_chart_form(&$form, 
     . "shown as different coloured bars. Germplasm exhibiting multiple $trait_name values are shown "
     . "as [first value]/[second value] where order is not meaningful.";
   }
-
+  
+  // Do we want to add a watermark?
+  $add_watermark = variable_get('ap_config_watermark_what', 'all');
+  if ($add_watermark == 'all') {
+    tripald3_load_libraries();
+    $watermark_url = variable_get('ap_config_watermark_url', FALSE);
+    $add_watermark = TRUE;
+  }
+  else {
+    $add_watermark = FALSE;
+    $watermark_url = FALSE;
+  }
+  
   // Add the needed JS for the chart.
   drupal_add_js($module_path . "/theme/js/$chart_type.chart.js", ['weight' => -3]);
   $data['analyzedPhenotypes'] = array();
@@ -323,6 +336,8 @@ function analyzedphenotypes_hp_phenotypic_variability_single_chart_form(&$form, 
     'xaxis' => $xaxis,
     'yaxis' => $yaxis,
     'germplasm' => $germplasm_name,
+    'addWatermark' => $add_watermark,
+    'watermarkURL' => $watermark_url,
   );
   drupal_add_js($data, 'setting');
 
