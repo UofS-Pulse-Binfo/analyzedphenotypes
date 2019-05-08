@@ -111,9 +111,32 @@ class local__number_of_experiments extends TripalField {
    *
    */
   public function load($entity) {
-    $field_name = $this->instance['field_name'];
+    // The source of the request: trait page or the germplasm page.
+    // Number of experiment in germplasm page is by stock_id and attr_id (cv term) in trait page.
+    $source = array(
+      // Traits.
+      'cvterm' => 'attr_id',
+      // Stock/Germplasm.
+      'stock'  => 'stock_id',
+    );
 
-    $entity->{$field_name}['und'][0]['value']['local:number of experiments'] = 1;
+    if (in_array($entity->chado_record->tablename, array_keys($source))) {
+      // Which source? get the key id field.
+      $key = $source[ $entity->chado_record->tablename ];
+
+      // Get count:
+      $sql   = sprintf("SELECT COUNT(DISTINCT project_id) FROM {phenotype} WHERE %s = :source", $key);
+      $count = chado_query($sql, array(':source' => $entity->chado_record_id))
+        ->fetchField();
+    }
+
+    // Nicely format the number or set note when no quantitative result returned.
+    $count = ($count && $count > 0) ? number_format($count) : 'Not measured in any experiment';
+
+    // Load.
+    // In value - for the user to see.
+    $field_name = $this->instance['field_name'];
+    $entity->{$field_name}['und'][0]['value']['local:number of experiments'] = $count;
   }
 
   /**

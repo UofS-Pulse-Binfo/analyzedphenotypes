@@ -95,6 +95,25 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
 	      'type' => 'field_chado_storage',
       ),
     );
+
+    // Number of experiments.
+    tripal_insert_cvterm(array(
+      'id' => 'local:number_of_experiments',
+      'name' => 'number of experiments',
+      'cv_name' => 'local',
+      'definition' => 'Number of experiments',
+    ));
+    $field_name = 'local__number_of_experiments';
+    $field_type = 'local__number_of_experiments';
+    $fields[$field_name] = array(
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => 1,
+      'locked' => FALSE,
+      'storage' => array(
+	      'type' => 'field_chado_storage',
+      ),
+    );
   }
 
   // Trait Distribution Chart Field.

@@ -44,21 +44,13 @@ class local__number_of_experiments_formatter extends TripalFieldFormatter {
    *    hook_field_formatter_view() function.
    */
   public function view(&$element, $entity_type, $entity, $langcode, $items, $display) {
-    // The source of the request: trait page or the germplasm page.
-    // Number of experiment in germplasm page is by stock_id and trait id in trait page.
-    $source = ($entity->chado_record->tablename == 'stocks') ? 'stock_id' : 'attr_id';
-  
-    // Get count:
-    $sql = sprintf("SELECT COUNT(DISTINCT project_id) FROM {phenotype} WHERE %s = :source", $source);
-    $number = chado_query($sql, array(':source' => $entity->chado_record_id))
-      ->fetchField();
-  
-    dpm($number);
+    // Refer to this ID for CSS styling.
+    $id = 'ap-field-number-of-experiments-wrapper';
 
-    // All set, render items.
+    // Render Number of Experimients.
     $element[0] = array(
       '#type' => 'markup',
-      '#markup' => 'lorem',
+      '#markup' => '<div id="' . $id . '">' . $items[0]['value']['local:number of experiments'] . '</div>',
     );
 
 
