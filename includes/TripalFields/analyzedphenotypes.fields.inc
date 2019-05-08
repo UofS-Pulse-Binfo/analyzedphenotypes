@@ -96,6 +96,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
       ),
     );
 
+    // Phenotype Summary Fields:
     // Number of experiments.
     tripal_insert_cvterm(array(
       'id' => 'local:number_of_experiments',
@@ -105,6 +106,25 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
     ));
     $field_name = 'local__number_of_experiments';
     $field_type = 'local__number_of_experiments';
+    $fields[$field_name] = array(
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => 1,
+      'locked' => FALSE,
+      'storage' => array(
+	      'type' => 'field_chado_storage',
+      ),
+    );
+
+    // Number of years.
+    tripal_insert_cvterm(array(
+      'id' => 'local:number_of_years',
+      'name' => 'number of years',
+      'cv_name' => 'local',
+      'definition' => 'Number of years',
+    ));
+    $field_name = 'local__number_of_years';
+    $field_type = 'local__number_of_years';
     $fields[$field_name] = array(
       'field_name' => $field_name,
       'type' => $field_type,
