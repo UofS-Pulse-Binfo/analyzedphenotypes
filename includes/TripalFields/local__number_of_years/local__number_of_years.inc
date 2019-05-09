@@ -144,7 +144,8 @@ class local__number_of_years extends TripalField {
         $sql = sprintf("SELECT t1.value AS year
           FROM {phenotypeprop} AS t1 INNER JOIN {phenotype} AS t2 USING(phenotype_id)
           WHERE t2.%s = :source AND t1.type_id = :year_term
-          GROUP BY t1.value ORDER BY t1.value DESC", $source[ $entity->chado_record->tablename ]);
+          GROUP BY t1.value
+          ORDER BY t1.value DESC", $source[ $entity->chado_record->tablename ]);
 
         $count = chado_query($sql, array(':year_term' => $sysvar_year, ':source' => $entity->chado_record_id))
           ->fetchAllKeyed(0, 0);
