@@ -111,24 +111,18 @@ class local__number_of_values_recorded extends TripalField {
    *
    */
   public function load($entity) {
-    // Debug: set true to show more details about the count.
-    $detailed = FALSE;
     //
     $count = '';
 
-    // The source of the request: trait page.
     if ($entity->chado_record->tablename == 'cvterm') {
       // Get count:
       $count = chado_query("SELECT COUNT(phenotype_id) FROM {phenotype} WHERE attr_id = :trait",
         array(':trait' => $entity->chado_record_id))
       ->fetchField();
 
-      $count = ($count && $count > 0) ? number_format($count) : 'No values found';
+      $count = ($count && $count > 0) ? number_format($count) : '';
     }
-    else {
-      // In the wrong content type.
-      $count = 'This field only supports Traits content type';
-    }
+
 
     // Load.
     // In value - for the user to see.

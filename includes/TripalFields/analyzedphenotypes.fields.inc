@@ -178,7 +178,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
       'id' => 'local:number_of_values_recorded',
       'name' => 'number of values recorded',
       'cv_name' => 'local',
-      'definition' => 'Number of values recorded',
+      'definition' => 'Used in AP Summary fields - Number of values recorded',
     ));
     $field_name = 'local__number_of_values_recorded';
     $field_type = 'local__number_of_values_recorded';
