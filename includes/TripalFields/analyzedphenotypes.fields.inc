@@ -153,6 +153,25 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
 	      'type' => 'field_chado_storage',
       ),
     );
+
+    // Number of germplasm.
+    tripal_insert_cvterm(array(
+      'id' => 'local:number_of_germplasm',
+      'name' => 'number of germplasm',
+      'cv_name' => 'local',
+      'definition' => 'Number of germplasm',
+    ));
+    $field_name = 'local__number_of_germplasm';
+    $field_type = 'local__number_of_germplasm';
+    $fields[$field_name] = array(
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => 1,
+      'locked' => FALSE,
+      'storage' => array(
+	      'type' => 'field_chado_storage',
+      ),
+    );
   }
 
   // Trait Distribution Chart Field.
