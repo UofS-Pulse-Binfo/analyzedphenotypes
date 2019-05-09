@@ -120,8 +120,9 @@ class local__number_of_traits extends TripalField {
         array(':stock_id' => $entity->chado_record_id))
       ->fetchField();
 
-      $count = ($count && $count > 0) ? number_format($count) : 'No traits found';
+      $count = ($count && $count > 0) ? number_format($count) : '';
     }
+
 
     // Load.
     // In value - for the user to see.

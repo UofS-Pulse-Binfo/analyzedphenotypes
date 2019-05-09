@@ -197,7 +197,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
       'id' => 'local:number_of_traits',
       'name' => 'number of traits',
       'cv_name' => 'local',
-      'definition' => 'Number of traits',
+      'definition' => 'Used in AP Summary fields - Number of traits',
     ));
     $field_name = 'local__number_of_traits';
     $field_type = 'local__number_of_traits';
