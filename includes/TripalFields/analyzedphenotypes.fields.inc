@@ -159,7 +159,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
       'id' => 'local:number_of_germplasm',
       'name' => 'number of germplasm',
       'cv_name' => 'local',
-      'definition' => 'Number of germplasm',
+      'definition' => 'Used in AP Summary fields - Number of germplasm',
     ));
     $field_name = 'local__number_of_germplasm';
     $field_type = 'local__number_of_germplasm';

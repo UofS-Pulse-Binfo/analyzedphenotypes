@@ -116,31 +116,30 @@ class local__number_of_germplasm extends TripalField {
     //
     $count = '';
 
-    // The source of the request: trait page.
     if ($entity->chado_record->tablename == 'cvterm') {
-      // Source is only coming from cvterm (trait).
-      $key = 'stock_id';
-
       // Get count:
-      $count = chado_query("SELECT t1.name FROM {stock} AS t1 INNER JOIN {phenotype} USING(stock_id)
-        WHERE attr_id = :source GROUP BY t1.name", array(':source' => $entity->chado_record_id))
+      $count = chado_query("SELECT t1.name AS stock_name
+        FROM {stock} AS t1 INNER JOIN {phenotype} USING(stock_id)
+        WHERE attr_id = :source
+        GROUP BY t1.name
+        ORDER BY t1.name ASC", array(':source' => $entity->chado_record_id))
       ->fetchAllKeyed(0, 0);
 
-      // Detailed or just the count.
-      if ($detailed) {
-        // List the germplasm.
-        $count = count($count) . ':' . implode(', ', $count);
-      }
-      else {
-        // Count the germplasm.
-        $count = count($count);
-        $count = ($count && $count > 0) ? number_format($count) : 'No germplasm found';
+      if ($count && count($count) > 0) {
+        $total_count = count($count);
+
+        // Detailed or just the count.
+        if ($detailed) {
+          // List count and germplasm.
+          $count = $total_count . ': ' . implode(', ', $count);
+        }
+        else {
+          // Count the germplasm.
+          $count = number_format($total_count);
+        }
       }
     }
-    else {
-      // In the wrong content type.
-      $count = 'This field only supports Traits content type';
-    }
+
 
     // Load.
     // In value - for the user to see.
