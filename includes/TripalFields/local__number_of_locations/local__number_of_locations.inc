@@ -117,20 +117,20 @@ class local__number_of_locations extends TripalField {
     $count = '';
 
     // Need to use 'location' ontology settings in AP.
+    // Get the system variable for locations.
     module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.systemvars.api');
 
     $sysvar_terms = ap_get_variablenames(
       array('variablename' => 'varset'),
       array('set' => 'terms')
     );
-
-    // Get the system variable for location.
     $sysvar_location = variable_get($sysvar_terms['ap_location']);
+
+
     if ($sysvar_location && $sysvar_location > 0) {
       // Only when the system variable for year is set.
 
-      // The source of the request: trait page or the germplasm page.
-      // Number of locations in germplasm page is by stock_id and attr_id (cv term) in trait page.
+      // The source of the request: trait page or the germplasm page and map the key field.
       $source = array(
         // Traits.
         'cvterm' => 'attr_id',
@@ -138,34 +138,34 @@ class local__number_of_locations extends TripalField {
         'stock'  => 'stock_id',
       );
 
-      if (in_array($entity->chado_record->tablename, array_keys($source))) {
-        // Which source? get the key id field.
-        $key = $source[ $entity->chado_record->tablename ];
 
-        // Get all locations registered:
-        $sql = sprintf("SELECT t1.value FROM {phenotypeprop} AS t1 LEFT JOIN {phenotype} USING(phenotype_id)
-          WHERE %s = :source AND type_id = :location_term GROUP BY t1.value ORDER BY t1.value ASC", $key);
+      if (in_array($entity->chado_record->tablename, array_keys($source))) {
+        // Get count:
+        $sql = sprintf("SELECT t1.value AS location
+          FROM {phenotypeprop} AS t1 INNER JOIN {phenotype} AS t2 USING(phenotype_id)
+          WHERE t2.%s = :source AND t1.type_id = :location_term
+          GROUP BY t1.value
+          ORDER BY t1.value ASC", $source[ $entity->chado_record->tablename ]);
 
         $count = chado_query($sql, array(':location_term' => $sysvar_location, ':source' => $entity->chado_record_id))
           ->fetchAllKeyed(0, 0);
 
-        // Detailed or just the count.
-        if ($detailed) {
-          // List the locations. Use ; instead of , since some location
-          // include the city and separated by comma.
-          $count = implode('; ', $count);
-        }
-        else {
-          // Count the locations.
-          $count = count($count);
-          $count = ($count && $count > 0) ? number_format($count) : 'Not measured in any location';
+        if ($count && count($count) > 0) {
+          $total_count = count($count);
+
+          // Detailed or just the count.
+          if ($detailed) {
+            // List count and locations.
+            $count = $total_count . ': ' . implode('; ', $count);
+          }
+          else {
+            // Count the locations.
+            $count = number_format($total_count);
+          }
         }
       }
     }
-    else {
-      // Term not set.
-      $count = 'Location ontology term not set in Analyzed Phenotypes Module';
-    }
+
 
     // Load.
     // In value - for the user to see.

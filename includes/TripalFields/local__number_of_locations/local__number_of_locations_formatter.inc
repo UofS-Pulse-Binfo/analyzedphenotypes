@@ -47,7 +47,7 @@ class local__number_of_locations_formatter extends TripalFieldFormatter {
     // Refer to this ID for CSS styling.
     $id = 'ap-field-number-of-locations-wrapper';
 
-    // Render Number of Experimients.
+    // Render Number of Locations.
     $element[0] = array(
       '#type' => 'markup',
       '#markup' => '<div id="' . $id . '">' . $items[0]['value']['local:number of locations'] . '</div>',

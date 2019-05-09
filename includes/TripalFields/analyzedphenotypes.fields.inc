@@ -140,7 +140,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
       'id' => 'local:number_of_locations',
       'name' => 'number of locations',
       'cv_name' => 'local',
-      'definition' => 'Number of locations',
+      'definition' => 'Used in AP Summary fields - Number of locations',
     ));
     $field_name = 'local__number_of_locations';
     $field_type = 'local__number_of_locations';
