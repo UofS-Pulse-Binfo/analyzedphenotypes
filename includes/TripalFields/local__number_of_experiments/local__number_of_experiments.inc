@@ -111,8 +111,12 @@ class local__number_of_experiments extends TripalField {
    *
    */
   public function load($entity) {
-    // The source of the request: trait page or the germplasm page.
-    // Number of experiment in germplasm page is by stock_id and attr_id (cv term) in trait page.
+    // Debug: set true to show more details about the count.
+    $detailed = FALSE;
+    //
+    $count = '';
+
+    // The source of the request: trait page or the germplasm page and map the key field.
     $source = array(
       // Traits.
       'cvterm' => 'attr_id',
@@ -120,18 +124,31 @@ class local__number_of_experiments extends TripalField {
       'stock'  => 'stock_id',
     );
 
-    if (in_array($entity->chado_record->tablename, array_keys($source))) {
-      // Which source? get the key id field.
-      $key = $source[ $entity->chado_record->tablename ];
 
+    if (in_array($entity->chado_record->tablename, array_keys($source))) {
       // Get count:
-      $sql   = sprintf("SELECT COUNT(DISTINCT project_id) FROM {phenotype} WHERE %s = :source", $key);
+      $sql = sprintf("SELECT t1.name AS project_name
+        FROM {project} AS t1 INNER JOIN {phenotype} AS t2 USING(project_id)
+        WHERE t2.%s = :source", $source[ $entity->chado_record->tablename ]);
+
       $count = chado_query($sql, array(':source' => $entity->chado_record_id))
-        ->fetchField();
+        ->fetchAllKeyed(0, 0);
+
+      if ($count && count($count) > 0) {
+        $total_count = count($count);
+
+        // Detailed or just the count.
+        if ($detailed) {
+          // List count and experiments.
+          $count = $total_count . ': ' . implode(', ', $count);
+        }
+        else {
+          // Count the experiments.
+          $count = number_format($total_count);
+        }
+      }
     }
 
-    // Nicely format the number or set note when no quantitative result returned.
-    $count = ($count && $count > 0) ? number_format($count) : 'Not measured in any experiment';
 
     // Load.
     // In value - for the user to see.

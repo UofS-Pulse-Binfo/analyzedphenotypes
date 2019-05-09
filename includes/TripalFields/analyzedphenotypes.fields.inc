@@ -102,7 +102,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
       'id' => 'local:number_of_experiments',
       'name' => 'number of experiments',
       'cv_name' => 'local',
-      'definition' => 'Number of experiments',
+      'definition' => 'Used in AP Summary fields - Number of experiments',
     ));
     $field_name = 'local__number_of_experiments';
     $field_type = 'local__number_of_experiments';

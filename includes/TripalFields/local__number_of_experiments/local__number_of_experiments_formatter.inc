@@ -17,7 +17,7 @@ class local__number_of_experiments_formatter extends TripalFieldFormatter {
   public static $default_label = 'Number of experiments';
 
   // The list of field types for which this formatter is appropriate.
-  public static $field_types = array('local__numnber_of_experiments');
+  public static $field_types = array('local__number_of_experiments');
 
   /**
    *  Provides the display for a field
