@@ -121,7 +121,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
       'id' => 'local:number_of_years',
       'name' => 'number of years',
       'cv_name' => 'local',
-      'definition' => 'Number of years',
+      'definition' => 'Used in AP Summary fields - Number of years',
     ));
     $field_name = 'local__number_of_years';
     $field_type = 'local__number_of_years';

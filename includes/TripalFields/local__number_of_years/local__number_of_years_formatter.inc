@@ -47,7 +47,7 @@ class local__number_of_years_formatter extends TripalFieldFormatter {
     // Refer to this ID for CSS styling.
     $id = 'ap-field-number-of-years-wrapper';
 
-    // Render Number of Experimients.
+    // Render Number of Years.
     $element[0] = array(
       '#type' => 'markup',
       '#markup' => '<div id="' . $id . '">' . $items[0]['value']['local:number of years'] . '</div>',
