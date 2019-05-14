@@ -232,6 +232,11 @@ function analyzedphenotypes_theme($existing, $type, $theme, $path) {
     'path' => $path . '/theme',
   );
 
+  // Phenotype Trait Summary Fields.
+  $items['analyzedphenotypes_trait_summary_fields'] = array(
+    'render element' => 'element',
+  );
+
 
   return $items;
 }
@@ -1090,3 +1095,112 @@ function analyzedphenotypes_trpdownload_writefile($filename, $data_rows, $file_t
       break;
   }
 }
+
+
+/**
+ * FUNCTION FIELD FORMATTER.
+ *
+ *
+ */
+function analyzedphenotypes_field_group_formatter_info() {
+  $info = array();
+
+  $settings = array(
+    'traitsummary' => array(
+      'label' => t('Analyzed Phenotypes Data Summary'),
+      'description' => t('This fieldgroup renders the Analyzed Phenotypes Data Summary with the field title as an item'),
+      'instance_settings' => array(
+        'id' => '',
+        'classes' => '',
+      )
+    )
+  );
+
+  $info = array(
+    'form' => $settings,
+    'display' => $settings,
+  );
+
+  return $info;
+}
+
+
+
+
+
+
+function analyzedphenotypes_field_group_format_settings($group) {
+  $form = array();
+
+  if ($group->format_type == 'traitsummary') {
+    // Apply additional settings here:
+    $form['instance_settings'] = array('weight' => 1);
+  }
+
+  return $form;
+}
+
+
+
+
+function analyzedphenotypes_field_group_pre_render(&$element, $group, &$form) {
+  if ($group->format_type == 'traitsummary') {
+    // Wrap the content type to div wrapper.
+    $element['#prefix'] = '<div id="ap-trait-summary-field-wrapper">';
+    $element['#suffix'] = '<div class="bg">&nbsp;</div></div>';
+    $element['#theme_wrappers'] = array('analyzedphenotypes_trait_summary_fields');
+  }
+}
+
+function analyzedphenotypes_field_group_build_pre_render_alter(&$element) {
+  $element['#attached']['js'][] = drupal_get_path('module', 'analyzedphenotypes') . '/theme/js/analyzedphenotypes.trait.summary.fieldgroup.js';
+  $element['#attached']['css'][] = drupal_get_path('module', 'analyzedphenotypes') . '/theme/css/analyzedphenotypes.trait.summary.fieldgroup.css';
+}
+
+
+function theme_analyzedphenotypes_trait_summary_fields($variables) {
+  $element = $variables['element'];
+
+
+  $markup = '
+    <div class="container-data-category">
+      <div class="container-round-icon">
+        <div class="data-icon">
+          img
+        </div>
+      </div>
+
+      <div class="container-data-text">
+        <em>%s</em>
+      </div>
+    </div>';
+
+  $output = '';
+
+  foreach (element_children($element) as $e) {
+    $field_title = $element[$e]['#title'];
+    $field_value = current($element[$e]['#items'][0]['value']);
+    $output .= sprintf($markup, $field_value . ' ' . $field_title);
+  }
+
+  return $output;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

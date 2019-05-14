@@ -1,0 +1,135 @@
+/**
+ * @file
+ * Contains styles used in trait summary field group.
+ */
+#ap-trait-summary-field-wrapper {
+  background: url(../img/trait-summary-fieldgroup/bg-bottom-summary.jpg) repeat-x bottom;
+  min-height: 430px;
+  position: relative;
+  width: 100%;
+}
+
+  .bg {
+    bottom: 0;
+    background-image: url(../img/trait-summary-fieldgroup/bg-leaf.png);
+    background-repeat: no-repeat;
+    background-position: center 80%;
+    pointer-events: none;
+    position: absolute;
+    height: 300px;
+    width: 100%;
+  }
+
+    div.container-data-category {
+      border-width: 1px;
+      border-bottom: none;
+      cursor: pointer;
+      display: none;
+      height: 130px;
+      position: absolute;
+      text-align: center;
+      width: 215px;
+
+      -webkit-transition: font-size 0.1s ease-out;
+      -moz-transition: font-size 0.1s ease-out;
+      -o-transition: font-size 0.1s ease-out;
+      transition: font-size 0.1s ease-out;
+
+      z-index: 10;
+    }
+
+      div.container-data-category:hover {
+        font-size: 1.1em;
+
+        -webkit-transition: font-size 0.2s ease-out;
+        -moz-transition: font-size 0.2s ease-out;
+        -o-transition: font-size 0.2s ease-out;
+        transition: font-size 0.2s ease-out;
+      }
+
+    div.container-round-icon {
+      background-color: #FFFFFF;
+      height: 38px;
+      left: 30%;
+      margin: 0 auto;
+      position: absolute;
+      text-align: center;
+      width: 85px;
+      z-index: 9999;
+    }
+
+    div.data-icon {
+      border-radius: 50%;
+      behavior: url(PIE.htc); /* remove if you don't care about IE8 */
+      background-color: #EAEAEA;
+      border: 1px solid #C0C0C0;
+      color: #000000;
+      font-family: sans-serif;
+      font-size: 2em;
+      font-weight: 300;
+      height: 70px;
+      line-height: 21px;
+      margin: 0 auto;
+      text-align: center;
+      width: 70px;
+
+      /* http://angrytools.com/gradient/ - gradient generator */
+      background: -moz-radial-gradient(center, ellipse cover, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 22%, rgba(208,208,208,1) 100%); /* ff3.6+ */
+      background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, rgba(255,255,255,1)), color-stop(22%, rgba(255,255,255,1)), color-stop(100%, rgba(208,208,208,1))); /* safari4+,chrome */
+      background: -webkit-radial-gradient(center, ellipse cover, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 22%, rgba(208,208,208,1) 100%); /* safari5.1+,chrome10+ */
+      background: -o-radial-gradient(center, ellipse cover, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 22%, rgba(208,208,208,1) 100%); /* opera 11.10+ */
+      background: -ms-radial-gradient(center, ellipse cover, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 22%, rgba(208,208,208,1) 100%); /* ie10+ */
+      background:radial-gradient(ellipse at center, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 22%, rgba(208,208,208,1) 100%); /* w3c */
+      filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#D0D0D0',GradientType=1 ); /* ie6-9 */
+    }
+
+    .data-icon img {
+      border: none;
+      margin: 10px 0 0 0;
+    }
+
+    div.container-data-text {
+      border-top: 1px solid #C0C0C0;
+      height: 90px;
+      position: relative;
+      margin-top: 35px;
+
+      background: #EAEAEA; /* For browsers that do not support gradients */
+      background: -webkit-linear-gradient( #FFFFFF, #EAEAEA); /* For Safari 5.1 to 6.0 */
+      background: -o-linear-gradient(#FFFFFF, #EAEAEA); /* For Opera 11.1 to 12.0 */
+      background: -moz-linear-gradient(#FFFFFF, #EAEAEA); /* For Firefox 3.6 to 15 */
+      background: linear-gradient(#FFFFFF, #EAEAEA); /* Standard syntax */
+    }
+
+      .container-data-text::after {
+        bottom: 15px;
+        background: transparent;
+        content: '';
+        height: 10px;
+        left: auto;
+        position: absolute;
+        right: 8px;
+        width: 70%;
+
+        -webkit-transform: skew(10deg) rotate(10deg);
+        -moz-transform: skew(10deg) rotate(10deg);
+        -ms-transform: skew(10deg) rotate(10deg);
+        -o-transform: skew(10deg) rotate(10deg);
+        transform: skew(10deg) rotate(10deg);
+
+        -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.7);
+        -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.7);
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.7);
+
+        z-index: -1;
+      }
+
+   div.container-data-text em {
+     color: #000000;
+     display: inline-block;
+     font-size: 1.4em;
+     font-family: Georgia;
+     font-style: italic;
+     margin: 45px 0 0 0;
+     text-shadow: 0 2px 0 rgba(255, 255, 255, 0.7);
+   }
