@@ -1188,7 +1188,7 @@ function theme_analyzedphenotypes_trait_summary_fields($variables) {
     <div class="container-data-category">
       <div class="container-round-icon">
         <div class="data-icon">
-          img
+          <img src="%s" height="45" widht="40" alt="%s" title="%s" />
         </div>
       </div>
 
@@ -1203,7 +1203,10 @@ function theme_analyzedphenotypes_trait_summary_fields($variables) {
     $field_title = $element[$e]['#title'];
     $field_value = current($element[$e]['#items'][0]['value']);
 
-    $output .= sprintf($markup, ap_shortval($field_value) . ' ' . $field_title);
+    $value = ap_shortval($field_value['count']) . ' ' . $field_title;
+    $image = $field_value['image'];
+
+    $output .= sprintf($markup, $image, $field_title, $field_title, $value);
   }
 
 
