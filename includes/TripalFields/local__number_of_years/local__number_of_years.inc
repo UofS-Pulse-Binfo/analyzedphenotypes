@@ -111,9 +111,6 @@ class local__number_of_years extends TripalField {
    *
    */
   public function load($entity) {
-    // Debug: set true to show more details about the count.
-    $detailed = FALSE;
-    //
     $count = '';
 
     // Need to use 'year' ontology settings in AP.
@@ -141,27 +138,15 @@ class local__number_of_years extends TripalField {
 
       if (in_array($entity->chado_record->tablename, array_keys($source))) {
         // Get count:
-        $sql = sprintf("SELECT t1.value AS year
+        $sql = sprintf("SELECT COUNT(DISTINCT t1.value) AS year_count
           FROM {phenotypeprop} AS t1 INNER JOIN {phenotype} AS t2 USING(phenotype_id)
-          WHERE t2.%s = :source AND t1.type_id = :year_term
-          GROUP BY t1.value
-          ORDER BY t1.value DESC", $source[ $entity->chado_record->tablename ]);
+          WHERE t2.%s = :source AND t1.type_id = :year_term", $source[ $entity->chado_record->tablename ]);
 
-        $count = chado_query($sql, array(':year_term' => $sysvar_year, ':source' => $entity->chado_record_id))
-          ->fetchAllKeyed(0, 0);
+        $count = chado_query($sql, array(':year_term' => $sysvar_year, ':source' => $entity->chado_record_id));
 
-        if ($count && count($count) > 0) {
-          $total_count = count($count);
 
-          // Detailed or just the count.
-          if ($detailed) {
-            // List count and years.
-            $count = $total_count . ': ' . implode(', ', $count);
-          }
-          else {
-            // Count the years.
-            $count = number_format($total_count);
-          }
+        if ($count && $count->rowCount() > 0) {
+          $count = $count->fetchField();
         }
       }
     }
@@ -170,7 +155,11 @@ class local__number_of_years extends TripalField {
     // Load.
     // In value - for the user to see.
     $field_name = $this->instance['field_name'];
-    $entity->{$field_name}['und'][0]['value']['local:number of years'] = $count;
+    $entity->{$field_name}['und'][0]['value']['local:number of years'] = array(
+      'count' =>  $count,
+      // Default image: change value to point to other image.
+      'image' => drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/local__number_of_experiments/theme/years.gif',
+    );
   }
 
   /**

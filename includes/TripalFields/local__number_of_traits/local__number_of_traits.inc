@@ -116,18 +116,23 @@ class local__number_of_traits extends TripalField {
     // The source of the request: germplasm page.
     if ($entity->chado_record->tablename == 'stock') {
       // Get count:
-      $count = chado_query("SELECT COUNT(DISTINCT attr_id) FROM {phenotype} WHERE stock_id = :stock_id",
-        array(':stock_id' => $entity->chado_record_id))
-      ->fetchField();
+      $count = chado_query("SELECT COUNT(DISTINCT attr_id) AS trait_count FROM {phenotype} WHERE stock_id = :stock_id",
+        array(':stock_id' => $entity->chado_record_id));
 
-      $count = ($count && $count > 0) ? number_format($count) : '';
+      if ($count && $count->rowCount() > 0) {
+        $count = $count->fetchField();
+      }
     }
 
 
     // Load.
     // In value - for the user to see.
     $field_name = $this->instance['field_name'];
-    $entity->{$field_name}['und'][0]['value']['local:number of traits'] = $count;
+    $entity->{$field_name}['und'][0]['value']['local:number of traits'] = array(
+      'count' =>  $count,
+      // Default image: change value to point to other image.
+      'image' => drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/local__number_of_experiments/theme/traits.gif',
+    );
   }
 
   /**

@@ -50,7 +50,7 @@ class local__number_of_values_recorded_formatter extends TripalFieldFormatter {
     // Render Number of Values Recorded.
     $element[0] = array(
       '#type' => 'markup',
-      '#markup' => '<div id="' . $id . '">' . $items[0]['value']['local:number of values recorded'] . '</div>',
+      '#markup' => '<div id="' . $id . '">' . $items[0]['value']['local:number of values recorded']['count'] . '</div>',
     );
 
 

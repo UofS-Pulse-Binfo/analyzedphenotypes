@@ -50,7 +50,7 @@ class local__number_of_traits_formatter extends TripalFieldFormatter {
     // Render Number of Traits.
     $element[0] = array(
       '#type' => 'markup',
-      '#markup' => '<div id="' . $id . '">' . $items[0]['value']['local:number of traits'] . '</div>',
+      '#markup' => '<div id="' . $id . '">' . $items[0]['value']['local:number of traits']['count'] . '</div>',
     );
 
 
