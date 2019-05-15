@@ -50,7 +50,7 @@ class local__number_of_years_formatter extends TripalFieldFormatter {
     // Render Number of Years.
     $element[0] = array(
       '#type' => 'markup',
-      '#markup' => '<div id="' . $id . '">' . $items[0]['value']['local:number of years'] . '</div>',
+      '#markup' => '<div id="' . $id . '">' . $items[0]['value']['local:number of years']['count'] . '</div>',
     );
 
 

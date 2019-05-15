@@ -111,32 +111,15 @@ class local__number_of_germplasm extends TripalField {
    *
    */
   public function load($entity) {
-    // Debug: set true to show more details about the count.
-    $detailed = FALSE;
-    //
     $count = '';
 
     if ($entity->chado_record->tablename == 'cvterm') {
       // Get count:
-      $count = chado_query("SELECT t1.name AS stock_name
-        FROM {stock} AS t1 INNER JOIN {phenotype} USING(stock_id)
-        WHERE attr_id = :source
-        GROUP BY t1.name
-        ORDER BY t1.name ASC", array(':source' => $entity->chado_record_id))
-      ->fetchAllKeyed(0, 0);
+      $count = chado_query("SELECT COUNT(DISTINCT stock_id) AS stock_count FROM {phenotype}
+        WHERE attr_id = :source", array(':source' => $entity->chado_record_id));
 
-      if ($count && count($count) > 0) {
-        $total_count = count($count);
-
-        // Detailed or just the count.
-        if ($detailed) {
-          // List count and germplasm.
-          $count = $total_count . ': ' . implode(', ', $count);
-        }
-        else {
-          // Count the germplasm.
-          $count = number_format($total_count);
-        }
+      if ($count && $count->rowCount() > 0) {
+        $count = $count->fetchField();
       }
     }
 
@@ -144,7 +127,11 @@ class local__number_of_germplasm extends TripalField {
     // Load.
     // In value - for the user to see.
     $field_name = $this->instance['field_name'];
-    $entity->{$field_name}['und'][0]['value']['local:number of germplasm'] = $count;
+    $entity->{$field_name}['und'][0]['value']['local:number of germplasm'] = array(
+      'count' =>  $count,
+      // Default image: change value to point to other image.
+      'image' => drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/local__number_of_experiments/theme/germplasm.gif',
+    );
   }
 
   /**

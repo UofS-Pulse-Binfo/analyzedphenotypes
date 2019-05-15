@@ -50,7 +50,7 @@ class local__number_of_germplasm_formatter extends TripalFieldFormatter {
     // Render Number of Germplasm.
     $element[0] = array(
       '#type' => 'markup',
-      '#markup' => '<div id="' . $id . '">' . $items[0]['value']['local:number of germplasm'] . '</div>',
+      '#markup' => '<div id="' . $id . '">' . $items[0]['value']['local:number of germplasm']['count'] . '</div>',
     );
 
 

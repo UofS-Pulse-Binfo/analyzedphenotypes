@@ -50,7 +50,7 @@ class local__number_of_locations_formatter extends TripalFieldFormatter {
     // Render Number of Locations.
     $element[0] = array(
       '#type' => 'markup',
-      '#markup' => '<div id="' . $id . '">' . $items[0]['value']['local:number of locations'] . '</div>',
+      '#markup' => '<div id="' . $id . '">' . $items[0]['value']['local:number of locations']['count'] . '</div>',
     );
 
 

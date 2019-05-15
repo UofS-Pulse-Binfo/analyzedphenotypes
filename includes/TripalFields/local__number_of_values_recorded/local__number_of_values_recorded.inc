@@ -111,23 +111,27 @@ class local__number_of_values_recorded extends TripalField {
    *
    */
   public function load($entity) {
-    //
     $count = '';
 
     if ($entity->chado_record->tablename == 'cvterm') {
       // Get count:
-      $count = chado_query("SELECT COUNT(phenotype_id) FROM {phenotype} WHERE attr_id = :trait",
-        array(':trait' => $entity->chado_record_id))
-      ->fetchField();
+      $count = chado_query("SELECT COUNT(phenotype_id) AS value_count FROM {phenotype} WHERE attr_id = :trait",
+        array(':trait' => $entity->chado_record_id));
 
-      $count = ($count && $count > 0) ? number_format($count) : '';
+      if ($count && $count->rowCount() > 0) {
+        $count = $count->fetchField();
+      }
     }
 
 
     // Load.
     // In value - for the user to see.
     $field_name = $this->instance['field_name'];
-    $entity->{$field_name}['und'][0]['value']['local:number of values recorded'] = $count;
+    $entity->{$field_name}['und'][0]['value']['local:number of values recorded'] = array(
+      'count' =>  $count,
+      // Default image: change value to point to other image.
+      'image' => drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/local__number_of_experiments/theme/values.gif',
+    );
   }
 
   /**

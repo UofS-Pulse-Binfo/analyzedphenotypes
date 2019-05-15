@@ -50,7 +50,7 @@ class local__number_of_experiments_formatter extends TripalFieldFormatter {
     // Render Number of Experimients.
     $element[0] = array(
       '#type' => 'markup',
-      '#markup' => '<div id="' . $id . '">' . $items[0]['value']['local:number of experiments'] . '</div>',
+      '#markup' => '<div id="' . $id . '">' . $items[0]['value']['local:number of experiments']['count'] . '</div>',
     );
 
 
