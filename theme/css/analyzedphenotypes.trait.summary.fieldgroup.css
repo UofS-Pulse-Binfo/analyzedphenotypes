@@ -4,9 +4,11 @@
  */
 #ap-trait-summary-field-wrapper {
   background: url(../img/trait-summary-fieldgroup/bg-bottom-summary.jpg) repeat-x bottom;
+  margin: 0;
   margin-top: 10px;
   min-height: 430px;
   position: relative;
+  padding: 0;
 }
 
   .bg {

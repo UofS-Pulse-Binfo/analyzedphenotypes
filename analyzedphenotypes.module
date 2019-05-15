@@ -1203,10 +1203,11 @@ function theme_analyzedphenotypes_trait_summary_fields($variables) {
     $field_title = $element[$e]['#title'];
     $field_value = current($element[$e]['#items'][0]['value']);
 
+    $raw_value_title = number_format($field_value['count']) . ' ' . $field_title;
     $value = ap_shortval($field_value['count']) . ' ' . $field_title;
-    $image = $field_value['image'];
+    $image = file_create_url($field_value['image']);
 
-    $output .= sprintf($markup, $image, $field_title, $field_title, $value);
+    $output .= sprintf($markup, $image, $raw_value_title, $raw_value_title, $value);
   }
 
 
