@@ -158,7 +158,7 @@ class local__number_of_years extends TripalField {
     $entity->{$field_name}['und'][0]['value']['local:number of years'] = array(
       'count' =>  $count,
       // Default image: change value to point to other image.
-      'image' => drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/local__number_of_experiments/theme/years.gif',
+      'image' => drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/local__number_of_years/theme/years.gif',
     );
   }
 

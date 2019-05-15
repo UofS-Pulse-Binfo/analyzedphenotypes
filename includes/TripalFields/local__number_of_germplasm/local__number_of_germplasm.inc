@@ -130,7 +130,7 @@ class local__number_of_germplasm extends TripalField {
     $entity->{$field_name}['und'][0]['value']['local:number of germplasm'] = array(
       'count' =>  $count,
       // Default image: change value to point to other image.
-      'image' => drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/local__number_of_experiments/theme/germplasm.gif',
+      'image' => drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/local__number_of_germplasm/theme/germplasm.gif',
     );
   }
 

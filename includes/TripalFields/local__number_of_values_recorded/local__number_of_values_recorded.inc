@@ -130,7 +130,7 @@ class local__number_of_values_recorded extends TripalField {
     $entity->{$field_name}['und'][0]['value']['local:number of values recorded'] = array(
       'count' =>  $count,
       // Default image: change value to point to other image.
-      'image' => drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/local__number_of_experiments/theme/values.gif',
+      'image' => drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/local__number_of_values_recorded/theme/values.gif',
     );
   }
 

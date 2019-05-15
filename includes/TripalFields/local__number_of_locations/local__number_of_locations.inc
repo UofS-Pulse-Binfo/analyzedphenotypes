@@ -158,7 +158,7 @@ class local__number_of_locations extends TripalField {
     $entity->{$field_name}['und'][0]['value']['local:number of locations'] = array(
       'count' =>  $count,
       // Default image: change value to point to other image.
-      'image' => drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/local__number_of_experiments/theme/locations.gif',
+      'image' => drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/local__number_of_locations/theme/locations.gif',
     );
   }
 

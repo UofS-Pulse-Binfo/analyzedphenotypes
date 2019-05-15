@@ -131,7 +131,7 @@ class local__number_of_traits extends TripalField {
     $entity->{$field_name}['und'][0]['value']['local:number of traits'] = array(
       'count' =>  $count,
       // Default image: change value to point to other image.
-      'image' => drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/local__number_of_experiments/theme/traits.gif',
+      'image' => drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/local__number_of_traits/theme/traits.gif',
     );
   }
 
