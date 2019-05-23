@@ -37,7 +37,7 @@
         .orient("left");
 
       var color = d3.scale.ordinal()
-        .range(["#BBC7BD","#0C6758","#7AB318","#253443", "#21597D", "#090C0E", "#D5D4E6", "#CCCCCC", "#9FA7A3"]);
+        .range(["#BBC7BD","#0C6758","#7AB318","#253443", "#4a7dad", "#3b2d96", "#6d7f33", "#4aad9e", "#6b6b6b", "#0a8c05"]);
 
       // Create the canvas.
       d3.select("#"+id+" svg").remove();
@@ -147,7 +147,7 @@
               .append('tspan')
                 .attr('x', width/2)
                 .attr('dy', "1.2em")
-                .text('('+xAxisLabel.split(' (')[1]);
+                .text('('+xAxisLabel.split(' (').slice(1,5).join(' ('));
 
         // Y-Axis.
         svg.append("g")

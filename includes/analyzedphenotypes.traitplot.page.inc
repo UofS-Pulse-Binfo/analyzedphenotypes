@@ -384,10 +384,9 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
     $yaxis = $trait_name.' ('.$unit.')';
     $figtitle = "Comparison of observed $trait_name between site years for <em>$experiment_name</em>.";
     $figlegend = "$trait_name was measured as a $unit. "
-     . $method . " Replicates were then averaged per germplasm within a single site-year."
-     . " The chart shows the number of germplasm with a specific $trait_name where site-years are "
-     . "shown as different coloured bars. Germplasm exhibiting multiple $trait_name values are shown "
-     . "as [first value]/[second value] where order is not meaningful.";
+     . $method . " Each replicate is it's ouwn data point in the above chart and contributes equally to the frequency."
+     . " The chart shows the frequency a given phenotypic value was observed where site-years are "
+     . "shown as different coloured bars.";
   }
   // @debug dpm($chart_type, 'chart type');
 
