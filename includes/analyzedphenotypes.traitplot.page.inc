@@ -503,22 +503,33 @@ function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $
     foreach($resource as $r) {
 
       $values = json_decode($r->values);
+      // QUANTITATIVE:
+      // We want to average the replicates and provide a single value.
       if ($r->chart_type == 'quantitative') {
         $mean = array_sum($values) / count($values);
+        $results[] = array(
+          'category' => $r->location . ' ' . $r->year,
+          'values' => $values,
+          'value' => $mean,
+          // This will tag this data point using the name of germplasm
+          // that will allow JS to highlight in the violin plot.
+          'germ' => $r->stock_name,
+        );
       }
+      // QUALITATIVE:
+      // We want to provide an item for each value so that replicates are additive.
       else {
-        $values = array_unique($values);
-        sort($values);
-        $mean = implode('/', $values);
+        foreach ($values as $val) {
+          $results[] = array(
+            'category' => $r->location . ' ' . $r->year,
+            'values' => $values,
+            'value' => $val,
+            // This will tag this data point using the name of germplasm
+            // that will allow JS to highlight in the violin plot.
+            'germ' => $r->stock_name,
+          );
+        }
       }
-      $results[] = array(
-        'category' => $r->location . ' ' . $r->year,
-        'values' => $values,
-        'value' => $mean,
-        // This will tag this data point using the name of germplasm
-        // that will allow JS to highlight in the violin plot.
-        'germ' => $r->stock_name,
-      );
     }
   }
 
