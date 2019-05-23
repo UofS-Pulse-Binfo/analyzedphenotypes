@@ -384,7 +384,7 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
     $yaxis = $trait_name.' ('.$unit.')';
     $figtitle = "Comparison of observed $trait_name between site years for <em>$experiment_name</em>.";
     $figlegend = "$trait_name was measured as a $unit. "
-     . $method . " Each replicate is it's ouwn data point in the above chart and contributes equally to the frequency."
+     . $method . " Each replicate is it's own data point in the above chart and contributes equally to the frequency."
      . " The chart shows the frequency a given phenotypic value was observed where site-years are "
      . "shown as different coloured bars.";
   }
@@ -492,7 +492,7 @@ function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $
           AND mview.method_id= :method_id
           AND mview.unit_id=:unit_id
           AND prop.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE name='additionalType')
-        ORDER BY year ASC, location ASC",
+        ORDER BY location ASC, year ASC",
       array(
         ':project_id' => $project_id,
         ':trait_id' => $trait_id,
