@@ -384,7 +384,7 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
     $yaxis = $trait_name.' ('.$unit.')';
     $figtitle = "Comparison of observed $trait_name between site years for <em>$experiment_name</em>.";
     $figlegend = "$trait_name was measured as a $unit. "
-     . $method . " Each replicate is it's own data point in the above chart and contributes equally to the frequency."
+     . $method . " Each replicate per site-year is not averaged but rather contributes equally to the frequency of occurrence (y-axis)."
      . " The chart shows the frequency a given phenotypic value was observed where site-years are "
      . "shown as different coloured bars.";
   }
