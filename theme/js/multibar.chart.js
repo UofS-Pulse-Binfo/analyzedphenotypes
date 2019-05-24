@@ -11,7 +11,7 @@
         method_id = apSettings.method_id,
         unit_id = apSettings.unit_id,
         xAxisLabel = apSettings.yaxis,
-        yAxisLabel = "Number of Germplasm",
+        yAxisLabel = "Frequency of Occurrence (percent)",
         id = apSettings.id;
 
       var margin = {top: 100, right: 20, bottom: 60, left: 50},
@@ -37,7 +37,7 @@
         .orient("left");
 
       var color = d3.scale.ordinal()
-        .range(["#BBC7BD","#0C6758","#7AB318","#253443", "#21597D", "#090C0E", "#D5D4E6", "#CCCCCC", "#9FA7A3"]);
+        .range(["#BBC7BD","#0C6758","#7AB318","#253443", "#4a7dad", "#3b2d96", "#6d7f33", "#4aad9e", "#6b6b6b", "#0a8c05"]);
 
       // Create the canvas.
       d3.select("#"+id+" svg").remove();
@@ -61,6 +61,8 @@
           seriesI = 0;
         // The max number of germplasm in a category/series combo.
         var ymax = 0;
+        // Keyed by the series, the max number of germplasm within that series across categories.
+        var seriesMax = [];
 
         // For each datapoint, add to the count for the correct category/series combo.
         rawdata.forEach(function(e) {
@@ -76,6 +78,7 @@
           if (!seriesIndex.hasOwnProperty(e.category)) {
             seriesNames.push(e.category);
             seriesIndex[ e.category ] = seriesI;
+            seriesMax[ seriesI ] = 0;
             seriesI++;
           }
           si = seriesIndex[ e.category ];
@@ -88,18 +91,30 @@
           // Iterate the number of germplasm for this category/series combo.
           data[ ci ].values[ si ].value += 1;
 
-          // Check to see if this is the max num of germplasm we've seen...
-          if (data[ ci ].values[ si ].value > ymax) {
-            ymax = data[ ci ].values[ si ].value;
-          }
+          // Interate the number of germplasm for this series.
+          seriesMax[ si ] += 1;
+
         });
 
-        // Make sure all categories have all series.
+        // @debug console.log(seriesMax);
+
+        // re-loop through all category/series combinations...
         categoryNames.forEach(function (c, ci) {
           seriesNames.forEach(function (s, si) {
+
+            // Make sure all categories have all series.
             if (typeof data[ ci ].values[ si ] === 'undefined') {
               data[ ci ].values[ si ] = { value: 0, series: s };
             }
+
+            // And change the values to a frequency (divide by the sum of all germplasm for a given series).
+            data[ ci ].values[ si ].value = (data[ ci ].values[ si ].value / seriesMax[ si ]) * 100;
+
+            // Check to see if this is the max frequency we've seen...
+            if (data[ ci ].values[ si ].value > ymax) {
+              ymax = data[ ci ].values[ si ].value;
+            }
+
           });
         });
 
@@ -110,7 +125,8 @@
         // Set up the scales based on the values of the axis'.
         x0.domain(categoryNames);
         x1.domain(seriesNames).rangeRoundBands([0, x0.rangeBand()]);
-        var ypadding = Math.ceil(ymax / 15);
+        var ypadding = 0;
+        if (ymax < 10) { ypadding = 1; } else { ypadding = 10; }
         y.domain([0, ymax + ypadding]);
 
         // X-Axis
@@ -131,7 +147,7 @@
               .append('tspan')
                 .attr('x', width/2)
                 .attr('dy', "1.2em")
-                .text('('+xAxisLabel.split(' (')[1]);
+                .text('('+xAxisLabel.split(' (').slice(1,5).join(' ('));
 
         // Y-Axis.
         svg.append("g")
