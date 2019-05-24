@@ -11,7 +11,7 @@
         method_id = apSettings.method_id,
         unit_id = apSettings.unit_id,
         xAxisLabel = apSettings.yaxis,
-        yAxisLabel = "Frequency of Occurance (percent)",
+        yAxisLabel = "Frequency of Occurrence (percent)",
         id = apSettings.id;
 
       var margin = {top: 100, right: 20, bottom: 60, left: 50},
