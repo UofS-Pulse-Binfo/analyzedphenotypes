@@ -2,8 +2,12 @@
   Drupal.behaviors.analyzedPhenotypesQualPlot = {
     attach: function (context, settings) {
 
-    Drupal.settings.analyzedPhenotypes.forEach(function (apSettings) {
+    Drupal.settings.analyzedPhenotypes.forEach(function (apSettings, ctr) {
     if (apSettings.type === 'multibar') {
+      // The Germplasm Name:
+      ////////////////////////////////////
+      var germplasmName = '';
+        germplasmName = apSettings.germplasm;
 
       // Prepare variables.
       var experiment_id = apSettings.experiment_id,
@@ -44,13 +48,18 @@
       var svg = d3.select("#"+id).append("svg")
           .attr("width", width + margin.left + margin.right)
           .attr("height", height + margin.top + margin.bottom)
+          .attr("id", "ap-svg-" + ctr)
         .append("g")
           .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+
+      // Begin Bar Chart:
       d3.json(Drupal.settings.basePath+'/json/phenotypes/traitplot/'+experiment_id+'/'+trait_id+'/'+method_id+'/'+unit_id, function(error, rawdata) {
 
         // Will contain the processed data.
         data = [];
+        var dataGermplasm = new Array();
+
         // X-axis labels.
         var categoryNames = [],
           categoryIndex = {},
@@ -90,6 +99,12 @@
 
           // Iterate the number of germplasm for this category/series combo.
           data[ ci ].values[ si ].value += 1;
+
+          // Mark where germplasm was found in a count:
+          //////////////////////////////////////////////////
+          if (germplasmName != '' && e.germ == germplasmName) {
+            dataGermplasm.push(ci + '-' + si);
+          }
 
           // Interate the number of germplasm for this series.
           seriesMax[ si ] += 1;
@@ -131,15 +146,15 @@
 
         // X-Axis
         svg.append("g")
-              .attr("class", "x axis")
-              .attr("transform", "translate(0," + height + ")")
-              .call(xAxis)
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis)
           .append("text")
-              .attr("y", 25)
-              .attr("dy", ".71em")
-              .attr("x", width/2)
-              .style("text-anchor", "middle")
-              .style('font-weight','bold')
+            .attr("y", 25)
+            .attr("dy", ".71em")
+            .attr("x", width/2)
+            .style("text-anchor", "middle")
+            .style('font-weight','bold')
               .append('tspan')
                 .attr('x', width/2)
                 .attr('dy', "1.2em")
@@ -151,59 +166,147 @@
 
         // Y-Axis.
         svg.append("g")
-              .attr("class", "y axis")
-              .style('opacity','1')
-              .call(yAxis)
+          .attr("class", "y axis")
+          .style("opacity", "1")
+          .call(yAxis)
           .append("text")
-              .attr("transform", "rotate(-90)")
-              .attr("y", -45)
-              .attr("dy", ".71em")
-              .attr("x", -height/1.5)
-              .style("text-anchor", "center")
-              .style('font-weight','bold')
-              .text(yAxisLabel);
+            .attr("transform", "rotate(-90)")
+            .attr("y", -45)
+            .attr("dy", ".71em")
+            .attr("x", -height/1.5)
+            .style("text-anchor", "center")
+            .style('font-weight', 'bold')
+            .text(yAxisLabel);
 
         var slice = svg.selectAll(".slice")
-              .data(data)
-              .enter().append("g")
-              .attr("class", "g")
-              .attr("transform",function(d) { return "translate(" + x0(d.category) + ",0)"; });
+          .data(data)
+          .enter()
+          .append("g")
+            .attr("class", "g")
+            .attr("transform",function(d) { return "translate(" + x0(d.category) + ",0)"; });
 
         slice.selectAll("rect")
-              .data(function(d) { return d.values; })
-          .enter().append("rect")
-              .attr("width", x1.rangeBand()-1)
-              .attr("x", function(d) { return x1(d.series); })
-              .style("fill", function(d) { return color(d.series) })
-              .attr("y", function(d) { return y(d.value)-1; })
-              .attr("height", function(d) { return height - y(d.value); })
-              .on("mouseover", function(d) {
-                d3.select(this).style("fill", d3.rgb(color(d.series)).darker(2));
-              })
-              .on("mouseout", function(d) {
-                d3.select(this).style("fill", color(d.series));
-              });
+          .data(function(d) { return d.values; })
+          .enter()
+            .append("g")
+              .attr("class", "ap-rect-bar-wrapper")
+              .append("rect")
+                .attr("width", x1.rangeBand()-1)
+                .attr("x", function(d) { return x1(d.series); })
+                .style("fill", function(d) { return color(d.series) })
+                .attr("y", function(d) { return y(d.value)-1; })
+                .attr("height", function(d) { return height - y(d.value); })
+                .on("mouseover", function(d) {
+                  d3.select(this).style("fill", d3.rgb(color(d.series)).darker(2));
+                })
+                .on("mouseout", function(d) {
+                  d3.select(this).style("fill", color(d.series));
+                });
+
+         //
+         // Mark Germplasm where it is measured in each bar.
+         if (germplasmName && germplasmName != '') {
+           // Add div window used as the tool tip window.
+           // But, first, ensure that it wasn't previously added, then no
+           // need to reappend the element.
+           var toolTipWindowId = 'ap-mark-germplasm-tooltip-window';
+           var tipWindow = d3.select('#' + toolTipWindowId);
+
+           var hasWindow = tipWindow.empty();
+           if (hasWindow) {
+             d3.select("body")
+               .append("div")
+                 .attr("id", toolTipWindowId)
+                 // Style:
+                 .style("background-color", "#72AB4D")
+                 .style("cursor", "pointer")
+                 .style("color", "#000000")
+                 .style("font-family", "sans-serif")
+                 .style("font-size", "0.7em")
+                 .style("font-weight", "300")
+                 .style("opacity", "0")
+                 .style("padding", "5px")
+                 .style("position", "absolute")
+                 .style("text-align", "center")
+                 .style("width", "70px");
+           }
+
+           // Add all circles:
+           d3.select("#ap-svg-" + ctr).selectAll(".g").each(function(d, i) {
+             d3.select(this).selectAll(".ap-rect-bar-wrapper").each(function(e, j) {
+               var rectProp = {};
+                 // X and Y, height of the rect.
+                 rectProp.rect = d3.select(this).select("rect");
+                 rectProp.height = rectProp.rect.attr("height");
+
+                 rectProp.x = rectProp.rect.attr("x");
+                 rectProp.x = parseInt(rectProp.x);
+
+                 rectProp.y = rectProp.rect.attr("y");
+                 rectProp.y = parseInt(rectProp.y);
+
+               // Add the marker only when height has some value...
+               // No value means it is there but not measured so we don't want a marker.
+               if (rectProp.height && rectProp.height > 0 && dataGermplasm.includes( i + '-' + j )) {
+                 var gRect = d3.select(this)
+                   .append("g")
+                   .on("mouseover", function() {
+                     // Window on.
+                     d3.select("#" + toolTipWindowId)
+                       .html(germplasmName)
+                       .style("left", (d3.event.pageX + 10) + "px")
+                       .style("top" , (d3.event.pageY) + "px")
+                       .style("opacity", "0.88");
+                   })
+                   .on("mouseout", function() {
+                     // Window out.
+                     d3.select("#" + toolTipWindowId)
+                       .html("")
+                       .style("left", 0)
+                       .style("top" , 0)
+                       .style("opacity", "0");
+                   })
+                   .attr("transform", "translate("+ (rectProp.x + (x1.rangeBand() / 2)) + "," + (rectProp.y - 15) +")")
+                   .style("cursor", "pointer");
+
+                 // Round handle - active handle.
+                 gRect
+                   .append("circle")
+                     .attr("r", 5)
+                     .attr("fill", "#74ac50");
+
+                 // Pointer - point at the bar.
+                 gRect
+                   .append("polygon")
+                     .attr("points", "0, 0 0, 12 5, 0")
+                     .attr("fill", "#74ac50");
+               }
+             });
+           });
+         }
+         //
 
          //Legend
          var legend = svg.selectAll(".legend")
-              .data(data[0].values.map(function(d) { return d.series; }).reverse())
-           .enter().append("g")
-              .attr("class", "legend")
-              .attr("transform", function(d,i) { return "translate(0," + (i * 20 - margin.top) + ")"; })
-              .style("opacity","1");
+           .data(data[0].values.map(function(d) { return d.series; }).reverse())
+           .enter()
+           .append("g")
+             .attr("class", "legend")
+             .attr("transform", function(d,i) { return "translate(0," + (i * 20 - margin.top) + ")"; })
+             .style("opacity", "1");
 
          legend.append("rect")
-              .attr("x", width - 18)
-              .attr("width", 18)
-              .attr("height", 18)
-              .style("fill", function(d) { return color(d); });
+           .attr("x", width - 18)
+           .attr("width", 18)
+           .attr("height", 18)
+           .style("fill", function(d) { return color(d); });
 
          legend.append("text")
-              .attr("x", width - 24)
-              .attr("y", 9)
-              .attr("dy", ".35em")
-              .style("text-anchor", "end")
-              .text(function(d) {return d; });
+           .attr("x", width - 24)
+           .attr("y", 9)
+           .attr("dy", ".35em")
+           .style("text-anchor", "end")
+           .text(function(d) {return d; });
 
          if (apSettings.addWatermark) {
            if (apSettings.watermarkURL !== false) {
@@ -213,6 +316,7 @@
              tripalD3.placeWatermark();
            }
          }
+
       }); //end of get json.
     }});
   }}; // End of Drupal Behaviours and associated attach.

@@ -300,6 +300,7 @@ function analyzedphenotypes_hp_phenotypic_variability_single_chart_form(&$form, 
       . "members of the sampled germplasm collection will show that phenotype.";
   }
   else {
+    $germplasm_name = $i['name'];
     $chart_type = 'multibar';
     $xaxis = 'Site-Year';
     $yaxis = $trait_name.' ('.$unit.')';
@@ -310,7 +311,7 @@ function analyzedphenotypes_hp_phenotypic_variability_single_chart_form(&$form, 
     . "shown as different coloured bars. Germplasm exhibiting multiple $trait_name values are shown "
     . "as [first value]/[second value] where order is not meaningful.";
   }
-  
+
   // Do we want to add a watermark?
   $add_watermark = variable_get('ap_config_watermark_what', 'all');
   if ($add_watermark == 'all') {
@@ -322,7 +323,7 @@ function analyzedphenotypes_hp_phenotypic_variability_single_chart_form(&$form, 
     $add_watermark = FALSE;
     $watermark_url = FALSE;
   }
-  
+
   // Add the needed JS for the chart.
   drupal_add_js($module_path . "/theme/js/$chart_type.chart.js", ['weight' => -3]);
   $data['analyzedPhenotypes'] = array();
