@@ -1,0 +1,63 @@
+/**
+ * @file
+ * Style ncit data field.
+ */
+#ap-summary-overview-list ul {
+  list-style-type: none;
+  margin: 0 0 30px 0;
+  padding: 0 0 10px 0;
+  clear: left;
+}
+
+#ap-summary-overview-list ul li {
+  background-position: left;
+  background-repeat: no-repeat;
+  background-size: 20px 21px;
+
+  margin: 10px 10px 0 0;
+  padding: 0;
+  display: inline;
+  float: left;
+  font-size: 1.2em;
+  line-height: 20px;
+
+  padding-left: 25px;
+  padding-right: 10px;
+}
+
+/*
+  List from left to right:
+  1. Germplasm Name as link.
+  2. Experiments
+  3. Locations
+  4. Years
+ */
+#ap-summary-overview-list ul li:first-child {
+  padding-left: 0;
+  padding-right: 15px;
+  line-height: 20px;
+  border-right: 1px solid #000000;
+}
+
+#ap-summary-overview-list ul li:nth-child(2) {
+  background-image: url(experiments.gif);
+}
+
+#ap-summary-overview-list ul li:nth-child(3) {
+  background-image: url(locations.gif);
+}
+
+#ap-summary-overview-list ul li:nth-child(4) {
+  background-image: url(years.gif);
+}
+
+/* Search Autocomplete text field */
+#ap-search-autocomplete-textfield {
+  margin: 15px 10px 15px 0;
+  width: 405px;
+}
+
+/* AJAX progress - always below the field */
+#ap-germplasm-search-wrapper .ajax-progress {
+  display: block;
+}

@@ -73,7 +73,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
       'cardinality' => 1,
       'locked' => FALSE,
       'storage' => array(
-	'type' => 'field_chado_storage',
+	      'type' => 'field_chado_storage',
       ),
     );
 
@@ -86,6 +86,25 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
     ));
     $field_name = 'local__magnitude_of_phenotypes';
     $field_type = 'local__magnitude_of_phenotypes';
+    $fields[$field_name] = array(
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => 1,
+      'locked' => FALSE,
+      'storage' => array(
+	      'type' => 'field_chado_storage',
+      ),
+    );
+
+    // Germplasm Phenotype Search.
+    tripal_insert_cvterm(array(
+      'id' => 'NCIT:data',
+      'name' => 'data',
+      'cv_name' => 'NCIT',
+      'definition' => 'Used in AP Germplasm Phenotype search field - Data',
+    ));
+    $field_name = 'ncit__data';
+    $field_type = 'ncit__data';
     $fields[$field_name] = array(
       'field_name' => $field_name,
       'type' => $field_type,
@@ -242,6 +261,38 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         'default' => array(
           'label' => 'hidden',
           'type' => 'local__magnitude_of_phenotypes_formatter',
+          'settings' => array(),
+        ),
+      ),
+    );
+
+    // Germplasm Phenotype Search Field.
+    $field_name = 'ncit__data';
+    $field_type = 'ncit__data';
+    $instances[$field_name] =  array(
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Germplasm Phenotype Search',
+      'definition' => 'Used in AP Germplasm Phenotype search field - Data',
+      'required' => FALSE,
+      'settings' => array(
+        'term_vocabulary' => 'local',
+        'term_name' => 'data',
+        'term_accession' => 'data',
+        'auto_attach' => FALSE,
+        'chado_table' => $bundle->data_table,
+        'chado_column' => 'cvterm_id',
+        'base_table' => $bundle->data_table,
+      ),
+      'widget' => array(
+        'type' => 'ncit__data_widget',
+        'settings' => array(),
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'ncit__data_formatter',
           'settings' => array(),
         ),
       ),
