@@ -13,6 +13,7 @@
   background-position: left;
   background-repeat: no-repeat;
   background-size: 20px 21px;
+  cursor: pointer;
 
   margin: 10px 10px 0 0;
   padding: 0;
@@ -25,6 +26,10 @@
   padding-right: 10px;
 }
 
+#ap-summary-overview-list ul li:hover {
+  text-decoration: underline;
+}
+
 /*
   List from left to right:
   1. Germplasm Name as link.
@@ -34,7 +39,7 @@
  */
 #ap-summary-overview-list ul li:first-child {
   padding-left: 0;
-  padding-right: 15px;
+  padding-right: 10px;
   line-height: 20px;
   border-right: 1px solid #000000;
 }
@@ -54,10 +59,65 @@
 /* Search Autocomplete text field */
 #ap-search-autocomplete-textfield {
   margin: 15px 10px 15px 0;
-  width: 405px;
+  width: 400px;
 }
 
 /* AJAX progress - always below the field */
 #ap-germplasm-search-wrapper .ajax-progress {
   display: block;
 }
+
+/* Table - reduced width for column showing only numbers */
+#ap-ncitdata-field-wrapper table td:nth-last-child(-n+3) {
+  width: 12%;
+  font-size: 1.1em;
+}
+
+#ap-ncitdata-field-wrapper table td span {
+  display: block;
+  font-weight: bold;
+  font-size: 0.99em;
+}
+
+/* Revel more rows */
+#ap-ncitdata-btn-reveal {
+  border-top: 1px solid #CCCCCC;
+  margin-top: 15px;
+  width: 100%;
+}
+
+#ap-ncitdata-btn-reveal div {
+  cursor: pointer;
+  color: #CCCCCC;
+  border: 1px solid #CCCCCC;
+  border-radius: 50%;
+  margin: -12px auto 0 auto;
+  text-align: center;
+  width: 20px;
+}
+
+.ap-ncitdata-table-row-reveal-off {
+  background: #F0F0F0 no-repeat url('arrow-sprite.gif') 2px 2px;
+}
+
+.ap-ncitdata-table-row-reveal-on {
+  background: #F0F0F0 no-repeat url('arrow-sprite.gif') 2px -12px;
+}
+
+
+/* Tool Tip */
+.ap-tooltip {
+  background-color: rgba(248, 240, 177, 0.9);
+  border: 1px solid #CBCf54;
+  display: none;
+  font-family: sans-serif;
+  font-size: 0.8em;
+  padding: 7px;
+  line-height: 20px;
+  margin: 0;
+  position: absolute;
+}
+
+
+
+
