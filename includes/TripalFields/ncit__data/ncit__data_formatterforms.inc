@@ -1,172 +1,227 @@
 <?php
+/**
+ * Function callback: construct search form.
+ *
+ * @param $form
+ *   Drupal form array/object.
+ * @param $form_state
+ *   Drupal form array/object.
+ * @param $items
+ *   Array, contains values created in load() method.
+ *   Elements include the trait id (cvterm_id) and trait data type (quantitative or qualitative).
+ *
+ * @return array.
+ *   Render array as parameter to drupal_get_form() in field formatter.
+ *
+ * @see ncit__data_formatter.inc.
+ *      ncit__data.inc.
+ */
 function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_state, $items) {
-  $module_path = drupal_get_path('module','analyzedphenotypes');
-  $form['#attached']['css'][] = $module_path . '/includes/TripalFields/ncit__data/theme/style_ncitdata_field.css';
-  $form['#attached']['js'][] = $module_path . '/includes/TripalFields/ncit__data/theme/script.js';
-
-  $form['ap_germplasm_autocomplete_textfield'] = array(
+  // FIELD: Autocomplete text field.
+  $form['ap_germplasm_search_autocomplete_textfield'] = array(
     '#type' => 'textfield',
-    '#title' => '',
-    '#autocomplete_path' => 'admin/tripal/storage/chado/auto_name/stock',
     '#theme_wrappers' => array(),
+    '#autocomplete_path' => 'admin/tripal/storage/chado/auto_name/stock',
     '#attributes' => array(
       'placeholder' => 'Germplasm Name or Accession'
     ),
-    '#id' => 'ap-search-autocomplete-textfield',
+
+    '#id' => 'ap-germplasm-search-autocomplete-textfield',
   );
 
-  $form['ap_search_button'] = array(
+  // BUTTON: Search button.
+  $form['ap_germplasm_search_button_submit'] = array(
     '#type' => 'button',
     '#value' => 'Search',
-    '#id' => 'ap-search-button',
     '#ajax' => array(
-      'callback' => 'analyzedphenotypes_ncitdata_AJAX_callback',
-      'wrapper' => 'ap-ncitdata-field-wrapper',
+      'callback' => 'analyzedphenotypes_germplasm_search_AJAX_callback',
+      'wrapper' => 'ap-germplasm-search-ajax-wrapper',
+      'effect' => 'slide',
     ),
+
+    '#id' => 'ap-germplasm-search-button-submit',
   );
 
-
-  $form['ap_ncitdata_field_wrapper'] = array(
-    '#prefix' => '<div id="ap-ncitdata-field-wrapper">',
+  // AJAX WRAPPER: Div wrapper element.
+  $form['ap_germplasm_search_ajax_wrapper'] = array(
+    '#prefix' => '<div id="ap-germplasm-search-ajax-wrapper">',
     '#suffix' => '</div>'
   );
 
-
+  // FIELD: Storage.
   // Store the trait id # and all values prepared by the loader
   // for it to be available in succeeding AJAX request.
-  $form['ap_cache_items'] = array(
+  $form['ap_germplasm_search_cache_items'] = array(
     '#type' => 'value',
     '#value' => $items,
   );
 
-  if (isset($form_state['values']) && isset($form_state['values']['ap_germplasm_autocomplete_textfield'])) {
-    $s = $form_state['values']['ap_germplasm_autocomplete_textfield'];
-    if (preg_match('/\[id: (\d+)\]/', $s, $matches)) {
-      $stock_id =  $matches[1];
 
-      $p = chado_query("SELECT name, uniquename, type_id FROM {stock} WHERE stock_id = :stock_id LIMIT 1"
-        , array(':stock_id' => $stock_id));
+  // AJAX RESPONSE:
 
-      if ($p->rowCount() > 0) {
-        $items = $form_state['values']['ap_cache_items'];
-        list($trait_id, $type) = array_values($items[0]);
+
+  if (isset($form_state['values'])) {
+    // AJAX form submitted.
+    // When form_state is set, autcomplete field too, and has a value.
+    if (isset($form_state['values']['ap_germplasm_search_autocomplete_textfield'])
+      && !empty($form_state['values']['ap_germplasm_search_autocomplete_textfield'])) {
+
+      // Check for valid stock id.
+      $a = $form_state['values']['ap_germplasm_search_autocomplete_textfield'];
+      $stock_id = (preg_match('/\[id: (\d+)\]$/', $a, $matches)) ? $matches[1] : 0;
+
+      if (!$stock_id) {
+        // Stock has no phenotype.
+        drupal_set_message('Germplasm not measured in this trait.
+          Please enter a Germplasm Name or Accession.', 'error');
+
+        return $form;
+      }
+
+      // BEGIN AJAX RESPONSE:
+      // Athough we are getting the id from autocomplete, still check the stock
+      // if it matched to a record in stock.
+      $stockprop = chado_get_stock(array('stock_id' => $stock_id), array('include_fk' => array()));
+
+      if ($stockprop) {
+        // Stock okay, but does it have a phenotype?
+        $cache = $form_state['values']['ap_germplasm_search_cache_items'];
+        list($trait_id, $type) = array_values($cache[0]);
 
         $data = chado_query("
-          SELECT
-            CONCAT(experiment_name, '<span>', location, ' - ', year , '</span>') AS experiment,
-            CONCAT(method_name, '<span>(', unit_name, ')</span>') AS method,
-            ARRAY_TO_JSON(ARRAY[experiment_name, location, year]) AS summary,
-            values
-          FROM {mview_phenotype}
-          WHERE trait_id = :trait_id AND stock_id = :stock_id
-          ORDER BY year, location, experiment_name DESC",
+          SELECT values,
+            ARRAY_TO_JSON(ARRAY[experiment_name, location, year]) AS experiment,
+            ARRAY_TO_JSON(ARRAY[method_name, unit_name]) AS method
+          FROM {mview_phenotype} WHERE trait_id = :trait_id AND stock_id = :stock_id ORDER BY year DESC",
           array(':trait_id' => $trait_id, ':stock_id' => $stock_id));
 
         if ($data->rowCount() > 0) {
-          // Has data.
-          $header = $item = $tmp = array();
-          array_push($header, 'Experiment', 'Method', '# Measurements');
+          // Has phenotypes, Prepare AJAX response.
+          $tmp1 = $item = array();
 
-          $col1 = $col2 = '';
-
+          //
+          // SUMMARY TABLE:
           foreach($data as $i => $row) {
-            $values = json_decode($row->values);
-            $replicates = count($values);
+             $values = json_decode($row->values);
+             $values_count = count($values);
 
-            // Specific to either types.
+             $cols = array();
+             $tem2 = '';
+
+            // Specific columns to either.
             if ($type['data_type'] == 'quantitative') {
-              // QUAN: mean value and standard deviation.
-              $mn = array_sum($values) / count($values);
-              $mn = $mn ?? '-';
-              $col1 = round($mn, 2);
-
-              $sd = ap_calculate_standard_deviation($values);
-              $sd = $sd ?? '-';
-              $col2 = round($sd, 2);
-
-              if ($i == 0) {
-                // Add specific header.
-                array_push($header, 'Mean', 'Standard Deviation');
-              }
+              // QUANTITY: mean and standard deviation.
+              $mean = round((array_sum($values) / $values_count), 2);
+              $sdev = round(ap_calculate_standard_deviation($values), 2);
+              $cols = array(
+                'Mean' => $mean,
+                'Standard<br />Deviation' => $sdev
+              );
             }
             elseif ($type['data_type'] == 'qualitative') {
-              // QUAL: observed phenotype (unique) and # measurements.
-              $col1 = array_uniqe($values);
-
-              if ($i == 0) {
-                // Add specific header.
-                array_push($header, 'Observed Phenotype');
-              }
+              // QUATLITY: observed phenotypes.
+              $obsv = array_unique($values);
+              $cols = array(
+                'Observed Phenotypes' => implode(', ', $obsv)
+              );
             }
 
-            // Common items to both quantitative and qualitative types.
-            // Experiment, Trait, # Measurement.
+            // Create table row items.
+            $tmp1[$i] = json_decode($row->experiment);
+            $tmp2     = json_decode($row->method);
 
-            // Add to item.
-            $item[] = array($row->experiment, $row->method, $replicates, $col1, $col2);
+            // span styled as block element.
+            $item[$i] = array_merge(
+              array(
+                $tmp1[$i][0] . '<span>'  . $tmp1[$i][1] . ' - ' . $tmp1[$i][2] . '</span>',
+                $tmp2[0]     . '<span>(' . $tmp2[1]    . ')</span>',
+                $values_count
+              ),
 
-            // Store the summary for quick count/reference in summary overview.
-            $tmp[] = json_decode($row->summary);
+              array_values($cols)
+            );
           }
+          //
 
-          $stockprop = $p->fetchObject();
-
-          // Construct: Summary Overview.
-          $chado_bundle = db_query('SELECT t2.name FROM {tripal_term} AS t1 INNER JOIN {tripal_bundle} AS t2 ON t1.id = t2.term_id
-            WHERE t1.accession = (SELECT t3.accession FROM chado.dbxref AS t3 INNER JOIN chado.cvterm AS t4 USING(dbxref_id)
-              WHERE t4.cvterm_id = :stock_type)', array(':stock_type' => $stockprop->type_id)
-          )
-          ->fetchField();
-
-          $e = sprintf("SELECT entity_id FROM chado_%s WHERE record_id = :stock_id LIMIT 1", $chado_bundle);
-          $chado_entity = chado_query($e, array(':stock_id' => $stock_id))
-            ->fetchField();
-
-          $base_cols = array(
-            'experiments' => array_unique(array_column($tmp, 0)),
-            'locations'  => array_unique(array_column($tmp, 1)),
-            'years'     => array_unique(array_column($tmp, 2))
-          );
-
-          $tool_tip = '<div class="ap-tooltip">%s</div>';
-
-          $summary_overview_val['items'] = array(
-            l($stockprop->name, url('../bio_data/' . $chado_entity), array('attributes' => array('target' => '_blank'))) . sprintf($tool_tip, $stockprop->name . ' (' . $stockprop->uniquename . ')'),
-            count($base_cols['experiments']) . ' Experiments' . sprintf($tool_tip, implode(' &bull; ', $base_cols['experiments'])),
-            count($base_cols['locations']) . ' Locations' . sprintf($tool_tip, implode(' &bull; ', $base_cols['locations'])),
-            count($base_cols['years']) . ' Years' . sprintf($tool_tip, implode(' &bull; ', $base_cols['years'])),
-          );
-
-          $summary_overview_markup = theme('item_list', $summary_overview_val);
-          $form['ap_ncitdata_field_wrapper']['ap_summary_overview'] = array(
-            '#type' => 'markup',
-            '#markup' => '<div id="ap-summary-overview-list">' . $summary_overview_markup . '</div>',
-          );
-
-          $summary_table_markup = theme('table', array(
-            'header' => $header,
+          $element_table = theme('table', array(
+            'header' => array_merge(array('Experiment', 'Method', 'Number of<br />Measurements'), array_keys($cols)),
             'rows' => $item,
             'sticky' => FALSE,
-            'attributes' => array('id' => 'ap-table-default-headers')
           ));
 
-          // First 5 rows but any more will require the button to show less or more.
-          $btn_reveal = (count($item) > 6)
-            ? '<div id="ap-ncitdata-btn-reveal"><div class="ap-ncitdata-table-row-reveal-on" title="Click to show more or less">&nbsp;</div></div'
-            : '';
 
-          $form['ap_ncitdata_field_wrapper']['ap_summary_table'] = array(
-            '#markup' => '<div id="ap-ncitdata-table-summary-wrapper" style="max-height: 300px; overflow-y: hidden">' . $summary_table_markup . '</div>' . $btn_reveal,
+          //
+          // SUMMARY OVERVIEW LIST:
+          $chado_bundle = db_query('SELECT t2.name FROM {tripal_term} AS t1 INNER JOIN {tripal_bundle} AS t2 ON t1.id = t2.term_id
+            WHERE t1.accession = (SELECT t3.accession FROM chado.dbxref AS t3 INNER JOIN chado.cvterm AS t4 USING(dbxref_id)
+              WHERE t4.cvterm_id = :stock_type)', array(':stock_type' => $stockprop->type_id))
+            ->fetchField();
+
+          $entity = sprintf("SELECT entity_id FROM chado_%s WHERE record_id = :stock_id LIMIT 1", $chado_bundle);
+          $chado_entity = chado_query($entity, array(':stock_id' => $stock_id))
+            ->fetchField();
+
+          $list_item = array(
+            'experiments' => array_unique(array_column($tmp1, 0)),
+            'locations'  => array_unique(array_column($tmp1, 1)),
+            'years'     => array_unique(array_column($tmp1, 2))
           );
-        } // has data.
-      }  // has stock
-    } // has match
+
+          $tooltip = '<div class="ap-germplasm-search-tooltip">%s</div>';
+          $element_list = theme('item_list', array(
+            'items' => array(
+              l($stockprop->name . ' (' . $stockprop->uniquename . ')', url('../bio_data/' . $chado_entity), array('attributes' => array('target' => '_blank')))
+                                                                . sprintf($tooltip, $stockprop->name . ' (' . $stockprop->uniquename . ')'),
+              count($list_item['experiments']) . ' Experiments' . sprintf($tooltip, implode(' &bull; ', $list_item['experiments'])),
+              count($list_item['locations'])   . ' Locations'   . sprintf($tooltip, implode(' &bull; ', $list_item['locations'])),
+              count($list_item['years'])       . ' Years'       . sprintf($tooltip, implode(' &bull; ', $list_item['years'])),
+            )
+          ));
+
+
+          //
+          // ATTACH TO - $form.
+          // First 5 rows but any more will require the button to show less or more.
+          $btn_reveal = (count($item) > 5)
+           ? '<div id="ap-germplasm-search-button-reveal">
+                <div class="ap-germplasm-search-table-row-reveal-on" title="Click to show more or less">&nbsp;</div>
+              </div>'
+           : '';
+
+          $form['ap_germplasm_search_ajax_wrapper']['ap_germplasm_search_ajax_response'] = array(
+            '#markup' => '
+              <div id="ap-germplasm-search-summary-overview-list">' . $element_list  . '<a href="#">Clear Search</a></div>
+              <div id="ap-germplasm-search-summary-table">'         . $element_table . '</div>'
+              . $btn_reveal
+          );
+        }
+        else {
+          // Stock has no phenotype.
+          drupal_set_message('Germplasm not measured in this trait.
+            Please enter a Germplasm Name or Accession.', 'error');
+        }
+      }
+      else {
+        // Stock not found.
+        drupal_set_message('Germplasm not measured in this trait.
+          Please enter a Germplasm Name or Accession.', 'error');
+      }
+    }
+    else {
+      // Nothing entered.
+      drupal_set_message('Germplasm not measured in this trait.
+        Please enter a Germplasm Name or Accession.', 'error');
+    }
   }
 
   return $form;
 }
 
 
-function analyzedphenotypes_ncitdata_AJAX_callback($form, $form_state) {
-  return $form['ap_ncitdata_field_wrapper'];
+/**
+ * Function callback.
+ * AJAX update wrapper element.
+ */
+function analyzedphenotypes_germplasm_search_AJAX_callback($form, $form_state) {
+  return $form['ap_germplasm_search_ajax_wrapper'];
 }

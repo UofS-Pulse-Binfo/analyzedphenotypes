@@ -5,23 +5,29 @@
 (function ($) {
 Drupal.behaviors.NCITData = {
   attach: function(context, settings) {
-  // Auto select field or content of autocomplete field.
-  $('#ap-search-autocomplete-textfield').focus();
-  $('#ap-search-autocomplete-textfield').click(function() {
-    $(this).select();
-  });
-
-  var wrapper = {};
-  wrapper.main = '#ap-ncitdata-table-summary-wrapper';
-  wrapper.btn  = '#ap-ncitdata-btn-reveal';
+  // Select value for quick edit.
+  $('#ap-germplasm-search-autocomplete-textfield')
+    .click(function() {
+      $(this).select();
+    })
+    .focusout(function() {
+      if (!$(this).val()) {
+        $('#ap-germplasm-search-ajax-wrapper')
+          .slideUp().empty();
+      }
+    });
 
   // Attach listener to reveal/show less button.
+  var wrapper = {};
+  wrapper.main = '#ap-germplasm-search-summary-table';
+  wrapper.btn  = '#ap-germplasm-search-button-reveal';
+
   $(wrapper.btn + ' div').click(function() {
     var h, classRem, classAdd;
     var main = $(wrapper.main);
 
     // Default height of the table container.
-    var minHeight = 300;
+    var minHeight = 250;
 
     if (main.height() == minHeight) {
       h = main[0].scrollHeight;
@@ -37,21 +43,33 @@ Drupal.behaviors.NCITData = {
     main.css('max-height', h);
 
     $(this)
-      .removeClass('ap-ncitdata-table-row-reveal-' + classRem)
-      .addClass('ap-ncitdata-table-row-reveal-' + classAdd);
+      .removeClass('ap-germplasm-search-table-row-reveal-' + classRem)
+      .addClass('ap-germplasm-search-table-row-reveal-' + classAdd);
   });
 
 
   // Summary information tool tip.
-  $('#ap-summary-overview-list ul li').mouseover(function() {
+  $('#ap-germplasm-search-summary-overview-list ul li').mouseover(function() {
     var pos = $(this).position();
 
-    $(this).find('.ap-tooltip').show().css({
+    $(this).find('.ap-germplasm-search-tooltip').show().css({
       'top': pos.top + 40,
       'left' : pos.left
     });
   })
   .mouseleave(function() {
-    $('.ap-tooltip').hide();
+    $('.ap-germplasm-search-tooltip').hide();
   });
+
+
+  // Clear Search.
+  var clear
+  if (clear = $('#ap-germplasm-search-summary-overview-list a:last-child')) {
+     clear.click(function(e) {
+       e.preventDefault();
+       $('#ap-germplasm-search-ajax-wrapper')
+          .slideUp().empty();
+       $('#ap-germplasm-search-autocomplete-textfield').val('').focus();
+     });
+  }
 }}}(jQuery));

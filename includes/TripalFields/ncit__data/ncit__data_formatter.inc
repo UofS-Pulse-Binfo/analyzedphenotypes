@@ -44,11 +44,16 @@ class ncit__data_formatter extends TripalFieldFormatter {
    *    hook_field_formatter_view() function.
    */
   public function view(&$element, $entity_type, $entity, $langcode, $items, $display) {
+    // CSS & JS.
+    $theme_path = drupal_get_path('module','analyzedphenotypes') . '/includes/TripalFields/ncit__data/theme/';
+    drupal_add_css($theme_path . 'style_ncitdata_field.css', 'file');
+    drupal_add_js ($theme_path . 'script.js');
+
     $autocomplete_field = drupal_get_form('analyzedphenotypes_germplasm_search_autocomplete_form', $items);
     $field = drupal_render($autocomplete_field);
 
     // Refer to this ID for CSS styling.
-    $id = 'ap-germplasm-search-wrapper';
+    $id = 'ap-germplasm-search-field-wrapper';
 
     // All set, render items.
     $element[] = array(

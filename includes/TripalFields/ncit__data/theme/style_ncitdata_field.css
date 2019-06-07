@@ -1,92 +1,147 @@
 /**
  * @file
- * Style ncit data field.
+ * Style ncit data field - germplasm search.
  */
-#ap-summary-overview-list ul {
-  list-style-type: none;
-  margin: 0 0 30px 0;
-  padding: 0 0 10px 0;
-  clear: left;
+/* Main field wrapper */
+#ap-germplasm-search-field-wrapper {
+  margin: 10px 0 0 0;
 }
 
-#ap-summary-overview-list ul li {
+/* Form fields - autocomplete textfield + button submit */
+#ap-germplasm-search-autocomplete-textfield {
+  margin: 0 15px 0 0;
+  width: 450px;
+}
+
+#ap-germplasm-search-button-submit {
+  display: inline;
+}
+
+/* AJAX Response Elements */
+
+/* AJAX progress - always below the field */
+#ap-germplasm-search-field-wrapper .ajax-progress {
+  display: block;
+}
+
+/* Summary Overview */
+#ap-germplasm-search-summary-overview-list {
+  margin: 15px 0 5px 0;
+  padding: 0;
+}
+
+#ap-germplasm-search-summary-overview-list ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+#ap-germplasm-search-summary-overview-list ul li {
   background-position: left;
   background-repeat: no-repeat;
   background-size: 20px 21px;
   cursor: pointer;
-
-  margin: 10px 10px 0 0;
-  padding: 0;
   display: inline;
-  float: left;
   font-size: 1.2em;
   line-height: 20px;
-
+  margin: 10px 10px 0 0;
+  padding: 0;
   padding-left: 25px;
   padding-right: 10px;
 }
 
-#ap-summary-overview-list ul li:hover {
+#ap-germplasm-search-summary-overview-list ul li:hover {
   text-decoration: underline;
 }
 
 /*
-  List from left to right:
+  #List from left to right:
   1. Germplasm Name as link.
   2. Experiments
   3. Locations
   4. Years
  */
-#ap-summary-overview-list ul li:first-child {
+#ap-germplasm-search-summary-overview-list {
+  position: relative;
+}
+
+#ap-germplasm-search-summary-overview-list ul li:first-child {
   padding-left: 0;
-  padding-right: 10px;
-  line-height: 20px;
+  padding-right: 15px;
+  line-height: 18px;
   border-right: 1px solid #000000;
 }
 
-#ap-summary-overview-list ul li:nth-child(2) {
+#ap-germplasm-search-summary-overview-list ul li:nth-child(2) {
   background-image: url(experiments.gif);
 }
 
-#ap-summary-overview-list ul li:nth-child(3) {
+#ap-germplasm-search-summary-overview-list ul li:nth-child(3) {
   background-image: url(locations.gif);
 }
 
-#ap-summary-overview-list ul li:nth-child(4) {
+#ap-germplasm-search-summary-overview-list ul li:nth-child(4) {
   background-image: url(years.gif);
 }
 
-/* Search Autocomplete text field */
-#ap-search-autocomplete-textfield {
-  margin: 15px 10px 15px 0;
-  width: 400px;
+.ap-germplasm-search-tooltip {
+  background-color: rgba(248, 240, 177, 0.9);
+  border: 1px solid #CBCf54;
+  display: none;
+  font-family: sans-serif;
+  font-size: 0.8em;
+  line-height: 20px;
+  margin: 0;
+  max-width: 300px;
+  padding: 7px;
+  position: absolute;
 }
 
-/* AJAX progress - always below the field */
-#ap-germplasm-search-wrapper .ajax-progress {
-  display: block;
+#ap-germplasm-search-summary-overview-list a:last-child {
+  line-height: 30px;
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
-/* Table - reduced width for column showing only numbers */
-#ap-ncitdata-field-wrapper table td:nth-last-child(-n+3) {
-  width: 12%;
-  font-size: 1.1em;
+
+/* Summary Table */
+#ap-germplasm-search-summary-table {
+  /* Used as the min height in JS
+    @see script.js
+  */
+  max-height: 250px;
+  margin: 0 0 15px 0;
+  overflow-y: hidden;
 }
 
-#ap-ncitdata-field-wrapper table td span {
+#ap-germplasm-search-summary-table table td span {
   display: block;
   font-weight: bold;
   font-size: 0.99em;
 }
 
-/* Revel more rows */
-#ap-ncitdata-btn-reveal {
+#ap-germplasm-search-summary-table table td,
+#ap-germplasm-search-summary-table table th {
+  line-height: 15px;
+  vertical-align: top;
+}
+
+#ap-germplasm-search-summary-table table td:nth-child(-n+3) {
+  width: 50%;
+}
+
+#ap-germplasm-search-summary-table table td:nth-last-child(-n+3) {
+  font-size: 1.1em;
+}
+
+
+#ap-germplasm-search-button-reveal {
   border-top: 1px solid #CCCCCC;
-  margin-top: 15px;
   width: 100%;
 }
 
-#ap-ncitdata-btn-reveal div {
+#ap-germplasm-search-button-reveal div {
   cursor: pointer;
   color: #CCCCCC;
   border: 1px solid #CCCCCC;
@@ -96,28 +151,10 @@
   width: 20px;
 }
 
-.ap-ncitdata-table-row-reveal-off {
+.ap-germplasm-search-table-row-reveal-off {
   background: #F0F0F0 no-repeat url('arrow-sprite.gif') 2px 2px;
 }
 
-.ap-ncitdata-table-row-reveal-on {
+.ap-germplasm-search-table-row-reveal-on {
   background: #F0F0F0 no-repeat url('arrow-sprite.gif') 2px -12px;
 }
-
-
-/* Tool Tip */
-.ap-tooltip {
-  background-color: rgba(248, 240, 177, 0.9);
-  border: 1px solid #CBCf54;
-  display: none;
-  font-family: sans-serif;
-  font-size: 0.8em;
-  padding: 7px;
-  line-height: 20px;
-  margin: 0;
-  position: absolute;
-}
-
-
-
-
