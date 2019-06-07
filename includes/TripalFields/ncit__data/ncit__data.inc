@@ -15,7 +15,7 @@ class ncit__data extends TripalField {
   // the field and it's default widget and formatter.
   // --------------------------------------------------------------------------
   // The default label for this field.
-  public static $default_label = 'Germplasm Phebotype Search';
+  public static $default_label = 'Germplasm Phenotype Search';
   // The default description for this field.
   public static $default_description = 'Germplasm Phenotype Search';
   // The default widget for this field.
