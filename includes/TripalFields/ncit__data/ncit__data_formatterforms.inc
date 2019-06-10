@@ -86,14 +86,16 @@ function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_stat
       if ($stockprop) {
         // Stock okay, but does it have a phenotype?
         $cache = $form_state['values']['ap_germplasm_search_cache_items'];
-        list($trait_id, $type) = array_values($cache[0]);
+        list($trait_id, $additional_type) = array_values($cache[0]);
 
         $data = chado_query("
-          SELECT values,
-            ARRAY_TO_JSON(ARRAY[experiment_name, location, year]) AS experiment,
-            ARRAY_TO_JSON(ARRAY[method_name, unit_name]) AS method
-          FROM {mview_phenotype} WHERE trait_id = :trait_id AND stock_id = :stock_id ORDER BY year DESC",
-          array(':trait_id' => $trait_id, ':stock_id' => $stock_id));
+          SELECT t1.values, t2.value AS unit_type,
+            ARRAY_TO_JSON(ARRAY[t1.experiment_name, t1.location, t1.year]) AS experiment,
+            ARRAY_TO_JSON(ARRAY[t1.method_name, t1.unit_name]) AS method
+          FROM {mview_phenotype} AS t1 INNER JOIN {cvtermprop} AS t2 ON t1.unit_id = t2.cvterm_id
+          WHERE trait_id = :trait_id AND stock_id = :stock_id AND t2.type_id = :additional_type
+          ORDER BY year DESC",
+          array(':trait_id' => $trait_id, ':stock_id' => $stock_id, ':additional_type' => $additional_type));
 
         if ($data->rowCount() > 0) {
           // Has phenotypes, Prepare AJAX response.

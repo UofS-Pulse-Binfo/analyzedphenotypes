@@ -111,31 +111,19 @@ class ncit__data extends TripalField {
    *
    */
   public function load($entity) {
-    // Identify if the trait is quantitative or qualitative.
-    $q = chado_query("SELECT value AS data_type, type_id AS data_type_id FROM {cvtermprop}
-      WHERE cvterm_id = :cvterm_id AND type_id IN
-        (SELECT cvterm_id FROM {cvterm} WHERE name = :additional_type)",
-      array(':cvterm_id' => $entity->chado_record_id, ':additional_type' => 'additionalType'));
+    // Prepare the cvterm id of this term used to tell type (quantity or quality) of unit.
+    $q = chado_query("SELECT cvterm_id FROM {cvterm} WHERE name = :additional_type",
+      array(':additional_type' => 'additionalType'));
 
-    // Only when trait data type can be established to either be quantitative or qualitative.
+    if ($q->rowCount() > 0 && $entity->chado_record_id > 0) {
+      $traitprop = $q->fetchField();
+      $field_name = $this->instance['field_name'];
 
-    if ($q->rowCount() > 0) {
-      $traitprop = $q->fetchObject();
-
-      if ($traitprop->data_type && in_array($traitprop->data_type, array('quantitative', 'qualitative'))) {
-        $field_name = $this->instance['field_name'];
-
-        // To render the field. Id then Type Property in this order:
-        // @see formatterform.inc.
-        $entity->{$field_name}['und'][0]['NCIT:data'] = $entity->chado_record_id;
-        $entity->{$field_name}['und'][0]['schema:additionalType'] = array(
-          'data_type' => $traitprop->data_type,
-          'id'     => $traitprop->data_type_id,
-        );
-      }
+      // To render the field. Id then Type Property in this order:
+      // @see formatterform.inc.
+      $entity->{$field_name}['und'][0]['NCIT:data'] = $entity->chado_record_id;
+      $entity->{$field_name}['und'][0]['schema:additionalType'] = $traitprop;
     }
-
-    // Else, nothing to render when it can't establish either quantitative/qualitative.
   }
 
   /**
