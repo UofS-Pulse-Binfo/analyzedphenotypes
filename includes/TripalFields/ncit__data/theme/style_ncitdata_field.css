@@ -26,7 +26,7 @@
 
 /* Summary Overview */
 #ap-germplasm-search-summary-overview-list {
-  margin: 15px 0 5px 0;
+  margin: 15px 0 0 0;
   padding: 0;
 }
 
@@ -95,6 +95,7 @@
   max-width: 300px;
   padding: 7px;
   position: absolute;
+  z-index: 1;
 }
 
 #ap-germplasm-search-summary-overview-list a:last-child {
@@ -110,15 +111,17 @@
   /* Used as the min height in JS
     @see script.js
   */
-  max-height: 250px;
+  max-height: 300px;
   margin: 0 0 15px 0;
   overflow-y: hidden;
+  position: relative;
 }
 
-#ap-germplasm-search-summary-table table td span {
-  display: block;
-  font-weight: bold;
-  font-size: 0.99em;
+#ap-germplasm-search-summary-table caption {
+  font-size: 1.5em;
+  font-weight: normal;
+  line-height: 30px;
+  margin: 20px 0 0 0;
 }
 
 #ap-germplasm-search-summary-table table td,
@@ -127,8 +130,8 @@
   vertical-align: top;
 }
 
-#ap-germplasm-search-summary-table table td:nth-child(-n+3) {
-  width: 50%;
+#ap-germplasm-search-summary-table table td:nth-child(-n+2) {
+  width: 70%;
 }
 
 #ap-germplasm-search-summary-table table td:nth-last-child(-n+3) {

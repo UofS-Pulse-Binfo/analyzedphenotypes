@@ -1,6 +1,6 @@
 <?php
 /**
- * Function callback: construct search form.
+ * Function callback: construct germplasm search form.
  *
  * @param $form
  *   Drupal form array/object.
@@ -80,80 +80,78 @@ function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_stat
 
       // BEGIN AJAX RESPONSE:
       // Athough we are getting the id from autocomplete, still check the stock
-      // if it matched to a record in stock.
+      // if it matched to a record in chado stock.
       $stockprop = chado_get_stock(array('stock_id' => $stock_id), array('include_fk' => array()));
 
       if ($stockprop) {
-        // Stock okay, but does it have a phenotype?
+        // Stock okay, but does it have phenotype?
         $cache = $form_state['values']['ap_germplasm_search_cache_items'];
         list($trait_id, $additional_type) = array_values($cache[0]);
 
+        // Experiment, location and year - this order is important see loop below
+        // that uses this information.
         $data = chado_query("
           SELECT t1.values, t2.value AS unit_type,
-            ARRAY_TO_JSON(ARRAY[t1.experiment_name, t1.location, t1.year]) AS experiment,
-            ARRAY_TO_JSON(ARRAY[t1.method_name, t1.unit_name]) AS method
+            ARRAY_TO_JSON(ARRAY[t1.experiment_name, t1.location, t1.year]) AS experiment_siteyear,
+            ARRAY_TO_JSON(ARRAY[t1.method_name, t1.unit_name]) AS method_unit
           FROM {mview_phenotype} AS t1 INNER JOIN {cvtermprop} AS t2 ON t1.unit_id = t2.cvterm_id
           WHERE trait_id = :trait_id AND stock_id = :stock_id AND t2.type_id = :additional_type
           ORDER BY year DESC",
-          array(':trait_id' => $trait_id, ':stock_id' => $stock_id, ':additional_type' => $additional_type));
+        array(':trait_id' => $trait_id, ':stock_id' => $stock_id, ':additional_type' => $additional_type));
 
-        if ($data->rowCount() > 0) {
+        $data_count = $data->rowCount();
+
+        if ($data_count > 0) {
           // Has phenotypes, Prepare AJAX response.
-          $tmp1 = $item = array();
 
-          //
-          // SUMMARY TABLE:
+          // Hold exp_siteyear and Drupal table row values.
+          $tmp = $tables = array();
+
+          // Group and summarize data by method-unit combination.
           foreach($data as $i => $row) {
-             $values = json_decode($row->values);
-             $values_count = count($values);
+            $cols = array();
 
-             $cols = array();
-             $tem2 = '';
+            // Values.
+            $values = json_decode($row->values);
+            $values_count = count($values);
 
-            // Specific columns to either.
-            if ($type['data_type'] == 'quantitative') {
+            // Specific column to either - quan or qual.
+            if ($row->unit_type == 'quantitative') {
               // QUANTITY: mean and standard deviation.
               $mean = round((array_sum($values) / $values_count), 2);
               $sdev = round(ap_calculate_standard_deviation($values), 2);
+
               $cols = array(
                 'Mean' => $mean,
                 'Standard<br />Deviation' => $sdev
               );
             }
-            elseif ($type['data_type'] == 'qualitative') {
-              // QUATLITY: observed phenotypes.
+            elseif ($row->unit_type == 'qualitative') {
+              // QUALITY: observed phenotypes.
               $obsv = array_unique($values);
+
               $cols = array(
                 'Observed Phenotypes' => implode(', ', $obsv)
               );
             }
 
-            // Create table row items.
-            $tmp1[$i] = json_decode($row->experiment);
-            $tmp2     = json_decode($row->method);
+            ///
+            // Use method-unit combination as unique key.
+            $method_unit = implode(' - ', json_decode($row->method_unit));
 
-            // span styled as block element.
-            $item[$i] = array_merge(
+            // Experiment, method and unit, and location info. With this summary
+            // Summary over list items can be generated from this array.
+            $tmp[$i] = json_decode($row->experiment_siteyear);
+
+            $tables[ $method_unit ][] = array_merge(
               array(
-                $tmp1[$i][0] . '<span>'  . $tmp1[$i][1] . ' - ' . $tmp1[$i][2] . '</span>',
-                $tmp2[0]     . '<span>(' . $tmp2[1]    . ')</span>',
-                $values_count
-              ),
+                'Experiment' => $tmp[$i][0],
+                'Site-year' => $tmp[$i][1] . ' - ' . $tmp[$i][2],
+                'Number of<br />Measurements' => $values_count),
+              $cols);
+          } // End group data.
 
-              array_values($cols)
-            );
-          }
-          //
-
-          $element_table = theme('table', array(
-            'header' => array_merge(array('Experiment', 'Method', 'Number of<br />Measurements'), array_keys($cols)),
-            'rows' => $item,
-            'sticky' => FALSE,
-          ));
-
-
-          //
-          // SUMMARY OVERVIEW LIST:
+          // Fetch entity id that will form part of the url linking to Tripal 3 germplasm page.
           $chado_bundle = db_query('SELECT t2.name FROM {tripal_term} AS t1 INNER JOIN {tripal_bundle} AS t2 ON t1.id = t2.term_id
             WHERE t1.accession = (SELECT t3.accession FROM chado.dbxref AS t3 INNER JOIN chado.cvterm AS t4 USING(dbxref_id)
               WHERE t4.cvterm_id = :stock_type)', array(':stock_type' => $stockprop->type_id))
@@ -163,10 +161,12 @@ function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_stat
           $chado_entity = chado_query($entity, array(':stock_id' => $stock_id))
             ->fetchField();
 
+          // Take away duplicate values from the overall summary overview.
+          // Order is important see query above.
           $list_item = array(
-            'experiments' => array_unique(array_column($tmp1, 0)),
-            'locations'  => array_unique(array_column($tmp1, 1)),
-            'years'     => array_unique(array_column($tmp1, 2))
+            'experiments' => array_unique(array_column($tmp, 0)),
+            'locations'  => array_unique(array_column($tmp, 1)),
+            'years'     => array_unique(array_column($tmp, 2))
           );
 
           $tooltip = '<div class="ap-germplasm-search-tooltip">%s</div>';
@@ -180,21 +180,30 @@ function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_stat
             )
           ));
 
+          // Theme data and attach to render array.
+          $tabs = $element_table = array();
+          foreach($tables as $table_header => $table_rows) {
+            $element_table[] = theme('table', array(
+              'caption' => $table_header,
+              'header' => array_keys(current($table_rows)),
+              'rows' => $table_rows,
+              'sticky' => FALSE
+            ));
+          } // End theme data.
 
-          //
-          // ATTACH TO - $form.
-          // First 5 rows but any more will require the button to show less or more.
-          $btn_reveal = (count($item) > 5)
-           ? '<div id="ap-germplasm-search-button-reveal">
+          $element_tabs = theme('item_list', array('items' => $tabs));
+
+          $btn_reveal = ($data_count > 6)
+            ? '<div id="ap-germplasm-search-button-reveal">
                 <div class="ap-germplasm-search-table-row-reveal-on" title="Click to show more or less">&nbsp;</div>
               </div>'
-           : '';
+             : '';
 
-          $form['ap_germplasm_search_ajax_wrapper']['ap_germplasm_search_ajax_response'] = array(
+          $form['ap_germplasm_search_ajax_wrapper']['ap_germplasm_search_ajax_response_table'] = array(
             '#markup' => '
-              <div id="ap-germplasm-search-summary-overview-list">' . $element_list  . '<a href="#">Clear Search</a></div>
-              <div id="ap-germplasm-search-summary-table">'         . $element_table . '</div>'
-              . $btn_reveal
+             <div id="ap-germplasm-search-summary-overview-list">' . $element_list  . '<a href="#">Clear Search</a></div>
+             <div id="ap-germplasm-search-summary-table">' . implode('', $element_table) . '</div>'
+             . $btn_reveal,
           );
         }
         else {
@@ -214,7 +223,8 @@ function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_stat
       drupal_set_message('Germplasm not measured in this trait.
         Please enter a Germplasm Name or Accession.', 'error');
     }
-  }
+  } // End form state.
+
 
   return $form;
 }

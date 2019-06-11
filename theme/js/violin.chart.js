@@ -12,7 +12,7 @@
       var elementID = apSettings.id;
 
       if (apSettings.type === 'violin') {
-        d3.json(Drupal.settings.basePath+'/json/phenotypes/traitplot/'+experiment_id+'/'+trait_id+'/'+method_id+'/'+unit_id, function(error, data) {
+        d3.json('/json/phenotypes/traitplot/'+experiment_id+'/'+trait_id+'/'+method_id+'/'+unit_id, function(error, data) {
 
           // Debug
 		      // console.log(data);

@@ -27,7 +27,7 @@ Drupal.behaviors.NCITData = {
     var main = $(wrapper.main);
 
     // Default height of the table container.
-    var minHeight = 250;
+    var minHeight = 300;
 
     if (main.height() == minHeight) {
       h = main[0].scrollHeight;
