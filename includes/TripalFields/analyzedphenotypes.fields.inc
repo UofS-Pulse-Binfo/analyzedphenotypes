@@ -73,7 +73,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
       'cardinality' => 1,
       'locked' => FALSE,
       'storage' => array(
-	'type' => 'field_chado_storage',
+	      'type' => 'field_chado_storage',
       ),
     );
 
@@ -86,6 +86,25 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
     ));
     $field_name = 'local__magnitude_of_phenotypes';
     $field_type = 'local__magnitude_of_phenotypes';
+    $fields[$field_name] = array(
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => 1,
+      'locked' => FALSE,
+      'storage' => array(
+	      'type' => 'field_chado_storage',
+      ),
+    );
+    
+    // Phenotype Image
+    tripal_insert_cvterm(array(
+      'id' => 'ncit:c48179',
+      'name' => 'Image',
+      'cv_name' => 'ncit',
+      'definition' => 'Phenotype Image.',
+    ));
+    $field_name = 'ncit__c48179';
+    $field_type = 'ncit__c48179';
     $fields[$field_name] = array(
       'field_name' => $field_name,
       'type' => $field_type,
@@ -242,6 +261,38 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         'default' => array(
           'label' => 'hidden',
           'type' => 'local__magnitude_of_phenotypes_formatter',
+          'settings' => array(),
+        ),
+      ),
+    );
+
+    // Phenotype Image.
+    $field_name = 'ncit__c48179';
+    $field_type = 'ncit__c48179';
+    $instances[$field_name] =  array(
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Phenotype Image',
+      'description' => 'Phenotype Image.',
+      'required' => FALSE,
+      'settings' => array(
+        'term_vocabulary' => 'NCIT',
+        'term_name' => 'Image',
+        'term_accession' => 'C48179',
+        'auto_attach' => FALSE,
+        'chado_table' => $bundle->data_table,
+        'chado_column' => 'cvterm_id',
+        'base_table' => $bundle->data_table,
+      ),
+      'widget' => array(
+        'type' => 'ncit__c48179_widget',
+        'settings' => array(),
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'ncit__c48179_formatter',
           'settings' => array(),
         ),
       ),
