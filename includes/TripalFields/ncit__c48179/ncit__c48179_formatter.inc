@@ -64,12 +64,14 @@ class ncit__c48179_formatter extends TripalFieldFormatter {
 
     $element_photo = array();
     foreach($trait_photo as $img) {
-      $scale = ap_scale_photo($img['height'], $img['width'], 300);
+      if ($img && file_exists($img['uri'])) {
+        $scale = ap_scale_photo($img['height'], $img['width'], 300);
 
-      $element_photo[] = theme('image', array(
-        'path' => $img['uri'],
-        'attributes' => array('style' => array('width' => 0)),
-      ));
+        $element_photo[] = theme('image', array(
+          'path' => $img['uri'],
+          'attributes' => array('style' => array('width' => 0)),
+        ));
+      }
     }
 
     // From the settings: apply class.
