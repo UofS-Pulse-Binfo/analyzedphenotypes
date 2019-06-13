@@ -6,7 +6,7 @@
  * Data: No data.
  * Assumptions:
  */
-class ncit__c48179 extends TripalField {
+class ncit__c48179 extends ChadoField {
   // --------------------------------------------------------------------------
   //                     EDITABLE STATIC CONSTANTS
   //
@@ -111,44 +111,12 @@ class ncit__c48179 extends TripalField {
    *
    */
   public function load($entity) {
-    $field_name = $this->instance['field_name'];
-    
     $trait_photo = ap_download_cvtermphoto($entity->chado_record_id);
-    
-     
-    $entity->{$field_name}['und'][0]['value']['ncit:c48179'] = $trait_photo;
+    if ($trait_photo) {
+      $field_name = $this->instance['field_name'];
+      $entity->{$field_name}['und'][0]['value']['ncit:c48179'] = $trait_photo;
+    }
   }
 
-  /**
-   * Provides a form for the 'Field Settings' of an instance of this field.
-   *
-   * This function corresponds to the hook_field_instance_settings_form()
-   * function of the Drupal Field API.
-   *
-   * Validation of the instance settings form is not supported by Drupal, but
-   * the TripalField class does provide a mechanism for supporting validation.
-   * To allow for validation of your setting form you must call the parent
-   * in your child class:
-   *
-   * @code
-   *   $element = parent::instanceSettingsForm();
-   * @endcode
-   *
-   * Please note, the form generated with this function does not easily
-   * support AJAX calls in the same way that other Drupal forms do.  If you
-   * need to use AJAX you must manually alter the $form in your ajax call.
-   * The typical way to handle updating the form via an AJAX call is to make
-   * the changes in the form function itself but that doesn't work here.
-   */
-  public function instanceSettingsForm() {
 
-    // Retrieve the current settings.
-    // If this field was just created these will contain the default values.
-    $settings = $this->instance['settings'];
-
-    // Allow the parent Tripal Field to set up the form element for us.
-    $element = parent::instanceSettingsForm();
-
-    return $element;
-  }
 }

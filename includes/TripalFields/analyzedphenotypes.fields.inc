@@ -95,7 +95,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
 	      'type' => 'field_chado_storage',
       ),
     );
-    
+
     // Phenotype Image
     tripal_insert_cvterm(array(
       'id' => 'ncit:c48179',
@@ -293,7 +293,10 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         'default' => array(
           'label' => 'hidden',
           'type' => 'ncit__c48179_formatter',
-          'settings' => array(),
+          'settings' => array(
+            'image_stack' => 'Left to Right',
+            'image_position' => 'Top to Bottom',
+          ),
         ),
       ),
     );
