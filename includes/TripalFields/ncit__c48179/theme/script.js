@@ -44,6 +44,7 @@ Drupal.behaviors.PhenotypeImage = {
     var pWidth = parentWrapper.width();
     var img = (aspectRatio / 100) * pWidth;
 
-    imageWrapper.find('img').css('width', img + 'px');
+    var no = (imageWrapper.find('img').length > 1) ? 1 : 2;
+    imageWrapper.find('img').css('width', (img * no) + 'px');
   }
 }}}(jQuery));
