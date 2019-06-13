@@ -19,6 +19,16 @@ class ncit__c48179_formatter extends TripalFieldFormatter {
   // The list of field types for which this formatter is appropriate.
   public static $field_types = array('ncit__c48179');
 
+  // The list of default settings for this formatter.
+  // Due to the different charts available and the dependance upon the data,
+  // it is too difficult to make a good default for the title and legend.
+  // As such I am making a horrible one in the hopes of making admin change it ;-p.
+  public static $default_settings = array(
+    'image_stack' => 'Left to Right',
+    'image_position' => 'Top to Bottom',
+  );
+
+
   /**
    *  Provides the display for a field
    *
@@ -44,14 +54,133 @@ class ncit__c48179_formatter extends TripalFieldFormatter {
    *    hook_field_formatter_view() function.
    */
   public function view(&$element, $entity_type, $entity, $langcode, $items, $display) {
-    
-    // All set, render items.
+    drupal_add_css(drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/ncit__c48179/theme/style_phenotype_image.css');
+    drupal_add_js(drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/ncit__c48179/theme/script.js');
+
+    $trait_photo = array_values($items[0]['value']['ncit:c48179']);
+
+    // Refer to this ID for CSS styling.
+    $id = 'ap-field-phenotype-image-wrapper';
+
+    $element_photo = array();
+    foreach($trait_photo as $img) {
+      $scale = ap_scale_photo($img['height'], $img['width'], 300);
+
+      $element_photo[] = theme('image', array(
+        'path' => $img['uri'],
+        'attributes' => array('style' => array('width' => 0)),
+      ));
+    }
+
+    // From the settings: apply class.
+    $class_stack = 'ap-' . str_replace(' ', '-', strtolower($display['settings']['image_stack']));
+    $class_position = 'ap-' . str_replace(' ', '-', strtolower($display['settings']['image_position']));
+
+
+    // Render Number of Experimients.
     $element[0] = array(
       '#type' => 'markup',
-      '#markup' => 'loremeeeest',
+      '#markup' => '<div id="' . $id . '" class="' . $class_stack . ' ' . $class_position . '">'
+        . implode('', $element_photo) . '</div><div class="ap-clear-float">&nbsp;</div>'
+    );
+
+    return $element;
+  }
+
+
+    /**
+   * Provides a form for the 'Field Settings' of an instance of this field.
+   *
+   * This function corresponds to the hook_field_instance_settings_form()
+   * function of the Drupal Field API.
+   *
+   * Validation of the instance settings form is not supported by Drupal, but
+   * the TripalField class does provide a mechanism for supporting validation.
+   * To allow for validation of your setting form you must call the parent
+   * in your child class:
+   *
+   * @code
+   *   $element = parent::instanceSettingsForm();
+   * @endcode
+   *
+   * Please note, the form generated with this function does not easily
+   * support AJAX calls in the same way that other Drupal forms do.  If you
+   * need to use AJAX you must manually alter the $form in your ajax call.
+   * The typical way to handle updating the form via an AJAX call is to make
+   * the changes in the form function itself but that doesn't work here.
+   */
+  public function settingsForm($view_mode, $form, &$form_state) {
+    // Illustrations showing configurations available.
+    $src = drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/ncit__c48179/theme/configuration.gif';
+    $element['configuration'] = array(
+      '#type' => 'markup',
+      '#markup' => theme('image', array(
+        'path' => $src,
+        'height' => 150,
+        'width' => 480,
+      ))
+    );
+
+    $display = $this->instance['display'][$view_mode];
+    $settings = $display['settings'];
+
+    // FIELD: Stacking order.
+    $element['image_stack'] = array(
+      '#type' => 'radios',
+      '#title' => 'Image stacking',
+      '#options' => array('Left to Right' => 'Left to Right', 'Top to Bottom' => 'Top to Bottom'),
+      '#default_value' => array_key_exists('image_stack', $settings) ? $settings['image_stack'] : 'Left to Right',
+    );
+
+    // FIELD: Float position.
+    $element['image_position'] = array(
+      '#type' => 'radios',
+      '#title' => 'Image position',
+      '#options' => array('Float Left' => 'Float Left', 'Float Right' => 'Float Right', 'None' => 'None - Use field order/weight'),
+      '#default_value' => array_key_exists('image_position', $settings) ? $settings['image_position'] : 'Float Right',
     );
 
 
     return $element;
+  }
+
+  /**
+   * Provides a summary of the formatter settings.
+   *
+   * This function corresponds to the hook_field_formatter_settings_summary()
+   * function of the Drupal Field API.
+   *
+   * On the 'Manage Display' page of the content type administration page,
+   * fields are allowed to provide a settings form.  This settings form can
+   * be used to allow the site admin to define how the field should be
+   * formatted.  The settings are then available for the formatter()
+   * function of this class.  This function provides a text-based description
+   * of the settings for the site developer to see.  It appears on the manage
+   * display page inline with the field.  A field must always return a
+   * value in this function if the settings form gear button is to appear.
+   *
+   * See the hook_field_formatter_settings_summary() function for more
+   * information.
+   *
+   * @param $field
+   * @param $instance
+   * @param $view_mode
+   *
+   * @return string
+   *   A string that provides a very brief summary of the field settings
+   *   to the user.
+   *
+   */
+  public function settingsSummary($view_mode) {
+    $display = $this->instance['display'][$view_mode];
+    $settings = $display['settings'];
+
+    $summary = t('Stack: @image_stack<br>Position: @image_position',
+      array(
+        '@image_stack' => $settings['image_stack'] ?? '',
+        '@image_position' => $settings['image_position'] ?? '')
+     );
+
+    return $summary;
   }
 }
