@@ -15,36 +15,42 @@ Drupal.behaviors.PhenotypeImage = {
 
     var pos = imageWrapper.attr('class');
     if (pos) {
-      // Image side by side, it is longer so we set text to 55% else to 70.
-      var pWidth = (pos.includes('ap-left-to-right')) ? 55 : 70;
-      var aspectRatio = (pos.includes('ap-left-to-right')) ? 20 : 27;
-
-      // Float image left or right adding extra gutter so elements are
-      // nicely spaced out in the container.
-      var pFloat = (pos.includes('ap-float-left'))
-        ? {'margin-left': '2%', 'float' : 'right'}
-        : {'margin-right': '2%', 'float' : 'left'};
-
       if (pos.includes('ap-float-left') || pos.includes('ap-float-right')) {
+        // P.
+        var pWidth   = (pos.includes('ap-left-to-right')) ? 55 : 70;
+        var pFloat   = (pos.includes('ap-float-right'))
+          ? {'margin-right': '1%', 'float' : 'left'}
+          : {'margin-left' : '1%', 'float' : 'right'};
+
         $('.ap-txt-define').css('width', pWidth + '%');
         $('.ap-txt-define').css(pFloat);
 
-        // Render
+        // IMG.
         apImgPosition();
-        // Listen to window resize and reapply render function.
         $(window).resize(apImgPosition);
       }
     }
   }
 
+
   /**
    * Function size image element.
    */
   function apImgPosition() {
-    var pWidth = parentWrapper.width();
-    var img = (aspectRatio / 100) * pWidth;
+    var w = (pos.includes('ap-left-to-right')) ? 40 : 25;
+    var imgW = (w / 100) * parentWrapper.width();
 
-    var no = (imageWrapper.find('img').length > 1) ? 1 : 2;
-    imageWrapper.find('img').css('width', (img * no) + 'px');
+    imageWrapper.find('img').css('width', function() {
+      var w;
+
+      if (imageWrapper.find('img').length < 2) {
+        w = imgW;
+      }
+      else {
+        w = (pos.includes('ap-top-to-bottom')) ? imgW : ((imgW / 2) - 5);
+      }
+
+      return w + 'px';
+    });
   }
 }}}(jQuery));
