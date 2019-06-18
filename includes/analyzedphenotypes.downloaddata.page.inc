@@ -91,19 +91,16 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
   // Create list of default and optional column headers.
   // Will return Experiment, Trait Name, Germplasm Name, Year, Location, Replicate, Data Collector, Country of Origin.
-  $headers = ap_create_columnheaders('columns_downloadable');
+  $tmp_headers = ap_create_columnheaders('columns_downloadable');
+  // Im this order.
+  // Experiment, Germplasm Name, Location, Year, Traits...
+  $headers[0] = $tmp_headers[0];
+  $headers[1] = $tmp_headers[2];
+  $headers[2] = $tmp_headers[4];
+  $headers[3] = $tmp_headers[3];
+  $headers[4] = $tmp_headers[1];
+
   $default_headers = array_combine($headers, $headers);
-  $optional_headers = array();
-
-  // Move Data Collector and Origin to optional column headers.
-  $optional_headers['Data Collector'] = 'Data Collector';
-  unset($default_headers['Data Collector']);
-
-  $optional_headers['Origin'] = 'Country of Origin';
-  unset($default_headers['Country of Origin']);
-
-  // By default form averages rep - replicate is not required.
-  unset($default_headers['Replicate']);
 
   // Contain all field values.
   $field_values = null;
@@ -263,12 +260,6 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         // ONE EXPERIMENT.
 
         $field_values[$fld_experiment] = current($field_values[$fld_experiment]);
-
-        // Experiment is optional with single project and not average rep.
-        if ($field_values[$fld_experiment] > 0 && $form_state['values'][ $fldname[$fld_averagerep]['field'] ] == 0) {
-          unset($default_headers['Experiment']);
-          $optional_headers['Experiment'] = 'Experiment';
-        }
 
         // #Genus.
         $options = ap_populate_fieldgenus(array(
@@ -718,10 +709,6 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
         $default_headers['Trait Name'] = $traits_list;
       }
 
-      // Add Replicate to Default headers when user does not want to average data.
-      if ($form_state['values'][ $fldname[$fld_averagerep]['field'] ] == 0) {
-        $default_headers['Replicate'] = 'Replicate';
-      }
     ///
     }
   //
@@ -838,7 +825,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
     $form[$AJAX_wrapper][$ap_fieldset_1]['ap_' . $fld_species . '_field'] = array(
       '#type' => 'checkboxes',
       '#required' => TRUE,
-      '#default_value' => isset($field_prop[$fld_species]['default']) ? $field_prop[$fld_species]['default'] : NULL,
+      '#default_value' => isset($field_prop[$fld_species]['default']) ? $field_prop[$fld_species]['default'] : array(),
       '#options'       => $field_prop[$fld_species]['options'],
       '#disabled'      => $field_prop[$fld_species]['disabled'],
 
@@ -1233,7 +1220,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
             }
             else {
               // Bad name, does not exists.
-              $error[$id] = '<small class="ap-germplasmfield-error">*The germplasm name/stock name you entered is invalid or does not exists.</small>';
+              $error[$id] = '<small class="ap-germplasmfield-error">*The germplasm name/stock name you entered is invalid or does not exist.</small>';
             }
           }
           else {
@@ -1329,6 +1316,10 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
     // End if germplasm_count.
     }
 
+    /*
+    // NOT IMPLEMENTED:
+    // Commented out, this field does not have any effect on the exported data.
+    // *Corresponding behaviours in js if this is enabled.
     //
     // FIELD: MAX MISSING DATA.
     $form[$AJAX_wrapper][$ap_fieldset_2][ $fldname[$fld_missingdata]['field'] ] = array(
@@ -1341,7 +1332,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
       '#description' => t('Enter the percent (%) missing data per germplasm that you would like to allow. For example, a value of 20% will ensure that all germplasm exported have values for at least 20% of site-years this trait was observed in. If you further restrict the site-year exported using other filter criteria, this filter will be applied to the restricted dataset.'),
       '#id' => $fldname[$fld_missingdata]['field-id'],
     );
-
+    */
 
 
   //
@@ -1357,7 +1348,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
     $form[$AJAX_wrapper][$ap_fieldset_3]['ap_fieldset3_description'] = array(
       '#type' => 'item',
-      '#description' => t('Select the file format, column headers and summary options you would like the data exported in below.'),
+      '#description' => t('Select the file format and summary options you would like the data exported in below.'),
       '#id' => 'ap-fieldset3-description',
     );
 
@@ -1381,19 +1372,6 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
       '#markup' => '<div>Please note that some germplasm names may have converted into dates in Microsoft Excel.</div>',
       '#id' => 'ap-filetype-warning',
     );
-
-
-    //
-    // INCLUDE ALL REPLICATES
-    $form[$AJAX_wrapper][$ap_fieldset_3][ $fldname[$fld_averagerep ]['field'] ] = array(
-      '#title' => t('Average Replicates per Site-Year'),
-      '#type' => 'checkbox',
-      '#default_value' => 1,
-      '#disabled' => $field_prop[$fld_averagerep]['disabled'],
-      '#description' => t('By default, all replicates in a single site-year will be averaged. Please specify if you would like all replicates to be included. To export the value of each replicate, uncheck this option.'),
-      '#id' => $fldname[$fld_averagerep]['field-id'],
-    )
-    + $AJAX_callback;
 
     //
     // RFRIENDLY HEADERS.
@@ -1435,13 +1413,12 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
       $rows[] = array(
         'number'   => array('title' => t('Order #'), 'id' => $id . 'seqn', 'class' => array('ap-seq-no'), 'data' => '#' . $i),
-        'column'   => array('title' => t('Click to move one level up...'), 'id' => $id . 'cols', 'class' => array('ap-column'), 'data' => '<input type="checkbox" checked="checked" disabled="disabled"> <small>(default)</small> &nbsp;-  <span>' . $def . '</span><em>' . $rfriendly . '</em>'),
-        'row-up'   => array('title' => t('Click to move one level up...'), 'id' => $id . 'goup', 'class' => array('ap-row-up'), 'data' => '&nbsp;'),
-        'row-down' => array('title' => t('Click to move one level down...'), 'id' => $id . 'down', 'class' => array('ap-row-down'), 'data' => '&nbsp;')
+        'column'   => array('id' => $id . 'cols', 'class' => array('ap-column'), 'data' => '<span>' . $def . '</span><em>' . $rfriendly . '</em>'),
       );
 
       $i++;
     }
+
 
     //
     // DEFAULT COLUMN HEADERS TABLE.
@@ -1453,66 +1430,7 @@ function analyzedphenotypes_downloaddata_form($form, &$form_state) {
 
     // Preview Headers.
     $form[$AJAX_wrapper][$ap_fieldset_3]['ap_column_header_picker_container']['ap_table_default_headers'] = array(
-      '#markup' => $tbl1
-        . l('Preview headers', '#', array('attributes' => array('id' => 'ap-preview-link')))
-        . '<div class="ap-clear-float"></div>',
-    );
-
-
-    //
-    // PREIVEW COLUMN HEADERS TABLE.
-    $tbl3 = theme('table', array(
-      'header' => array(),
-      'rows'   => array(),
-      'attributes' => array('id' => 'ap-table-preview-headers'),
-      'sticky' => FALSE,
-    ));
-
-    $form[$AJAX_wrapper][$ap_fieldset_3]['ap_column_header_picker_container']['ap_table_preview_headers'] = array(
-      '#markup' => '<div id="ap-table-preview-headers-container">
-        <br />This is a sample data to show a preview of the otput file based on the column headers chosen above.'
-        . $tbl3 . '<span>&nbsp;</span></div>',
-    );
-
-    //
-    // OPTIONAL COLUMN HEADERS TABLE.
-    $rows = array();
-    $i = 1;
-
-    foreach($optional_headers as $opt) {
-      $id = 'ap-optional-row' . $i;
-
-      // Load the RFriendly version of headers.
-      $rfriendly = ap_convert_rcolumnheader($opt);
-
-      $rows[] = array(
-        'number'   => array('title' => t('Check header to include/exclude in the output file.'), 'id' => $id . 'seqn', 'class' => array(), 'data' => '+'),
-        'column'   => array('title' => t('Check header to include/exclude in the output file.'), 'id' => $id . 'cols', 'class' => array('ap-column'), 'data' => '<input type="checkbox" id="' . $id  . 'checkbox" class="ap-optional-traits ap-skip-loading"> &nbsp;- <span>' . $opt . '</span><em>' . $rfriendly . '</em>'),
-        'row-up'   => array('title' => t('Check header to include/exclude in the output file.'), 'id' => $id . 'goup', 'class' => array(), 'data' => '&nbsp;'),
-        'row-down' => array('title' => t('Check header to include/exclude in the output file.'), 'id' => $id . 'down', 'class' => array(), 'data' => '&nbsp;')
-      );
-
-      $i++;
-    }
-
-    $form[$AJAX_wrapper][$ap_fieldset_3]['ap_column_header_picker_container']['ap_optional_table_title'] = array(
-      '#type' => 'item',
-      '#title' => 'Optional Headers',
-    );
-
-    $tbl2 = theme('table', array(
-      'header' => $header,
-      'rows'   => $rows,
-      'attributes' => array('id' => 'ap-table-optional-headers')
-    ));
-
-    $form[$AJAX_wrapper][$ap_fieldset_3]['ap_column_header_picker_container']['ap_table_optional_headers'] = array(
-      '#markup' => $tbl2,
-    );
-
-    $form[$AJAX_wrapper][$ap_fieldset_3]['ap_column_header_picker_container']['ap_table_description'] = array(
-      '#type' => 'item',
-      '#description' => t('Check the column headers you want to include in the output file. Use the up and down arrow buttons to change the order they appear in the file. Click Preview headers to preview selected column headers.'),
+      '#markup' => $tbl1,
     );
 
 

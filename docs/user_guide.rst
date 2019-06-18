@@ -9,4 +9,5 @@ This guide is meant for data curators and users of your Tripal site. It demonstr
 
    user_guide/loading
    user_guide/downloading
-   user_guide/trait_chart
+   user_guide/visualize_data
+   user_guide/fields

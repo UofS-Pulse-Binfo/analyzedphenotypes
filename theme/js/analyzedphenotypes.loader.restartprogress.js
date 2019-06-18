@@ -6,6 +6,6 @@
 (function($) {
   Drupal.behaviors.restartProgress = {
     attach: function (context, settings) {
-      //pb.startMonitoring('http://knowpulse.usask.ca/dev/reynold/admin/tripal/extension/analyzedphenotypes/json/validate_jobstatus/2693', 500);
+      //pb.startMonitoring('Job address', 500);
       //
 } }; }(jQuery));

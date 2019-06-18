@@ -384,10 +384,9 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
     $yaxis = $trait_name.' ('.$unit.')';
     $figtitle = "Comparison of observed $trait_name between site years for <em>$experiment_name</em>.";
     $figlegend = "$trait_name was measured as a $unit. "
-     . $method . " Replicates were then averaged per germplasm within a single site-year."
-     . " The chart shows the number of germplasm with a specific $trait_name where site-years are "
-     . "shown as different coloured bars. Germplasm exhibiting multiple $trait_name values are shown "
-     . "as [first value]/[second value] where order is not meaningful.";
+     . $method . " Each replicate per site-year is not averaged but rather contributes equally to the frequency of occurrence (y-axis)."
+     . " The chart shows the frequency a given phenotypic value was observed where site-years are "
+     . "shown as different coloured bars.";
   }
   // @debug dpm($chart_type, 'chart type');
 
@@ -396,6 +395,18 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
   $form['#attached']['js'][] = 'https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js';
   $form['#attached']['js'][] = $module_path . '/theme/js/distroChart.js';
   $form['#attached']['js'][] = $module_path . "/theme/js/$chart_type.chart.js";
+
+  // Do we want to add a watermark?
+  $add_watermark = variable_get('ap_config_watermark_what', 'all');
+  if ($add_watermark == 'all') {
+    tripald3_load_libraries();
+    $watermark_url = variable_get('ap_config_watermark_url', FALSE);
+    $add_watermark = TRUE;
+  }
+  else {
+    $add_watermark = FALSE;
+    $watermark_url = FALSE;
+  }
 
   $data = array();
   $data['analyzedPhenotypes'] = array();
@@ -408,6 +419,8 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
       'yaxis' => $yaxis,
       'id' => 'tripal-ap-violin-plot',
       'type' => $chart_type,
+      'addWatermark' => $add_watermark,
+      'watermarkURL' => $watermark_url,
   );
   $form['#attached']['js'][] = array(
     'type' => 'setting',
@@ -479,7 +492,7 @@ function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $
           AND mview.method_id= :method_id
           AND mview.unit_id=:unit_id
           AND prop.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE name='additionalType')
-        ORDER BY year ASC, location ASC",
+        ORDER BY location ASC, year ASC",
       array(
         ':project_id' => $project_id,
         ':trait_id' => $trait_id,
@@ -489,19 +502,33 @@ function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $
     foreach($resource as $r) {
 
       $values = json_decode($r->values);
+      // QUANTITATIVE:
+      // We want to average the replicates and provide a single value.
       if ($r->chart_type == 'quantitative') {
         $mean = array_sum($values) / count($values);
+        $results[] = array(
+          'category' => $r->location . ' ' . $r->year,
+          'values' => $values,
+          'value' => $mean,
+          // This will tag this data point using the name of germplasm
+          // that will allow JS to highlight in the violin plot.
+          'germ' => $r->stock_name,
+        );
       }
+      // QUALITATIVE:
+      // We want to provide an item for each value so that replicates are additive.
       else {
-        $values = array_unique($values);
-        sort($values);
-        $mean = implode('/', $values);
+        foreach ($values as $val) {
+          $results[] = array(
+            'category' => $r->location . ' ' . $r->year,
+            'values' => $values,
+            'value' => $val,
+            // This will tag this data point using the name of germplasm
+            // that will allow JS to highlight in the violin plot.
+            'germ' => $r->stock_name,
+          );
+        }
       }
-      $results[] = array(
-        'category' => $r->location . ' ' . $r->year,
-        'values' => $values,
-        'value' => $mean,
-      );
     }
   }
 
