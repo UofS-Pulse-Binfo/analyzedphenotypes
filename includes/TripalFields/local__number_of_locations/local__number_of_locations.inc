@@ -155,6 +155,7 @@ class local__number_of_locations extends TripalField {
     // Load.
     // In value - for the user to see.
     $field_name = $this->instance['field_name'];
+    $entity->{$field_name}['und'][0]['value'] = array();
     $entity->{$field_name}['und'][0]['value']['local:number of locations'] = array(
       'count' =>  $count,
       // Default image: change value to point to other image.
