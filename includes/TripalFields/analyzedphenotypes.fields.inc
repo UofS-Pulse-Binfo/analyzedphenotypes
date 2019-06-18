@@ -34,6 +34,8 @@
 function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
   $fields = array();
 
+
+  // IN TRAIT PAGE ONLY:
   // Because we are expecting data housed in Chado we can use the 'data_table'
   // property of the bundle to determine if this bundle is really the one
   // we want the field to be associated with.
@@ -73,7 +75,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
       'cardinality' => 1,
       'locked' => FALSE,
       'storage' => array(
-	'type' => 'field_chado_storage',
+	      'type' => 'field_chado_storage',
       ),
     );
 
@@ -86,64 +88,6 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
     ));
     $field_name = 'local__magnitude_of_phenotypes';
     $field_type = 'local__magnitude_of_phenotypes';
-    $fields[$field_name] = array(
-      'field_name' => $field_name,
-      'type' => $field_type,
-      'cardinality' => 1,
-      'locked' => FALSE,
-      'storage' => array(
-	      'type' => 'field_chado_storage',
-      ),
-    );
-
-    // Phenotype Summary Fields:
-    // Number of experiments.
-    tripal_insert_cvterm(array(
-      'id' => 'local:number_of_experiments',
-      'name' => 'number of experiments',
-      'cv_name' => 'local',
-      'definition' => 'Used in AP Summary fields - Number of experiments',
-    ));
-    $field_name = 'local__number_of_experiments';
-    $field_type = 'local__number_of_experiments';
-    $fields[$field_name] = array(
-      'field_name' => $field_name,
-      'type' => $field_type,
-      'cardinality' => 1,
-      'locked' => FALSE,
-      'storage' => array(
-	      'type' => 'field_chado_storage',
-      ),
-    );
-
-    // Number of years.
-    tripal_insert_cvterm(array(
-      'id' => 'local:number_of_years',
-      'name' => 'number of years',
-      'cv_name' => 'local',
-      'definition' => 'Used in AP Summary fields - Number of years',
-    ));
-    $field_name = 'local__number_of_years';
-    $field_type = 'local__number_of_years';
-    $fields[$field_name] = array(
-      'field_name' => $field_name,
-      'type' => $field_type,
-      'cardinality' => 1,
-      'locked' => FALSE,
-      'storage' => array(
-	      'type' => 'field_chado_storage',
-      ),
-    );
-
-    // Number of locations.
-    tripal_insert_cvterm(array(
-      'id' => 'local:number_of_locations',
-      'name' => 'number of locations',
-      'cv_name' => 'local',
-      'definition' => 'Used in AP Summary fields - Number of locations',
-    ));
-    $field_name = 'local__number_of_locations';
-    $field_type = 'local__number_of_locations';
     $fields[$field_name] = array(
       'field_name' => $field_name,
       'type' => $field_type,
@@ -191,7 +135,10 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
 	      'type' => 'field_chado_storage',
       ),
     );
+  }
 
+  // IN GERMPLASM PAGE ONLY:
+  if (isset($bundle->data_table) AND ($bundle->data_table == 'stock')) {
     // Number of traits.
     tripal_insert_cvterm(array(
       'id' => 'local:number_of_traits',
@@ -212,6 +159,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
     );
   }
 
+  // IN TRAIT, GERMPLASM AND PROJECT PAGE:
   // Trait Distribution Chart Field.
   if (isset($bundle->data_table) AND
     (($bundle->data_table == 'cvterm') OR ($bundle->data_table == 'project') OR ($bundle->data_table == 'stock'))) {
@@ -234,6 +182,65 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
         'type' => 'field_chado_storage',
       ),
     );
+
+    if ($bundle->data_table == 'cvterm' || $bundle->data_table == 'stock') {
+      // Number of experiments.
+      tripal_insert_cvterm(array(
+        'id' => 'local:number_of_experiments',
+        'name' => 'number of experiments',
+        'cv_name' => 'local',
+        'definition' => 'Used in AP Summary fields - Number of experiments',
+      ));
+      $field_name = 'local__number_of_experiments';
+      $field_type = 'local__number_of_experiments';
+      $fields[$field_name] = array(
+        'field_name' => $field_name,
+        'type' => $field_type,
+        'cardinality' => 1,
+        'locked' => FALSE,
+        'storage' => array(
+          'type' => 'field_chado_storage',
+        ),
+      );
+
+      // Number of years.
+      tripal_insert_cvterm(array(
+        'id' => 'local:number_of_years',
+        'name' => 'number of years',
+        'cv_name' => 'local',
+        'definition' => 'Used in AP Summary fields - Number of years',
+      ));
+      $field_name = 'local__number_of_years';
+      $field_type = 'local__number_of_years';
+      $fields[$field_name] = array(
+        'field_name' => $field_name,
+        'type' => $field_type,
+        'cardinality' => 1,
+        'locked' => FALSE,
+        'storage' => array(
+          'type' => 'field_chado_storage',
+        ),
+      );
+
+      // Number of locations.
+      tripal_insert_cvterm(array(
+        'id' => 'local:number_of_locations',
+        'name' => 'number of locations',
+        'cv_name' => 'local',
+        'definition' => 'Used in AP Summary fields - Number of locations',
+      ));
+      $field_name = 'local__number_of_locations';
+      $field_type = 'local__number_of_locations';
+      $fields[$field_name] = array(
+        'field_name' => $field_name,
+        'type' => $field_type,
+        'cardinality' => 1,
+        'locked' => FALSE,
+        'storage' => array(
+          'type' => 'field_chado_storage',
+        ),
+      );
+    }
   }
 
   return $fields;
@@ -264,6 +271,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
 function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
   $instances = array();
 
+  // IN TRAITS PAGE ONLY:
   if (isset($bundle->data_table) AND ($bundle->data_table == 'cvterm')) {
 
     // Trait Methods Field.
@@ -362,8 +370,107 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
       ),
     );
 
+    // Number of Germplasm.
+    $field_name = 'local__number_of_germplasm';
+    $field_type = 'local__number_of_germplasm';
+    $instances[$field_name] =  array(
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Phenotype Summary: Number of Germplasm',
+      'description' => 'Used in AP Summary fields - Number of germplasm.',
+      'required' => FALSE,
+      'settings' => array(
+        'term_vocabulary' => 'local',
+        'term_name' => 'number of germplasm',
+        'term_accession' => 'number_of_germplasm',
+        'auto_attach' => FALSE,
+        'chado_table' => $bundle->data_table,
+        'chado_column' => 'cvterm_id',
+        'base_table' => $bundle->data_table,
+      ),
+      'widget' => array(
+        'type' => 'local__number_of_germplasm_widget',
+        'settings' => array(),
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'local__number_of_germplasm_formatter',
+          'settings' => array(),
+        ),
+      ),
+    );
+
+    // Number of Values Recorded.
+    $field_name = 'local__number_of_values_recorded';
+    $field_type = 'local__number_of_values_recorded';
+    $instances[$field_name] =  array(
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Phenotype Summary: Number of Values Recorded',
+      'description' => 'Used in AP Summary fields - Number of values recorded.',
+      'required' => FALSE,
+      'settings' => array(
+        'term_vocabulary' => 'local',
+        'term_name' => 'number of values recorded',
+        'term_accession' => 'number_of_values_recorded',
+        'auto_attach' => FALSE,
+        'chado_table' => $bundle->data_table,
+        'chado_column' => 'cvterm_id',
+        'base_table' => $bundle->data_table,
+      ),
+      'widget' => array(
+        'type' => 'local__number_of_values_recorded_widget',
+        'settings' => array(),
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'local__number_of_values_recorded_formatter',
+          'settings' => array(),
+        ),
+      ),
+    );
   }
 
+  // IN GERMPLASM PAGE ONLY:
+  if (isset($bundle->data_table) AND ($bundle->data_table == 'stock')) {
+    // Number of Values Recorded.
+    $field_name = 'local__number_of_traits';
+    $field_type = 'local__number_of_traits';
+    $instances[$field_name] =  array(
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Phenotype Summary: Number of Traits',
+      'description' => 'Used in AP Summary fields - Number of traits.',
+      'required' => FALSE,
+      'settings' => array(
+        'term_vocabulary' => 'local',
+        'term_name' => 'number of traits',
+        'term_accession' => 'number_of_traits',
+        'auto_attach' => FALSE,
+        'chado_table' => $bundle->data_table,
+        'chado_column' => $bundle->data_table . '_id',
+        'base_table' => $bundle->data_table,
+      ),
+      'widget' => array(
+        'type' => 'local__number_of_traits_widget',
+        'settings' => array(),
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'local__number_of_traits_formatter',
+          'settings' => array(),
+        ),
+      ),
+    );
+  }
+
+  // IN TRAIT, GERMPLASM AND PROJECT PAGE:
   // Trait Distribution Plot Field.
   if (isset($bundle->data_table) AND
     (($bundle->data_table == 'cvterm') OR ($bundle->data_table == 'project') OR ($bundle->data_table == 'stock'))) {
@@ -398,6 +505,102 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         ),
       ),
     );
+
+
+    if ($bundle->data_table == 'cvterm' || $bundle->data_table == 'stock') {
+      $field_name = 'local__number_of_experiments';
+      $field_type = 'local__number_of_experiments';
+      $instances[$field_name] =  array(
+        'field_name' => $field_name,
+        'entity_type' => $entity_type,
+        'bundle' => $bundle->name,
+        'label' => 'Phenotype Summary: Number of Experiments',
+        'description' => 'Used in AP Summary fields - Number of experiments.',
+        'required' => FALSE,
+        'settings' => array(
+          'term_vocabulary' => 'local',
+          'term_name' => 'number of experiments',
+          'term_accession' => 'number_of_experiments',
+          'auto_attach' => FALSE,
+          'chado_table' => $bundle->data_table,
+          'chado_column' => $bundle->data_table . '_id',
+          'base_table' => $bundle->data_table,
+        ),
+        'widget' => array(
+          'type' => 'local__number_of_experiments_widget',
+          'settings' => array(),
+        ),
+        'display' => array(
+          'default' => array(
+            'label' => 'hidden',
+            'type' => 'local__number_of_experiments_formatter',
+            'settings' => array(),
+          ),
+        ),
+      );
+
+      $field_name = 'local__number_of_locations';
+      $field_type = 'local__number_of_locations';
+      $instances[$field_name] =  array(
+        'field_name' => $field_name,
+        'entity_type' => $entity_type,
+        'bundle' => $bundle->name,
+        'label' => 'Phenotype Summary: Number of Locations',
+        'description' => 'Used in AP Summary fields - Number of locations.',
+        'required' => FALSE,
+        'settings' => array(
+          'term_vocabulary' => 'local',
+          'term_name' => 'number of locations',
+          'term_accession' => 'number_of_locations',
+          'auto_attach' => FALSE,
+          'chado_table' => $bundle->data_table,
+          'chado_column' => $bundle->data_table . '_id',
+          'base_table' => $bundle->data_table,
+        ),
+        'widget' => array(
+          'type' => 'local__number_of_locations_widget',
+          'settings' => array(),
+        ),
+        'display' => array(
+          'default' => array(
+            'label' => 'hidden',
+            'type' => 'local__number_of_locations_formatter',
+            'settings' => array(),
+          ),
+        ),
+      );
+
+      $field_name = 'local__number_of_years';
+      $field_type = 'local__number_of_years';
+      $instances[$field_name] =  array(
+        'field_name' => $field_name,
+        'entity_type' => $entity_type,
+        'bundle' => $bundle->name,
+        'label' => 'Phenotype Summary: Number of Years',
+        'description' => 'Used in AP Summary fields - Number of years.',
+        'required' => FALSE,
+        'settings' => array(
+          'term_vocabulary' => 'local',
+          'term_name' => 'number of years',
+          'term_accession' => 'number_of_years',
+          'auto_attach' => FALSE,
+          'chado_table' => $bundle->data_table,
+          'chado_column' => $bundle->data_table . '_id',
+          'base_table' => $bundle->data_table,
+        ),
+        'widget' => array(
+          'type' => 'local__number_of_years_widget',
+          'settings' => array(),
+        ),
+        'display' => array(
+          'default' => array(
+            'label' => 'hidden',
+            'type' => 'local__number_of_years_formatter',
+            'settings' => array(),
+          ),
+        ),
+      );
+    }
   }
 
   return $instances;
