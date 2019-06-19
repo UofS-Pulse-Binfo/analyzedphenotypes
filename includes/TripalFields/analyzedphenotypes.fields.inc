@@ -100,11 +100,11 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
     tripal_insert_cvterm(array(
       'id' => 'ncit:c48179',
       'name' => 'Image',
-      'cv_name' => 'ncit',
+      'cv_name' => 'NCIT',
       'definition' => 'Phenotype Image.',
     ));
-    $field_name = 'ncit__c48179';
-    $field_type = 'ncit__c48179';
+    $field_name = 'ncit__image';
+    $field_type = 'ncit__image';
     $fields[$field_name] = array(
       'field_name' => $field_name,
       'type' => $field_type,
@@ -267,8 +267,8 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
     );
 
     // Phenotype Image.
-    $field_name = 'ncit__c48179';
-    $field_type = 'ncit__c48179';
+    $field_name = 'ncit__image';
+    $field_type = 'ncit__image';
     $instances[$field_name] =  array(
       'field_name' => $field_name,
       'entity_type' => $entity_type,
@@ -286,13 +286,13 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         'base_table' => $bundle->data_table,
       ),
       'widget' => array(
-        'type' => 'ncit__c48179_widget',
+        'type' => 'ncit__image_widget',
         'settings' => array(),
       ),
       'display' => array(
         'default' => array(
           'label' => 'hidden',
-          'type' => 'ncit__c48179_formatter',
+          'type' => 'ncit__image_formatter',
           'settings' => array(
             'image_stack' => 'Left to Right',
             'image_position' => 'Top to Bottom',
