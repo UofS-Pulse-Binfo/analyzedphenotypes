@@ -441,3 +441,35 @@ function ap_make_datafile_permanent($datafile) {
 function ap_noformat($string) {
   return strtolower(trim($string));
 }
+
+
+/**
+ * FUNCTION:
+ * Shortens a number in K/M/B.
+ *
+ * @param $value
+ *   An integer containing the number to be formatted.
+ *
+ * @return string
+ *   Shortened result.
+ */
+function ap_shortval($value) {
+  if ($value < 1000) {
+    // Hundred and less.
+    $value = $value;
+  }
+  else if ($value < 1000000) {
+    // Thousand.
+    $value = round($value / 1000, 0) . 'K';
+  }
+  else if ($value < 1000000000) {
+    // Million.
+    $value = round($value / 1000000, 0) . 'M';
+  }
+  else {
+    // Billion.
+    $value = round($value / 1000000000, 0) . 'B';
+  }
+
+  return $value;
+}
