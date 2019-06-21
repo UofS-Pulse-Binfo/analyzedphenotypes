@@ -12,12 +12,18 @@
  *   - search button text.
  *   - autocomplete path.
  */
-class ncit__synonym_formatter extends TripalFieldFormatter {
+class ncit__synonym_formatter extends ChadoFieldFormatter {
   // The default label for this field.
   public static $default_label = 'Phenotype Ontology';
 
   // The list of field types for which this formatter is appropriate.
   public static $field_types = array('ncit__synonym');
+
+
+
+  public function settingsForm($view_mode, $form, &$form_state) {
+
+  }
 
   /**
    *  Provides the display for a field
@@ -44,7 +50,6 @@ class ncit__synonym_formatter extends TripalFieldFormatter {
    *    hook_field_formatter_view() function.
    */
   public function view(&$element, $entity_type, $entity, $langcode, $items, $display) {
-
     // All set, render items.
     $element[0] = array(
       '#type' => 'markup',

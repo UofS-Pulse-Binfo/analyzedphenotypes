@@ -6,7 +6,7 @@
  * Data: No data.
  * Assumptions:
  */
-class ncit__synonym extends TripalField {
+class ncit__synonym extends ChadoField {
   // --------------------------------------------------------------------------
   //                     EDITABLE STATIC CONSTANTS
   //
@@ -31,14 +31,14 @@ class ncit__synonym extends TripalField {
   // Once instances exist for a field type then these settings cannot be
   // changed.
   public static $default_settings = array(
-    'storage' => 'tripal_no_storage',
+    'storage' => 'field_chado_storage',
     // It is expected that all fields set a 'value' in the load() function.
     // In many cases, the value may be an associative array of key/value pairs.
     // In order for Tripal to provide context for all data, the keys should
     // be a controlled vocabulary term (e.g. rdfs:type). Keys in the load()
     // function that are supported by the query() function should be
     // listed here.
-    'browseable_keys' => array(),
+    'searchable_keys' => array(),
   );
 
   // Provide a list of instance specific settings. These can be access within
@@ -64,12 +64,6 @@ class ncit__synonym extends TripalField {
     // should have auto_attach set to FALSE so tha their values can be
     // attached asynchronously.
     'auto_attach' => FALSE,
-    // The table where the options for this specific field are stored.
-    // This can be one of trpfancy_browse_options or trpfancy_browse_options_per_entity
-    // based on admin configuration. Default: trpfancy_browse_options.
-    'option_storage' => '',
-    // A list of browser types this field intends to provide.
-    'browser_types' => '',
   );
 
   // A boolean specifying that users should not be allowed to create
@@ -81,7 +75,7 @@ class ncit__synonym extends TripalField {
   // should exclude the field from web services or downloads.  An example
   // could be a quick browse field that appears on the page that redirects
   // the user but otherwise provides no data.
-  public static $no_data = TRUE;
+  public static $no_data = FALSE;
 
  /**
    * Loads the field values from the underlying data store.
@@ -111,9 +105,45 @@ class ncit__synonym extends TripalField {
    *
    */
   public function load($entity) {
-    $field_name = $this->instance['field_name'];
+    // Trait/cvterm record.
+    $record = $entity->chado_record;
 
-    $entity->{$field_name}['und'][0]['value']['local:number of experiments'] = 1;
+    if ($record) {
+      // Has record.
+      $settings = $this->instance['settings'];
+
+      // Define relationship between trait and ontology term by
+      // creating entry in cvterm_relationhip where subject id is the ontology term
+      // and object id being the trait. Relation is of type related (as configured).
+      $field_table = array(
+        'table' => 'cvterm_relationship',
+        'field' => 'subject_id'
+      );
+
+      $field_name = $this->field['field_name'];
+
+      // Set some defaults for the empty record.
+      $entity->{$field_name}['und'][0] = array(
+        'value' => array(),
+      );
+
+      // Requires ontology term for this trait in both Tripal Engine and End-user.
+      // @see api/ontology.api
+      $traitprop = ap_get_cvterm(
+        array('cvterm_id' => $entity->chado_record_id),
+        array('dataset' => 'fullset')
+      );
+
+      // To user (formmater):
+      if ($traitprop['crop_ontology']) {
+        $term_rel_subject = tripal_get_chado_semweb_term($field_table['table'], $field_table['field']);
+        $entity->{$field_name}['und'][0]['value'][ $term_rel_subject ] = $traitprop['crop_ontology'];
+      }
+
+      // To Tripal engine (widget):
+      $linker_field = 'chado-' . $field_table['table'] . '__' . $field_table['field'];
+      $entity->{$field_name}['und'][ $linker_field ] = 1;// $traitprop['crop_ontology'];
+    }
   }
 
   /**
@@ -138,14 +168,5 @@ class ncit__synonym extends TripalField {
    * the changes in the form function itself but that doesn't work here.
    */
   public function instanceSettingsForm() {
-
-    // Retrieve the current settings.
-    // If this field was just created these will contain the default values.
-    $settings = $this->instance['settings'];
-
-    // Allow the parent Tripal Field to set up the form element for us.
-    $element = parent::instanceSettingsForm();
-
-    return $element;
   }
 }
