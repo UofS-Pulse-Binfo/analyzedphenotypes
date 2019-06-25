@@ -4,7 +4,7 @@
  *
  * @see TripalImporter
  */
-class PhenotypeImporter extends TripalImporter {
+class APPhenotypeImporter extends TripalImporter {
 
   /**
    * The name of this loader.  This name will be presented to the site
@@ -16,7 +16,7 @@ class PhenotypeImporter extends TripalImporter {
    * The machine name for this loader. This name will be used to construct
    * the URL for the loader.
    */
-  public static $machine_name = 'ap_phenotype_importer';
+  public static $machine_name = 'APPhenotypeImporter';
 
   /**
    * A brief description for this loader.  This description will be
@@ -132,6 +132,9 @@ class PhenotypeImporter extends TripalImporter {
     // Add in the status header and any general JS/CSS.
     $form = $this->form_header($form, $form_state, $current_stage);
 
+    // Add in hidden form elements to save values from pervious steps.
+    $form = $this->save_stage_values($form, $form_state, $stage_id);
+
     // Based on the current stage, return the correct form.
     switch ($current_stage) {
       case 'upload':
@@ -155,11 +158,12 @@ class PhenotypeImporter extends TripalImporter {
         '#type' => 'submit',
         '#value' => 'Next Step',
         '#weight' => 100,
-        //'#id' => 'ap-next-stage-submit-field',
+        '#id' => 'ap-next-stage-submit-field',
       );
     }
 
-    // @debug dpm($form, 'form');
+    // @debug dpm($form, '$form in Importer::form');
+    // @debug dpm($form_state, '$form_state in Importer::form');
 
     return $form;
   }
@@ -187,10 +191,10 @@ class PhenotypeImporter extends TripalImporter {
         //$form['#attached']['js'][]  = $path_theme . 'js/analyzedphenotypes.loader.stage1.js';
         break;
       case 'validate':
-        //$form['#attached']['css'][] = $path_theme . 'css/analyzedphenotypes.loader.progress.css';
-        //$form['#attached']['js'][]  = $path_theme . 'js/analyzedphenotypes.loader.progress.js';
-        //$form['#attached']['js'][]  = $path_theme . 'js/analyzedphenotypes.loader.stage2.js';
-        //drupal_add_js('misc/progress.js');
+        $form['#attached']['css'][] = $path_theme . 'css/analyzedphenotypes.loader.progress.css';
+        $form['#attached']['js'][]  = $path_theme . 'js/analyzedphenotypes.loader.progress.js';
+        $form['#attached']['js'][]  = $path_theme . 'js/analyzedphenotypes.loader.stage2.js';
+        drupal_add_js('misc/progress.js');
         break;
       case 'describe':
         //$form['#attached']['css'][] = $path_theme . 'css/analyzedphenotypes.loader.stage3.css';
@@ -276,23 +280,35 @@ class PhenotypeImporter extends TripalImporter {
 
   /**
    * Provides the upload file portion of the form.
+   *
+   * @stage 1
    */
   public function form_stage1 ($form,  &$form_state) {
     $class = get_called_class();
     global $user;
 
+
+    // Pull defaults from the path if they are available.
+    $query = drupal_get_query_parameters();
+    $default_project = $default_genus = NULL;
+    if (isset($query['project'])) { $default_project = $query['project']; }
+    if (isset($query['genus'])) { $default_genus = $query['genus']; }
+
+    // @debug dpm($query, '$query in Importer::stage1');
+
     // Autocomplete search field: Experiment/project title.
-    $form['project_id'] = array(
+    $form['project_name'] = array(
       '#title' => 'Experiment',
       '#type' => 'textfield',
       '#maxlength' => 200,
       '#size' => 100,
       '#required' => TRUE,
-
+      '#default_value' => $default_project,
       // @see analyzedphenotypes_data_json() in functions.inc where $dataype = projects.
       '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/projects/experiment',
 
       // When project is selected, autofill the genus field with corresponding project genus.
+      /* @todo test this...
       '#ajax' => array(
         'callback' => 'ap_send_ajaxrequest',
         'case' => 'autofillgenus',
@@ -303,15 +319,16 @@ class PhenotypeImporter extends TripalImporter {
           'message' => 'Loading project genus...'
         ),
       ),
+      */
       '#description' => t('Type in the experiment or project title your data is specific to.'),
       '#id' => 'ap-project-select-field'
     );
 
     // All genus.
     $arr_all_genus = array(0 => '- Select -');
-    // Fetch all genus that have been configured in settings page.
+    // Fetch all genus that have been configured in settings page...
     $genusprop = ap_get_activegenus();
-
+    // and add them to the options array.
     if ($genusprop) {
       foreach($genusprop as $g) {
         $arr_all_genus[$g] = $g;
@@ -319,8 +336,8 @@ class PhenotypeImporter extends TripalImporter {
     }
 
     // Project genus - autofill.
-    if (isset($form_state['values']['project_id'])) {
-      $project = trim($form_state['values']['project_id']);
+    if (isset($form_state['values']['project_name'])) {
+      $project = trim($form_state['values']['project_name']);
 
       if (!empty($project)) {
         // Fetch genus assigned to a project.
@@ -347,7 +364,7 @@ class PhenotypeImporter extends TripalImporter {
 
       $default_genus = $form_state['values']['genus'];
     }
-    else {
+    elseif ($default_genus === NULL) {
       $default_genus = array_keys($genus_options)[0];
     }
 
@@ -402,12 +419,77 @@ class PhenotypeImporter extends TripalImporter {
 
   /**
    * Provides the validate file portion of the form.
+   *
+   * @stage 2
    */
   public function form_stage2 ($form,  &$form_state) {
 
-    $form['status'] = [
-      '#markup' => '<h3 color="green">TWO</h3>',
-      '#weight' => -110,
+    // @debug dpm($form_state, '$form_state in Importer::form_stage2');
+
+    $job_id = NULL;
+    if (isset($form_state['values']['project_name']) &&
+        isset($form_state['values']['genus'])   &&
+        isset($form_state['values']['files'])) {
+
+      $project_name  = $form_state['values']['project_name'];
+      $project_genus = $form_state['values']['genus'];
+      $data_file     = $form_state['values']['files'][0]['fid'];
+
+      $tripal_dataset = array(
+        'description' => 'Validate Analyzed Phenotypes',
+        'callback'    => 'analyzedphenotypes_validate_tsv_data',
+        'dataset' => array(
+          'project_name'  => $project_name,
+          'project_genus' => $project_genus,
+          'data_file'     => $data_file,
+        )
+      );
+
+      $job_id = ap_create_tripaljob($tripal_dataset);
+    }
+
+    if ($job_id) {
+      $base_admin = base_path() . 'admin/tripal/extension/analyzedphenotypes';
+
+      $js_var = array(
+        'stage'    => 'validate',
+        'job_id'    => $job_id,
+        'path_JSON' => $base_admin . '/json/jobstatus/',
+        'path_VR'   => $base_admin . '/validation_result/data/',
+      );
+
+      drupal_add_js(array('analyzedphenotypes' => array('vars' => $js_var)), array('type' => 'setting'));
+    }
+
+    // Add in neccessary markup.
+    $form['context_display'] = [
+      '#type' => 'item',
+      '#title' => 'Experiment (Genus)',
+      '#markup' => $project_name . ' (' . $project_genus . ')',
+    ];
+
+    $form['validating_container'] = [
+      '#type' => 'markup',
+      '#markup' => '<div class="ap-tsv-file-form-element"><label>TSV Data File</label><span>Validating...</span></div>'
+        . '<div id="ap-progress-container" class="ap-tsv-file-form-element">
+            <div class="ap-navy-spinner">Validating data... Please wait.</div>
+            <!-- Apply progress bar - disable display rule to use progress bar instead of spinner above !-->
+            <div class="ap-progress-wrapper" style="display: none">
+              <div class="progress-pane"></div>
+            </div>
+          </div>',
+    ];
+    // NOTE: The above markup element will be replaced with the validation
+    // result once the job completes. This is achomplished through AJAX in
+    // the stage2 js file.
+
+    $form['back'] = [
+      '#type' => 'markup',
+      '#markup' => l(
+        'Re-upload File',
+        '/admin/tripal/loaders/APPhenotypeImporter',
+        ['query' => ['genus' => $project_genus, 'project' => $project_name]]
+      ),
     ];
 
     return $form;
@@ -415,6 +497,8 @@ class PhenotypeImporter extends TripalImporter {
 
   /**
    * Provides the describe traits portion of the form.
+   *
+   * @stage 3
    */
   public function form_stage3 ($form,  &$form_state) {
 
@@ -428,6 +512,8 @@ class PhenotypeImporter extends TripalImporter {
 
   /**
    * Provides the save data portion of the form.
+   *
+   * @stage 4
    */
   public function form_stage4 ($form,  &$form_state) {
 
@@ -435,6 +521,104 @@ class PhenotypeImporter extends TripalImporter {
       '#markup' => '<h3 color="green">FOUR</h3>',
       '#weight' => -110,
     ];
+
+    return $form;
+  }
+
+  /**
+   * This function will ensure values from other steps are saved through to
+   * the last step. This allows our TripalImporter::run() to act as through
+   * it's a single page form!
+   */
+  public function save_stage_values($form, &$form_state, $stage_id) {
+
+    //...........................................
+    // STAGE 1:
+    // project_name.
+    if (isset($form_state['values']['project_name'])) {
+      $form['project_name'] = [
+        '#type' => 'hidden',
+        '#value' => $form_state['values']['project_name'],
+      ];
+    }
+    // genus.
+    if (isset($form_state['values']['genus'])) {
+      $form['genus'] = [
+        '#type' => 'hidden',
+        '#value' => $form_state['values']['genus'],
+      ];
+    }
+    // fid.
+    // If this is the second stage...
+    if (isset($form_state['values']['file_upload'])) {
+      // Then we want to reformat the results and save them for future use.
+      // The fid will be in either file_upload or file_upload_existing for
+      // if the user uploaded a file or picked an existing one.
+      $fid = !empty($form_state['values']['file_upload']) ? $form_state['values']['file_upload'] : $form_state['values']['file_upload_existing'];
+      // @debug dpm($fid, '$fid in Importer::save_stage_values');
+
+      $form['files'] = [
+        '#tree' => TRUE,
+      ];
+
+      // Handle multiple file uploads.
+      if (preg_match('/\|/', $fid)) {
+        $fids = explode('|', $fid);
+        foreach ($fids as $k => $id) {
+          $file = file_load($id);
+          $form_state['values']['files'][$k]['fid'] = $id;
+          $form['files'][] = [
+            'file_path' => [
+              '#type' => 'hidden',
+              '#value' => drupal_realpath($file->uri),
+            ],
+            'fid' => [
+              '#type' => 'hidden',
+              '#value' => $id,
+            ]
+          ];
+        }
+      }
+      // Handle a single file.
+      else {
+        $file = file_load($fid);
+        // @debug dpm($file, '$file in Importer::save_stage_values');
+        $form_state['values']['files'][0]['fid'] = $fid;
+        $form['files'][] = [
+          'file_path' => [
+            '#type' => 'hidden',
+            '#value' => drupal_realpath($file->uri),
+          ],
+          'fid' => [
+            '#type' => 'hidden',
+            '#value' => $fid,
+          ]
+        ];
+      }
+    }
+    // Otherwise we have already formatted the results and just need
+    // to continue to pass them through...
+    elseif (isset($form_state['values']['files'])) {
+
+      $form['files'] = [
+        '#tree' => TRUE,
+      ];
+      foreach($form_state['values']['files'] as $k => $f) {
+        $form['files'][$k] = [
+          'file_path' => [
+            '#type' => 'hidden',
+            '#value' => $f->file_path,
+          ],
+          'fid' => [
+            '#type' => 'hidden',
+            '#value' => $f->fid,
+          ]
+        ];
+      }
+    }
+
+    //...........................................
+    // STAGE 2:
 
     return $form;
   }
@@ -448,11 +632,12 @@ class PhenotypeImporter extends TripalImporter {
    */
   public function formValidate($form, &$form_state) {
 
-    dpm($form_state, 'form state in validate.');
-    dpm($form, 'form');
+    // @debug dpm($form_state, '$form_state in Importer::validate.');
+    // @debug dpm($form, 'form');
+
     $stage_id = $form_state['values']['stage_id'];
 
-    if ($stage_id === 0) {
+    if ($stage_id === 1) {
 
       //...........................................
       // Validate that the genus is set in Stage 1.
