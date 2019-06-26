@@ -15,9 +15,9 @@ class ncit__synonym extends ChadoField {
   // the field and it's default widget and formatter.
   // --------------------------------------------------------------------------
   // The default label for this field.
-  public static $default_label = 'Phenotype Ontology';
+  public static $default_label = 'Crop Ontology';
   // The default description for this field.
-  public static $default_description = 'Phenotype Ontology';
+  public static $default_description = 'Crop Ontology';
   // The default widget for this field.
   public static $default_widget = 'ncit__synonym_widget';
   // The default formatter for this field.
@@ -31,14 +31,14 @@ class ncit__synonym extends ChadoField {
   // Once instances exist for a field type then these settings cannot be
   // changed.
   public static $default_settings = array(
-    'storage' => 'field_chado_storage',
+    'storage' => 'tripal_no_storage',
     // It is expected that all fields set a 'value' in the load() function.
     // In many cases, the value may be an associative array of key/value pairs.
     // In order for Tripal to provide context for all data, the keys should
     // be a controlled vocabulary term (e.g. rdfs:type). Keys in the load()
     // function that are supported by the query() function should be
     // listed here.
-    'searchable_keys' => array(),
+    'browseable_keys' => array(),
   );
 
   // Provide a list of instance specific settings. These can be access within
@@ -64,6 +64,17 @@ class ncit__synonym extends ChadoField {
     // should have auto_attach set to FALSE so tha their values can be
     // attached asynchronously.
     'auto_attach' => FALSE,
+    // The table where the options for this specific field are stored.
+    // This can be one of trpfancy_browse_options or trpfancy_browse_options_per_entity
+    // based on admin configuration. Default: trpfancy_browse_options.
+    'option_storage' => '',
+    // A list of browser types this field intends to provide.
+    'browser_types' => '',
+
+    'chado_table' => 'cvterm_relationship',
+    'chado_column' => 'cvterm_relationship_id',
+    'base_table'    => 'cvterm_relationship'
+
   );
 
   // A boolean specifying that users should not be allowed to create
@@ -75,7 +86,7 @@ class ncit__synonym extends ChadoField {
   // should exclude the field from web services or downloads.  An example
   // could be a quick browse field that appears on the page that redirects
   // the user but otherwise provides no data.
-  public static $no_data = FALSE;
+  public static $no_data = TRUE;
 
  /**
    * Loads the field values from the underlying data store.
@@ -105,45 +116,29 @@ class ncit__synonym extends ChadoField {
    *
    */
   public function load($entity) {
-    // Trait/cvterm record.
-    $record = $entity->chado_record;
+    // We need the term configuration for term Related used when creating relationship.
+    $sysvar = ap_get_variablenames(
+      array('variablename' => 'related'),
+      array('set' => 'terms')
+    );
+    $sysvar_related = variable_get($sysvar);
 
-    if ($record) {
-      // Has record.
-      $settings = $this->instance['settings'];
+    $m = chado_query("SELECT cvterm_relationship_id AS id, subject_id AS synonym_id
+      FROM {cvterm_relationship} WHERE type_id = :type_id AND object_id = :trait_id limit 1",
+      array(':type_id' => $sysvar_related, ':trait_id' => $entity->chado_record_id))
+    ->fetchObject();
 
-      // Define relationship between trait and ontology term by
-      // creating entry in cvterm_relationhip where subject id is the ontology term
-      // and object id being the trait. Relation is of type related (as configured).
-      $field_table = array(
-        'table' => 'cvterm_relationship',
-        'field' => 'subject_id'
-      );
+    $this->instance['settings']['chado_table'] = 'cvterm_relationship';
+    $field_table = $this->instance['settings']['chado_table'];
 
-      $field_name = $this->field['field_name'];
-
-      // Set some defaults for the empty record.
-      $entity->{$field_name}['und'][0] = array(
-        'value' => array(),
-      );
-
-      // Requires ontology term for this trait in both Tripal Engine and End-user.
-      // @see api/ontology.api
-      $traitprop = ap_get_cvterm(
-        array('cvterm_id' => $entity->chado_record_id),
-        array('dataset' => 'fullset')
-      );
-
-      // To user (formmater):
-      if ($traitprop['crop_ontology']) {
-        $term_rel_subject = tripal_get_chado_semweb_term($field_table['table'], $field_table['field']);
-        $entity->{$field_name}['und'][0]['value'][ $term_rel_subject ] = $traitprop['crop_ontology'];
-      }
-
-      // To Tripal engine (widget):
-      $linker_field = 'chado-' . $field_table['table'] . '__' . $field_table['field'];
-      $entity->{$field_name}['und'][ $linker_field ] = 1;// $traitprop['crop_ontology'];
-    }
+    $field_name = $this->field['field_name'];
+    $entity->{$field_name}['und'][0] = array(
+      'value' => '',
+      'chado-' . $field_table . '__cvterm_relationship_id' => $m->id,
+      'chado-' . $field_table . '__type_id' => $sysvar_related,
+      'chado-' . $field_table . '__object_id' => $entity->chado_record_id,
+      'chado-' . $field_table . '__subject_id' => $m->synonym_id
+    );
   }
 
   /**
@@ -168,5 +163,14 @@ class ncit__synonym extends ChadoField {
    * the changes in the form function itself but that doesn't work here.
    */
   public function instanceSettingsForm() {
+
+    // Retrieve the current settings.
+    // If this field was just created these will contain the default values.
+    $settings = $this->instance['settings'];
+
+    // Allow the parent Tripal Field to set up the form element for us.
+    $element = parent::instanceSettingsForm();
+
+    return $element;
   }
 }

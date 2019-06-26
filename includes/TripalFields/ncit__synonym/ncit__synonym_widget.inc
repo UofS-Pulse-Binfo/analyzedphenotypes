@@ -7,7 +7,7 @@
  *
  * Allowing edit? No
  */
-class ncit__synonym_widget extends ChadoFieldWidget {
+class ncit__synonym_widget extends TripalFieldWidget {
 
   // The default lable for this field.
   public static $default_label = 'No Edits';
@@ -71,78 +71,55 @@ class ncit__synonym_widget extends ChadoFieldWidget {
    *    $delta above
    */
   public function form(&$widget, &$form, &$form_state, $langcode, $items, $delta, $element) {
-    if (count($delta) == 1) {
-      // Create field element to allow user to modify trait ontology term.
-      $field_name = $this->field['field_name'];
-      $field_table = array(
-        'table' => 'cvterm_relationship',
-        'field' => 'subject_id'
-      );
+    parent::form($widget, $form, $form_state, $langcode, $items, $delta, $element);
 
-      $linker_field = 'chado-' . $field_table['table'] . '__' . $field_table['field'];
+    $field_name = $this->field['field_name'];
+    $field_type = $this->field['type'];
 
-      // Create or upldate.
+    $this->instance['settings']['chado_table'] = 'cvterm_relationship';
+    $field_table = $this->instance['settings']['chado_table'];
 
-      // The value presented to the user via load.
-      // If $items['delta']['value'] is set then we are updating and already have this
-      // information. As such, simply save it again.
-      $widget['value'] = array(
-        '#type' => 'value',
-        '#value' => array_key_exists($delta, $items) ? $items[ $delta ]['value'] : '',
-      );
+    $this->instance['settings']['chado_column'] = 'cvterm_relationship_id';
+    $field_column = $this->instance['settings']['chado_column'];
 
-      // Pull out the value previously saved to be used as the default.
-      $ontology_term = '';
-      if (count($items) > 0 && array_key_exists($linker_field, $items[0])) {
-        $ontology_term = $items[0][ $linker_field ];
-      }
+    $this->instance['settings']['base_table'] = 'cvterm_relationship';
+    $base_table = $this->instance['settings']['base_table'];
 
-      // Autocomplete field - instance the same as the ontology field in upload.
-      // @see api/ontology api
-      //      upload.inc
+    $widget['#table_name'] = $field_table;
 
-      // Search ontology terms in genus configuration:
-      $widget['ap_fieldset'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Crop Ontology'),
-      );
+    $widget['value'] = array(
+      '#type' => 'value',
+      '#value' => $items[$delta]['chado-cvterm__cvterm_relationship_id'],
+    );
 
-      // Fetch all genus with ontology value set.
-      $cv_options = array();
-      $genus = ap_get_genus();
-      foreach($genus as $g) {
-        $genus_key = strtolower(str_replace(' ', '_', $g));
-        $conf = variable_get('analyzedphenotypes_systemvar_' . $genus_key . '_ontology');
-        if ($conf) {
-          $term_name = ap_get_cv(
-            array('cv_id' => $conf)
-          );
+    $widget['chado-cvterm_relationship__cvterm_relationship_id'] = array(
+      '#type' => 'value',
+      '#value' => $items[$delta]['chado-cvterm_relationship__cvterm_relationship_id'],
+    );
 
-          $cv_options[ $g ] = $g . ' : ' . $term_name['name'];
-        }
-      }
+    $widget['chado-cvterm_relationship__type_id'] = array(
+      '#type' => 'value',
+      '#value' => $items[$delta]['chado-cvterm_relationship__type_id'],
+    );
 
-      $widget['ap_fieldset']['ap_source_cv'] = array(
-        '#type' => 'select',
-        '#title' => t('CV'),
-        '#description' => t('Select ontology terms in Genus-CV configuration to limit/filter terms only to this option.'),
-        '#options' => array('Select') + $cv_options,
-      );
+    $widget['chado-cvterm_relationship__object_id'] = array(
+      '#type' => 'value',
+      '#value' => $items[$delta]['chado-cvterm_relationship__object_id'],
+    );
 
-      $widget['ap_fieldset'][ $linker_field ] = array(
-        '#type' => 'textfield',
-        '#title' => t('Trait Ontology'),
-        //'#default_value' => $ontology_term,
-        '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/ontology/Lens',
-      );
-    }
-    else {
-      // This field can only process one field per trait.
-      drupal_set_message('Please set the maximum number of values user can enter for this field to 1 in manage field.', 'status', FALSE);
-      $widget['no_field'] = array(
-        '#markup' => 'Field not available.',
-      );
-    }
+    $widget['chado-cvterm_relationship__subject_id'] = array(
+      '#type' => 'value',
+      '#value' => $items[$delta]['chado-cvterm_relationship__subject_id'],
+    );
+
+
+    $widget['new_term'] = array(
+      '#type'   => 'select',
+      '#title'   => 'Trait Ontology',
+      '#options' => array(4010=>'Subset Traits: # Pods (count)',  6086 => 'Chickpea Traits', 5705 => 'Lentil Traits'),
+      //'#autocomplete_path' => 'admin/tripal/storage/chado/auto_name/cvterm/2',
+      '#default_value' => $m->subject_id,
+    );
   }
 
   /**
@@ -155,8 +132,19 @@ class ncit__synonym_widget extends ChadoFieldWidget {
    * fields must be used to set the 'value' field.
    */
   public function validate($element, $form, &$form_state, $langcode, $delta) {
+    $field_name = $this->field['field_name'];
 
- }
+
+    ///////////////
+    $this->instance['settings']['chado_table'] = 'cvterm_relationship';
+    $field_table = $this->instance['settings']['chado_table'];
+
+    $form_state['values'][$field_name][$langcode][$delta]['value'] = $form_state['values'][$field_name][$langcode][$delta]['value'];
+    $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__cvterm_relationship_id'] = $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__cvterm_relationship_id'];
+    $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__object_id'] = $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__object_id'];
+    $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__subject_id'] = $form_state['values'][$field_name][$langcode][$delta]['new_term'];
+    $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__type_id'] = $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__type_id'];
+  }
 
   /**
    * Performs extra commands when the entity form is submitted.
