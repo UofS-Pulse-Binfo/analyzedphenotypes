@@ -213,7 +213,10 @@ function ap_get_method($project_genus, $method_name, $options = []) {
   $method = chado_select_record('cvterm', array('cvterm_id', 'name', 'definition'),
       array('name' => $method_name));
 
-  return $method[0];
+  if (is_array($method) AND isset($method[0])) {
+    return $method[0];
+  }
+  return FALSE;
 }
 
 /**
