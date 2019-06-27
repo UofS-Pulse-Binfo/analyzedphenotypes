@@ -1115,7 +1115,7 @@ function analyzedphenotypes_validate_field_select_trait(&$element, &$form, &$for
 /**
  * Implements custom field validation.
  * Validate required fields: unit, method, trait description, ontology and photo.
- */
+ *
 function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_state) {
   if ($element['#disabled'] === FALSE) {
     $error = FALSE;
@@ -1227,7 +1227,7 @@ function analyzedphenotypes_validate_field_required(&$element, &$form, &$form_st
     }
   }
 }
-
+*/
 
 /**
  * Implements hook_submit().
