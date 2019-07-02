@@ -116,29 +116,57 @@ class ncit__synonym extends ChadoField {
    *
    */
   public function load($entity) {
-    // We need the term configuration for term Related used when creating relationship.
-    $sysvar = ap_get_variablenames(
-      array('variablename' => 'related'),
-      array('set' => 'terms')
-    );
-    $sysvar_related = variable_get($sysvar);
+    $record = $entity->chado_record_id;
 
-    $m = chado_query("SELECT cvterm_relationship_id AS id, subject_id AS synonym_id
-      FROM {cvterm_relationship} WHERE type_id = :type_id AND object_id = :trait_id limit 1",
-      array(':type_id' => $sysvar_related, ':trait_id' => $entity->chado_record_id))
-    ->fetchObject();
+    if ($record) {
+      // We need the term configuration for term Related used when creating relationship.
+      $sysvar = ap_get_variablenames(
+        array('variablename' => 'related'),
+        array('set' => 'terms')
+      );
+      $sysvar_related = variable_get($sysvar);
 
-    $this->instance['settings']['chado_table'] = 'cvterm_relationship';
-    $field_table = $this->instance['settings']['chado_table'];
+      if ($sysvar_related) {
+        $identifiers = array(
+          'column' => array('cvterm_relationship_id', 'subject_id'),
+          'value'  => array('type_id' => $sysvar_related, 'object_id' => $record)
+        );
+        $rel = chado_select_record('cvterm_relationship', $identifiers['column'], $identifiers['value']);
 
-    $field_name = $this->field['field_name'];
-    $entity->{$field_name}['und'][0] = array(
-      'value' => '',
-      'chado-' . $field_table . '__cvterm_relationship_id' => $m->id,
-      'chado-' . $field_table . '__type_id' => $sysvar_related,
-      'chado-' . $field_table . '__object_id' => $entity->chado_record_id,
-      'chado-' . $field_table . '__subject_id' => $m->synonym_id
-    );
+        $field_name = $this->field['field_name'];
+        $field_table = 'cvterm_relationship';
+
+        if ($rel) {
+          // Has crop ontology.
+
+          // For chado mechnanism.
+          $entity->{$field_name}['und'][0] = array(
+            'chado-' . $field_table . '__cvterm_relationship_id' => $rel[0]->cvterm_relationship_id,
+            'chado-' . $field_table . '__type_id' => $sysvar_related,
+            'chado-' . $field_table . '__object_id' => $entity->chado_record_id,
+            'chado-' . $field_table . '__subject_id' => $rel[0]->subject_id
+          );
+
+          // For end user.
+          $relationship_term = tripal_get_chado_semweb_term('cvterm_relationship', 'subject_id');
+
+          $traitprop = ap_get_cvterm(
+            array('cvterm_id' => $record),
+            array('dataset' => 'fullset')
+          );
+
+          $entity->{$field_name}['und'][0]['value'][ $relationship_term ] = $traitprop[0]['crop_ontology'];
+        }
+        else {
+          // Crop ontology not set.
+          $entity->{$field_name}['und'][0] = array(
+            'value' => array(),
+            'chado-' . $field_table . '__object_id' => $entity->chado_record_id,
+            'chado-' . $field_table . '__type_id' => $sysvar_related,
+          );
+        }
+      }
+    }
   }
 
   /**

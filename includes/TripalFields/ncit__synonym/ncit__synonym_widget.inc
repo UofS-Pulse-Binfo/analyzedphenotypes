@@ -71,55 +71,115 @@ class ncit__synonym_widget extends TripalFieldWidget {
    *    $delta above
    */
   public function form(&$widget, &$form, &$form_state, $langcode, $items, $delta, $element) {
-    parent::form($widget, $form, $form_state, $langcode, $items, $delta, $element);
+    if (count($delta) == 1) {
+      // By the default, field allows for multiple/unlimited values to be entered. AP only
+      // supports 1 and only 1 crop ontology term per trait name.
 
-    $field_name = $this->field['field_name'];
-    $field_type = $this->field['type'];
+      parent::form($widget, $form, $form_state, $langcode, $items, $delta, $element);
 
-    $this->instance['settings']['chado_table'] = 'cvterm_relationship';
-    $field_table = $this->instance['settings']['chado_table'];
+      // Field name.
+      $field_name = $this->field['field_name'];
 
-    $this->instance['settings']['chado_column'] = 'cvterm_relationship_id';
-    $field_column = $this->instance['settings']['chado_column'];
+      // Elements of chado.cvterm_relationship table:
+      $chado_table = 'chado-cvterm_relationship__';
 
-    $this->instance['settings']['base_table'] = 'cvterm_relationship';
-    $base_table = $this->instance['settings']['base_table'];
+      // Column - cvterm_relationship_id primary key.
+      $widget['value'] = array(
+        '#type' => 'value',
+        '#value' => $items[$delta][ $chado_table . 'cvterm_relationship_id' ] ?? '',
+      );
 
-    $widget['#table_name'] = $field_table;
+      // Column - cvterm_relationship_id primary key.
+      $widget[ $chado_table . 'cvterm_relationship_id' ] = array(
+        '#type' => 'value',
+        '#value' => $items[$delta][ $chado_table . 'cvterm_relationship_id' ] ?? '',
+      );
 
-    $widget['value'] = array(
-      '#type' => 'value',
-      '#value' => $items[$delta]['chado-cvterm__cvterm_relationship_id'],
-    );
+      // Column - object_id, the trait id (cvterm_id) # the crop ontology term maps to.
+      // Has value even when trait has no crop ontology.
+      $widget[ $chado_table . 'object_id' ] = array(
+        '#type' => 'value',
+        '#value' => $items[$delta][ $chado_table . 'object_id' ],
+      );
 
-    $widget['chado-cvterm_relationship__cvterm_relationship_id'] = array(
-      '#type' => 'value',
-      '#value' => $items[$delta]['chado-cvterm_relationship__cvterm_relationship_id'],
-    );
+      // Column - subject_id, the crop ontology id (cvterm_id) that maps to a trait.
+      $widget[ $chado_table . 'subject_id' ] = array(
+        '#type' => 'value',
+        '#value' => $items[$delta][ $chado_table . 'subject_id' ] ?? '',
+      );
 
-    $widget['chado-cvterm_relationship__type_id'] = array(
-      '#type' => 'value',
-      '#value' => $items[$delta]['chado-cvterm_relationship__type_id'],
-    );
+      // Column - type_id, refers to ontology term Related in AP configuration.
+      // Has value even when trait has no crop ontology.
+      $widget[ $chado_table . 'type_id' ] = array(
+        '#type' => 'value',
+        '#value' => $items[$delta][ $chado_table . 'type_id' ],
+      );
 
-    $widget['chado-cvterm_relationship__object_id'] = array(
-      '#type' => 'value',
-      '#value' => $items[$delta]['chado-cvterm_relationship__object_id'],
-    );
+      // FORM ELEMENTS:
+      // Current crop ontology.
+      $relationship_term = tripal_get_chado_semweb_term('cvterm_relationship', 'subject_id');
+      $ontology = $items[$delta]['value'][ $relationship_term ] ?? 'Crop ontology not set';
 
-    $widget['chado-cvterm_relationship__subject_id'] = array(
-      '#type' => 'value',
-      '#value' => $items[$delta]['chado-cvterm_relationship__subject_id'],
-    );
+      // FIELDSET - Main fieldset - search ontology terms.
+      $widget['ap_fieldset'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Crop Ontology'),
+      );
+
+      // MARKUP - Show current record if any.
+      $widget['ap_fieldset']['ap_ontology'] = array(
+        '#type' => 'markup',
+        '#markup' => '<h2 style="font-style: italic">' . $ontology . '</h2>',
+      );
+
+      $vocs = [];
+      $vocs = chado_get_cv_select_options();
+      $cv_id = isset($form_state['values'][$field_name][$langcode][$delta]['ap_fieldset']['ap_ajax_response']['ap_source_cv'])
+        ? $form_state['values'][$field_name][$langcode][$delta]['ap_fieldset']['ap_ajax_response']['ap_source_cv'] : 0;
+
+      // ITEM - Describe both CV field and CV Term field.
+      $widget['ap_fieldset']['ap_describe'] = array(
+        '#type' => 'item',
+        '#title' => t('CV and Term'),
+        '#description' => t('Select CV and Term to change the ontology term for this trait.'),
+      );
+
+      // MARKUP - AJAX response wrapper. Update CV id filter in autocomplete field below.
+      $widget['ap_fieldset']['ap_ajax_response'] = array(
+        '#prefix' => '<div id="ap-ajax-response">',
+        '#suffix' => '</div>',
+      );
 
 
-    $widget['new_term'] = array(
-      '#type'   => 'select',
-      '#title'   => 'Trait Ontology',
-      '#options' => array(4010=>'Subset Traits: # Pods (count)',  6086 => 'Chickpea Traits', 5705 => 'Lentil Traits'),
-      //'#autocomplete_path' => 'admin/tripal/storage/chado/auto_name/cvterm/2',
-      '#default_value' => $m->subject_id,
-    );
+      // FIELD SELECT - Select CV.
+      $widget['ap_fieldset']['ap_ajax_response']['ap_source_cv'] = array(
+        '#type' => 'select',
+        '#options' => $vocs,
+        '#theme_wrappers' => array(),
+        '#ajax' => array(
+          'callback' => 'analyzedphentypes_synonym_callback',
+          'wrapper' => 'ap-ajax-response',
+          'method' => 'replace',
+        ),
+      );
+
+      // FIELD AUTOCOMPLETE - Search term in a CV.
+      $widget['ap_fieldset']['ap_ajax_response']['ap_ontology_term'] = array(
+        '#type' => 'textfield',
+        '#size' => 60,
+        '#autocomplete_path' => 'admin/tripal/storage/chado/auto_name/cvterm/' . $cv_id,
+        '#disabled' => TRUE,
+        '#theme_wrappers' => array(),
+        '#attributes' => array(
+          'style' => 'margin: 0 10px;'
+        ),
+      );
+
+      if (isset($cv_id)) {
+        // Enable field when a cv selected.
+        $widget['ap_fieldset']['ap_ajax_response']['ap_ontology_term']['#disabled'] = FALSE;
+      }
+    }
   }
 
   /**
@@ -134,16 +194,46 @@ class ncit__synonym_widget extends TripalFieldWidget {
   public function validate($element, $form, &$form_state, $langcode, $delta) {
     $field_name = $this->field['field_name'];
 
+    if (isset($form_state['values'][$field_name][$langcode][$delta])) {
+      $form_values = $form_state['values'][$field_name][$langcode][$delta];
 
-    ///////////////
-    $this->instance['settings']['chado_table'] = 'cvterm_relationship';
-    $field_table = $this->instance['settings']['chado_table'];
+      if (isset($form_values['ap_fieldset']['ap_ajax_response']['ap_source_cv'])
+        && isset($form_values['ap_fieldset']['ap_ajax_response']['ap_ontology_term'])) {
 
-    $form_state['values'][$field_name][$langcode][$delta]['value'] = $form_state['values'][$field_name][$langcode][$delta]['value'];
-    $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__cvterm_relationship_id'] = $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__cvterm_relationship_id'];
-    $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__object_id'] = $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__object_id'];
-    $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__subject_id'] = $form_state['values'][$field_name][$langcode][$delta]['new_term'];
-    $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__type_id'] = $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__type_id'];
+          $termprop = chado_generate_var('cvterm', array(
+            'cv_id' => $form_values['ap_fieldset']['ap_ajax_response']['ap_source_cv'],
+            'name' => $form_values['ap_fieldset']['ap_ajax_response']['ap_ontology_term'],
+          ));
+
+          if ($termprop && $termprop->cvterm_id > 0) {
+            // Term is valid.
+
+            // From this point on, set the chado_table settings to cvterm_relationship from cvterm.
+            $this->instance['settings']['chado_table'] = 'cvterm_relationship';
+            $field_table = $this->instance['settings']['chado_table'];
+
+
+            // Create or Update?
+
+            if (empty($form_values['value'])) {
+              // Create.
+              $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__object_id'] = $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__object_id'];
+              $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__type_id'] = $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__type_id'];
+
+              // As entered in the autocomplete field.
+              $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__subject_id'] = $termprop->cvterm_id;
+            }
+            else {
+              // Update.
+              // As entered in the autocomplete field.
+              $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__subject_id'] = $termprop->cvterm_id;
+           }
+
+           // After create or update, restore chado_table setting to original value (cvterm).
+           $this->instance['settings']['chado_table'] = 'cvterm';
+         }
+      }
+    }
   }
 
   /**
@@ -182,5 +272,24 @@ class ncit__synonym_widget extends TripalFieldWidget {
    *    The form state array.
    */
   public function submit($form, &$form_state, $entity_type, $entity, $langcode, $delta) {
+  }
+}
+
+
+/**
+ * Function callback - AJAX response.
+ * @credits to Tripal developer - sbo relationship.
+ */
+function analyzedphentypes_synonym_callback($form, $form_state) {
+  // Get the triggering element
+  $form_element_name = $form_state['triggering_element']['#name'];
+  preg_match('/(.+?)\[(.+?)\]\[(.+?)\]/', $form_element_name, $matches);
+  $field = $matches[1];
+  $lang = $matches[2];
+  $delta = $matches[3];
+
+  // Return the widget that triggered the AJAX call, but only the ontology section.
+  if (isset($form[$field][$lang][$delta])) {
+    return $form[$field][$lang][$delta]['ap_fieldset']['ap_ajax_response'];
   }
 }

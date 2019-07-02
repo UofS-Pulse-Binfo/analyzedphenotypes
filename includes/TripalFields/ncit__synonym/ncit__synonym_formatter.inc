@@ -44,24 +44,13 @@ class ncit__synonym_formatter extends TripalFieldFormatter {
    *    hook_field_formatter_view() function.
    */
   public function view(&$element, $entity_type, $entity, $langcode, $items, $display) {
-    $trait_id = $items[0]['chado-cvterm_relationship__object_id'];
-    dpm($trait_id);
-
-    // Requires ontology term for this trait in both Tripal Engine and End-user.
-    // @see api/ontology.api
-    $traitprop = ap_get_cvterm(
-      array('cvterm_id' => $trait_id),
-      array('dataset' => 'fullset')
-    );
-
-
-    if ($traitprop[0]['crop_ontology']) {
+    // Render crop ontology for this trait.
+    if ($items[0]['value']) {
       $element[0] = array(
         '#type' => 'markup',
-        '#markup' => $traitprop[0]['crop_ontology'],
+        '#markup' => current($items[0]['value']),
       );
     }
-
 
     return $element;
   }
