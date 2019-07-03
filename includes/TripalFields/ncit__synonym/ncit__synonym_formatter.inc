@@ -44,11 +44,23 @@ class ncit__synonym_formatter extends TripalFieldFormatter {
    *    hook_field_formatter_view() function.
    */
   public function view(&$element, $entity_type, $entity, $langcode, $items, $display) {
+    // No show when no crop ontology for a trait.
+    $element = null;
+
     // Render crop ontology for this trait.
     if ($items[0]['value']) {
+      // Style information.
+      drupal_add_css(drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/ncit__synonym/theme/style_cp_synonym_field.css');
+
+      // Refer to this ID for CSS styling.
+      $id = 'ap-field-crop_ontology_synonym';
+
+      list($term, $accession, $cv) = array_values($items[0]['value']);
+      $cvterm_lookup = l('Vocabulary Details', 'cv/lookup/' .  $cv . '/' . $accession, array('attributes' => array('target' => '_blank')));
+
       $element[0] = array(
         '#type' => 'markup',
-        '#markup' => current($items[0]['value']),
+        '#markup' => '<div id="' . $id . '">' . $term . '</div> ' . $cvterm_lookup,
       );
     }
 

@@ -1,0 +1,27 @@
+/**
+ * @file
+ * Style NCIT synonym - crop ontology.
+ */
+
+/* Term wrapper */
+#ap-field-crop_ontology_synonym {
+  background-color: #3A7f21;
+  color: #FFFFFF;
+  display: inline-block;
+  font-family: sans-serif;
+  margin-right: 20px;
+  padding: 10px;
+
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+
+  letter-spacing: 1px;
+  word-spacing: 1px;
+}
+
+/* Update ontology formset wrapper */
+#ap-crop-ontology-form-fields {
+  display: none;
+  margin: 15px 0 0 0;
+}
