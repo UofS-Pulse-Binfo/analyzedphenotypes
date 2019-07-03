@@ -71,11 +71,11 @@ class ncit__synonym_widget extends TripalFieldWidget {
    *    $delta above
    */
   public function form(&$widget, &$form, &$form_state, $langcode, $items, $delta, $element) {
-    if (count($delta) == 1) {
+    parent::form($widget, $form, $form_state, $langcode, $items, $delta, $element);
+
+    if ($delta == 0) {
       // By the default, field allows for multiple/unlimited values to be entered. AP only
       // supports 1 and only 1 crop ontology term per trait name.
-
-      parent::form($widget, $form, $form_state, $langcode, $items, $delta, $element);
 
       // Field name.
       $field_name = $this->field['field_name'];
@@ -126,7 +126,7 @@ class ncit__synonym_widget extends TripalFieldWidget {
       list($term, $accession, $cv) = array_values($items[0]['value']);
 
       if (empty($term)) {
-        $crop_ontology = 'Crop ontology not set ';
+        $crop_ontology = 'Crop ontology not set | ';
         $cvterm_lookup = '';
       }
       else {
@@ -210,7 +210,7 @@ class ncit__synonym_widget extends TripalFieldWidget {
         })", array('type' => 'inline', 'scope' => 'footer'));
     }
     else {
-      drupal_set_message('Crop ontology configuration can only be set to a single value. Please set the allowed value to one in mange field.', 'warning');
+      drupal_set_message('Crop ontology configuration can only be set to a single value. Please set the allowed value to one in mange field.', 'warning', FALSE);
     }
   }
 

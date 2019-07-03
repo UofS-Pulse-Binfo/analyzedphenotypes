@@ -5,12 +5,13 @@
 
 /* Term wrapper */
 #ap-field-crop_ontology_synonym {
-  background-color: #3A7f21;
+  background-color: #3A7F21;
   color: #FFFFFF;
   display: inline-block;
   font-family: sans-serif;
+  font-weight: 300;
   margin-right: 20px;
-  padding: 10px;
+  padding: 5px 7px;
 
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
