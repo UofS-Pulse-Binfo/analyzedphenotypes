@@ -177,8 +177,8 @@ class ncit__synonym extends ChadoField {
           // Nothing here, just forward what we know so far, Related term and the trait id.
           $entity->{$field_name}['und'][0] = array(
             'value' => array(),
-            'chado-' . $field_table . '__object_id' => $entity->chado_record_id,
-            'chado-' . $field_table . '__type_id' => $sysvar_related,
+            $field_table . 'object_id' => $entity->chado_record_id,
+            $field_table . 'type_id' => $sysvar_related,
           );
         }
       }

@@ -123,18 +123,17 @@ class ncit__synonym_widget extends TripalFieldWidget {
       drupal_add_css(drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/ncit__synonym/theme/style_cp_synonym_field.css');
 
       // Current crop ontology.
-      list($term, $accession, $cv) = array_values($items[0]['value']);
-
-      if (empty($term)) {
-        $crop_ontology = 'Crop ontology not set | ';
-        $cvterm_lookup = '';
-      }
-      else {
+      if (count($items[0]['value']) > 0) {
+        @list($term, $accession, $cv) = array_values($items[0]['value']);
         // Refer to this ID for CSS styling.
         $id = 'ap-field-crop_ontology_synonym';
 
         $crop_ontology = '<div id="' . $id . '">' . $term . '</div> ';
         $cvterm_lookup = l('Vocabulary Details', 'cv/lookup/' .  $cv . '/' . $accession, array('attributes' => array('target' => '_blank'))) . ' | ';
+      }
+      else {
+        $crop_ontology = 'Crop ontology not set | ';
+        $cvterm_lookup = '';
       }
 
       // FIELDSET - Main fieldset - search ontology terms.
