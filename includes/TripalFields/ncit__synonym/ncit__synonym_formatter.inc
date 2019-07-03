@@ -56,7 +56,15 @@ class ncit__synonym_formatter extends TripalFieldFormatter {
       $id = 'ap-field-crop_ontology_synonym';
 
       list($term, $accession, $cv) = array_values($items[0]['value']);
-      $cvterm_lookup = l('Vocabulary Details', 'cv/lookup/' .  $cv . '/' . $accession, array('attributes' => array('target' => '_blank')));
+
+      // If we can't find the term then do not provide the link as it will just cause a term not found
+      // in the term lookup module.
+      // @see tripal_vocabulary_lookup_term_page()
+      // Tripal.term_lookup.inc.
+      $lookterm = tripal_get_term_details($cv, $accession);
+
+      $cvterm_lookup = (!$lookterm) ? ''
+        : l('Vocabulary Details', 'cv/lookup/' .  $cv . '/' . $accession, array('attributes' => array('target' => '_blank')));
 
       $element[0] = array(
         '#type' => 'markup',
