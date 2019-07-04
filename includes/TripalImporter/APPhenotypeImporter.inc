@@ -615,6 +615,7 @@ class APPhenotypeImporter extends TripalImporter {
       );
 
       // -- Trait Definition/description.
+      dpm('@todo show existing definition.');
       $form['traits'][$trait_name_value]['trait_description'] = array(
         '#type' => 'textarea',
         '#title' => t('Trait Description'),
@@ -1013,12 +1014,78 @@ class APPhenotypeImporter extends TripalImporter {
 
     $stage_id = $form_state['values']['stage_id'];
 
-    if ($stage_id <= 2) {
+    if ($stage_id < 3) {
       $form_state['rebuild'] = TRUE;
     }
     if ($stage_id == 2) {
-      // We want to save the trait and submit the job.
-      dpm($form_state, 'form state in submit');
+
+      $form_state['rebuild'] = FALSE;
+
+      // Save the project genus.
+      $project_name = $form_state['values']['project_name'];
+      $project_genus = $form_state['values']['genus'];
+      // Does project have a genus?
+      $projectprop = ap_get_projectgenus(
+        array('project_name' => $project_name)
+      );
+      if (!$projectprop) {
+
+        // No previous genus set for the project, create one.
+        // Match (full match) a project name.
+        $projectprop = ap_match_projectname(
+          array('name' => $project_name),
+          array('fullmatch' => TRUE, 'limitrows' => 1)
+        );
+        // Set new genus to project.
+        ap_set_projectgenus(
+          array('project_id' => $projectprop['project_id'], 'genus' => $project_genus),
+          array('replace' => FALSE)
+        );
+      }
+
+      // These arrays will save the trait details for use in the importer::run.
+      $arr_traitname_cvtermid = [];
+      $arr_method_cvtermid = [];
+      $arr_unit_cvtermid = [];
+
+      // We want to save the trait.
+      foreach ($form_state['values']['traits'] as $k => $trait_details) {
+
+        // Determine whether this trait is qualitative or quantitative.
+        $type = 'quant';
+        if (preg_match('/[Ss]cale/', $trait_details['unit'])) {
+          $type = 'qual';
+        }
+
+        // Insert the trait.
+        $result = ap_insert_trait([
+          'genus' => $form_state['values']['genus'],
+          'name' => $trait_details['trait_name'],
+          'description' => $trait_details['trait_description'],
+          'method_title' => $trait_details['method_name'],
+          'method' => $trait_details['method_description'],
+          'unit' => $trait_details['unit'],
+          'type' => $type,
+        ]);
+        dpm($result, 'result');
+
+        // Save the trait details for use in importer::run().
+        $form_state['values']['traits'][$k]['trait_id'] = $result['trait']->cvterm_id;
+        $form_state['values']['traits'][$k]['method_id'] = $result['method']->cvterm_id;
+        $form_state['values']['traits'][$k]['unit_id'] = $result['unit']->cvterm_id;
+
+        // Upload photo's.
+        if (!empty($trait_details['ap_photo_1_file_field0'])) {
+          dpm('@todo handle image upload.');
+        }
+        if (!empty($trait_details['ap_photo_2_file_field0'])) {
+          dpm('@todo handle image upload.');
+        }
+
+        // Save the ontology term.
+        dpm('@todo save ontology term.');
+
+      }
     }
   }
 
