@@ -589,6 +589,13 @@ class APPhenotypeImporter extends TripalImporter {
         ),
       );
 
+      // trait definition.
+      $trait_select = ap_get_trait($project_genus, $trait_details['trait']);
+      if (!empty($trait_select)) {
+        $traitprop['definition'] = $trait_select->definition;
+        $traitprop['cvterm_id'] = $trait_select->cvterm_id;
+      }
+
       $form['traits'][$trait_name_value] = array(
         '#type' => 'markup',
         '#prefix' => '<h3>#' . ($i+1) . '. ' . $trait_name_value . '</h3>'
@@ -596,9 +603,6 @@ class APPhenotypeImporter extends TripalImporter {
         '#suffix'  => '</div>',
       );
 
-      // @todo does the trait already exist?
-
-      // @todo is this needed?
       $disabled = ($traitprop['cvterm_id']) ? TRUE : FALSE;
       $class = ($disabled) ? '' : 'ap-required';
 
@@ -617,8 +621,6 @@ class APPhenotypeImporter extends TripalImporter {
         '#id' => 'ap-name-text-field' . $i,
       );
 
-      // -- Trait Definition/description.
-      dpm('@todo show existing definition.');
       $form['traits'][$trait_name_value]['trait_description'] = array(
         '#type' => 'textarea',
         '#title' => t('Trait Description'),
