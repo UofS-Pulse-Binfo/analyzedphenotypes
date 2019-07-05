@@ -71,21 +71,3 @@ $failed_counter = 0;
     ?>
   </div>
 </div>
-
-<?php
-  // Keep the validation result and drupal set message error/success together.
-  if ($failed_counter > 0) {
-    $type = 'messages error';
-    $message = 'The specified file could not be uploaded. See Validation Result for more information about the error.';
-    $id = 'ap-validator-failed';
-  }
-  else {
-    $type = 'messages status';
-    $message = 'Your file uploaded successfully. Please click "Next Step" to continue.';
-    $id = 'ap-validator-passed';
-  }
-?>
-
-<div <?php print 'class="' . $type . ' ' . $scope . '" id="' . $id . '"'; ?>>
-  <?php print $message; ?>
-</div>

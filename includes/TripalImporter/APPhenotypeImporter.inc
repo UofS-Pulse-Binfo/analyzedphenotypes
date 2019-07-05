@@ -399,6 +399,8 @@ class APPhenotypeImporter extends TripalImporter {
         '#description' => t('You may select a file that is already uploaded.'),
         '#options' => $fids,
       ];
+
+      $form['file']['file_upload_existing']['#element_validate'][] = 'APPhenotypeImporter_file_validate';
     }
     $form['file']['file_upload'] = [
       '#type' => 'html5_file',
@@ -414,6 +416,7 @@ class APPhenotypeImporter extends TripalImporter {
       '#allowed_types' => $class::$file_types,
       '#cardinality' => $class::$cardinality,
     ];
+    $form['file']['file_upload']['#element_validate'][] = 'APPhenotypeImporter_file_validate';
 
     return $form;
   }
@@ -1067,7 +1070,6 @@ class APPhenotypeImporter extends TripalImporter {
           'unit' => $trait_details['unit'],
           'type' => $type,
         ]);
-        dpm($result, 'result');
 
         // Save the trait details for use in importer::run().
         $form_state['values']['traits'][$k]['trait_id'] = $result['trait']->cvterm_id;
@@ -1102,19 +1104,73 @@ class APPhenotypeImporter extends TripalImporter {
     // made available to us here by the Class' arguments member variable.
     $arguments = $this->arguments['run_args'];
 
-    // The path to the uploaded file is always made available using the
-    // 'files' argument. The importer can support multiple files, therefore
-    // this is an array of files, where each has a 'file_path' key specifying
-    // where the file is located on the server.
-    $file_path = $this->arguments['files'][0]['file_path'];
+    // We are using a separate function to load the file. It requires the fid.
+    $fid = $arguments['files'][0]['fid'];
 
-    $FILE = fopen($file_path, 'r');
-    $linenum = 0;
-    while (($data = fgetcsv($FILE, 100000, "\t")) !== FALSE) {
-      if ($linenum !== 0) {
-      }
-      $linenum++;
+    // The function also requires the trat/method/unit IDs.
+    $trait_ids = array();
+    $method_ids = array();
+    $unit_ids = array();
+    foreach ($arguments['traits'] as $result) {
+      $trait_ids[ $result['trait_name'] ] = $result['trait_id'];
+      $method_ids[ $result['method_name'] ] = $result['method_id'];
+      $unit_ids[ $result['unit'] ] = $result['unit_id'];
     }
-    fclose($FILE);
+
+    $dataset = [
+      'project_name' => $arguments['project_name'],
+      'project_genus' => $arguments['genus'],
+      'trait_cvterm' => $trait_ids,
+      'method_cvterm' => $method_ids,
+      'unit_cvterm' => $unit_ids,
+      'data_file' => $fid,
+    ];
+
+    // Now pass the dataset off to the original loading function.
+    $job_id = $this->job->getJobID();
+    analyzedphenotypes_save_tsv_data(serialize($dataset), $job_id);
+  }
+}
+
+
+/**
+ * Custom validation for the file_upload element in stage 1.
+ */
+function APPhenotypeImporter_file_validate($element, &$form_state, $form) {
+
+  // If existing
+  if ($element['#type'] == 'select') {
+    $element_key = 'file][file_upload_existing';
+    $fid = $form_state['values']['file_upload_existing'];
+  }
+  // If uploaded.
+  elseif ($element['#type'] == 'html5_file') {
+    $element_key = 'file][file_upload';
+    $fid = $form_state['values']['file_upload'];
+  }
+
+  if (!empty($fid)) {
+    $file = file_load($fid);
+    $project_name =  trim($form_state['values']['project_name']);
+    $project_genus = trim($form_state['values']['genus']);
+
+    // Validation is at file level.
+    // Begin validation process.
+    $status = analyzedphenotypes_validate_tsv_file(array(
+      'project_name'  => trim($project_name),
+      'project_genus' => trim($project_genus),
+      'data_file' => $file,
+    ));
+
+    drupal_set_message(ap_report_validationresult('file', $status), 'ap-result-panel');
+
+    $all_results = array_values($status);
+    foreach($all_results as $result) {
+      if ($result['type'] == 'failed') {
+        form_set_error($element_key, 'The specified file could not be uploaded. See Validation Result for more information about the error.');
+        return FALSE;
+      }
+    }
+    drupal_set_message('Your file uploaded successfully. Please click "Next Step" to continue.');
   }
 }
