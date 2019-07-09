@@ -212,7 +212,35 @@ class APPhenotypeImporter extends TripalImporter {
         replicates or site-year.</strong>',
     ];
 
-    // @todo add in message regarding allow new traits.
+    $allow_new = FALSE;
+    // Allow new terms to be upload. Warn admin that the module is set to not allow
+    // new trait be uploaded.
+    $sysvars = ap_get_variablenames(
+      array('variablename' => 'varset'),
+      array('set' => 'options')
+    );
+
+    foreach($sysvars as $i => $var) {
+      $sysvar_options = variable_get($var);
+
+      if ($i == 'ap_allownew' && $sysvar_options == 1) {
+        $allow_new = TRUE;
+      }
+    }
+    $form['allow_new'] = [
+      '#type' => 'hidden',
+      '#value' => $allow_new,
+    ];
+    if (!$allow_new) {
+      $form['allow_new_warning'] = [
+        '#type' => 'markup',
+        '#prefix' => '<div class="messages warning ap-messages">',
+        '#suffix' => '</div>',
+        '#markup' => 'This module is set to NOT allow new traits to be added
+          into the system. Please contact the administrator of this website
+          before loading your analyzed phenotypes.',
+      ];
+    }
 
     // Stage Indicator/Title.
     //---------------------------------
@@ -523,7 +551,7 @@ class APPhenotypeImporter extends TripalImporter {
     $unit_cut_i = $unit_name_index + 1;
     // @debug dpm([$trait_name_index, $method_name_index, $unit_name_index], 'indicies');
 
-    // Now grad the unique combination of trait/method/name from the file
+    // Now grab the unique combination of trait/method/name from the file
     // and save it into an array.
     $traits_raw = `cut -f $trait_cut_i,$method_cut_i,$unit_cut_i $data_file | sort -u`;
     $traits = [];
@@ -834,6 +862,12 @@ class APPhenotypeImporter extends TripalImporter {
         '#value' => $form_state['values']['genus'],
       ];
     }
+    if (isset($form_state['values']['allow_new'])) {
+      $form['allow_new'] = [
+        '#type' => 'hidden',
+        '#value' => $form_state['values']['allow_new'],
+      ];
+    }
     // fid.
     // If this is the second stage...
     if (isset($form_state['values']['file_upload'])) {
@@ -976,8 +1010,18 @@ class APPhenotypeImporter extends TripalImporter {
           form_set_error("traits][$trait_name_value][unit", 'The value in the unit field contains characters "(" and/or ")". Please remove these characters and try again.');
         }
 
-        // @todo validate crop ontology. @see analyzedphenotypes_validate_field_required
+        // Check that all traits are disabled (i.e. already existed).
+        if ($form_state['values']['allow_new'] === FALSE) {
+          if ($form['traits'][$trait_name_value]['trait_description']['#disabled'] === FALSE) {
+            form_set_error("traits][$trait_name_value][trait_name",
+              t("The trait (:trait) must already exist before loading data due to
+              configuration. Please contact an administrator.",
+              [':trait' => $trait_name_value]));
+          }
+        }
 
+        // @todo validate crop ontology. @see analyzedphenotypes_validate_field_required
+        // @debug form_set_error('','TESTING');
         // @todo validate images. @see analyzedphenotypes_validate_field_required
       }
     }
@@ -1055,14 +1099,14 @@ class APPhenotypeImporter extends TripalImporter {
 
         // Upload photo's.
         if (!empty($trait_details['ap_photo_1_file_field0'])) {
-          dpm('@todo handle image upload.');
+          drupal_set_message('Image upload is not currently supported.', 'warning');
         }
         if (!empty($trait_details['ap_photo_2_file_field0'])) {
-          dpm('@todo handle image upload.');
+          drupal_set_message('Image upload is not currently supported.', 'warning');
         }
 
         // Save the ontology term.
-        dpm('@todo save ontology term.');
+        // @todo save ontology term
 
       }
     }
