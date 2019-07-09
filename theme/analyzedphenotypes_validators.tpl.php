@@ -20,7 +20,7 @@ $failed_counter = 0;
       <?php
         foreach($status as $validator => $result) {
           $type = $result['type'];
-          $details = $result['details'];
+          $details = (isset($result['details'])) ? $result['details'] : '';
           $details = rtrim($details, ', ');
 
           // Style each error based on validation result.

@@ -114,7 +114,6 @@ class APPhenotypeImporter extends TripalImporter {
       'upload',   // Stage 1 - Select project, genus and upload data file.
       'validate', // Stage 2 - Validate data.
       'describe', // Stage 3 - Fully describe all traits.
-      'save',     // Stage 4 - Save data and file.
     );
     if (isset($form_state['values'])) {
       // If the submit was clicked, iterate the stage.
@@ -145,9 +144,6 @@ class APPhenotypeImporter extends TripalImporter {
         break;
       case 'describe':
         $form = $this->form_stage3($form, $form_state);
-        break;
-      case 'save':
-        $form = $this->form_stage4($form, $form_state);
         break;
     }
 
@@ -201,11 +197,6 @@ class APPhenotypeImporter extends TripalImporter {
         $form['#attached']['js'][]  = $path_theme . 'js/analyzedphenotypes.loader.stage3.js';
         drupal_add_library('system', 'ui.accordion');
         break;
-      case 'save':
-        //$form['#attached']['css'][] = $path_theme . 'css/analyzedphenotypes.loader.progress.css';
-        //$form['#attached']['js'][]  = $path_theme . 'js/analyzedphenotypes.loader.progress.js';
-        //drupal_add_js('misc/progress.js');
-        break;
     }
 
     // Warnings.
@@ -229,7 +220,6 @@ class APPhenotypeImporter extends TripalImporter {
       'Upload',   // Stage 1 - Select project, genus and upload data file.
       'Validate', // Stage 2 - Validate data.
       'Describe', // Stage 3 - Fully describe all traits.
-      'Save',     // Stage 4 - Save data and file.
     );
     // Determine which steps still need to be completed.
     $active_stage = ucfirst($current_stage);
@@ -822,21 +812,6 @@ class APPhenotypeImporter extends TripalImporter {
   }
 
   /**
-   * Provides the save data portion of the form.
-   *
-   * @stage 4
-   */
-  public function form_stage4 ($form,  &$form_state) {
-
-    $form['status'] = [
-      '#markup' => '<h3 color="green">FOUR</h3>',
-      '#weight' => -110,
-    ];
-
-    return $form;
-  }
-
-  /**
    * This function will ensure values from other steps are saved through to
    * the last step. This allows our TripalImporter::run() to act as through
    * it's a single page form!
@@ -1164,15 +1139,22 @@ function APPhenotypeImporter_file_validate($element, &$form_state, $form) {
       'data_file' => $file,
     ));
 
-    drupal_set_message(ap_report_validationresult('file', $status), 'ap-result-panel');
-
     $all_results = array_values($status);
+    $error = FALSE;
     foreach($all_results as $result) {
       if ($result['type'] == 'failed') {
         form_set_error($element_key, 'The specified file could not be uploaded. See Validation Result for more information about the error.');
-        return FALSE;
+        $error = TRUE;
       }
     }
-    drupal_set_message('Your file uploaded successfully. Please click "Next Step" to continue.');
+
+    if ($error) {
+      drupal_set_message(ap_report_validationresult('file', $status), 'ap-result-panel');
+      return FALSE;
+    }
+    else {
+      drupal_set_message('Your file uploaded successfully. Please click "Next Step" to continue.');
+      return TRUE;
+    }
   }
 }
