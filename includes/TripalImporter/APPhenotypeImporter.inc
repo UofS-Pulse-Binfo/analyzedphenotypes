@@ -697,6 +697,7 @@ class APPhenotypeImporter extends TripalImporter {
       $sysvar_genus_ontology = variable_get($sysvar);
 
       // If Ontology Set.
+      /*
       if ($sysvar_genus_ontology) {
 
         $ontology_suggestions = ap_suggest_ontology(
@@ -751,8 +752,10 @@ class APPhenotypeImporter extends TripalImporter {
           );
         }
       }
+      */
 
       // -- Photo.
+      /*
       $form['traits'][$trait_name_value]['ap_group_photo_upload' . $i] = array(
         '#type' => 'item',
         '#title' => t('&#9660; PHOTO UPLOAD'),
@@ -788,6 +791,7 @@ class APPhenotypeImporter extends TripalImporter {
 
         $g++;
       }
+      */
 
       // -- Standard Deviation table.
       $form['traits'][$trait_name_value]['ap_group_summary_table' . $i] = array(
