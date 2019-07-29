@@ -554,7 +554,7 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
       // Line broken down to individual cell.
       $cells = str_getcsv($cur_row, "\t");
       // Dropped leading and trailing spaces.
-      $data_values = array_map(trim, $cells);
+      $data_values = array_map('trim', $cells);
 
       // 1. Columns Headers
       // 2. Data
