@@ -11,49 +11,71 @@
       submitButton.addClass('form-button-disabled');
       submitButton.attr('disabled','disabled');
 
-      var redirect = (Drupal.settings.analyzedphenotypes.redirect)
-        ? Drupal.settings.analyzedphenotypes.redirect
-        : null;
+      setTimeout(APValidatorUpdateStatus, 1000);
 
-      if (redirect) {
-        $('#ap-main-form-elements-container').children().hide();
+       function APValidatorUpdateStatus() {
+         var fileStatus = $('.ap-tsv-file-form-element span');
+         var pane = $('#ap-progress-container');
+         var job_id = Drupal.settings.analyzedphenotypes.vars.job_id;
 
-        var dMessage = $('#ap-validator-passed');
-        dMessage.text('Your file uploaded successfully.');
+         $.ajax({
+           type: 'GET',
+           url: Drupal.settings.analyzedphenotypes.vars.path_JSON + job_id,
+           data: '',
+           dataType: 'json',
+           success: function (progress) {
 
-        var m = 0;
-        var t = setInterval(function() {
-          m++;
+             // If the job is complete then we want to put our validation
+             // result in place of the progress spinner.
+             if (progress.percentage == 100) {
+               if (progress.message == 'Completed') {
+                 APShowValidationResult(pane, fileStatus, job_id);
+                 console.log('Validation Complete');
+               }
+               else {
+                 console.log(progress);
+                 console.log('ERROR: the job did not complete.');
+                 fileStatus.replaceWith('An error was encountered when trying to validate the file...');
+               }
+             }
+             // If the job is not complete then we want to check again in 1s.
+             else {
+               setTimeout(APValidatorUpdateStatus, 1000);
+             }
+           },
+           error: function (xmlhttp) {
+             console.log(xmlhttp);
+             console.log('ERROR: the job did not complete.');
+           }
+         });
+       };
 
-          if (m == 1) {
-            dMessage.text('Validating data... Please wait.');
-          }
+       /**
+        * Replaces the progress spinner with the result summary from validation.
+        */
+      function APShowValidationResult(pane, fileStatus, job_id) {
 
-          if (m == 2) {
-            location.assign(redirect);
-            clearInterval(t);
-            return;
-          }
-        }, 1000);
+        $.ajax({
+          type: 'GET',
+          url: Drupal.settings.analyzedphenotypes.vars.path_VR + job_id,
+          data: '',
+          dataType: 'html',
+          success: function (validation_result) {
+            pane.replaceWith(validation_result);
+            fileStatus.replaceWith('Validation complete...');
+
+            // If there were no errors then re-enable the next button.
+            if (validation_result.indexOf('file could not be uploaded') == -1) {
+              submitButton.removeClass('form-button-disabled');
+              submitButton.removeAttr('disabled');
+            }
+          },
+          error: function (xmlhttp) {
+            console.log(xmlhttp);
+            console.log('ERROR: the job did not complete.');
+            fileStatus.replaceWith('An error was encountered when trying to validate the file...');
+          },
+        });
       }
-
-      $(document)
-      //
-      .ajaxComplete(function() {
-        // When DOM has upload success message.
-        if ($('#ap-validator-passed').length && $('#ap-validator-passed').hasClass('ap-data-scope')) {
-          // Exclude form fields.
-          $('.form-item').hide();
-
-          submitButton.removeClass('form-button-disabled');
-          submitButton.removeAttr('disabled');
-
-          // Tell user what's next.
-          $('#ap-main-form-fieldset').once(function() {
-            $('<span class="text-next-step">&#x25B8; Next Step: Stage 3 - Describe Traits</span>')
-              .insertAfter('#ap-next-stage-submit-field');
-          });
-        }
-      });
       //
 } }; }(jQuery));

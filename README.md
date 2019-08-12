@@ -10,9 +10,8 @@ This module provides support and visualization for partially analyzed data store
 2. [Tripal 3.x](http://tripal.info/)
 3. [Tripal Download API](https://github.com/tripal/trpdownload_api)
 4. [PostgresSQL 9.3](https://www.postgresql.org/)
-5. [Drag and Drag Upload module](https://www.drupal.org/project/dragndrop_upload)
-6. [PHP Excel Writer Libraries](https://github.com/SystemDevil/PHP_XLSXWriter_plus)
-7. [D3 JavaScript Library](https://github.com/d3/d3/releases/download/v3.5.14/d3.zip)
+5. [PHP Excel Writer Libraries](https://github.com/SystemDevil/PHP_XLSXWriter_plus)
+6. [D3 JavaScript Library](https://github.com/d3/d3/releases/download/v3.5.14/d3.zip)
 
 ## Installation
 1. Install the dependencies listed above.
@@ -20,10 +19,10 @@ This module provides support and visualization for partially analyzed data store
 
 [See our documentation for more detailed installation instructions](https://analyzedphenotypes.readthedocs.io/en/latest/admin_guide/install.html).
 
-## Features 
+## Features
 - Specialized upload form for end users to submit filtered phenotypic data.
 - Summary page showing how many traits, experiments, germplasm, etc. have phenotypic data.
-- Dynamic quantitative trait chart summarizing the data for a given trait-project combination. This chart keeps site-years seperate but averages replicates.
+- Dynamic quantitative trait chart summarizing the data for a given trait-project combination. This chart keeps site-years separate but averages replicates.
 - Specialized, permission controlled download form for end users to extract replicate-averaged phenotypic data.
 - Trait Tripal Content Type providing pages for each Trait (One content type per organism/crop supported by your site). Include a number of specialized Tripal 3 Fields including the following functionality:
    - define the method and units used to collect the data,
