@@ -254,7 +254,7 @@ function analyzedphenotypes_schema() {
         'not null' => TRUE,
       ],
       'chart_type' => [
-        'description' => 'The type of chart which should be used for display (e.g. "histogram", "violin").',
+        'description' => 'The type of chart which should be used for display (e.g. "multibar", "violin").',
         'type' => 'varchar',
         'not null' => TRUE,
       ],
@@ -292,7 +292,7 @@ function analyzedphenotypes_update_7100() {
       p.project_id,
       CASE
         WHEN (up.value = 'quantitative') THEN 'violin'
-        ELSE 'histogram' END
+        ELSE 'multibar' END
         as chart_type
     FROM chado.phenotype p
     LEFT JOIN chado.projectprop pp ON pp.project_id=p.project_id

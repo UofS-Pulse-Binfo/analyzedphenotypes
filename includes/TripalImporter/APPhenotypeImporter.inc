@@ -1151,7 +1151,7 @@ class APPhenotypeImporter extends TripalImporter {
       // Determine the default chart type based on unit name.
       $chart_type = 'violin';
       if (preg_match('([Ss]cale|\d+\s*-\s*\d+)', $result['method_name'])) {
-        $chart_type = 'histogram';
+        $chart_type = 'multibar';
       }
 
       // Add the data collection with default chart type.
