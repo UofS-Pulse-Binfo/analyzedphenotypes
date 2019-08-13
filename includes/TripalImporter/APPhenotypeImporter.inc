@@ -1132,6 +1132,13 @@ class APPhenotypeImporter extends TripalImporter {
     // We are using a separate function to load the file. It requires the fid.
     $fid = $arguments['files'][0]['fid'];
 
+    // Look up the project_id.
+    $projectprop = ap_match_projectname(
+      array('name' => $arguments['project_name']),
+      array('fullmatch' => TRUE, 'limitrows' => 1)
+    );
+    $project_id = ($projectprop) ? $projectprop['project_id'] : 0;
+
     // The function also requires the trat/method/unit IDs.
     $trait_ids = array();
     $method_ids = array();
@@ -1140,6 +1147,22 @@ class APPhenotypeImporter extends TripalImporter {
       $trait_ids[ $result['trait_name'] ] = $result['trait_id'];
       $method_ids[ $result['method_name'] ] = $result['method_id'];
       $unit_ids[ $result['unit'] ] = $result['unit_id'];
+
+      // Determine the default chart type based on unit name.
+      $chart_type = 'violin';
+      if (preg_match('([Ss]cale|\d+\s*-\s*\d+)', $result['method_name'])) {
+        $chart_type = 'histogram';
+      }
+
+      // Add the data collection with default chart type.
+      db_insert('analyzedphenotypes_collections')->fields([
+        'genus' => $arguments['genus'],
+        'project_id' => $project_id,
+        'trait_id' => $result['trait_id'],
+        'method_id' => $result['method_id'],
+        'unit_id' => $result['unit_id'],
+        'chart_type' => $chart_type,
+      ])->execute();
     }
 
     $dataset = [
