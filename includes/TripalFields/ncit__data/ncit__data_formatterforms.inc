@@ -95,9 +95,9 @@ function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_stat
             ARRAY_TO_JSON(ARRAY[t1.experiment_name, t1.location, t1.year]) AS experiment_siteyear,
             ARRAY_TO_JSON(ARRAY[t1.method_name, t1.unit_name]) AS method_unit
           FROM {mview_phenotype} AS t1 INNER JOIN {cvtermprop} AS t2 ON t1.unit_id = t2.cvterm_id
-          WHERE trait_id = :trait_id AND stock_id = :stock_id AND t2.type_id = :additional_type
+          WHERE trait_id = :trait_id AND stock_id = :stock_id
           ORDER BY year DESC",
-        array(':trait_id' => $trait_id, ':stock_id' => $stock_id, ':additional_type' => $additional_type));
+        array(':trait_id' => $trait_id, ':stock_id' => $stock_id));
 
         $data_count = $data->rowCount();
 
