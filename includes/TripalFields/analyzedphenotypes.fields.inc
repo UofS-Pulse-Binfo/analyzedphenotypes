@@ -400,7 +400,7 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
       'definition' => 'Used in AP Germplasm Phenotype search field - Data',
       'required' => FALSE,
       'settings' => array(
-        'term_vocabulary' => 'local',
+        'term_vocabulary' => 'NCIT',
         'term_name' => 'data',
         'term_accession' => 'data',
         'auto_attach' => FALSE,
