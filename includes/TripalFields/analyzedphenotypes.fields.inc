@@ -98,6 +98,25 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
       ),
     );
 
+    // Germplasm Phenotype Search.
+    tripal_insert_cvterm(array(
+      'id' => 'NCIT:data',
+      'name' => 'data',
+      'cv_name' => 'NCIT',
+      'definition' => 'Used in AP Germplasm Phenotype search field - Data',
+    ));
+    $field_name = 'ncit__data';
+    $field_type = 'ncit__data';
+    $fields[$field_name] = array(
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => 1,
+      'locked' => FALSE,
+      'storage' => array(
+        'type' => 'field_chado_storage',
+      ),
+    );
+
     // Number of germplasm.
     tripal_insert_cvterm(array(
       'id' => 'local:number_of_germplasm',
@@ -135,7 +154,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
 	      'type' => 'field_chado_storage',
       ),
     );
-    
+
     // Phenotype Image
     tripal_insert_cvterm(array(
       'id' => 'ncit:c48179',
@@ -189,7 +208,6 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
       'cv_name' => 'HP',
       'definition' => 'A variability of phenotypic features.',
     ));
-
     $field_name = 'hp__phenotypic_variability';
     $field_type = 'hp__phenotypic_variability';
     $fields[$field_name] = array(
@@ -388,7 +406,39 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         ),
       ),
     );
-    
+
+    // Germplasm Phenotype Search Field.
+    $field_name = 'ncit__data';
+    $field_type = 'ncit__data';
+    $instances[$field_name] =  array(
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+       'label' => 'Germplasm Phenotype Search',
+      'definition' => 'Used in AP Germplasm Phenotype search field - Data',
+      'required' => FALSE,
+      'settings' => array(
+        'term_vocabulary' => 'NCIT',
+        'term_name' => 'data',
+        'term_accession' => 'data',
+        'auto_attach' => FALSE,
+        'chado_table' => $bundle->data_table,
+        'chado_column' => 'cvterm_id',
+        'base_table' => $bundle->data_table,
+      ),
+      'widget' => array(
+        'type' => 'ncit__data_widget',
+        'settings' => array(),
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'ncit__data_formatter',
+          'settings' => array(),
+        ),
+      ),
+    );
+
     // Number of Germplasm.
     $field_name = 'local__number_of_germplasm';
     $field_type = 'local__number_of_germplasm';
@@ -452,7 +502,7 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         ),
       ),
     );
-    
+
     // Phenotype Image.
     $field_name = 'ncit__image';
     $field_type = 'ncit__image';

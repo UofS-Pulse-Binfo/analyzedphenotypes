@@ -266,6 +266,7 @@ function ap_create_summarytable($file, $column_row, $trait_key) {
   $index_value  = array_search($columns[8], $column_row);
   $index_year   = array_search($columns[5], $column_row);
   $index_site   = array_search($columns[6], $column_row);
+  // @debug dpm([$index_trait, $index_method, $index_unit, $index_value, $index_year, $index_site], 'indicies in summarytable');
 
   $arr_siteyear = array();
   $arr_values = array();

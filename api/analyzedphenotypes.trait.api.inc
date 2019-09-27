@@ -195,25 +195,83 @@ function ap_insert_trait($data) {
 }
 
 /**
+ * Retrieve the trait details based on the name.
+ *
+ * @param $project_genus
+ *   The organism genus the trait is measured in.
+ * @param $trait_name
+ *   The full name of the trait.
+ * @param $options
+ *   An array with the following possible keys:
+ *    [NONE YET SUPPORTED]
+ */
+function ap_get_trait($project_genus, $trait_name, $options = []) {
+
+  // Grab necessary system config.
+  //  - Get system configuration of this genus.
+  $sysvar = ap_get_variablenames(
+    array('variablename' => $project_genus),
+    array('set' => 'cvdbon', 'suffix' => 'allsuffix')
+  );
+
+  //  - Controlled Vocabulary (cv). Used in the cv_name in cvterm property array below.
+  $sysvar_genus_cv = variable_get($sysvar['cv']);
+  $cvprop = ap_get_cv(array(
+    'cv_id' => $sysvar_genus_cv
+  ));
+  if (!isset($cvprop['cv_id'])) {
+    return FALSE;
+  }
+  $cv_id = $cvprop['cv_id'];
+
+  // Now lookup the details for the specified method.
+  $trait = chado_select_record('cvterm', array('cvterm_id', 'name', 'definition'),
+      array('name' => $trait_name, 'cv_id' => $cv_id));
+
+  if (is_array($trait) AND isset($trait[0])) {
+    return $trait[0];
+  }
+  return FALSE;
+}
+
+/**
  * Retrieve the method details based on the name.
  *
  * @param $project_genus
  *   The organism genus the trait is measured in.
  * @param $method_name
- *   The full name of the trait.
+ *   The full name of the method.
  * @param $options
  *   An array with the following possible keys:
  *    [NONE YET SUPPORTED]
  */
 function ap_get_method($project_genus, $method_name, $options = []) {
 
-  // @todo restrict this by the project genus.
+  // Grab necessary system config.
+  //  - Get system configuration of this genus.
+  $sysvar = ap_get_variablenames(
+    array('variablename' => $project_genus),
+    array('set' => 'cvdbon', 'suffix' => 'allsuffix')
+  );
+
+  //  - Method Controlled Vocabulary (cv). Used in the cv_name in cvterm property array below.
+  $sysvar_genus_method = variable_get($sysvar['method']);
+  $cvprop = ap_get_cv(array(
+    'cv_id' => $sysvar_genus_method
+  ));
+  if (!isset($cvprop['cv_id'])) {
+    return FALSE;
+  }
+  $cv_id = $cvprop['cv_id'];
 
   // Now lookup the details for the specified method.
   $method = chado_select_record('cvterm', array('cvterm_id', 'name', 'definition'),
-      array('name' => $method_name));
+      array('name' => $method_name, 'cv_id' => $cv_id));
 
-  return $method[0];
+  if (is_array($method) AND isset($method[0])) {
+    return $method[0];
+  }
+  return FALSE;
 }
 
 /**

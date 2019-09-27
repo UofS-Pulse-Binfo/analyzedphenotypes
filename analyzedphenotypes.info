@@ -2,7 +2,6 @@ name = Analyzed Phenotypes
 description = Provides phenotypic trait pages, charts, upload and download for partially filtered (not raw) phenotypic data.
 package = Tripal Extensions
 
-dependencies[] = dragndrop_upload_element
 dependencies[] = tripal
 dependencies[] = trpdownload_api
 dependencies[] = tripald3

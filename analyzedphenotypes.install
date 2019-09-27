@@ -212,3 +212,94 @@ function analyzedphenotypes_requirements($phase) {
 
   return $requirements;
 }
+
+/**
+ * Implements hook_schema().
+ */
+function analyzedphenotypes_schema() {
+  $tables = [];
+
+  $tables['analyzedphenotypes_collections'] = [
+    'description' => 'Keeps track of phenotypic data collections; specifically, options for display.',
+    'fields' => [
+      'collection_id' => [
+        'description' => 'The primary identifier for a phenotypic data collection.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE
+      ],
+      'genus' => [
+        'description' => 'The genus of the germplasm this data was taken on.',
+        'type' => 'varchar',
+        'not null' => TRUE,
+      ],
+      'trait_id' => [
+        'description' => 'The Trait (e.g. plant height).',
+        'type' => 'int',
+        'not null' => TRUE,
+      ],
+      'method_id' => [
+        'description' => 'The Method (e.g. stretched primary stem).',
+        'type' => 'int',
+        'not null' => TRUE,
+      ],
+      'unit_id' => [
+        'description' => 'The Unit (e.g. centimeters).',
+        'type' => 'int',
+        'not null' => TRUE,
+      ],
+      'project_id' => [
+        'description' => 'The Experiment',
+        'type' => 'int',
+        'not null' => TRUE,
+      ],
+      'chart_type' => [
+        'description' => 'The type of chart which should be used for display (e.g. "multibar", "violin").',
+        'type' => 'varchar',
+        'not null' => TRUE,
+      ],
+    ],
+    'unique keys' => [
+      'composite_key' => ['trait_id', 'method_id', 'unit_id', 'project_id'],
+    ],
+    'indexes' => [],
+    'primary key' => ['collection_id'],
+  ];
+
+  return $tables;
+}
+
+/**
+ * Create analyzedpenotypes_collections table and populate defaults.
+ */
+function analyzedphenotypes_update_7100() {
+
+  // Load the schema from mymodule_schema() so you don't have to duplicate code.
+  $schema = analyzedphenotypes_schema();
+
+  // Pass the table name and schema for that table to db_create_table()
+  db_create_table(
+    'analyzedphenotypes_collections',
+    $schema['analyzedphenotypes_collections']
+  );
+
+  // Populate the table for pre-existing collections.
+  $sql = "SELECT
+      pp.value as genus,
+      p.attr_id as trait_id,
+      p.assay_id as method_id,
+      p.unit_id,
+      p.project_id,
+      CASE
+        WHEN (up.value = 'quantitative') THEN 'violin'
+        ELSE 'multibar' END
+        as chart_type
+    FROM chado.phenotype p
+    LEFT JOIN chado.projectprop pp ON pp.project_id=p.project_id
+      AND pp.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE name='genus')
+    LEFT JOIN chado.cvtermprop up ON up.cvterm_id=p.unit_id
+      AND up.type_id IN (SELECT cvterm_id FROM chado.cvterm WHERE name='additionalType')
+    GROUP BY p.attr_id, p.assay_id, p.unit_id, p.project_id, pp.value, up.value";
+  db_query('INSERT INTO {analyzedphenotypes_collections}
+    (genus, trait_id, method_id, unit_id, project_id, chart_type)' . $sql);
+}

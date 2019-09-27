@@ -357,6 +357,8 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
   $definition = chado_query('SELECT definition FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $trait_id))->fetchField();
   $unit = chado_query('SELECT name FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $unit_id))->fetchField();
   $method = chado_query('SELECT definition FROM {cvterm} WHERE cvterm_id=:id', array(':id' => $method_id))->fetchField();
+  $chart_type = db_query('SELECT chart_type FROM {analyzedphenotypes_collections} WHERE project_id=:project_id AND trait_id=:trait_id AND method_id=:method_id AND unit_id=:unit_id',
+    ['project_id' => $experiment_id, 'trait_id' => $trait_id, 'method_id' => $method_id, 'unit_id' => $unit_id])->fetchField();
 
   // Determine the type of chart to show.
   // It should be stored as a property of the unit cvterm.
@@ -366,7 +368,6 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
       type_id IN (SELECT cvterm_id FROM {cvterm} WHERE name='additionalType')",
     array(':id' => $unit_id))->fetchField();
   if ($phenotype_type == 'quantitative' OR empty($phenotype_type)) {
-    $chart_type = 'violin';
 
     $xaxis = 'Site-Year';
     $yaxis = $trait_name.' ('.$unit.')';
@@ -378,7 +379,6 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
      . "members of the sampled germplasm collection will show that phenotype.";
   }
   else {
-    $chart_type = 'multibar';
 
     $xaxis = 'Site-Year';
     $yaxis = $trait_name.' ('.$unit.')';
@@ -484,7 +484,7 @@ function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $
 
   if ($project_id && $trait_id && $method_id && $unit_id) {
     $resource = chado_query(
-      "SELECT mview.location, mview.year, mview.stock_name, mview.values, prop.value as chart_type
+      "SELECT mview.location, mview.year, mview.stock_name, mview.values, prop.value as data_type
         FROM chado.mview_phenotype mview
         LEFT JOIN {cvtermprop} prop ON prop.cvterm_id=mview.unit_id
         WHERE mview.experiment_id=:project_id
@@ -504,7 +504,7 @@ function analyzedphenotypes_traitplot_json($project_id, $trait_id, $method_id, $
       $values = json_decode($r->values);
       // QUANTITATIVE:
       // We want to average the replicates and provide a single value.
-      if ($r->chart_type == 'quantitative') {
+      if ($r->data_type == 'quantitative') {
         $mean = array_sum($values) / count($values);
         $results[] = array(
           'category' => $r->location . ' ' . $r->year,

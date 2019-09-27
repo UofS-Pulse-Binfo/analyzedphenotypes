@@ -554,7 +554,7 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
       // Line broken down to individual cell.
       $cells = str_getcsv($cur_row, "\t");
       // Dropped leading and trailing spaces.
-      $data_values = array_map(trim, $cells);
+      $data_values = array_map('trim', $cells);
 
       // 1. Columns Headers
       // 2. Data
@@ -824,9 +824,9 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
  *  An associative array containing user provide values:
  *  - project_name      : Project/experiment selected.
  *  - project_genus     : Project/experiment genus selected.
- *  - trait_cvterm_ids  : array of trait name => trait cvterm_ids for all traits in file
- *  - method_cvterm_ids : array of trait name => method cvterm_ids for all traits in file
- *  - unit_cvterm_ids   : array of trait name => unit cvterm_ids for all traits in file
+ *  - trait_cvterm      : array of trait name => trait cvterm_ids for all traits in file
+ *  - method_cvterm     : array of trait name => method cvterm_ids for all traits in file
+ *  - unit_cvterm       : array of trait name => unit cvterm_ids for all traits in file
  *  - data_file         : Standard Drupal File Id Number (FID).
  * @param Integer $job_id
  *  - Registered Tripal Job Id number.

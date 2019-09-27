@@ -11,7 +11,6 @@ Additionally, the following extension modules and libraries are pre-requisites:
 Unpack the following in your ``sites/all/modules`` directory:
 
 - `Tripal Download API <https://github.com/tripal/trpdownload_api>`_
-- `Drag and Drag Upload module <https://www.drupal.org/project/dragndrop_upload>`_
 - `Tripal D3.js <https://github.com/tripal/tripald3>`_
 
 and unpack these libraries in the ``sites//all/libraries`` directory:
