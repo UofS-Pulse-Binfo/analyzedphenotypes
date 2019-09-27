@@ -288,7 +288,7 @@ function analyzedphenotypes_hp_phenotypic_variability_single_chart_form(&$form, 
 
   // Then form the figure legend based on those parts.
   if ($phenotype_type == 'quantitative' OR empty($phenotype_type)) {
-    $germplasm_name = $i['name'];
+    $germplasm_name = (isset($i['name'])) ? $i['name'] : '';
     $chart_type = 'violin';
     $xaxis = 'Site-Year';
     $yaxis = $trait_name.' ('.$unit.')';
