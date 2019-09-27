@@ -255,6 +255,7 @@ function analyzedphenotypes_hp_phenotypic_variability_experiment_form($form, $fo
  *   The current item.
  */
 function analyzedphenotypes_hp_phenotypic_variability_single_chart_form(&$form, $form_state, $i) {
+  global $base_url;
 
   $module_path = drupal_get_path('module', 'analyzedphenotypes');
 
@@ -339,6 +340,7 @@ function analyzedphenotypes_hp_phenotypic_variability_single_chart_form(&$form, 
     'germplasm' => $germplasm_name,
     'addWatermark' => $add_watermark,
     'watermarkURL' => $watermark_url,
+    'dataURL' => $base_url . '/json/phenotypes/traitplot/' . $experiment_id . '/' . $trait_id . '/' . $method_id . '/' . $unit_id,
   );
   drupal_add_js($data, 'setting');
 

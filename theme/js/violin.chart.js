@@ -12,7 +12,7 @@
       var elementID = apSettings.id;
 
       if (apSettings.type === 'violin') {
-        d3.json('/json/phenotypes/traitplot/'+experiment_id+'/'+trait_id+'/'+method_id+'/'+unit_id, function(error, data) {
+        d3.json(apSettings.dataURL, function(error, data) {
 
           // Debug
 		      // console.log(data);
@@ -49,12 +49,12 @@
             lineWidth:15,
             colors:['#555']
           });
-          
+
           // Highlight germplasm, if current germplasm is known.
           if (apSettings.germplasm) {
             highlightGermplasm(data, apSettings.germplasm);
           }
-          
+
           // Place watermark, if configured.
           if (apSettings.addWatermark) {
             if (apSettings.watermarkURL !== false) {
