@@ -98,6 +98,25 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
       ),
     );
 
+    // Germplasm Phenotype Search.
+    tripal_insert_cvterm(array(
+      'id' => 'NCIT:data',
+      'name' => 'data',
+      'cv_name' => 'NCIT',
+      'definition' => 'Used in AP Germplasm Phenotype search field - Data',
+    ));
+    $field_name = 'ncit__data';
+    $field_type = 'ncit__data';
+    $fields[$field_name] = array(
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => 1,
+      'locked' => FALSE,
+      'storage' => array(
+        'type' => 'field_chado_storage',
+      ),
+    );
+
     // Number of germplasm.
     tripal_insert_cvterm(array(
       'id' => 'local:number_of_germplasm',
@@ -138,13 +157,32 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
 
     // Phenotype Ontology.
     tripal_insert_cvterm(array(
-      'id' => 'NCIT:c52469',
+      'id' => 'NCIT:C52469',
       'name' => 'Synonym',
       'cv_name' => 'NCIT',
       'definition' => 'A word having the same or nearly the same meaning as another word or other words in a language; a word or an expression that serves as a figurative or symbolic substitute for another',
     ));
     $field_name = 'ncit__synonym';
     $field_type = 'ncit__synonym';
+    $fields[$field_name] = array(
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => 1,
+      'locked' => FALSE,
+      'storage' => array(
+	      'type' => 'field_chado_storage',
+      ),
+    );
+    
+    // Phenotype Image
+    tripal_insert_cvterm(array(
+      'id' => 'NCIT:C48179',
+      'name' => 'Image',
+      'cv_name' => 'NCIT',
+      'definition' => 'Phenotype Image.',
+    ));
+    $field_name = 'ncit__image';
+    $field_type = 'ncit__image';
     $fields[$field_name] = array(
       'field_name' => $field_name,
       'type' => $field_type,
@@ -189,7 +227,6 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
       'cv_name' => 'HP',
       'definition' => 'A variability of phenotypic features.',
     ));
-
     $field_name = 'hp__phenotypic_variability';
     $field_type = 'hp__phenotypic_variability';
     $fields[$field_name] = array(
@@ -389,6 +426,38 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
       ),
     );
 
+    // Germplasm Phenotype Search Field.
+    $field_name = 'ncit__data';
+    $field_type = 'ncit__data';
+    $instances[$field_name] =  array(
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+       'label' => 'Germplasm Phenotype Search',
+      'definition' => 'Used in AP Germplasm Phenotype search field - Data',
+      'required' => FALSE,
+      'settings' => array(
+        'term_vocabulary' => 'NCIT',
+        'term_name' => 'data',
+        'term_accession' => 'data',
+        'auto_attach' => FALSE,
+        'chado_table' => $bundle->data_table,
+        'chado_column' => 'cvterm_id',
+        'base_table' => $bundle->data_table,
+      ),
+      'widget' => array(
+        'type' => 'ncit__data_widget',
+        'settings' => array(),
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'ncit__data_formatter',
+          'settings' => array(),
+        ),
+      ),
+    );
+
     // Number of Germplasm.
     $field_name = 'local__number_of_germplasm';
     $field_type = 'local__number_of_germplasm';
@@ -481,6 +550,41 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
           'label' => 'hidden',
           'type' => 'ncit__synonym_formatter',
           'settings' => array(),
+        ),
+      ),
+    );
+
+    // Phenotype Image.
+    $field_name = 'ncit__image';
+    $field_type = 'ncit__image';
+    $instances[$field_name] =  array(
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Phenotype Image',
+      'description' => 'Phenotype Image.',
+      'required' => FALSE,
+      'settings' => array(
+        'term_vocabulary' => 'NCIT',
+        'term_name' => 'Image',
+        'term_accession' => 'C48179',
+        'auto_attach' => FALSE,
+        'chado_table' => $bundle->data_table,
+        'chado_column' => 'cvterm_id',
+        'base_table' => $bundle->data_table,
+      ),
+      'widget' => array(
+        'type' => 'ncit__image_widget',
+        'settings' => array(),
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'ncit__image_formatter',
+          'settings' => array(
+            'image_stack' => 'Left to Right',
+            'image_position' => 'Top to Bottom',
+          ),
         ),
       ),
     );

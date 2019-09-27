@@ -54,7 +54,7 @@
 
 
       // Begin Bar Chart:
-      d3.json(Drupal.settings.basePath+'/json/phenotypes/traitplot/'+experiment_id+'/'+trait_id+'/'+method_id+'/'+unit_id, function(error, rawdata) {
+      d3.json(apSettings.dataURL, function(error, rawdata) {
 
         // Will contain the processed data.
         data = [];

@@ -3,7 +3,7 @@ General Usage
 
 .. warning::
 
-  Before you can use this module, you need to set it up the module by going to Admin > Tripal > Extensions> Analyzed Phenotypes > Set-up. For more detail on how to do this, see the "Setup" documentation in the Administrators Guide.
+  Before you can use this module, you need to set it up the module by going to Admin > Tripal > Extensions> Analyzed Phenotypes > Set-up Ontologies. For more detail on how to do this, see the "Setup" documentation in the Administrators Guide.
 
 Phenotypic data should be uploaded by trusted users, preferably the biologists who generated the data. This is done by going to Admin > Tripal > Extensions > Analyzed Phenotypes > Upload Phenotypic Data. Trusted users should be given permission to this page via Admin > People > Permissions and checking ``Upload Analyzed Phenotypic Data`` for the desired role. I suggest creating a Specific Role for users who will upload data and assigning users to that role via Admin > People.
 

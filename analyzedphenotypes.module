@@ -35,6 +35,7 @@ module_load_include('inc', 'analyzedphenotypes', 'includes/analyzedphenotypes.va
 // Fields.
 module_load_include('inc', 'analyzedphenotypes', 'includes/TripalFields/analyzedphenotypes.fields');
 module_load_include('inc', 'analyzedphenotypes', 'includes/TripalFields/hp__phenotypic_variability/hp__phenotypic_variability_formatterforms');
+module_load_include('inc', 'analyzedphenotypes', 'includes/TripalFields/ncit__data/ncit__data_formatterforms');
 
 /**
  * Implements hook_menu().
@@ -108,20 +109,6 @@ function analyzedphenotypes_menu() {
   );
 
   // FORM IMPLEMENTATIONS:
-
-
-  // UPLOAD DATA.
-  // @todo should this be at admin/tripal/loaders?
-  $items[$tripal_extension_ap . '/upload'] = array(
-    'title' => 'Upload Phenotypic Data',
-    'description' => 'Import a partially filtered (not raw) phenotypic datasets into Chado for display on Trait and Germplasm pages.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('analyzedphenotypes_uploaddata_form'),
-    'access arguments' => array('upload analyzed phenotypes'),
-    'file' => 'includes/analyzedphenotypes.uploaddata.page.inc',
-    'weight' => 1,
-    'type' => MENU_NORMAL_ITEM,
-  );
 
   // DOWNLOAD DATA.
   $items['phenotypes/download'] = array(
@@ -209,13 +196,6 @@ function analyzedphenotypes_theme($existing, $type, $theme, $path) {
     'path' => $path . '/theme',
   );
 
-  // Data uploader.
-  $items['analyzedphenotypes_uploaddata_form'] = array(
-    'template' => 'analyzedphenotypes_pages',
-    'render element' => 'form',
-    'path' => $path . '/theme',
-  );
-
   // Data downloader.
   $items['analyzedphenotypes_downloaddata_form'] = array(
     'template' => 'analyzedphenotypes_pages',
@@ -296,94 +276,6 @@ function analyzedphenotypes_preprocess_analyzedphenotypes_admin_page_directory(&
 
   return $variables;
 }
-
-
-/**
- * Implements hook_preprocess().
- */
-function analyzedphenotypes_preprocess_analyzedphenotypes_uploaddata_form(&$variables, $hook) {
-  // Default system to not properly set, then prove otherwise.
-  $notset = 'not set';
-  $allow_new = 0;
-
-  // All genus.
-  $genus = ap_get_genus();
-
-  $sysvar_genus_set = 0;
-
-  // Test genus cv and db. System only requires a genus to have a cv and db set.
-  foreach($genus as $g) {
-    $sysvar_genus = ap_get_variablenames(
-      array('variablename' => $g),
-      array('set' => 'cvdbon', 'suffix' => 'allsuffix')
-    );
-
-    $sysvar_genus_cv = variable_get($sysvar_genus['cv']);
-    $sysvar_genus_db = variable_get($sysvar_genus['db']);
-
-    if ($sysvar_genus_cv > 0 && $sysvar_genus_db > 0) {
-      // Found at least 1 genus with cv and db set.
-      $sysvar_genus_set = 1;
-
-      break;
-    }
-  }
-
-  if ($sysvar_genus_set > 0) {
-    // Did no find a genus with cv and db set.
-    $notset = 'set';
-  }
-
-  // Test if terms (location, replicate etc.) were set.
-  $sysvars = ap_get_variablenames(
-    array('variablename' => 'varset'),
-    array('set' => 'terms')
-  );
-
-  foreach($sysvars as $var) {
-    $sysvar_term = variable_get($var);
-
-    if ($sysvar_term <= 0) {
-      // If any one failed, then module is not ready.
-      $notset = 'not set';
-
-      break;
-    }
-  }
-
-  unset($sysvars);
-
-  // Allow new terms to be upload. Warn admin that the module is set to not allow
-  // new trait be uploaded.
-  $sysvars = ap_get_variablenames(
-    array('variablename' => 'varset'),
-    array('set' => 'options')
-  );
-
-  foreach($sysvars as $i => $var) {
-    $sysvar_options = variable_get($var);
-
-    if ($i == 'ap_allownew' && $sysvar_options == 1) {
-      $allow_new = 1;
-    }
-
-    // Other optional settings.
-  }
-
-  unset($sysvars);
-
-  // Make configuration value available to theme.
-  $variables['system_set'] = $notset;
-  $variables['allow_new']  = $allow_new;
-
-  $variables['stages'] = $variables['form']['#ap_stage_indicators'];
-  $variables['stage_title'] = $variables['form']['#ap_stage_title'];
-  $variables['current_stage'] = $variables['form']['#ap_current_stage'];
-
-
-  return $variables;
-}
-
 
 /**
  * Implements hook_libraries_info().
