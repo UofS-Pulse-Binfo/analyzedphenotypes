@@ -154,6 +154,25 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
 	      'type' => 'field_chado_storage',
       ),
     );
+
+    // Phenotype Image
+    tripal_insert_cvterm(array(
+      'id' => 'NCIT:C48179',
+      'name' => 'Image',
+      'cv_name' => 'NCIT',
+      'definition' => 'Phenotype Image.',
+    ));
+    $field_name = 'ncit__image';
+    $field_type = 'ncit__image';
+    $fields[$field_name] = array(
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => 1,
+      'locked' => FALSE,
+      'storage' => array(
+	      'type' => 'field_chado_storage',
+      ),
+    );
   }
 
   // IN GERMPLASM PAGE ONLY:
@@ -388,7 +407,6 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
       ),
     );
 
-
     // Germplasm Phenotype Search Field.
     $field_name = 'ncit__data';
     $field_type = 'ncit__data';
@@ -481,6 +499,41 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
           'label' => 'hidden',
           'type' => 'local__number_of_values_recorded_formatter',
           'settings' => array(),
+        ),
+      ),
+    );
+
+    // Phenotype Image.
+    $field_name = 'ncit__image';
+    $field_type = 'ncit__image';
+    $instances[$field_name] =  array(
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Phenotype Image',
+      'description' => 'Phenotype Image.',
+      'required' => FALSE,
+      'settings' => array(
+        'term_vocabulary' => 'NCIT',
+        'term_name' => 'Image',
+        'term_accession' => 'C48179',
+        'auto_attach' => FALSE,
+        'chado_table' => $bundle->data_table,
+        'chado_column' => 'cvterm_id',
+        'base_table' => $bundle->data_table,
+      ),
+      'widget' => array(
+        'type' => 'ncit__image_widget',
+        'settings' => array(),
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'ncit__image_formatter',
+          'settings' => array(
+            'image_stack' => 'Left to Right',
+            'image_position' => 'Top to Bottom',
+          ),
         ),
       ),
     );
