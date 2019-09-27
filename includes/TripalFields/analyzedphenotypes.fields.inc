@@ -155,6 +155,25 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
       ),
     );
 
+    // Phenotype Ontology.
+    tripal_insert_cvterm(array(
+      'id' => 'NCIT:C52469',
+      'name' => 'Synonym',
+      'cv_name' => 'NCIT',
+      'definition' => 'A word having the same or nearly the same meaning as another word or other words in a language; a word or an expression that serves as a figurative or symbolic substitute for another',
+    ));
+    $field_name = 'ncit__synonym';
+    $field_type = 'ncit__synonym';
+    $fields[$field_name] = array(
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => 1,
+      'locked' => FALSE,
+      'storage' => array(
+	      'type' => 'field_chado_storage',
+      ),
+    );
+    
     // Phenotype Image
     tripal_insert_cvterm(array(
       'id' => 'NCIT:C48179',
@@ -498,6 +517,38 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         'default' => array(
           'label' => 'hidden',
           'type' => 'local__number_of_values_recorded_formatter',
+          'settings' => array(),
+        ),
+      ),
+    );
+
+    // Phenotype Ontology - Synonym.
+    $field_name = 'ncit__synonym';
+    $field_type = 'ncit__synonym';
+    $instances[$field_name] =  array(
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Phenotype Ontology',
+      'description' => 'Phenotype Ontology.',
+      'required' => FALSE,
+      'settings' => array(
+        'term_vocabulary' => 'NCIT',
+        'term_name' => 'Synonym',
+        'term_accession' => 'c52469',
+        'auto_attach' => FALSE,
+        'chado_table' => $bundle->data_table,
+        'chado_column' => $bundle->data_table . '_id',
+        'base_table' => $bundle->data_table,
+      ),
+      'widget' => array(
+        'type' => 'ncit__synonym_widget',
+        'settings' => array(),
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'ncit__synonym_formatter',
           'settings' => array(),
         ),
       ),
