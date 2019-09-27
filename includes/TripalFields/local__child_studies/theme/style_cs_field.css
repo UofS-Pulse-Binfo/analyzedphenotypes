@@ -1,0 +1,52 @@
+/**
+ * @file
+ * Style stock child studies field.
+ */
+
+#ap-field-child-studies-wrapper {
+  position: relative;
+  display: block;
+}
+
+#ap-field-child-studies-wrapper ul {
+  list-style-type:  none;
+  margin: 0;
+  padding: 0;
+}
+
+#ap-field-child-studies-wrapper ul > li {
+  border: 1px solid #000000;
+  width: 20%;
+  margin: 1%;
+  float: left;
+  padding: 10px;
+}
+
+#ap-field-child-studies-wrapper ul li ul {
+  margin: 10px;
+  padding:0;
+}
+
+#ap-field-child-studies-wrapper ul li ul li {
+  border: none;
+  width: 100%;
+  padding: 0;
+  font-size: 0.7em;
+}
+
+#ap-field-child-studies-wrapper ul li ul li div {
+  padding: 5px;
+  border: 1px solid #000000;
+  display: inline-block;
+  border-radius: 5px;
+  font-family: sans-serif;
+  font-size: 1.2em;
+  color: #000000;
+  font-weight: 300;
+}
+
+#ap-field-child-studies-wrapper ul li ul li span {
+  display: block;
+  margin: 5px 0 10px 0;
+}
+
