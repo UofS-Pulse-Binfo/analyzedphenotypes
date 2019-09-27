@@ -1,5 +1,8 @@
 [![Build Status](https://travis-ci.org/UofS-Pulse-Binfo/analyzedphenotypes.svg?branch=7.x-3.x)](https://travis-ci.org/UofS-Pulse-Binfo/analyzedphenotypes)
 [![Documentation Status](https://readthedocs.org/projects/analyzedphenotypes/badge/?version=latest)](https://analyzedphenotypes.readthedocs.io/en/latest/?badge=latest)
+![Tripal Dependency](https://img.shields.io/badge/tripal-%3E=3.0-brightgreen)
+![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/UofS-Pulse-Binfo/analyzedphenotypes?include_prereleases)
+
 
 # Analyzed Phenotypes
 This module provides support and visualization for partially analyzed data stored in a modified GMOD Chado schema. It is meant to support **large scale phenotypic data** through backwards compatible improvements to the Chado schema including the addition of a project and stock foreign key to the existing phenotype table, optimized queries and well-choosen indexes. For benchmarking demonstrating the efficiency of this module, see our [documentation](https://analyzedphenotypes.readthedocs.io/en/latest/admin_guide/benchmarking.html).
