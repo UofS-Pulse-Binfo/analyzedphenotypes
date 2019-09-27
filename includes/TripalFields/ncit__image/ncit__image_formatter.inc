@@ -54,10 +54,14 @@ class ncit__image_formatter extends TripalFieldFormatter {
    *    hook_field_formatter_view() function.
    */
   public function view(&$element, $entity_type, $entity, $langcode, $items, $display) {
-    drupal_add_css(drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/ncit__c48179/theme/style_phenotype_image.css');
-    drupal_add_js(drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/ncit__c48179/theme/script.js');
+    drupal_add_css(drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/ncit__image/theme/style_phenotype_image.css');
+    drupal_add_js(drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/ncit__image/theme/script.js');
 
-    $trait_photo = array_values($items[0]['value']['ncit:c48179']);
+    // If there is no photo then don't render anything.
+    if (empty($items[0]['value'])) {
+      return '';
+    }
+    $trait_photo = array_values($items[0]['value']['NCIT:C48179']);
 
     // Refer to this ID for CSS styling.
     $id = 'ap-field-phenotype-image-wrapper';

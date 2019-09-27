@@ -50,11 +50,11 @@ class ncit__image extends ChadoField {
   // required for all TripalFields.
   public static $default_instance_settings = array(
     // The short name for the vocabulary (e.g. schema, SO, GO, PATO, etc.).
-    'term_vocabulary' => 'ncit',
+    'term_vocabulary' => 'NCIT',
     // The name of the term.
     'term_name' => 'Image',
     // The unique ID (i.e. accession) of the term.
-    'term_accession' => 'c48179',
+    'term_accession' => 'C48179',
     // Set to TRUE if the site admin is not allowed to change the term
     // type, otherwise the admin can change the term mapped to a field.
     'term_fixed' => FALSE,
@@ -111,10 +111,14 @@ class ncit__image extends ChadoField {
    *
    */
   public function load($entity) {
+    $field_name = $this->instance['field_name'];
+
     $trait_photo = ap_download_cvtermphoto($entity->chado_record_id);
-    if ($trait_photo) {
-      $field_name = $this->instance['field_name'];
-      $entity->{$field_name}['und'][0]['value']['ncit:c48179'] = $trait_photo;
+    if (is_array($trait_photo) AND !empty($trait_photo['ap_photo_1'])) {
+      $entity->{$field_name}['und'][0]['value']['NCIT:C48179'] = $trait_photo;
+    }
+    else {
+      $entity->{$field_name}['und'][0]['value'] = '';
     }
   }
 }

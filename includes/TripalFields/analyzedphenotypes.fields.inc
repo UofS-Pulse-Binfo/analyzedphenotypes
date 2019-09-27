@@ -157,7 +157,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
 
     // Phenotype Image
     tripal_insert_cvterm(array(
-      'id' => 'ncit:c48179',
+      'id' => 'NCIT:C48179',
       'name' => 'Image',
       'cv_name' => 'NCIT',
       'definition' => 'Phenotype Image.',
