@@ -1,7 +1,10 @@
-[![Build Status](https://travis-ci.org/UofS-Pulse-Binfo/analyzedphenotypes.svg?branch=7.x-3.x)](https://travis-ci.org/UofS-Pulse-Binfo/analyzedphenotypes)
-[![Documentation Status](https://readthedocs.org/projects/analyzedphenotypes/badge/?version=latest)](https://analyzedphenotypes.readthedocs.io/en/latest/?badge=latest)
 ![Tripal Dependency](https://img.shields.io/badge/tripal-%3E=3.0-brightgreen)
+![Module is Generic](https://img.shields.io/badge/generic-tested%20manually-yellow)
 ![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/UofS-Pulse-Binfo/analyzedphenotypes?include_prereleases)
+
+[![Build Status](https://travis-ci.org/UofS-Pulse-Binfo/analyzedphenotypes.svg?branch=7.x-3.x)](https://travis-ci.org/UofS-Pulse-Binfo/analyzedphenotypes)
+[![Maintainability](https://api.codeclimate.com/v1/badges/201831f4d8bcca2e16c0/maintainability)](https://codeclimate.com/github/UofS-Pulse-Binfo/analyzedphenotypes/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/201831f4d8bcca2e16c0/test_coverage)](https://codeclimate.com/github/UofS-Pulse-Binfo/analyzedphenotypes/test_coverage)
 
 
 # Analyzed Phenotypes
