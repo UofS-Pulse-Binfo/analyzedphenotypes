@@ -68,9 +68,13 @@ function ap_create_tripaljob($identifiers, $options = array('return_jobid' => TR
     $user->uid
   );
 
-  if ($job_id > 0 && $options['return_jobid']) {
-    return $job_id;
+  if ($job_id > 0) {
+    if ($options['return_jobid']) {
+      return $job_id;
+    }
+    return TRUE;
   }
+  return FALSE;
 }
 
 
@@ -90,13 +94,17 @@ function ap_get_tripaljob($tripaljob_id) {
   global $user;
 
   $job = tripal_get_job($tripaljob_id);
-  if ($job->job_id > 0 && $job->uid && $job->modulename == $tripal_config['TRIPALJOB_source_module']) {
+
+  if ($job->job_id > 0 && $job->modulename == $tripal_config['TRIPALJOB_source_module']) {
     return array(
       'job_id'   => $job->job_id,
       'status' => $job->status,
       'uid' => $job->uid,
       'progress' => $job->progress
     );
+  }
+  else {
+    return FALSE;
   }
 }
 
@@ -119,14 +127,13 @@ function ap_get_tripaljob($tripaljob_id) {
  */
 function ap_update_tripaljob_progress($tripaljob_id, $progress) {
   $tripal_config = ap_configure_tripaljob();
-  
+
   $update = db_update($tripal_config['TRIPALJOB_job_table'])
     ->fields(array('progress' => $progress))
     ->condition('job_id', $tripaljob_id, '=')
-    ->execution();
+    ->execute();
 
-
-  return ($update) ? $update : null;
+  return ($update) ? $update : FALSE;
 }
 
 
@@ -148,12 +155,13 @@ function ap_update_tripaljob_progress($tripaljob_id, $progress) {
 function ap_read_tripaljob_progress($tripaljob_id, $source) {
   $tripal_config = ap_configure_tripaljob();
   $file = $tripal_config['TRIPALJOB_file_path'] . '/ap_' . $source . '_tripaljob_' . $tripaljob_id . '.' . $tripal_config['TRIPALJOB_file_extension'];
-  
+
   if (file_exists($file)) {
     $content = file_get_contents($file);
-    
-    return ($content) ? $content : null;
-  }  
+
+    return ($content) ? $content : FALSE;
+  }
+  return FALSE;
 }
 
 
@@ -164,21 +172,21 @@ function ap_read_tripaljob_progress($tripaljob_id, $source) {
  *
  * @param $tripaljob_id
  *   An integer, Tripal job id number.
+ * @param $to_write
+ *   An integer, computed progress of a job from 0 to 100, begin to completed respectively.
  * @param $source
  *   Source of Tripal job request:
  *   - jobprogress : for standard progress bar in upload data.
  *   - validateresult : perform validation.
- * @param $progress
- *   An integer, computed progress of a job from 0 to 100, begin to completed respectively.
  *
  * @return
- *   Drupal file mangaed object.
+ *   A string with the path of the resulting file, or FALSE on error.
  */
 function ap_write_tripaljob_progress($tripaljob_id, $to_write, $source) {
   $tripal_config = ap_configure_tripaljob();
   $file = $tripal_config['TRIPALJOB_file_path'] . '/ap_' . $source . '_tripaljob_' . $tripaljob_id . '.' . $tripal_config['TRIPALJOB_file_extension'];
-  
-  file_unmanaged_save_data($to_write, $file, FILE_EXISTS_REPLACE);
+
+  return file_unmanaged_save_data($to_write, $file, FILE_EXISTS_REPLACE);
 }
 
 
