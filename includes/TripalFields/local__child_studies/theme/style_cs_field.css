@@ -5,48 +5,70 @@
 
 #ap-field-child-studies-wrapper {
   position: relative;
-  display: block;
+  display: none;
 }
 
-#ap-field-child-studies-wrapper ul {
+#ap-field-child-studies-wrapper ul.trait-list,
+#ap-field-child-studies-wrapper ul.trait-list ul {
   list-style-type:  none;
   margin: 0;
   padding: 0;
 }
 
-#ap-field-child-studies-wrapper ul > li {
-  border: 1px solid #000000;
-  width: 20%;
-  margin: 1%;
+
+#ap-field-child-studies-wrapper ul.trait-list > li {
+  border: 1px solid #CCCCCC;
+  border-bottom: 4px solid #CCCCCC;
   float: left;
-  padding: 10px;
+  margin: 1%;
+  width: 22%;
+
+  -webkit-box-shadow: 1px 2px 2px 0px rgba(0,0,0,0.20);
+  -moz-box-shadow: 1px 2px 2px 0px rgba(0,0,0,0.20);
+  box-shadow: 1px 2px 2px 0px rgba(0,0,0,0.20);
 }
 
-#ap-field-child-studies-wrapper ul li ul {
-  margin: 10px;
-  padding:0;
-}
-
-#ap-field-child-studies-wrapper ul li ul li {
-  border: none;
-  width: 100%;
-  padding: 0;
-  font-size: 0.7em;
-}
-
-#ap-field-child-studies-wrapper ul li ul li div {
-  padding: 5px;
-  border: 1px solid #000000;
+#ap-field-child-studies-wrapper ul.trait-list li > a {
+  background: url(icon-leaf.gif) left top no-repeat;
   display: inline-block;
-  border-radius: 5px;
-  font-family: sans-serif;
-  font-size: 1.2em;
-  color: #000000;
-  font-weight: 300;
+  line-height: 18px;
+  margin: 2px 0 0 5px;
+  padding: 10px 30px 20px 35px;
 }
 
-#ap-field-child-studies-wrapper ul li ul li span {
+#ap-field-child-studies-wrapper ul.trait-list ul {
+  margin: 0 15px;
+}
+
+#ap-field-child-studies-wrapper ul.trait-list ul li div {
+  padding: 5px;
+  border: 1px solid #3A7F21;
+  display: inline-block;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 1.2em;
+  font-weight: 300;
+  text-shadow: 1px 1px #FFFFFF;
+
+  -webkit-box-shadow: 1px 2px 2px 0px rgba(0,0,0,0.20);
+  -moz-box-shadow: 1px 2px 2px 0px rgba(0,0,0,0.20);
+  box-shadow: 1px 2px 2px 0px rgba(0,0,0,0.20);
+}
+
+#ap-field-child-studies-wrapper ul.trait-list ul li span {
+  font-size: 0.8em;
   display: block;
+  line-height: 14px;
   margin: 5px 0 10px 0;
 }
 
+
+/* Media query - apply stype when viewport is 1500px */
+@media(max-width: 1600px) {
+
+  #ap-field-child-studies-wrapper ul.trait-list > li {
+    float: none;
+    width: 100%;
+  }
+
+}

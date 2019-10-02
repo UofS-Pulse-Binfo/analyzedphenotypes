@@ -492,7 +492,7 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
       ),
     );
 
-    // Child Studies.
+    // Child Studies Field.
     $field_name = 'local__child_studies';
     $field_type = 'local__child_studies';
     $instances[$field_name] =  array(
