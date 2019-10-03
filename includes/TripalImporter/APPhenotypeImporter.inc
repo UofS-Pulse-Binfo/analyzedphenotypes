@@ -523,7 +523,6 @@ class APPhenotypeImporter extends TripalImporter {
    * @stage 3
    */
   public function form_stage3 ($form,  &$form_state) {
-
     $project_name = $form_state['values']['project_name'];
     $project_genus = $form_state['values']['genus'];
     $data_file = $form_state['values']['files'][0]['file_path'];
@@ -536,6 +535,7 @@ class APPhenotypeImporter extends TripalImporter {
     $unit_name = array_keys($expected_columns)[2];
     // @debug dpm([$trait_name, $method_name, $unit_name], 'Header Names of Interest');
     unset($expected_columns);
+
     // Now determine the indicies in the current file based on the header.
     $header_raw =  `head -n 1 $data_file`;
     $header = array_map('trim', str_getcsv($header_raw, "\t"));
@@ -755,15 +755,28 @@ class APPhenotypeImporter extends TripalImporter {
       */
 
       // -- Photo.
-      /*
+
+      // When fields are disabled it is therefore using a pre-existing trait.
+      // Fetch image set for this trait. Allow description to be relevant when image is
+      // available or user is asked to upload one.
+      if ($disabled) {
+        $traitprop['photos'] = ap_download_cvtermphoto($traitprop['cvterm_id']);
+        $photo_description = '';
+      }
+      else {
+        // Trait photo set is the one set above - which is an empty pair.
+        $photo_description = '<br />If possible, please upload pictures of your trait. For example, for plant height, you could take a picture of the plant with the ruler, and for disease rating you could take a picture of the various levels of disease.';
+      }
+
       $form['traits'][$trait_name_value]['ap_group_photo_upload' . $i] = array(
         '#type' => 'item',
         '#title' => t('&#9660; PHOTO UPLOAD'),
-        '#description' => '<br />If possible, please upload pictures of your trait. For example, for plant height, you could take a picture of the plant with the ruler, and for disease rating you could take a picture of the various levels of disease.',
+        '#description' => $photo_description,
       );
 
       $g = 1;
       $no_photo_count = 0;
+
       foreach($traitprop['photos'] as $seq => $photo_info) {
         if ($photo_info) {
           $scale = ap_scale_photo($photo_info['height'], $photo_info['width'], 300);
@@ -779,19 +792,32 @@ class APPhenotypeImporter extends TripalImporter {
           );
         }
         else {
-          $form['traits'][$trait_name_value][$seq . '_file_field' . $i] = array(
-            '#type' => 'file',
-            '#title' => t('Image ' . $g . ' of 2'),
-            '#name' => 'files[' . $seq . $i . ']',
-            '#description' => t('JPG file type only.'),
-            '#attributes' => ($g == 1) ? array('class' => array('ap-no-required')) : array(),
-            '#id' => 'ap-photo-'. $g .'-file-field' . $i,
-          );
+          if (!$disabled) {
+            $form['traits'][$trait_name_value][$seq . '_file_field' . $i] = array(
+              '#type' => 'file',
+              '#title' => t('Image ' . $g . ' of 2'),
+              '#name' => 'files[' . $seq . $i . ']',
+              '#description' => t('JPG file type only.'),
+              '#attributes' => ($g == 1) ? array('class' => array('ap-no-required')) : array(),
+              '#id' => 'ap-photo-'. $g .'-file-field' . $i,
+            );
+          }
+          else {
+            $no_photo_count++;
+          }
         }
 
         $g++;
       }
-      */
+
+
+      // While showing a pre-existing trait:
+      // Inform user no image was uploaded. They can't upload image at this point.
+      if ($disabled && $no_photo_count == count($traitprop['photos'])) {
+        $form['traits'][$trait_name_value]['ap_not_available' . $i] = array(
+          '#markup' => 'Photo not available.',
+        );
+      }
 
       // -- Standard Deviation table.
       $form['traits'][$trait_name_value]['ap_group_summary_table' . $i] = array(
@@ -840,6 +866,8 @@ class APPhenotypeImporter extends TripalImporter {
       }
     }
 
+    // Support for file/image.
+    $form['#attributes']['enctype'] = 'multipart/form-data';
     return $form;
   }
 
@@ -1002,21 +1030,26 @@ class APPhenotypeImporter extends TripalImporter {
           'method_description' => 'Collection Method Description',
           'unit' => 'Unit',
         ];
+
+      $field_index = 0;
       foreach ($form_state['values']['traits'] as $trait_name_value => $values) {
         foreach ($required_fields as $req_field_name => $field_title) {
           if (empty($values[$req_field_name])) {
+            $error = TRUE;
             form_set_error("traits][$trait_name_value][$req_field_name", "The $field_title for $trait_name_value is required.");
           }
         }
 
         // Check the unit doesn't have brackets?
         if (strpbrk($values['unit'], '()')) {
+          $error = TRUE;
           form_set_error("traits][$trait_name_value][unit", 'The value in the unit field contains characters "(" and/or ")". Please remove these characters and try again.');
         }
 
         // Check that all traits are disabled (i.e. already existed).
         if ($form_state['values']['allow_new'] === FALSE) {
           if ($form['traits'][$trait_name_value]['trait_description']['#disabled'] === FALSE) {
+            $error = TRUE;
             form_set_error("traits][$trait_name_value][trait_name",
               t("The trait (:trait) must already exist before loading data due to
               configuration. Please contact an administrator.",
@@ -1026,7 +1059,42 @@ class APPhenotypeImporter extends TripalImporter {
 
         // @todo validate crop ontology. @see analyzedphenotypes_validate_field_required
         // @debug form_set_error('','TESTING');
-        // @todo validate images. @see analyzedphenotypes_validate_field_required
+
+        // File.
+        // Image 1.
+        $field_name = 'ap_photo_1' . $field_index;
+        if (isset($_FILES['files']['name'][$field_name])) {
+          $field_value = $_FILES['files']['name'][$field_name];
+          if (!empty($field_value)) {
+             $file_extension = pathinfo($field_value, PATHINFO_EXTENSION);
+
+             if ($file_extension != 'jpg') {
+               $error = TRUE;
+               form_set_error('ap_photo_1_file_field' . $field_index, t($trait_name_value . ': Photo 1 of 2 is not a .jpg file. Please provide a .jpg photo.'));
+             }
+          }
+        }
+
+        // Image 2.
+        $field_name = 'ap_photo_2' . $field_index;
+        if (isset($_FILES['files']['name'][$field_name])) {
+          $field_value = $_FILES['files']['name'][$field_name];
+          if (!empty($field_value)) {
+             $file_extension = pathinfo($field_value, PATHINFO_EXTENSION);
+
+             if ($file_extension != 'jpg') {
+               $error = TRUE;
+               form_set_error('ap_photo_1_file_field' . $field_index, t($trait_name_value . ': Photo 2 of 2 is not a .jpg file. Please provide a .jpg photo.'));
+             }
+          }
+        }
+
+        $field_index++;
+      }
+
+      if ($error) {
+        // On error the accordion breaks, this will reinstantiate the library.
+        drupal_add_library('system', 'ui.accordion');
       }
     }
   }
@@ -1051,11 +1119,13 @@ class APPhenotypeImporter extends TripalImporter {
 
       // Save the project genus.
       $project_name = $form_state['values']['project_name'];
+
       $project_genus = $form_state['values']['genus'];
       // Does project have a genus?
       $projectprop = ap_get_projectgenus(
         array('project_name' => $project_name)
       );
+
       if (!$projectprop) {
 
         // No previous genus set for the project, create one.
@@ -1064,11 +1134,14 @@ class APPhenotypeImporter extends TripalImporter {
           array('name' => $project_name),
           array('fullmatch' => TRUE, 'limitrows' => 1)
         );
+
+
+/*
         // Set new genus to project.
         ap_set_projectgenus(
           array('project_id' => $projectprop['project_id'], 'genus' => $project_genus),
           array('replace' => FALSE)
-        );
+        ); */
       }
 
       // These arrays will save the trait details for use in the importer::run.
@@ -1077,6 +1150,7 @@ class APPhenotypeImporter extends TripalImporter {
       $arr_unit_cvtermid = [];
 
       // We want to save the trait.
+      $photo_i = 0;
       foreach ($form_state['values']['traits'] as $k => $trait_details) {
 
         // Determine whether this trait is qualitative or quantitative.
@@ -1102,12 +1176,17 @@ class APPhenotypeImporter extends TripalImporter {
         $form_state['values']['traits'][$k]['unit_id'] = $result['unit']->cvterm_id;
 
         // Upload photo's.
-        if (!empty($trait_details['ap_photo_1_file_field0'])) {
-          drupal_set_message('Image upload is not currently supported.', 'warning');
-        }
-        if (!empty($trait_details['ap_photo_2_file_field0'])) {
-          drupal_set_message('Image upload is not currently supported.', 'warning');
-        }
+        // Photo.
+        $photo_1 = 'ap_photo_1' . $photo_i;
+        $photo_2 = 'ap_photo_2' . $photo_i;
+
+        // Save cvterm image.
+        ap_upload_cvtermphoto(
+          array('cvterm_id' => $result['trait']->cvterm_id, 'photo' => array($photo_1, $photo_2)),
+          array('scaleto' => 400)
+        );
+
+        $photo_i++;
 
         // Save the ontology term.
         // @todo save ontology term
