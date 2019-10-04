@@ -1084,12 +1084,6 @@ class APPhenotypeImporter extends TripalImporter {
           }
         }
 
-        // Check the unit doesn't have brackets?
-        if (strpbrk($values['unit'], '()')) {
-          $error = TRUE;
-          form_set_error("traits][$trait_name_value][unit", 'The value in the unit field contains characters "(" and/or ")". Please remove these characters and try again.');
-        }
-
         // Check that all traits are disabled (i.e. already existed).
         if ($form_state['values']['allow_new'] === FALSE) {
           if ($form['traits'][$trait_name_value]['trait_description']['#disabled'] === FALSE) {
