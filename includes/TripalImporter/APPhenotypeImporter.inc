@@ -148,15 +148,15 @@ class APPhenotypeImporter extends TripalImporter {
     }
 
     // Next stage submit button.
-    if ($current_stage != 'save') {
-      // No button on last stage.
-      $form['ap_next_step_button'] = array(
-        '#type' => 'submit',
-        '#value' => 'Next Step',
-        '#weight' => 100,
-        '#id' => 'ap-next-stage-submit-field',
-      );
-    }
+    $btn_text = ($current_stage == 'describe') ? 'Save' : 'Next Step';
+
+    $form['ap_next_step_button'] = array(
+      '#type' => 'submit',
+      '#value' => $btn_text,
+      '#weight' => 100,
+      '#id' => 'ap-next-stage-submit-field',
+    );
+
 
     // @debug dpm($form, '$form in Importer::form');
     // @debug dpm($form_state, '$form_state in Importer::form');
