@@ -977,6 +977,8 @@ function analyzedphenotypes_save_tsv_data($dataset, $job_id) {
           }
 
           $trait_id = $trait_cvterm_ids[$file_traitname];
+
+          // Inspect the array key: does the original contain quotes or not?.
           $method_id = $method_cvterm_ids[$file_methodname];
           // @debug print "METHOD ID:$method_id ($file_methodname)\n";
           $unit_id = $unit_cvterm_ids[$file_unitname];

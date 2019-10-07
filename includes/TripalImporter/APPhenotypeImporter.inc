@@ -580,6 +580,12 @@ class APPhenotypeImporter extends TripalImporter {
     foreach ($traits as $i => $trait_details) {
       $trait_name_value = implode('; ',$trait_details);
 
+      // Strip all quotes and spaces from this point for both Trait Details.
+      // # Detail.
+      foreach($trait_details as $detail_key => $detail_value) {
+        $trait_details[ $detail_key ] = trim(str_replace('"', '', $detail_value));
+      }
+
       // Prepare describe fieldset.
       $traitprop = array(
         'cvterm_id'     => '',
@@ -604,16 +610,16 @@ class APPhenotypeImporter extends TripalImporter {
 
         // Pre-existing trait, inspect if this trait has been set to
         // contain an crop ontology information.
-        $trait_details = ap_get_cvterm(
+        $trait_ontology = ap_get_cvterm(
           array('cvterm_id' => $trait_select->cvterm_id),
           array('dataset' => 'fullset')
         );
 
         if ($trait_details) {
-          $trait_crop_ontology = $trait_details[0]['crop_ontology'];
+          $trait_crop_ontology = $trait_ontology[0]['crop_ontology'];
         }
 
-        unset($trait_details);
+        unset($trait_ontology);
       }
 
       $form['traits'][$trait_name_value] = array(
@@ -625,6 +631,14 @@ class APPhenotypeImporter extends TripalImporter {
 
       $disabled = ($traitprop['cvterm_id']) ? TRUE : FALSE;
       $class = ($disabled) ? '' : 'ap-required';
+
+      // Strip all quotes and spaces from this point for both Trait Property.
+      // # Property.
+      foreach($traitprop as $property_key => $property_value) {
+        if ($property_key != 'photos') {
+          $traitprop[ $property_key ] = trim(str_replace('"', '', $property_value));
+        }
+      }
 
       $form['traits'][$trait_name_value]['ap_group_about_the_trait'] = array(
         '#type' => 'item',
@@ -1342,6 +1356,7 @@ class APPhenotypeImporter extends TripalImporter {
       'unit_cvterm' => $unit_ids,
       'data_file' => $fid,
     ];
+
 
     // Now pass the dataset off to the original loading function.
     $job_id = $this->job->getJobID();
