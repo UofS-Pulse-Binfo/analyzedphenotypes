@@ -604,16 +604,16 @@ class APPhenotypeImporter extends TripalImporter {
 
         // Pre-existing trait, inspect if this trait has been set to
         // contain an crop ontology information.
-        $trait_details = ap_get_cvterm(
+        $trait_ontology = ap_get_cvterm(
           array('cvterm_id' => $trait_select->cvterm_id),
           array('dataset' => 'fullset')
         );
 
         if ($trait_details) {
-          $trait_crop_ontology = $trait_details[0]['crop_ontology'];
+          $trait_crop_ontology = $trait_ontology[0]['crop_ontology'];
         }
 
-        unset($trait_details);
+        unset($trait_ontology);
       }
 
       $form['traits'][$trait_name_value] = array(
