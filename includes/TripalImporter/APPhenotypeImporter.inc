@@ -408,6 +408,7 @@ class APPhenotypeImporter extends TripalImporter {
 
       $form['file']['file_upload_existing']['#element_validate'][] = 'APPhenotypeImporter_file_validate';
     }
+
     $form['file']['file_upload'] = [
       '#type' => 'html5_file',
       '#title' => '',
@@ -422,7 +423,18 @@ class APPhenotypeImporter extends TripalImporter {
       '#allowed_types' => $class::$file_types,
       '#cardinality' => $class::$cardinality,
     ];
+
     $form['file']['file_upload']['#element_validate'][] = 'APPhenotypeImporter_file_validate';
+
+    $form['file']['file_local'] = [
+      '#title' => t('Server path'),
+      '#type' => 'textfield',
+      '#maxlength' => 5120,
+      '#description' => t('If the file is local to the Tripal server please provide the full path here.'),
+    ];
+
+    $form['file']['file_local']['#element_validate'][] = 'APPhenotypeImporter_file_validate';
+
 
     return $form;
   }
@@ -435,7 +447,6 @@ class APPhenotypeImporter extends TripalImporter {
   public function form_stage2 ($form,  &$form_state) {
 
     // @debug dpm($form_state, '$form_state in Importer::form_stage2');
-
     $job_id = NULL;
     if (isset($form_state['values']['project_name']) &&
         isset($form_state['values']['genus'])   &&
@@ -957,9 +968,32 @@ class APPhenotypeImporter extends TripalImporter {
         '#value' => $form_state['values']['allow_new'],
       ];
     }
+
+    // File through server path.
+    if (isset($form_state['values']['file_local']) && !empty($form_state['values']['file_local'])) {
+      // An array containing the file id and file path.
+      // @see APPhenotypeImporter_file_validate().
+      $local_file = $form_state['values']['file_local'];
+
+      $form['files'] = [
+        '#tree' => TRUE,
+      ];
+
+      $form_state['values']['files'][0]['fid'] = $local_file['fid'];
+      $form['files'][0] = [
+        'file_path' => [
+          '#type' => 'hidden',
+          '#value' => $local_file['path'],
+        ],
+        'fid' => [
+          '#type' => 'hidden',
+          '#value' => $local_file['fid'],
+        ]
+      ];
+    }
     // fid.
     // If this is the second stage...
-    if (isset($form_state['values']['file_upload'])) {
+    elseif (isset($form_state['values']['file_upload'])) {
       // Then we want to reformat the results and save them for future use.
       // The fid will be in either file_upload or file_upload_existing for
       // if the user uploaded a file or picked an existing one.
@@ -1051,20 +1085,22 @@ class APPhenotypeImporter extends TripalImporter {
 
     // FILE.
     if ($stage_id === 0) {
-
-      //...........................................
       // Validate that the genus is set in Stage 1.
       if ($form_state['values']['genus'] == '0') {
         form_set_error('genus', 'You must set the genus for which the data is associated.');
       }
 
-      //...........................................
-      // Validate that file is uploaded in Stage 1.
-      // First check the upload element.
       if (empty($form_state['values']['file_upload'])) {
-        // Then check the existing file element.
+        // Main file upload field - Check the next field, existing file field.
         if (empty($form_state['values']['file_upload_existing'])) {
-          form_set_error('file', 'You must provide a file.');
+          // Secondary file upload field - Check next field, server path field.
+          if (empty($form_state['values']['file_local'])) {
+            // Finally, none provided.
+            form_set_error('file', 'You must provide a file.');
+          }
+          else {
+            $form_state['values']['fid'] = $form_state['values']['file_local']['fid'];
+          }
         }
         else {
           $form_state['values']['fid'] = $form_state['values']['file_upload_existing'];
@@ -1073,7 +1109,6 @@ class APPhenotypeImporter extends TripalImporter {
       else {
         $form_state['values']['fid'] = $form_state['values']['file_upload'];
       }
-
     }
 
     // DESCRIBE.
@@ -1379,6 +1414,37 @@ function APPhenotypeImporter_file_validate($element, &$form_state, $form) {
   elseif ($element['#type'] == 'html5_file') {
     $element_key = 'file][file_upload';
     $fid = $form_state['values']['file_upload'];
+  }
+  // If local server file.
+  elseif ($element['#type'] == 'textfield') {
+    $element_key = 'file][file_local';
+
+    if (file_exists($form_state['values']['file_local'])) {
+      global $user;
+
+      // Field value which is the local path to file.
+      $file_name = basename($form_state['values']['file_local']);
+      // We want to move the server file to user directory to serve
+      // as a backup copy of the original file and reference this file in succeeding stages.
+      $f = fopen($form_state['values']['file_local'], 'r');
+      $destination_file = 'public://' . 'tripal/users/' . $user->uid . '/' . $file_name;
+      $file_copy = file_save_data($f, $destination_file, FILE_EXISTS_RENAME);
+      fclose($f);
+
+      $fid = $file_copy->fid;
+
+      // Since the the value in the field is not file object but a text value we need
+      // transfer the file in the file system designed for this module while generating
+      // a file id in the process.
+      $form_state['values']['file_local'] = array(
+        'fid' => $fid,
+        // The new file, local in users folder not the original file.
+        'path' => drupal_realpath($file_copy->uri),
+      );
+    }
+    else {
+      $fid = null;
+    }
   }
 
   if (!empty($fid)) {
