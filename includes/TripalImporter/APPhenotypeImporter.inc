@@ -615,6 +615,9 @@ class APPhenotypeImporter extends TripalImporter {
 
       // trait definition.
       $trait_select = ap_get_trait($project_genus, $trait_details['trait']);
+      // trait ontology var passed to the form api.
+      $trait_crop_ontology = null;
+
       if (!empty($trait_select)) {
         $traitprop['definition'] = $trait_select->definition;
         $traitprop['cvterm_id'] = $trait_select->cvterm_id;
@@ -803,7 +806,7 @@ class APPhenotypeImporter extends TripalImporter {
           '#default_value' => $traitprop['crop_ontology'],
           '#description' => $ontology_description,
           '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/ontology/' . $project_genus,
-          '#attributes' => array('class' => array('ap-crop-ontology', ap-no-required)),
+          '#attributes' => array('class' => array('ap-crop-ontology', 'ap-no-required')),
           '#id' => drupal_html_id('ap-crop-ontology-text-field' . $i),
         );
 
@@ -1113,6 +1116,8 @@ class APPhenotypeImporter extends TripalImporter {
 
     // DESCRIBE.
     if ($stage_id === 2) {
+      // Set error to False and prove otherwise.
+      $error = FALSE;
 
       // Check required fields for each trait.
       $required_fields = [
