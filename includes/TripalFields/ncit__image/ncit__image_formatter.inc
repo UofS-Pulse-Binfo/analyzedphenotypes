@@ -117,7 +117,7 @@ class ncit__image_formatter extends TripalFieldFormatter {
    */
   public function settingsForm($view_mode, $form, &$form_state) {
     // Illustrations showing configurations available.
-    $src = drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/ncit__c48179/theme/configuration.gif';
+    $src = drupal_get_path('module', 'analyzedphenotypes') . '/includes/TripalFields/ncit__image/theme/configuration.gif';
     $element['configuration'] = array(
       '#type' => 'markup',
       '#markup' => theme('image', array(

@@ -111,10 +111,12 @@ function ap_insert_trait($data) {
     $trait_cvterm = tripal_get_cvterm(array('cvterm_id' => $data['trait_id']));
   }
 
+
   // Check to see if the method exists.
   // This is needed because the method uses cvterm.definition rather then name.
   $exists = chado_query('SELECT cvterm_id FROM {cvterm} WHERE definition=:method AND cv_id IN (SELECT cv_id FROM {cv} WHERE name=:cv_name)',
-    array(':method' => $data['method'], ':cv_name' => $cv_name))->fetchField();
+    array(':method' => $data['method'], ':cv_name' => $method_cvname))->fetchField();
+
   if (!$exists) {
     // Insert the method cvterm
     $method_cvterm = array(
@@ -132,16 +134,29 @@ function ap_insert_trait($data) {
     $method_cvterm = tripal_get_cvterm(array('cvterm_id' => $exists));
   }
 
-  // Insert the unit cvterm
-  $unit_cvterm = array(
-    'cv_name' => $unit_cvname,
-    'id' => trim($db_name) . ':' . $data['unit'],
-    'name' => $data['unit'],
-    'definition' => '',
-  );
-  $unit_cvterm = tripal_insert_cvterm($unit_cvterm);
-  if (!$unit_cvterm) {
-    tripal_report_error('ap_trait', TRIPAL_ERROR, 'Unable to create unit when the following is supplied: '.print_r($data,TRUE));
+  // Check to see if the unit exists.
+  // If it does exist, then just use the the existing one, otherwise
+  // insert the a new record for this unit.
+  unset($exists);
+  $exists = chado_query('SELECT cvterm_id FROM {cvterm} WHERE name = :unit AND cv_id IN (SELECT cv_id FROM {cv} WHERE name = :cv_name)',
+    array(':unit' => $data['unit'], ':cv_name' => $unit_cvname))->fetchField();
+
+  if (!$exists) {
+    // Insert the unit cvterm
+    $unit_cvterm = array(
+      'cv_name' => $unit_cvname,
+      'id' => trim($db_name) . ':' . $data['unit'],
+      'name' => $data['unit'],
+      'definition' => '',
+    );
+    $unit_cvterm = tripal_insert_cvterm($unit_cvterm);
+
+    if (!$unit_cvterm) {
+      tripal_report_error('ap_trait', TRIPAL_ERROR, 'Unable to create unit when the following is supplied: '.print_r($data,TRUE));
+    }
+  }
+  else {
+    $unit_cvterm = tripal_get_cvterm(array('cvterm_id' => $exists));
   }
 
   // Add type property to the unit.

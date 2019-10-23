@@ -82,6 +82,7 @@ class APPhenotypeImporter extends TripalImporter {
         “location name, country” or GPS coordinates (e.g. Saskatoon, Canada)</li>
       <li><strong>Replicate:</strong> The number for the replicate the current
         measurement is in. (e.g. 3)</li>
+      <li><strong>Value:</strong> The measured phenotypic value. (e.g. 34)</li>
       <li><strong>Data Collector:</strong> The name of the person or
         organization which measured the phenotype.</li>
     </ol>
@@ -148,15 +149,15 @@ class APPhenotypeImporter extends TripalImporter {
     }
 
     // Next stage submit button.
-    if ($current_stage != 'save') {
-      // No button on last stage.
-      $form['ap_next_step_button'] = array(
-        '#type' => 'submit',
-        '#value' => 'Next Step',
-        '#weight' => 100,
-        '#id' => 'ap-next-stage-submit-field',
-      );
-    }
+    $btn_text = ($current_stage == 'describe') ? 'Save' : 'Next Step';
+
+    $form['ap_next_step_button'] = array(
+      '#type' => 'submit',
+      '#value' => $btn_text,
+      '#weight' => 100,
+      '#id' => 'ap-next-stage-submit-field',
+    );
+
 
     // @debug dpm($form, '$form in Importer::form');
     // @debug dpm($form_state, '$form_state in Importer::form');
@@ -305,16 +306,12 @@ class APPhenotypeImporter extends TripalImporter {
   public function form_stage1 ($form,  &$form_state) {
     $class = get_called_class();
     global $user;
-
-
     // Pull defaults from the path if they are available.
     $query = drupal_get_query_parameters();
     $default_project = $default_genus = NULL;
     if (isset($query['project'])) { $default_project = $query['project']; }
     if (isset($query['genus'])) { $default_genus = $query['genus']; }
-
     // @debug dpm($query, '$query in Importer::stage1');
-
     // Autocomplete search field: Experiment/project title.
     $form['project_name'] = array(
       '#title' => 'Experiment',
@@ -325,8 +322,8 @@ class APPhenotypeImporter extends TripalImporter {
       '#default_value' => $default_project,
       // @see analyzedphenotypes_data_json() in functions.inc where $dataype = projects.
       '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/projects/experiment',
-
       // When project is selected, autofill the genus field with corresponding project genus.
+
       /* @todo test this...
       '#ajax' => array(
         'callback' => 'ap_send_ajaxrequest',
@@ -338,11 +335,11 @@ class APPhenotypeImporter extends TripalImporter {
           'message' => 'Loading project genus...'
         ),
       ),
+
       */
       '#description' => t('Type in the experiment or project title your data is specific to.'),
       '#id' => 'ap-project-select-field'
     );
-
     // All genus.
     $arr_all_genus = array(0 => '- Select -');
     // Fetch all genus that have been configured in settings page...
@@ -353,40 +350,32 @@ class APPhenotypeImporter extends TripalImporter {
         $arr_all_genus[$g] = $g;
       }
     }
-
     // Project genus - autofill.
     if (isset($form_state['values']['project_name'])) {
       $project = trim($form_state['values']['project_name']);
-
       if (!empty($project)) {
         // Fetch genus assigned to a project.
         $project_genus = ap_get_projectgenus(
           array('project_name' => $project)
         );
-
         if ($project_genus) {
           $arr_project_genus = array($project_genus => $project_genus);
         }
       }
     }
-
     $genus_options = (isset($arr_project_genus)) ? $arr_project_genus : $arr_all_genus;
-
     // AJAX callback wrapper.
     $form['ap_AJAX_wrapper_autofillgenus'] = array(
       '#prefix' => '<div id="ap-AJAX-wrapper-autofillgenus">',
       '#suffix' => '</div>',
     );
-
     if (isset($form_state['values']['genus']) &&
        !empty($form_state['values']['genus'])) {
-
       $default_genus = $form_state['values']['genus'];
     }
     elseif ($default_genus === NULL) {
       $default_genus = array_keys($genus_options)[0];
     }
-
     // Select field: Genus.
     $form['ap_AJAX_wrapper_autofillgenus']['genus'] = array(
       '#type' => 'select',
@@ -420,6 +409,7 @@ class APPhenotypeImporter extends TripalImporter {
 
       $form['file']['file_upload_existing']['#element_validate'][] = 'APPhenotypeImporter_file_validate';
     }
+
     $form['file']['file_upload'] = [
       '#type' => 'html5_file',
       '#title' => '',
@@ -434,7 +424,18 @@ class APPhenotypeImporter extends TripalImporter {
       '#allowed_types' => $class::$file_types,
       '#cardinality' => $class::$cardinality,
     ];
+
     $form['file']['file_upload']['#element_validate'][] = 'APPhenotypeImporter_file_validate';
+
+    $form['file']['file_local'] = [
+      '#title' => t('Server path'),
+      '#type' => 'textfield',
+      '#maxlength' => 5120,
+      '#description' => t('If the file is local to the Tripal server please provide the full path here.'),
+    ];
+
+    $form['file']['file_local']['#element_validate'][] = 'APPhenotypeImporter_file_validate';
+
 
     return $form;
   }
@@ -447,7 +448,6 @@ class APPhenotypeImporter extends TripalImporter {
   public function form_stage2 ($form,  &$form_state) {
 
     // @debug dpm($form_state, '$form_state in Importer::form_stage2');
-
     $job_id = NULL;
     if (isset($form_state['values']['project_name']) &&
         isset($form_state['values']['genus'])   &&
@@ -536,6 +536,7 @@ class APPhenotypeImporter extends TripalImporter {
     $unit_name = array_keys($expected_columns)[2];
     // @debug dpm([$trait_name, $method_name, $unit_name], 'Header Names of Interest');
     unset($expected_columns);
+
     // Now determine the indicies in the current file based on the header.
     $header_raw =  `head -n 1 $data_file`;
     $header = array_map('trim', str_getcsv($header_raw, "\t"));
@@ -591,6 +592,12 @@ class APPhenotypeImporter extends TripalImporter {
     foreach ($traits as $i => $trait_details) {
       $trait_name_value = implode('; ',$trait_details);
 
+      // Strip all quotes and spaces from this point for both Trait Details.
+      // # Detail.
+      foreach($trait_details as $detail_key => $detail_value) {
+        $trait_details[ $detail_key ] = trim(str_replace('"', '', $detail_value));
+      }
+
       // Prepare describe fieldset.
       $traitprop = array(
         'cvterm_id'     => '',
@@ -609,9 +616,25 @@ class APPhenotypeImporter extends TripalImporter {
 
       // trait definition.
       $trait_select = ap_get_trait($project_genus, $trait_details['trait']);
+      // trait ontology var passed to the form api.
+      $trait_crop_ontology = null;
+
       if (!empty($trait_select)) {
         $traitprop['definition'] = $trait_select->definition;
         $traitprop['cvterm_id'] = $trait_select->cvterm_id;
+
+        // Pre-existing trait, inspect if this trait has been set to
+        // contain an crop ontology information.
+        $trait_ontology = ap_get_cvterm(
+          array('cvterm_id' => $trait_select->cvterm_id),
+          array('dataset' => 'fullset')
+        );
+
+        if ($trait_details) {
+          $trait_crop_ontology = $trait_ontology[0]['crop_ontology'];
+        }
+
+        unset($trait_ontology);
       }
 
       $form['traits'][$trait_name_value] = array(
@@ -623,6 +646,14 @@ class APPhenotypeImporter extends TripalImporter {
 
       $disabled = ($traitprop['cvterm_id']) ? TRUE : FALSE;
       $class = ($disabled) ? '' : 'ap-required';
+
+      // Strip all quotes and spaces from this point for both Trait Property.
+      // # Property.
+      foreach($traitprop as $property_key => $property_value) {
+        if ($property_key != 'photos') {
+          $traitprop[ $property_key ] = trim(str_replace('"', '', $property_value));
+        }
+      }
 
       $form['traits'][$trait_name_value]['ap_group_about_the_trait'] = array(
         '#type' => 'item',
@@ -696,79 +727,125 @@ class APPhenotypeImporter extends TripalImporter {
       );
       $sysvar_genus_ontology = variable_get($sysvar);
 
-      // If Ontology Set.
-      /*
+      // Construct ontologies suggestions:
+      // Var to hold ontology term suggestions.
+      $list = '';
+
       if ($sysvar_genus_ontology) {
+        // Ontology set.
 
-        $ontology_suggestions = ap_suggest_ontology(
-          array('trait' => $traitprop['name'], 'genus' => $project_genus),
-          array('limitrows' => 10)
-        );
+        if ($disabled) {
+          // Field is disabled to load fetch ontology value for a trait
+          // selected from suggested traits.
 
-        $list = '';
-        if ($ontology_suggestions) {
-          // Found term to suggest.
-          $a = array();
-
-          foreach($ontology_suggestions as $k => $t) {
-            $definition = $t['name'];
-
-            $a[] = l($t['name'], '#', array('attributes' => array(
-              'alt' => $definition,
-              'title' => $definition,
-            )));
+          // Additional check to see if there is a value at all.
+          if (empty($traitprop['crop_ontology'])) {
+            // Not set, fieldset should be hidden.
+            $fieldset_disable = TRUE;
           }
-
-          if (count($a) > 0) {
-            $list = theme('item_list', array(
-              'items' => $a,
-              'title' => '',
-              'attributes' => array('id' => 'ap-ontology-suggest-' . $i, 'class' => 'ap-item-list'),
-            ));
+          else {
+            // A value in there, show the field but disabled.
+            $fieldset_disable = FALSE;
+            $ontology_disable = TRUE;
           }
         }
+        else {
+          // Regular page load with properly set ontoloy configuration
+          // Begin suggestions.
 
+          $ontology_suggestions = ap_suggest_ontology(
+            array('trait' => $traitprop['name'], 'genus' => $project_genus),
+            array('limitrows' => 10)
+          );
+
+          if ($ontology_suggestions) {
+            // Found term to suggest.
+            $a = array();
+
+            foreach($ontology_suggestions as $k => $t) {
+              $definition = $t['name'];
+
+              $a[] = l($t['name'], '#', array('attributes' => array(
+                'alt' => $definition,
+                'title' => $definition,
+              )));
+            }
+
+            if (count($a) > 0) {
+              $list = theme('item_list', array(
+                'items' => $a,
+                'title' => '',
+                'attributes' => array('id' => 'ap-ontology-suggest-' . $i, 'class' => 'ap-item-list'),
+              ));
+            }
+          }
+
+          $fieldset_disable = FALSE;
+        }
+      }
+      else {
+        // Not set, make ontology fieldset unavailable.
+        $fieldset_disable = TRUE;
+      }
+
+      $traitprop['crop_ontology'] = $trait_crop_ontology ?? '';
+      $ontology_description = ($trait_crop_ontology)
+        ? ''
+        : t('Type in a term name or click one from suggestions below. The term choosen should be generic but as similar as possible to your trait.');
+
+      if (!$fieldset_disable || $traitprop['crop_ontology']) {
         // Field group title:
-        $form['traits'][$trait_name_value]['ap_group_mapping_information' . $i] = array(
+        $form['traits'][$trait_name_value]['ap_group_mapping_information'] = array(
           '#type' => 'item',
           '#title' => t('&#9660; RELATED ONTOLOGY TERMS'),
         );
 
-        $form['traits'][$trait_name_value]['crop_ontology_term_name'] = array(
+        $form['traits'][$trait_name_value]['ap_crop_ontology_text_field'] = array(
           '#title' => 'Crop Ontology',
           '#type' => 'textfield',
           '#disabled' => (isset($ontology_disable)) ? $ontology_disable : $disabled,
           '#default_value' => $traitprop['crop_ontology'],
-          '#description' => t('Type in a term name or click one from suggestions below. The term choosen should be generic but as similar as possible to your trait.'),
+          '#description' => $ontology_description,
           '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/ontology/' . $project_genus,
-          '#attributes' => array('class' => array('ap-crop-ontology', ap-no-required)),
+          '#attributes' => array('class' => array('ap-crop-ontology', 'ap-no-required')),
           '#id' => drupal_html_id('ap-crop-ontology-text-field' . $i),
         );
 
         // Suggest ontology.
-        if ($list) {
-          $form['traits'][$trait_name_value]['ap_ontology_suggestion_markup_field' . $i] = array(
+        if (isset($list) && !$disabled) {
+          $form['traits'][$trait_name_value]['ap_ontology_suggestion_markup_field'] = array(
             '#markup' => $list . '<br />',
           );
         }
       }
-      */
 
       // -- Photo.
-      /*
-      $form['traits'][$trait_name_value]['ap_group_photo_upload' . $i] = array(
+      // When fields are disabled it is therefore using a pre-existing trait.
+      // Fetch image set for this trait. Allow description to be relevant when image is
+      // available or user is asked to upload one.
+      if ($disabled) {
+        $traitprop['photos'] = ap_download_cvtermphoto($traitprop['cvterm_id']);
+        $photo_description = '';
+      }
+      else {
+        // Trait photo set is the one set above - which is an empty pair.
+        $photo_description = '<br />If possible, please upload pictures of your trait. For example, for plant height, you could take a picture of the plant with the ruler, and for disease rating you could take a picture of the various levels of disease.';
+      }
+
+      $form['traits'][$trait_name_value]['ap_group_photo_upload'] = array(
         '#type' => 'item',
         '#title' => t('&#9660; PHOTO UPLOAD'),
-        '#description' => '<br />If possible, please upload pictures of your trait. For example, for plant height, you could take a picture of the plant with the ruler, and for disease rating you could take a picture of the various levels of disease.',
+        '#description' => $photo_description,
       );
 
       $g = 1;
       $no_photo_count = 0;
+
       foreach($traitprop['photos'] as $seq => $photo_info) {
         if ($photo_info) {
           $scale = ap_scale_photo($photo_info['height'], $photo_info['width'], 300);
 
-          $form['traits'][$trait_name_value][$seq . $i] = array(
+          $form['traits'][$trait_name_value][$seq] = array(
             '#type' => 'markup',
             '#id' => 'ap-photo-1' . $i,
             '#markup' => theme('image', array(
@@ -779,19 +856,32 @@ class APPhenotypeImporter extends TripalImporter {
           );
         }
         else {
-          $form['traits'][$trait_name_value][$seq . '_file_field' . $i] = array(
-            '#type' => 'file',
-            '#title' => t('Image ' . $g . ' of 2'),
-            '#name' => 'files[' . $seq . $i . ']',
-            '#description' => t('JPG file type only.'),
-            '#attributes' => ($g == 1) ? array('class' => array('ap-no-required')) : array(),
-            '#id' => 'ap-photo-'. $g .'-file-field' . $i,
-          );
+          if (!$disabled) {
+            $form['traits'][$trait_name_value][$seq . '_file_field' . $i] = array(
+              '#type' => 'file',
+              '#title' => t('Image ' . $g . ' of 2'),
+              '#name' => 'files[' . $seq . $i . ']',
+              '#description' => t('JPG file type only.'),
+              '#attributes' => ($g == 1) ? array('class' => array('ap-no-required')) : array(),
+              '#id' => 'ap-photo-'. $g .'-file-field' . $i,
+            );
+          }
+          else {
+            $no_photo_count++;
+          }
         }
 
         $g++;
       }
-      */
+
+
+      // While showing a pre-existing trait:
+      // Inform user no image was uploaded. They can't upload image at this point.
+      if ($disabled && $no_photo_count == count($traitprop['photos'])) {
+        $form['traits'][$trait_name_value]['ap_not_available'] = array(
+          '#markup' => 'Photo not available.',
+        );
+      }
 
       // -- Standard Deviation table.
       $form['traits'][$trait_name_value]['ap_group_summary_table' . $i] = array(
@@ -840,6 +930,16 @@ class APPhenotypeImporter extends TripalImporter {
       }
     }
 
+    // Hidden field: Genus.
+    // Make this information available to hooks (ie validate).
+    $form['ap_genus_select_field'] = array(
+      '#type' => 'hidden',
+      '#value' => $project_genus,
+      '#id' => 'ap-genus-select-field',
+    );
+
+    // Support for file/image.
+    $form['#attributes']['enctype'] = 'multipart/form-data';
     return $form;
   }
 
@@ -872,9 +972,32 @@ class APPhenotypeImporter extends TripalImporter {
         '#value' => $form_state['values']['allow_new'],
       ];
     }
+
+    // File through server path.
+    if (isset($form_state['values']['file_local']) && !empty($form_state['values']['file_local'])) {
+      // An array containing the file id and file path.
+      // @see APPhenotypeImporter_file_validate().
+      $local_file = $form_state['values']['file_local'];
+
+      $form['files'] = [
+        '#tree' => TRUE,
+      ];
+
+      $form_state['values']['files'][0]['fid'] = $local_file['fid'];
+      $form['files'][0] = [
+        'file_path' => [
+          '#type' => 'hidden',
+          '#value' => $local_file['path'],
+        ],
+        'fid' => [
+          '#type' => 'hidden',
+          '#value' => $local_file['fid'],
+        ]
+      ];
+    }
     // fid.
     // If this is the second stage...
-    if (isset($form_state['values']['file_upload'])) {
+    elseif (isset($form_state['values']['file_upload'])) {
       // Then we want to reformat the results and save them for future use.
       // The fid will be in either file_upload or file_upload_existing for
       // if the user uploaded a file or picked an existing one.
@@ -966,20 +1089,22 @@ class APPhenotypeImporter extends TripalImporter {
 
     // FILE.
     if ($stage_id === 0) {
-
-      //...........................................
       // Validate that the genus is set in Stage 1.
       if ($form_state['values']['genus'] == '0') {
         form_set_error('genus', 'You must set the genus for which the data is associated.');
       }
 
-      //...........................................
-      // Validate that file is uploaded in Stage 1.
-      // First check the upload element.
       if (empty($form_state['values']['file_upload'])) {
-        // Then check the existing file element.
+        // Main file upload field - Check the next field, existing file field.
         if (empty($form_state['values']['file_upload_existing'])) {
-          form_set_error('file', 'You must provide a file.');
+          // Secondary file upload field - Check next field, server path field.
+          if (empty($form_state['values']['file_local'])) {
+            // Finally, none provided.
+            form_set_error('file', 'You must provide a file.');
+          }
+          else {
+            $form_state['values']['fid'] = $form_state['values']['file_local']['fid'];
+          }
         }
         else {
           $form_state['values']['fid'] = $form_state['values']['file_upload_existing'];
@@ -988,11 +1113,12 @@ class APPhenotypeImporter extends TripalImporter {
       else {
         $form_state['values']['fid'] = $form_state['values']['file_upload'];
       }
-
     }
 
     // DESCRIBE.
     if ($stage_id === 2) {
+      // Set error to False and prove otherwise.
+      $error = FALSE;
 
       // Check required fields for each trait.
       $required_fields = [
@@ -1002,21 +1128,21 @@ class APPhenotypeImporter extends TripalImporter {
           'method_description' => 'Collection Method Description',
           'unit' => 'Unit',
         ];
+
+      // Image index.
+      $file_index = 0;
       foreach ($form_state['values']['traits'] as $trait_name_value => $values) {
         foreach ($required_fields as $req_field_name => $field_title) {
           if (empty($values[$req_field_name])) {
+            $error = TRUE;
             form_set_error("traits][$trait_name_value][$req_field_name", "The $field_title for $trait_name_value is required.");
           }
-        }
-
-        // Check the unit doesn't have brackets?
-        if (strpbrk($values['unit'], '()')) {
-          form_set_error("traits][$trait_name_value][unit", 'The value in the unit field contains characters "(" and/or ")". Please remove these characters and try again.');
         }
 
         // Check that all traits are disabled (i.e. already existed).
         if ($form_state['values']['allow_new'] === FALSE) {
           if ($form['traits'][$trait_name_value]['trait_description']['#disabled'] === FALSE) {
+            $error = TRUE;
             form_set_error("traits][$trait_name_value][trait_name",
               t("The trait (:trait) must already exist before loading data due to
               configuration. Please contact an administrator.",
@@ -1024,9 +1150,60 @@ class APPhenotypeImporter extends TripalImporter {
           }
         }
 
-        // @todo validate crop ontology. @see analyzedphenotypes_validate_field_required
-        // @debug form_set_error('','TESTING');
-        // @todo validate images. @see analyzedphenotypes_validate_field_required
+        // Check crop ontology.
+        if (isset($form_state['values']['traits'][ $trait_name_value ]['ap_crop_ontology_text_field'])) {
+          $field_value = $form_state['values']['traits'][ $trait_name_value ]['ap_crop_ontology_text_field'];
+
+          if (!empty($field_value)) {
+            $project_genus = $form_state['values']['ap_genus_select_field'];
+
+            // Check if a trait ontology matched a record.
+            $exists = ap_match_ontology($project_genus, $field_value);
+
+            if (!$exists) {
+              $error = TRUE;
+              form_set_error("traits][$trait_name_value][ap_crop_ontology_text_field", t('Then Crop ontology for ' . $trait_name_value . ' is not recognized. Please enter or select crop ontology.'));
+            }
+          }
+        }
+
+        // File photo.
+        // Image 1.
+        $field_name = 'ap_photo_1' . $file_index;
+        if (isset($_FILES['files']['name'][$field_name])) {
+          $field_value = $_FILES['files']['name'][$field_name];
+          if (!empty($field_value)) {
+             $file_extension = pathinfo($field_value, PATHINFO_EXTENSION);
+
+             if ($file_extension != 'jpg') {
+               $error = TRUE;
+               form_set_error("traits][$trait_name_value][ap_photo_1_file_field$file_index",
+                 t('Photo #1 for ' . $trait_name_value . ', is not a .jpg file. Please provide a .jpg photo.'));
+             }
+          }
+        }
+
+        // Image 2.
+        $field_name = 'ap_photo_2' . $file_index;
+        if (isset($_FILES['files']['name'][$field_name])) {
+          $field_value = $_FILES['files']['name'][$field_name];
+          if (!empty($field_value)) {
+             $file_extension = pathinfo($field_value, PATHINFO_EXTENSION);
+
+             if ($file_extension != 'jpg') {
+               $error = TRUE;
+               form_set_error("traits][$trait_name_value][ap_photo_2_file_field$file_index",
+                 t('Photo #2 for ' . $trait_name_value . ', is not a .jpg file. Please provide a .jpg photo.'));
+             }
+          }
+        }
+
+        $file_index++;
+      }
+
+      if ($error) {
+        // On error the accordion breaks, this will reinstantiate the library.
+        drupal_add_library('system', 'ui.accordion');
       }
     }
   }
@@ -1045,25 +1222,27 @@ class APPhenotypeImporter extends TripalImporter {
     if ($stage_id < 3) {
       $form_state['rebuild'] = TRUE;
     }
-    if ($stage_id == 2) {
 
+    if ($stage_id == 2) {
       $form_state['rebuild'] = FALSE;
 
       // Save the project genus.
       $project_name = $form_state['values']['project_name'];
       $project_genus = $form_state['values']['genus'];
+
       // Does project have a genus?
       $projectprop = ap_get_projectgenus(
         array('project_name' => $project_name)
       );
-      if (!$projectprop) {
 
+      if (!$projectprop) {
         // No previous genus set for the project, create one.
         // Match (full match) a project name.
         $projectprop = ap_match_projectname(
           array('name' => $project_name),
           array('fullmatch' => TRUE, 'limitrows' => 1)
         );
+
         // Set new genus to project.
         ap_set_projectgenus(
           array('project_id' => $projectprop['project_id'], 'genus' => $project_genus),
@@ -1076,7 +1255,20 @@ class APPhenotypeImporter extends TripalImporter {
       $arr_method_cvtermid = [];
       $arr_unit_cvtermid = [];
 
+      // System variables: Genus ontology.
+      // Fetch genus ontology settings for this project genus.
+      $sysvar = ap_get_variablenames(
+        array('variablename' => $project_genus),
+        array('set' => 'cvdbon', 'suffix' => 'ontology')
+      );
+
+      $sysvar_genus_ontology = variable_get($sysvar);
+
+
       // We want to save the trait.
+      // Photo index. Each trait has photo field, this counter assigns a
+      // unique sequencial number to each field.
+      $file_index = 0;
       foreach ($form_state['values']['traits'] as $k => $trait_details) {
 
         // Determine whether this trait is qualitative or quantitative.
@@ -1101,12 +1293,44 @@ class APPhenotypeImporter extends TripalImporter {
         $form_state['values']['traits'][$k]['method_id'] = $result['method']->cvterm_id;
         $form_state['values']['traits'][$k]['unit_id'] = $result['unit']->cvterm_id;
 
-        // Upload photo's.
-        if (!empty($trait_details['ap_photo_1_file_field0'])) {
-          drupal_set_message('Image upload is not currently supported.', 'warning');
-        }
-        if (!empty($trait_details['ap_photo_2_file_field0'])) {
-          drupal_set_message('Image upload is not currently supported.', 'warning');
+        if ($result) {
+          if ($sysvar_genus_ontology > 0) {
+            // Create plant ontology relationship only when genus ontology (on)
+            // is set in congiguration file.
+            // Unit. Scale. Ontology.
+            $ontology_value = $form_state['values']['traits'][$k]['ap_crop_ontology_text_field'];
+
+            if (!empty($ontology_value)) {
+              // Fetch cvterm/ontology term limit search in genus configuration of project genus.
+              $ontologyprop = ap_get_cvterm(
+                array('name' => $ontology_value, array('genus' => $project_genus)),
+                array('dataset' => 'cvtermid')
+              );
+
+              if ($ontologyprop) {
+                // Create relationship.
+                // Set the ontology for term to crop ontology selected.
+                // Replace existing ontology-trait relationship set to FALSE.
+                ap_set_ontology(
+                  array('trait_cvterm_id' => $result['trait']->cvterm_id, 'ontology_cvterm_id' => $ontologyprop[0]['cvterm_id']),
+                  array('replace' => FALSE)
+                );
+              }
+            }
+          }
+
+          // Upload photo's.
+          // Photo.
+          $photo_1 = 'ap_photo_1' . $file_index;
+          $photo_2 = 'ap_photo_2' . $file_index;
+
+          // Save cvterm image.
+          ap_upload_cvtermphoto(
+            array('cvterm_id' => $result['trait']->cvterm_id, 'photo' => array($photo_1, $photo_2)),
+            array('scaleto' => 400)
+          );
+
+          $file_index++;
         }
 
         // Save the ontology term.
@@ -1143,6 +1367,13 @@ class APPhenotypeImporter extends TripalImporter {
     $trait_ids = array();
     $method_ids = array();
     $unit_ids = array();
+
+    // Inspect the composite key if it exists, ignore and move on to next in line
+    // otherwise, insert into collections table. Needs only one to satisfy the condition.
+    $sql_collection = "SELECT collection_id FROM analyzedphenotypes_collections
+      WHERE (trait_id, method_id, unit_id, project_id) = (:trait_id, :method_id, :unit_id, :project_id)
+      LIMIT 1";
+
     foreach ($arguments['traits'] as $result) {
       $trait_ids[ $result['trait_name'] ] = $result['trait_id'];
       $method_ids[ $result['method_name'] ] = $result['method_id'];
@@ -1154,15 +1385,26 @@ class APPhenotypeImporter extends TripalImporter {
         $chart_type = 'multibar';
       }
 
-      // Add the data collection with default chart type.
-      db_insert('analyzedphenotypes_collections')->fields([
-        'genus' => $arguments['genus'],
-        'project_id' => $project_id,
-        'trait_id' => $result['trait_id'],
-        'method_id' => $result['method_id'],
-        'unit_id' => $result['unit_id'],
-        'chart_type' => $chart_type,
-      ])->execute();
+      // Fetch key.
+      $key_exists = chado_query($sql_collection, array(
+        ':trait_id'   => $result['trait_id'],
+        ':method_id'  => $result['method_id'],
+        ':unit_id'    => $result['unit_id'],
+        ':project_id' => $result['project_id']))
+      ->rowCount();
+
+      // Only if key combination does not exist, we add a row.
+      if (!$key_exists || $key_exists <= 0) {
+        // Add the data collection with default chart type.
+        db_insert('analyzedphenotypes_collections')->fields([
+          'genus' => $arguments['genus'],
+          'project_id' => $project_id,
+          'trait_id' => $result['trait_id'],
+          'method_id' => $result['method_id'],
+          'unit_id' => $result['unit_id'],
+          'chart_type' => $chart_type,
+        ])->execute();
+      }
     }
 
     $dataset = [
@@ -1173,6 +1415,7 @@ class APPhenotypeImporter extends TripalImporter {
       'unit_cvterm' => $unit_ids,
       'data_file' => $fid,
     ];
+
 
     // Now pass the dataset off to the original loading function.
     $job_id = $this->job->getJobID();
@@ -1195,6 +1438,37 @@ function APPhenotypeImporter_file_validate($element, &$form_state, $form) {
   elseif ($element['#type'] == 'html5_file') {
     $element_key = 'file][file_upload';
     $fid = $form_state['values']['file_upload'];
+  }
+  // If local server file.
+  elseif ($element['#type'] == 'textfield') {
+    $element_key = 'file][file_local';
+
+    if (file_exists($form_state['values']['file_local'])) {
+      global $user;
+
+      // Field value which is the local path to file.
+      $file_name = basename($form_state['values']['file_local']);
+      // We want to move the server file to user directory to serve
+      // as a backup copy of the original file and reference this file in succeeding stages.
+      $f = fopen($form_state['values']['file_local'], 'r');
+      $destination_file = 'public://' . 'tripal/users/' . $user->uid . '/' . $file_name;
+      $file_copy = file_save_data($f, $destination_file, FILE_EXISTS_RENAME);
+      fclose($f);
+
+      $fid = $file_copy->fid;
+
+      // Since the the value in the field is not file object but a text value we need
+      // transfer the file in the file system designed for this module while generating
+      // a file id in the process.
+      $form_state['values']['file_local'] = array(
+        'fid' => $fid,
+        // The new file, local in users folder not the original file.
+        'path' => drupal_realpath($file_copy->uri),
+      );
+    }
+    else {
+      $fid = null;
+    }
   }
 
   if (!empty($fid)) {

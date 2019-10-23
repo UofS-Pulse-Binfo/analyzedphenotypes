@@ -71,3 +71,4 @@ $failed_counter = 0;
     ?>
   </div>
 </div>
+<br />
