@@ -61,7 +61,7 @@ class ncit__image_formatter extends TripalFieldFormatter {
     if (empty($items[0]['value'])) {
       return '';
     }
-    $trait_photo = array_values($items[0]['value']['NCIT:image']);
+    $trait_photo = array_values($items[0]['value']['NCIT:C48179']);
 
     // Refer to this ID for CSS styling.
     $id = 'ap-field-phenotype-image-wrapper';

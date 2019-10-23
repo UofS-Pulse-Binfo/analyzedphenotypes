@@ -115,6 +115,7 @@ class ncit__image extends ChadoField {
 
     $trait_photo = ap_download_cvtermphoto($entity->chado_record_id);
     if (is_array($trait_photo) AND !empty($trait_photo['ap_photo_1'])) {
+      $entity->{$field_name}['und'][0]['value'] = array();
       $entity->{$field_name}['und'][0]['value']['NCIT:C48179'] = $trait_photo;
     }
     else {
