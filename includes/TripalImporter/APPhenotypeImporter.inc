@@ -1366,6 +1366,13 @@ class APPhenotypeImporter extends TripalImporter {
     $trait_ids = array();
     $method_ids = array();
     $unit_ids = array();
+
+    // Inspect the composite key if it exists, ignore and move on to next in line
+    // otherwise, insert into collections table. Needs only one to satisfy the condition
+    $sql_collection = "SELECT collection_id FROM analyzedphenotypes_collections
+      WHERE (trait_id, method_id, unit_id, project_id) = (:trait_id, :method_id, :unit_id, :project_id)
+      LIMIT 1";
+
     foreach ($arguments['traits'] as $result) {
       $trait_ids[ $result['trait_name'] ] = $result['trait_id'];
       $method_ids[ $result['method_name'] ] = $result['method_id'];
@@ -1377,15 +1384,26 @@ class APPhenotypeImporter extends TripalImporter {
         $chart_type = 'multibar';
       }
 
-      // Add the data collection with default chart type.
-      db_insert('analyzedphenotypes_collections')->fields([
-        'genus' => $arguments['genus'],
-        'project_id' => $project_id,
-        'trait_id' => $result['trait_id'],
-        'method_id' => $result['method_id'],
-        'unit_id' => $result['unit_id'],
-        'chart_type' => $chart_type,
-      ])->execute();
+      // Fetch key.
+      $key_exists = chado_query($sql_collection, array(
+        ':trait_id'   => $result['trait_id'],
+        ':method_id'  => $result['method_id'],
+        ':unit_id'    => $result['unit_id'],
+        ':project_id' => $result['project_id']))
+      ->rowCount();
+
+      // Only if key combination does not exist, we add a row.
+      if (!$key_exists || $key_exists <= 0) {
+        // Add the data collection with default chart type.
+        db_insert('analyzedphenotypes_collections')->fields([
+          'genus' => $arguments['genus'],
+          'project_id' => $project_id,
+          'trait_id' => $result['trait_id'],
+          'method_id' => $result['method_id'],
+          'unit_id' => $result['unit_id'],
+          'chart_type' => $chart_type,
+        ])->execute();
+      }
     }
 
     $dataset = [
