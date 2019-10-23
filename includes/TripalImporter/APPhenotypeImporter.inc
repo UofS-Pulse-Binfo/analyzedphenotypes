@@ -82,6 +82,7 @@ class APPhenotypeImporter extends TripalImporter {
         “location name, country” or GPS coordinates (e.g. Saskatoon, Canada)</li>
       <li><strong>Replicate:</strong> The number for the replicate the current
         measurement is in. (e.g. 3)</li>
+      <li><strong>Value:</strong> The measured phenotypic value. (e.g. 34)</li>
       <li><strong>Data Collector:</strong> The name of the person or
         organization which measured the phenotype.</li>
     </ol>
@@ -1368,7 +1369,7 @@ class APPhenotypeImporter extends TripalImporter {
     $unit_ids = array();
 
     // Inspect the composite key if it exists, ignore and move on to next in line
-    // otherwise, insert into collections table. Needs only one to satisfy the condition
+    // otherwise, insert into collections table. Needs only one to satisfy the condition.
     $sql_collection = "SELECT collection_id FROM analyzedphenotypes_collections
       WHERE (trait_id, method_id, unit_id, project_id) = (:trait_id, :method_id, :unit_id, :project_id)
       LIMIT 1";
