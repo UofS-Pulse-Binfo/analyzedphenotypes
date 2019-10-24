@@ -104,6 +104,7 @@ class ncit__method extends ChadoField {
    *
    */
   public function load($entity) {
+    $field_name = $this->field['field_name'];
 
     // ChadoFields automatically load the chado column specified in the
     // default settings above. If that is all you need then you don't even
@@ -130,8 +131,8 @@ class ncit__method extends ChadoField {
     $results = chado_select_record('cvterm_relationship', array('object_id'),
       array('subject_id' => $trait_id, 'type_id' => $type_id));
 
-    $entity->ncit__method['und'] = array();
-    foreach ($results as $r) {
+    $entity->{$field_name}['und'] = array();
+    foreach ($results as $index => $r) {
       // Get the details for the method cvterm.
       $method_r = chado_select_record('cvterm', array('cvterm_id', 'name', 'definition'),
         array('cvterm_id' => $r->object_id));
@@ -150,9 +151,10 @@ class ncit__method extends ChadoField {
       }
 
       // Finally add it to the field.
-      $entity->ncit__method['und'][] = array(
-	 'value' => $method,
-	 'chado-cvterm__cvterm_id' => $method_r[0]->cvterm_id,
+      $entity->{$field_name}['und'][$index] = array(
+	      'value' => ['NCIT:C71460' => $method_r[0]->name],
+        $field_name => $method,
+	      'chado-cvterm__cvterm_id' => $method_r[0]->cvterm_id,
       );
     }
   }
@@ -178,13 +180,27 @@ class ncit__method extends ChadoField {
    */
   public function elementInfo() {
     $field_term = $this->getFieldTermID();
+
     return array(
       $field_term => array(
-        'operations' => array('eq', 'ne', 'contains', 'starts'),
-        'sortable' => TRUE,
-        'searchable' => TRUE,
+        'operations' => [],
+        'sortable' => FALSE,
+        'searchable' => FALSE,
+        'label' => 'Phenotyping Method',
+        'type' => 'xs:complexType',
+        'readonly' => TRUE,
+        'elements' => array(
+          'NCIT:C71460' => array(
+            'searchable' => TRUE,
+            'name' => 'Phenotyping Method',
+            'operations' => ['eq', 'ne', 'contains', 'starts'],
+            'sortable' => TRUE,
+            'readonly' => TRUE,
+            'type' => 'xs:string',
+            'required' => FALSE,
+          ),
+        ),
       ),
     );
   }
-
 }
