@@ -32,7 +32,7 @@ class sio__study_formatter extends ChadoFieldFormatter {
    *
    */
   public function view(&$element, $entity_type, $entity, $langcode, $items, $display) {
-
+    $field_name = $this->field['field_name'];
     // Get the settings
     $settings = $display['settings'];
 
@@ -51,7 +51,7 @@ class sio__study_formatter extends ChadoFieldFormatter {
       // Add a containing element for this experiment.
       $element[$delta] = array(
         '#type' => 'fieldset',
-        '#title' => $item['value']['schema:name'],
+        '#title' => $item[ $field_name ]['schema:name'],
         '#attributes' => array (
           'class' => array(
             'collapsible',
@@ -64,7 +64,7 @@ class sio__study_formatter extends ChadoFieldFormatter {
 
       // Summarize the methodology used for this experiment.
       $methods = array();
-      foreach ($item['value']['ncit:method'] as $m) {
+      foreach ($item[ $field_name ]['ncit:method'] as $m) {
         $methods[] = $m['schema:name'] . ' (' . implode(',', $m['uo:unit']). ')';
       }
       $statement = '<p>'
@@ -77,10 +77,10 @@ class sio__study_formatter extends ChadoFieldFormatter {
       );
 
       // Then summarize the site-years in a table.
-      $caption = 'Table '.($delta+1).': Site-years for '.$item['value']['schema:name'];
+      $caption = 'Table ' . ($delta+1) . ': Site-years for ' . $item[ $field_name ]['schema:name'];
       $header = array('Location', 'Years');
       $rows = array();
-      foreach ($item['value']['ncit:location'] as $loc) {
+      foreach ($item[ $field_name ]['ncit:location'] as $loc) {
         $rows[] = array(
           $loc['schema:name'],
           implode(', ', $loc['ncit:year']),

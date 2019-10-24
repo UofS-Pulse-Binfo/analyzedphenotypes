@@ -104,6 +104,7 @@ class sio__study extends ChadoField {
    *
    */
   public function load($entity) {
+    $field_name = $this->field['field_name'];
 
     // ChadoFields automatically load the chado column specified in the
     // default settings above. If that is all you need then you don't even
@@ -118,8 +119,8 @@ class sio__study extends ChadoField {
     $projects = chado_query($sql, array(':id' => $trait_id))->fetchCol();
 
     // For each project we need to retrieve additional details.
-    $entity->sio__study['und'] = array();
-    foreach ($projects as $project_id) {
+    $entity->{$field_name}['und'] = array();
+    foreach ($projects as $index => $project_id) {
 
       // Retrieve additional details for this project.
       $proj = ap_match_projectid(array('project_id' => $project_id));
@@ -149,22 +150,25 @@ class sio__study extends ChadoField {
         'schema:name' => $proj['project_name'],
         'ncit:location' => array(),
       );
+
       foreach ($locations as $loc) {
         $loc['ncit:year'] = array_unique($loc['ncit:year']);
         $value['ncit:location'][] = $loc;
       }
+
       foreach ($methods as $m) {
         $m['uo:unit'] = array_unique($m['uo:unit']);
         $value['ncit:method'][] = $m;
       }
-      $entity->sio__study['und'][] = array(
-        'value' => $value,
+
+      // For each project, create elements for Tripal WS, Formatter and Chado.
+      $entity->{$field_name}['und'][$index] = array(
+        'value' => ['SIO:001066' => $proj['project_name']],
+        $field_name => $value,
         'chado-prodject__project_id' => $project_id,
       );
     }
   }
-
-
 
   /**
    * @see ChadoField::query()
@@ -187,11 +191,26 @@ class sio__study extends ChadoField {
    */
   public function elementInfo() {
     $field_term = $this->getFieldTermID();
+
     return array(
       $field_term => array(
-        'operations' => array('eq', 'ne', 'contains', 'starts'),
-        'sortable' => TRUE,
-        'searchable' => TRUE,
+        'operations' => [],
+        'sortable' => FALSE,
+        'searchable' => FALSE,
+        'label' => 'Phenotyping Experiments',
+        'type' => 'xs:complexType',
+        'readonly' => TRUE,
+        'elements' => array(
+          'SIO:001066' => array(
+            'searchable' => TRUE,
+            'name' => 'Phenotyping Experiments - Study',
+            'operations' => ['eq', 'ne', 'contains', 'starts'],
+            'sortable' => TRUE,
+            'readonly' => TRUE,
+            'type' => 'xs:string',
+            'required' => FALSE,
+          ),
+        ),
       ),
     );
   }
