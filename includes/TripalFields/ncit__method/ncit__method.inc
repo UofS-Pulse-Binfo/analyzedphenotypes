@@ -152,7 +152,7 @@ class ncit__method extends ChadoField {
 
       // Finally add it to the field.
       $entity->{$field_name}['und'][$index] = array(
-	      'value' => ['NCIT:C71460' => $method_r[0]->name],
+	      'value' => ['NCIT:C71460' => $method_r[0]->name, 'IAO:0000115' => $method_r[0]->definition],
         $field_name => $method,
 	      'chado-cvterm__cvterm_id' => $method_r[0]->cvterm_id,
       );
