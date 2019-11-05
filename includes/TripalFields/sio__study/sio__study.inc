@@ -167,6 +167,18 @@ class sio__study extends ChadoField {
         $field_name => $value,
         'chado-prodject__project_id' => $project_id,
       );
+
+      // Tripal WS, Locations and Year, together with the Experiments.
+      $l = 0;
+      foreach ($locations as $loc) {
+        $entity->{$field_name}['und'][$index]['value']['hydra:member'][$l] =
+          array(
+            'NCIT:C25341' => $loc['schema:name'],  // Locations.
+            'NCIT:C29848' => implode(', ', array_unique($loc['ncit:year']))  // Years.
+          );
+
+        $l++;
+      }
     }
   }
 
