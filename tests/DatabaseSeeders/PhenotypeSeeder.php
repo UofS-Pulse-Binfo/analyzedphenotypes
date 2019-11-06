@@ -39,9 +39,9 @@ class PhenotypeSeeder extends Seeder {
     $trait_cv = $info['trait_cv'] = factory('chado.cv')->create();
     variable_set('analyzedphenotypes_systemvar_'.$genus.'_cv', $trait_cv->cv_id);
     $method_cv = $info['method_cv'] = factory('chado.cv')->create();
-    variable_set('analyzedphenotypes_systemvar_'.$genus.'_method', $trait_cv->cv_id);
+    variable_set('analyzedphenotypes_systemvar_'.$genus.'_method', $method_cv->cv_id);
     $unit_cv = $info['unit_cv'] = factory('chado.cv')->create();
-    variable_set('analyzedphenotypes_systemvar_'.$genus.'_unit', $trait_cv->cv_id);
+    variable_set('analyzedphenotypes_systemvar_'.$genus.'_unit', $unit_cv->cv_id);
     $trait_db = $info['trait_db'] = factory('chado.db')->create();
     variable_set('analyzedphenotypes_systemvar_'.$genus.'_db', $trait_db->db_id);
 
