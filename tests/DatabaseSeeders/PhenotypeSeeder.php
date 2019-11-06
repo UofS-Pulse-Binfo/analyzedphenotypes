@@ -23,12 +23,18 @@ class PhenotypeSeeder extends Seeder {
 
     // Create Project.
     $project = $info['project'] = factory('chado.project')->create();
-    $organism = $info['organism'] = factory('chado.organism')->create([
+    $organism_values = [
       'genus' => 'Tripalus',
       'species' => 'databasica',
-      'common_name' => 'Tripalus',
-      'abbreviation' => 'T. databasica',
-    ]);
+    ];
+    $organism = chado_select_record('organism', ['*'], $organism_values);
+    if ($organism) {
+      $organism = $organism[0];
+    }
+    else {
+      $organism = chado_insert_record('organism', $organism_values);
+    }
+    $info['organism'] = $organism;
 
     // @debug print "Project: ".$project->name."; Genus: ".$organism->genus."\n";
 
@@ -86,6 +92,7 @@ class PhenotypeSeeder extends Seeder {
         'method' => $faker->sentences(5, true),
         'unit' => $faker->word(true),
         'genus' => $organism->genus,
+        'type' => 'quantitative',
       ]);
     }
 
