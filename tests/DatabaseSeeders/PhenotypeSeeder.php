@@ -35,10 +35,17 @@ class PhenotypeSeeder extends Seeder {
     // Configure Module for this organism.
     // Set the line in the config page for the fake organism.
     // Variables are analyzedphenotypes_systemvar_[genus]_[cv/db/ontology]
+    $genus = strtolower($organism->genus);
     $trait_cv = $info['trait_cv'] = factory('chado.cv')->create();
-    variable_set('analyzedphenotypes_systemvar_'.$organism->genus.'_cv', $trait_cv->cv_id);
+    variable_set('analyzedphenotypes_systemvar_'.$genus.'_cv', $trait_cv->cv_id);
+    $method_cv = $info['method_cv'] = factory('chado.cv')->create();
+    variable_set('analyzedphenotypes_systemvar_'.$genus.'_method', $trait_cv->cv_id);
+    $unit_cv = $info['unit_cv'] = factory('chado.cv')->create();
+    variable_set('analyzedphenotypes_systemvar_'.$genus.'_unit', $trait_cv->cv_id);
     $trait_db = $info['trait_db'] = factory('chado.db')->create();
-    variable_set('analyzedphenotypes_systemvar_'.$organism->genus.'_db', $trait_db->db_id);
+    variable_set('analyzedphenotypes_systemvar_'.$genus.'_db', $trait_db->db_id);
+
+    // @debug print "Trait CV: ".$trait_cv->cv_id."; Trait DB: ".$trait_db->db_id.".\n";
 
     // Attach organism to the project.
     chado_insert_record('projectprop', [
