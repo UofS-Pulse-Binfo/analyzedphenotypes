@@ -8,6 +8,7 @@ This module provides a large number of fields for displaying phenotypic data on 
    :caption: Pages:
 
    fieldconfig/trait
+   fieldconfig/germplasm
 
 Where is the Configuration?
 -------------------------------
