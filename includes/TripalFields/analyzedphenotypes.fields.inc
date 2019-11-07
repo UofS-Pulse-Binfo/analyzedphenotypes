@@ -395,38 +395,6 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
       ),
     );
 
-    // Magnitude of phenotypes Field.
-    $field_name = 'local__magnitude_of_phenotypes';
-    $field_type = 'local__magnitude_of_phenotypes';
-    $instances[$field_name] =  array(
-      'field_name' => $field_name,
-      'entity_type' => $entity_type,
-      'bundle' => $bundle->name,
-      'label' => 'Magnitude of Phenotypes',
-      'description' => 'Magnitude of phenotypic data.',
-      'required' => FALSE,
-      'settings' => array(
-        'term_vocabulary' => 'local',
-        'term_name' => 'magnitude of phenotypes',
-        'term_accession' => 'magnitude_of_phenotypes',
-        'auto_attach' => FALSE,
-        'chado_table' => $bundle->data_table,
-        'chado_column' => 'cvterm_id',
-        'base_table' => $bundle->data_table,
-      ),
-      'widget' => array(
-        'type' => 'local__magnitude_of_phenotypes_widget',
-        'settings' => array(),
-      ),
-      'display' => array(
-        'default' => array(
-          'label' => 'hidden',
-          'type' => 'local__magnitude_of_phenotypes_formatter',
-          'settings' => array(),
-        ),
-      ),
-    );
-
     // Germplasm Phenotype Search Field.
     $field_name = 'ncit__data';
     $field_type = 'ncit__data';
@@ -624,6 +592,39 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         ),
       ),
     );
+
+    // Magnitude of phenotypes Field.
+    $field_name = 'local__magnitude_of_phenotypes';
+    $field_type = 'local__magnitude_of_phenotypes';
+    $instances[$field_name] =  array(
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Magnitude of Phenotypes',
+      'description' => 'Magnitude of phenotypic data.',
+      'required' => FALSE,
+      'settings' => array(
+        'term_vocabulary' => 'local',
+        'term_name' => 'magnitude of phenotypes',
+        'term_accession' => 'magnitude_of_phenotypes',
+        'auto_attach' => FALSE,
+        'chado_table' => $bundle->data_table,
+        'chado_column' => 'cvterm_id',
+        'base_table' => $bundle->data_table,
+      ),
+      'widget' => array(
+        'type' => 'local__magnitude_of_phenotypes_widget',
+        'settings' => array(),
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'local__magnitude_of_phenotypes_formatter',
+          'settings' => array(),
+        ),
+      ),
+    );
+
   }
 
   // IN TRAIT, GERMPLASM AND PROJECT PAGE:
