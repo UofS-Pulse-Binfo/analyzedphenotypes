@@ -79,25 +79,6 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
       ),
     );
 
-    // Magnitude of Phenotypes
-    tripal_insert_cvterm(array(
-      'id' => 'local:magnitude_of_phenotypes',
-      'name' => 'magnitude of phenotypes',
-      'cv_name' => 'local',
-      'definition' => 'Magnitude of Phenotypes.',
-    ));
-    $field_name = 'local__magnitude_of_phenotypes';
-    $field_type = 'local__magnitude_of_phenotypes';
-    $fields[$field_name] = array(
-      'field_name' => $field_name,
-      'type' => $field_type,
-      'cardinality' => 1,
-      'locked' => FALSE,
-      'storage' => array(
-	      'type' => 'field_chado_storage',
-      ),
-    );
-
     // Germplasm Phenotype Search.
     tripal_insert_cvterm(array(
       'id' => 'NCIT:data',
@@ -214,6 +195,26 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
 	      'type' => 'field_chado_storage',
       ),
     );
+
+    // Magnitude of Phenotypes
+    tripal_insert_cvterm(array(
+      'id' => 'local:magnitude_of_phenotypes',
+      'name' => 'magnitude of phenotypes',
+      'cv_name' => 'local',
+      'definition' => 'Magnitude of Phenotypes.',
+    ));
+    $field_name = 'local__magnitude_of_phenotypes';
+    $field_type = 'local__magnitude_of_phenotypes';
+    $fields[$field_name] = array(
+      'field_name' => $field_name,
+      'type' => $field_type,
+      'cardinality' => 1,
+      'locked' => FALSE,
+      'storage' => array(
+	      'type' => 'field_chado_storage',
+      ),
+    );
+
   }
 
   // IN TRAIT, GERMPLASM AND PROJECT PAGE:
