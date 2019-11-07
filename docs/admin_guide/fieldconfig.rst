@@ -9,6 +9,7 @@ This module provides a large number of fields for displaying phenotypic data on 
 
    fieldconfig/trait
    fieldconfig/germplasm
+   fieldconfig/project
 
 Where is the Configuration?
 -------------------------------
