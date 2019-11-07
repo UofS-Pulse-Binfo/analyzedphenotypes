@@ -85,7 +85,7 @@ class PhenotypeSeeder extends Seeder {
       $trait_name = $faker->words(2, true);
       $trait_description = $faker->sentences(2, true);
 
-      $traits[] = ap_insert_trait([
+      $result = ap_insert_trait([
         'name' => $trait_name,
         'description' => $trait_description,
         'method_title' => $faker->words(2, true),
@@ -94,9 +94,20 @@ class PhenotypeSeeder extends Seeder {
         'genus' => $organism->genus,
         'type' => 'quantitative',
       ]);
+      $traits[] = $result;
+
+      // Add the data collection with default chart type.
+      db_insert('analyzedphenotypes_collections')->fields([
+        'genus' => $organism->genus,
+        'project_id' => $project->project_id,
+        'trait_id' => $result['trait']->cvterm_id,
+        'method_id' => $result['method']->cvterm_id,
+        'unit_id' => $result['unit']->cvterm_id,
+        'chart_type' => 'violin',
+      ])->execute();
     }
 
-    // @debug print "Number of Traits: ".sizeof($traits)."\n";
+    // @debug print "Traits (".sizeof($traits)."): ".print_r($traits,TRUE)."\n";
 
     $num_years = rand(2,4);
     $num_sites = rand(1,2);

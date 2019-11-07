@@ -25,9 +25,10 @@ Manual Testing (Demonstration)
 
 We have provided a `Tripal Test Suite Database Seeder <https://tripaltestsuite.readthedocs.io/en/latest/db-seeders.html>` to make development and demonstration of functionality easier. To populate your development database with fake phenotypic data:
 
-1. Create an organism (genus: Tripalus; species: databasica)
-2. Configure the module terms by Navigating to Administration » Tripal » Extensions » Analyzed Phenotypes » Set-up Ontologies and click "Save term configuration" at the bottom of the page.
-3. Run the database seeder to populate the database using the following commands:
+1. Install this module according to the instructions in the administration guide.
+2. Create an organism (genus: Tripalus; species: databasica)
+3. Configure the module terms by Navigating to Administration » Tripal » Extensions » Analyzed Phenotypes » Set-up Ontologies and click "Save term configuration" at the bottom of the page.
+4. Run the database seeder to populate the database using the following commands:
 
   .. code::
 
@@ -36,6 +37,13 @@ We have provided a `Tripal Test Suite Database Seeder <https://tripaltestsuite.r
     ./vendor/bin/tripaltest db:seed PhenotypeSeeder
 
 4. Populate the materialized views by going to Administration » Tripal » Data Storage » Chado » Materialized Views and clicking "Populate" beside ``mview_phenotype`` and ``mview_phenotype_summary``. Finally run the Tripal jobs submitted.
+5. Create the trait content type by going to Administration » Structure » Tripal Content Types » Add Tripal Content Type. We suggest the following values:
+
+  - Chado Base Table: cvterm
+  - Use a Parent Chado cvterm?	No. All records belong to a single controlled vocabulary.
+  - Restrict to Vocabulary: [get value from set-up ontologies page]
+
+6. Publish to play with trait pages and/or go checkout the admin/users tutorials!
 
 .. warning::
 
