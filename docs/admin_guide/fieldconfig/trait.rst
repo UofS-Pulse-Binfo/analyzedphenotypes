@@ -1,7 +1,13 @@
 Trait Pages
 =============
 
-First off, we recommend installing ``tripal_ds`` and applying the default layout. This will unfortuantly pile all our new Analyzed Phenotypes fields into the summary table but it gives us a good place to start.
+The following shows the full trait page configured on a default Tripal site with `Antonelli <https://www.drupal.org/project/antonelli>`_ theme and the following field configuration.
+
+.. image:: trait.full_page.png
+
+.. note::
+
+  First off, we recommend installing ``tripal_ds`` and applying the default layout. This will unfortunately pile all our new Analyzed Phenotypes fields into the summary table but it gives us a good place to start.
 
 Phenotype Summary
 -------------------
@@ -29,3 +35,35 @@ Phenotype Summary
 .. image:: trait.3.png
 
 This will produce a summary at the top of your page!
+
+Core Trait Details
+--------------------
+
+This sections shows you which fields contain the core trait information such as definition, method and units.
+
+.. warning::
+
+  Remember to click save after each step!
+
+1. Disable the following fields: Accession, Cross Reference, Relationship, Is Obsolete, Resource Type, and Vocabulary. The information provided by these fields is provided by the remaining fields in a more intuitive way.
+
+2. Move the following fields out of the summary table (still in the summary): Phenotype Image and Definition.
+
+3. Move the following fields out of the summary all together: Collection Methods, Phenotyping Experiments, Germplasm Phenotype Search, Magnitude of Phenotypes, Trait Distribution Plot.
+
+.. image:: trait.4.png
+
+4. Create a Tripal Pane for Collection Methods and another or Experiments by clicking "Create an empty Tripal Pane" at the top, entering the title and clicking save. Then nest the field within it.
+
+.. image:: trait.5.png
+
+.. note::
+
+  If you do not want a Tripal Pane hidden on page load, click on the gear on the right hand side of the "Manage Display" for that Tripal Pane and uncheck the "Hide panel on page load" checkbox. Click both "update" and "save" and changing these settings.
+
+Trait Distribution Plot
+-------------------------
+
+The trait distribution plot tool is also provided for embedding on trait pages via the ``Trait Distribution Plot`` field. We recommend placing this field in a Tripal Pane with the "Germplasm Phenotype Search" field beneath it.
+
+.. image:: trait.6.png

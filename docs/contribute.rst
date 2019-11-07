@@ -43,7 +43,7 @@ We have provided a `Tripal Test Suite Database Seeder <https://tripaltestsuite.r
   - Use a Parent Chado cvterm?	No. All records belong to a single controlled vocabulary.
   - Restrict to Vocabulary: [get value from set-up ontologies page]
 
-6. Publish to play with trait pages and/or go checkout the admin/users tutorials!
+6. To play with trait pages go to Administration » Structure » Tripal Content Types » Publish Tripal Content and select the term used in step 5 to create pages.
 
 .. warning::
 
