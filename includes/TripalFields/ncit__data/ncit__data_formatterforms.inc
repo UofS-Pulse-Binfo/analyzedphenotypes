@@ -156,10 +156,11 @@ function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_stat
             WHERE t1.accession = (SELECT t3.accession FROM chado.dbxref AS t3 INNER JOIN chado.cvterm AS t4 USING(dbxref_id)
               WHERE t4.cvterm_id = :stock_type)', array(':stock_type' => $stockprop->type_id))
             ->fetchField();
-
-          $entity = sprintf("SELECT entity_id FROM chado_%s WHERE record_id = :stock_id LIMIT 1", $chado_bundle);
-          $chado_entity = chado_query($entity, array(':stock_id' => $stock_id))
-            ->fetchField();
+          if ($$chado_bundle) {
+            $entity = sprintf("SELECT entity_id FROM chado_%s WHERE record_id = :stock_id LIMIT 1", $chado_bundle);
+            $chado_entity = chado_query($entity, array(':stock_id' => $stock_id))
+              ->fetchField();
+          }
 
           // Take away duplicate values from the overall summary overview.
           // Order is important see query above.
@@ -170,10 +171,13 @@ function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_stat
           );
 
           $tooltip = '<div class="ap-germplasm-search-tooltip">%s</div>';
+          $name = $stockprop->name . ' (' . $stockprop->uniquename . ')';
+          if ($chado_bundle) {
+            $name = l($name, url('/bio_data/' . $chado_entity), ['attributes' => ['target' => '_blank']]);
+          }
           $element_list = theme('item_list', array(
             'items' => array(
-              l($stockprop->name . ' (' . $stockprop->uniquename . ')', url('../bio_data/' . $chado_entity), array('attributes' => array('target' => '_blank')))
-                                                                . sprintf($tooltip, $stockprop->name . ' (' . $stockprop->uniquename . ')'),
+              $name                            . sprintf($tooltip, $stockprop->name . ' (' . $stockprop->uniquename . ')'),
               count($list_item['experiments']) . ' Experiments' . sprintf($tooltip, implode(' &bull; ', $list_item['experiments'])),
               count($list_item['locations'])   . ' Locations'   . sprintf($tooltip, implode(' &bull; ', $list_item['locations'])),
               count($list_item['years'])       . ' Years'       . sprintf($tooltip, implode(' &bull; ', $list_item['years'])),

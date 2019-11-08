@@ -14,8 +14,7 @@
       if (apSettings.type === 'violin') {
         d3.json(apSettings.dataURL, function(error, data) {
 
-          // Debug
-		      // console.log(data);
+          // @debug console.log(data);
           d3.selectAll('#'+elementID+' .inner-wrapper').remove();
 
          // Ensure the datapoint is a number.
