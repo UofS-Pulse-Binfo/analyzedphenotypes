@@ -21,7 +21,7 @@ function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_stat
   $form['ap_germplasm_search_autocomplete_textfield'] = array(
     '#type' => 'textfield',
     '#theme_wrappers' => array(),
-    '#autocomplete_path' => 'admin/tripal/storage/chado/auto_name/stock',
+    '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/phenotyped-stock/json',
     '#attributes' => array(
       'placeholder' => 'Germplasm Name or Accession'
     ),
@@ -173,7 +173,7 @@ function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_stat
           $tooltip = '<div class="ap-germplasm-search-tooltip">%s</div>';
           $name = $stockprop->name . ' (' . $stockprop->uniquename . ')';
           if ($chado_bundle) {
-            $name = l($name, url('/bio_data/' . $chado_entity), ['attributes' => ['target' => '_blank']]);
+            $name = l($name, url('bio_data/' . $chado_entity), ['attributes' => ['target' => '_blank']]);
           }
           $element_list = theme('item_list', array(
             'items' => array(
