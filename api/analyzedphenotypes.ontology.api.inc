@@ -368,7 +368,7 @@ function ap_match_ontology($genus, $ontology) {
   // Find a cvterm by name, limit search in ontology configuration (cv)
   // and return the cvterm id and name.
   $ontology_match = ap_get_cvterm(
-    array('name' => $ontology, 'genus' => $sysvar_genus_ontology),
+    array('name' => $ontology, array('genus' => $sysvar_genus_ontology)),
     array('dataset' => 'cvtermidname')
   );
 

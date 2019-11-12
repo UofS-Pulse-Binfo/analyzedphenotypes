@@ -50,15 +50,15 @@ class TraitImporter extends TripalImporter {
    * Provides information to the user about the file upload.  Typically this
    * may include a description of the file types allowed.
    */
-  public static $upload_description = 'This should be a tab-separated file 
+  public static $upload_description = 'This should be a tab-separated file
     with the following columns: <ol>
-      <li><strong>Trait Name:</strong> the name of the trait, as you would like it to appear 
+      <li><strong>Trait Name:</strong> the name of the trait, as you would like it to appear
           to the user (e.g. Days to Flower).</li>
-      <li><strong>Trait Description:</strong> a full description of the trait. This is 
+      <li><strong>Trait Description:</strong> a full description of the trait. This is
           recommended to be at least one paragraph.</li>
-      <li><strong>Method Short Name:</strong> A full, unique title for the method (e.g. Days 
+      <li><strong>Method Short Name:</strong> A full, unique title for the method (e.g. Days
           till 10% of plants/plot have flowers)</li>
-      <li><strong>Collection Method:</strong> A full description of how the trait was collected. 
+      <li><strong>Collection Method:</strong> A full description of how the trait was collected.
           This is also recommended to be at least one paragraph.</li>
       <li><strong>Unit:</strong> The full name of the unit used (e.g. days, centimeters)</li>
       <li><strong>Type:</strong> One of "Qualitative" or "Quantitative".</li>
@@ -137,7 +137,7 @@ class TraitImporter extends TripalImporter {
     $arguments = $this->arguments['run_args'];
 
     // The only arguement we need is the genus. This is used to determine
-    // which cv's to insert the terms into based on configuration 
+    // which cv's to insert the terms into based on configuration
     // handled by this module.
     $genus = $arguments['genus'];
 

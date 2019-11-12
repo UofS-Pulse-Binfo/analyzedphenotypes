@@ -19,6 +19,7 @@ module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.genus.a
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.projects.api');
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.database.api');
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.tripaljob.api');
+module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.ontology.api');
 
 // Materialized views, data summary.
 module_load_include('inc', 'analyzedphenotypes', 'api/analyzedphenotypes.materializedview.api');
@@ -35,6 +36,7 @@ module_load_include('inc', 'analyzedphenotypes', 'includes/analyzedphenotypes.va
 // Fields.
 module_load_include('inc', 'analyzedphenotypes', 'includes/TripalFields/analyzedphenotypes.fields');
 module_load_include('inc', 'analyzedphenotypes', 'includes/TripalFields/hp__phenotypic_variability/hp__phenotypic_variability_formatterforms');
+module_load_include('inc', 'analyzedphenotypes', 'includes/TripalFields/ncit__data/ncit__data_formatterforms');
 
 /**
  * Implements hook_menu().

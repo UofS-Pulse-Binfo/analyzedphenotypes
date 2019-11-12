@@ -23,22 +23,35 @@ class PhenotypeSeeder extends Seeder {
 
     // Create Project.
     $project = $info['project'] = factory('chado.project')->create();
-    $organism = $info['organism'] = factory('chado.organism')->create([
+    $organism_values = [
       'genus' => 'Tripalus',
       'species' => 'databasica',
-      'common_name' => 'Tripalus',
-      'abbreviation' => 'T. databasica',
-    ]);
+    ];
+    $organism = chado_select_record('organism', ['*'], $organism_values);
+    if ($organism) {
+      $organism = $organism[0];
+    }
+    else {
+      $organism = chado_insert_record('organism', $organism_values);
+    }
+    $info['organism'] = $organism;
 
     // @debug print "Project: ".$project->name."; Genus: ".$organism->genus."\n";
 
     // Configure Module for this organism.
     // Set the line in the config page for the fake organism.
     // Variables are analyzedphenotypes_systemvar_[genus]_[cv/db/ontology]
+    $genus = strtolower($organism->genus);
     $trait_cv = $info['trait_cv'] = factory('chado.cv')->create();
-    variable_set('analyzedphenotypes_systemvar_'.$organism->genus.'_cv', $trait_cv->cv_id);
+    variable_set('analyzedphenotypes_systemvar_'.$genus.'_cv', $trait_cv->cv_id);
+    $method_cv = $info['method_cv'] = factory('chado.cv')->create();
+    variable_set('analyzedphenotypes_systemvar_'.$genus.'_method', $method_cv->cv_id);
+    $unit_cv = $info['unit_cv'] = factory('chado.cv')->create();
+    variable_set('analyzedphenotypes_systemvar_'.$genus.'_unit', $unit_cv->cv_id);
     $trait_db = $info['trait_db'] = factory('chado.db')->create();
-    variable_set('analyzedphenotypes_systemvar_'.$organism->genus.'_db', $trait_db->db_id);
+    variable_set('analyzedphenotypes_systemvar_'.$genus.'_db', $trait_db->db_id);
+
+    // @debug print "Trait CV: ".$trait_cv->cv_id."; Trait DB: ".$trait_db->db_id.".\n";
 
     // Attach organism to the project.
     chado_insert_record('projectprop', [
@@ -72,17 +85,29 @@ class PhenotypeSeeder extends Seeder {
       $trait_name = $faker->words(2, true);
       $trait_description = $faker->sentences(2, true);
 
-      $traits[] = ap_insert_trait([
+      $result = ap_insert_trait([
         'name' => $trait_name,
         'description' => $trait_description,
         'method_title' => $faker->words(2, true),
         'method' => $faker->sentences(5, true),
         'unit' => $faker->word(true),
         'genus' => $organism->genus,
+        'type' => 'quantitative',
       ]);
+      $traits[] = $result;
+
+      // Add the data collection with default chart type.
+      db_insert('analyzedphenotypes_collections')->fields([
+        'genus' => $organism->genus,
+        'project_id' => $project->project_id,
+        'trait_id' => $result['trait']->cvterm_id,
+        'method_id' => $result['method']->cvterm_id,
+        'unit_id' => $result['unit']->cvterm_id,
+        'chart_type' => 'violin',
+      ])->execute();
     }
 
-    // @debug print "Number of Traits: ".sizeof($traits)."\n";
+    // @debug print "Traits (".sizeof($traits)."): ".print_r($traits,TRUE)."\n";
 
     $num_years = rand(2,4);
     $num_sites = rand(1,2);

@@ -408,6 +408,14 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
     $watermark_url = FALSE;
   }
 
+  // URL for the data.
+  $dataURL = strtr('/json/phenotypes/traitplot/:exp/:trait/:method/:unit', [
+    ':exp' => $experiment_id,
+    ':trait' => $trait_id,
+    ':method' => $method_id,
+    ':unit' => $unit_id,
+  ]);
+
   $data = array();
   $data['analyzedPhenotypes'] = array();
   $data['analyzedPhenotypes'][] = array(
@@ -421,6 +429,7 @@ function analyzedphenotypes_traitplot_form(&$form, &$form_state,
       'type' => $chart_type,
       'addWatermark' => $add_watermark,
       'watermarkURL' => $watermark_url,
+      'dataURL' => url($dataURL),
   );
   $form['#attached']['js'][] = array(
     'type' => 'setting',

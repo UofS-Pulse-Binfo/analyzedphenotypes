@@ -1,5 +1,6 @@
 _build/
 .env
 vendor/
-
+tests/_build
+docs/_build
 *._*

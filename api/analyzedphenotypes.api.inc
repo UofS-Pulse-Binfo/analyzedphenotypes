@@ -289,6 +289,13 @@ function ap_create_summarytable($file, $column_row, $trait_key) {
           }, $data);
 
         $file_unique_key = implode('; ', array($data[$index_trait], $data[$index_method], $data[$index_unit]));
+
+        // The $file_unique_key has been formatted and all quotes removed (see above).
+        // This condition will not translate to true since $trait_key still
+        // contains all quotes, hence when quotes are present, this summary table
+        // shows empty. Apply same formatting rule to $trait_key.
+        $trait_key = str_replace('"', '', $trait_key);
+
         if ($file_unique_key == $trait_key) {
           // Each row in trait name.
           $value = $data[$index_value];

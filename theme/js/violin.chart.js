@@ -12,10 +12,9 @@
       var elementID = apSettings.id;
 
       if (apSettings.type === 'violin') {
-        d3.json(Drupal.settings.basePath+'/json/phenotypes/traitplot/'+experiment_id+'/'+trait_id+'/'+method_id+'/'+unit_id, function(error, data) {
+        d3.json(apSettings.dataURL, function(error, data) {
 
-          // Debug
-		      // console.log(data);
+          // @debug console.log(data);
           d3.selectAll('#'+elementID+' .inner-wrapper').remove();
 
          // Ensure the datapoint is a number.
@@ -49,12 +48,12 @@
             lineWidth:15,
             colors:['#555']
           });
-          
+
           // Highlight germplasm, if current germplasm is known.
           if (apSettings.germplasm) {
             highlightGermplasm(data, apSettings.germplasm);
           }
-          
+
           // Place watermark, if configured.
           if (apSettings.addWatermark) {
             if (apSettings.watermarkURL !== false) {
