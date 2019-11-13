@@ -111,8 +111,14 @@ class local__child_studies extends TripalField {
    *
    */
   public function load($entity) {
+    $field_name = $this->field['field_name'];
+
     // The record.
     $chado_record_id = $entity->chado_record_id;
+
+    // Clear the field.
+    $this->entity{$field_name}['und'][0] = array();
+    $this->entity{$field_name}['und'][0]['value'] = NULL;
 
     // Inspect phenotype if stocks have been measured.
     $sql = "SELECT COUNT(stock_id) stock_count FROM {phenotype} WHERE stock_id = :stock_id";
@@ -131,6 +137,7 @@ class local__child_studies extends TripalField {
       $result = chado_query($sql, array(':stock_id' => $chado_record_id));
 
       if ($result->rowCount() > 0) {
+
         // Stock has instance (a selection of).
         // Prepare Stock - Traits - Experiment tree.
         $child_stock = $result->fetchAllKeyed(0, 0);
@@ -177,8 +184,10 @@ class local__child_studies extends TripalField {
           }
         }
 
-        $field_name = $this->field['field_name'];
-        $entity->{$field_name}['und'][0]['value']['local:child_studies'] = $arr_tiles;
+	if (!empty($arr_tiles)) {
+	  $entity->{$field_name}['und'][0]['value'] = array();
+          $entity->{$field_name}['und'][0]['value']['local:child_studies'] = $arr_tiles;
+        }
       }
     }
   }
