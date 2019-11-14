@@ -34,6 +34,7 @@ class ncit__method_formatter extends ChadoFieldFormatter {
     **/
 
   public function view(&$element, $entity_type, $entity, $langcode, $items, $display) {
+    $field_name = $this->field['field_name'];
 
     // Get the settings
     $settings = $display['settings'];
@@ -47,12 +48,12 @@ class ncit__method_formatter extends ChadoFieldFormatter {
       // Set up a container for the current method.
       $element[$delta] = array(
         '#type' => 'fieldset',
-        '#title' => $item['value']['schema:name'],
+        '#title' => $item[ $field_name ]['schema:name'],
         '#attributes' => array (
           'class' => array(
             'collapsible',
-	    'method',
-	    'collapsed',
+	          'method',
+	          'collapsed',
           )
         ),
       );
@@ -60,13 +61,13 @@ class ncit__method_formatter extends ChadoFieldFormatter {
       // Add the definition.
       $element[$delta]['definition'] = array(
         '#type' => 'markup',
-        '#markup' => '<p class="definition">'.$item['value']['IAO:0000115'].'</p>',
+        '#markup' => '<p class="definition">' . $item[ $field_name ]['IAO:0000115'].'</p>',
       );
 
       // Add the unit
       // Process the units for display.
       $units = array();
-      foreach ($item['value']['UO:unit'] as $u) {
+      foreach ($item[ $field_name ]['UO:unit'] as $u) {
         $units[] = $u['schema:name'];
       }
       $element[$delta]['unit'] = array(
