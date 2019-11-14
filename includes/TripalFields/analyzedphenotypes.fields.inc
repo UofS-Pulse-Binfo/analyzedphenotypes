@@ -42,6 +42,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
   if (isset($bundle->data_table) AND ($bundle->data_table == 'cvterm')) {
 
     // Trait Method Field.
+    // Cardinality set to unlimited to support multiple entries.
     tripal_insert_cvterm(array(
       'id' => 'NCIT:C71460',
       'name' => 'method',
@@ -53,7 +54,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
     $fields[$field_name] = array(
       'field_name' => $field_name,
       'type' => $field_type,
-      'cardinality' => 1,
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
       'locked' => FALSE,
       'storage' => array(
         'type' => 'field_chado_storage',
@@ -61,6 +62,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
     );
 
     // Trait Experiments Field.
+    // Cardinality set to unlimited to support multiple entries.
     tripal_insert_cvterm(array(
       'id' => 'SIO:001066',
       'name' => 'study',
@@ -72,7 +74,7 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
     $fields[$field_name] = array(
       'field_name' => $field_name,
       'type' => $field_type,
-      'cardinality' => 1,
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
       'locked' => FALSE,
       'storage' => array(
 	      'type' => 'field_chado_storage',
