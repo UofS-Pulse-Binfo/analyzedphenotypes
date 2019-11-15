@@ -16,12 +16,13 @@
  * @see ncit__data_formatter.inc.
  *      ncit__data.inc.
  */
-function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_state, $items) {
+function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_state, $items, $trait_id) {
+
   // FIELD: Autocomplete text field.
   $form['ap_germplasm_search_autocomplete_textfield'] = array(
     '#type' => 'textfield',
     '#theme_wrappers' => array(),
-    '#autocomplete_path' => 'admin/tripal/storage/chado/auto_name/stock',
+    '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/phenotyped-stock/json/'.$trait_id,
     '#attributes' => array(
       'placeholder' => 'Germplasm Name or Accession'
     ),
@@ -58,7 +59,6 @@ function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_stat
 
 
   // AJAX RESPONSE:
-
 
   if (isset($form_state['values'])) {
     // AJAX form submitted.
@@ -152,15 +152,7 @@ function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_stat
           } // End group data.
 
           // Fetch entity id that will form part of the url linking to Tripal 3 germplasm page.
-          $chado_bundle = db_query('SELECT t2.name FROM {tripal_term} AS t1 INNER JOIN {tripal_bundle} AS t2 ON t1.id = t2.term_id
-            WHERE t1.accession = (SELECT t3.accession FROM chado.dbxref AS t3 INNER JOIN chado.cvterm AS t4 USING(dbxref_id)
-              WHERE t4.cvterm_id = :stock_type)', array(':stock_type' => $stockprop->type_id))
-            ->fetchField();
-          if ($$chado_bundle) {
-            $entity = sprintf("SELECT entity_id FROM chado_%s WHERE record_id = :stock_id LIMIT 1", $chado_bundle);
-            $chado_entity = chado_query($entity, array(':stock_id' => $stock_id))
-              ->fetchField();
-          }
+          $chado_entity = chado_get_record_entity_by_table('stock', $stock_id);
 
           // Take away duplicate values from the overall summary overview.
           // Order is important see query above.
@@ -172,8 +164,8 @@ function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_stat
 
           $tooltip = '<div class="ap-germplasm-search-tooltip">%s</div>';
           $name = $stockprop->name . ' (' . $stockprop->uniquename . ')';
-          if ($chado_bundle) {
-            $name = l($name, url('/bio_data/' . $chado_entity), ['attributes' => ['target' => '_blank']]);
+          if ($chado_entity) {
+            $name = l($name, 'bio_data/' . $chado_entity, ['attributes' => ['target' => '_blank']]);
           }
           $element_list = theme('item_list', array(
             'items' => array(
