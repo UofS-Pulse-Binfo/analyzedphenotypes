@@ -16,12 +16,13 @@
  * @see ncit__data_formatter.inc.
  *      ncit__data.inc.
  */
-function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_state, $items) {
+function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_state, $items, $trait_id) {
+
   // FIELD: Autocomplete text field.
   $form['ap_germplasm_search_autocomplete_textfield'] = array(
     '#type' => 'textfield',
     '#theme_wrappers' => array(),
-    '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/phenotyped-stock/json',
+    '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/phenotyped-stock/json/'.$trait_id,
     '#attributes' => array(
       'placeholder' => 'Germplasm Name or Accession'
     ),
@@ -58,7 +59,6 @@ function analyzedphenotypes_germplasm_search_autocomplete_form($form, $form_stat
 
 
   // AJAX RESPONSE:
-
 
   if (isset($form_state['values'])) {
     // AJAX form submitted.

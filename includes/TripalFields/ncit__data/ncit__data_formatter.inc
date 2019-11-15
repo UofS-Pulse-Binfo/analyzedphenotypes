@@ -49,7 +49,8 @@ class ncit__data_formatter extends TripalFieldFormatter {
     drupal_add_css($theme_path . 'style_ncitdata_field.css', 'file');
     drupal_add_js ($theme_path . 'script.js');
 
-    $autocomplete_field = drupal_get_form('analyzedphenotypes_germplasm_search_autocomplete_form', $items);
+    $trait_id = $entity->chado_record_id;
+    $autocomplete_field = drupal_get_form('analyzedphenotypes_germplasm_search_autocomplete_form', $items, $trait_id);
     $field = drupal_render($autocomplete_field);
 
     // Refer to this ID for CSS styling.
