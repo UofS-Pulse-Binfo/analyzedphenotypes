@@ -31,6 +31,36 @@ Drupal.behaviors.ChildStudies = {
   });
 
 
+  // Reveal other phenotypes.
+  var wrapper = {};
+  wrapper.id  = '#ap-field-child-studies-wrapper';
+  wrapper.btn = '#ap-field-child-studies-btn-reveal';
+  
+  $(wrapper.btn + ' div').click(function() {
+    var h, classRem, classAdd;
+    var phenotypes = $(wrapper.id);
+    // Default height of the container.
+    var minHeight = 250;
+
+    if (phenotypes.height() == minHeight) {
+      h = phenotypes[0].scrollHeight;
+      classRem = 'on';
+      classAdd = 'off';
+    }
+    else {
+      h = minHeight + 'px';
+      classRem = 'off';
+      classAdd = 'on';
+    }
+
+    phenotypes.css('max-height', h);
+
+    $(this)
+      .removeClass('ap-field-child-studies-reveal-' + classRem)
+      .addClass('ap-field-child-studies-reveal-' + classAdd);
+  });
+
+
   /**
    * Function, calculate the maximum height based on all the tiles.
    * The largest of all will become the base height across all tiles.

@@ -57,7 +57,10 @@ class local__child_studies_formatter extends TripalFieldFormatter {
       $element[0] = array(
         '#type' => 'markup',
         '#prefix' => '<p>The following traits are measured in related germplasm:</p>',
-        '#markup' => '<div id="' . $id . '">' . theme('item_list', array('items' =>  $arr_tiles, 'attributes'=> array('class' => 'trait-list'))) . '</div><div style="clear: both"></div>'
+        '#markup' => '<div id="' . $id . '">' . theme('item_list', array('items' =>  $arr_tiles, 'attributes'=> array('class' => 'trait-list'))) . '</div><div style="clear: both"></div>
+          <div id="ap-field-child-studies-btn-reveal">
+            <div class="ap-field-child-studies-reveal-on" title="Click to show more or less phenotypes">&nbsp;</div>
+          </div>'
       );
     }
 
