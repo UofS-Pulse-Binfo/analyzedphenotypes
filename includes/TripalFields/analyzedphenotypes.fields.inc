@@ -243,6 +243,29 @@ function analyzedphenotypes_bundle_fields_info($entity_type, $bundle) {
     );
 
     if ($bundle->data_table == 'cvterm' || $bundle->data_table == 'stock') {
+      // Field child_studies to go into stock page only.
+      if ($bundle->data_table == 'stock') {
+        // Child Studies.
+        tripal_insert_cvterm(array(
+          'id' => 'local:child_studies',
+          'name' => 'child_studies',
+          'cv_name' => 'local',
+          'definition' => 'Used in AP Summary fields - Child Studies',
+        ));
+
+        $field_name = 'local__child_studies';
+        $field_type = 'local__child_studies';
+        $fields[$field_name] = array(
+          'field_name' => $field_name,
+          'type' => $field_type,
+          'cardinality' => 1,
+          'locked' => FALSE,
+          'storage' => array(
+            'type' => 'field_chado_storage',
+          ),
+        );
+      }
+
       // Number of experiments.
       tripal_insert_cvterm(array(
         'id' => 'local:number_of_experiments',
@@ -595,6 +618,38 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
       ),
     );
 
+    // Child Studies Field.
+    $field_name = 'local__child_studies';
+    $field_type = 'local__child_studies';
+    $instances[$field_name] =  array(
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle->name,
+      'label' => 'Phenotype Summary: Child Studies',
+      'description' => 'Used in AP Summary fields - Child Studies.',
+      'required' => FALSE,
+      'settings' => array(
+        'term_vocabulary' => 'local',
+        'term_name' => 'child_studies',
+        'term_accession' => 'child_studies',
+        'auto_attach' => FALSE,
+        'chado_table' => $bundle->data_table,
+        'chado_column' => $bundle->data_table . '_id',
+        'base_table' => $bundle->data_table,
+      ),
+      'widget' => array(
+        'type' => 'local__child_studies_widget',
+        'settings' => array(),
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+           'type' => 'local__child_studies_formatter',
+          'settings' => array(),
+        ),
+      ),
+    );
+
     // Magnitude of phenotypes Field.
     $field_name = 'local__magnitude_of_phenotypes';
     $field_type = 'local__magnitude_of_phenotypes';
@@ -626,7 +681,6 @@ function analyzedphenotypes_bundle_instances_info($entity_type, $bundle) {
         ),
       ),
     );
-
   }
 
   // IN TRAIT, GERMPLASM AND PROJECT PAGE:

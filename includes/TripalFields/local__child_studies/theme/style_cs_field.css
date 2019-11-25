@@ -1,0 +1,110 @@
+/**
+ * @file
+ * Style stock child studies field.
+ */
+
+#ap-field-child-studies-wrapper {
+  position: relative;
+  display: none;
+
+  overflow-y: hidden;
+
+  min-height: 250px;
+  max-height: 250px;
+
+  -webkit-transition: max-height 0.5s ease-in-out;
+  -moz-transition: max-height 0.5s ease-in-out;
+  -ms-transition: max-height 0.5s ease-in-out;
+  -o-transition: max-height 0.5s ease-in-out;
+  transition: max-height 0.5s ease-in-out;
+}
+
+#ap-field-child-studies-wrapper ul.trait-list,
+#ap-field-child-studies-wrapper ul.trait-list ul {
+  list-style-type:  none;
+  margin: 0;
+  padding: 0;
+}
+
+
+#ap-field-child-studies-wrapper ul.trait-list > li {
+  border: 1px solid #CCCCCC;
+  border-bottom: 4px solid #CCCCCC;
+  float: left;
+  margin: 1%;
+  width: 22%;
+
+  -webkit-box-shadow: 1px 2px 2px 0px rgba(0,0,0,0.20);
+  -moz-box-shadow: 1px 2px 2px 0px rgba(0,0,0,0.20);
+  box-shadow: 1px 2px 2px 0px rgba(0,0,0,0.20);
+}
+
+#ap-field-child-studies-wrapper ul.trait-list li > a {
+  background: url(icon-leaf.gif) left top no-repeat;
+  display: inline-block;
+  line-height: 18px;
+  margin: 2px 0 0 5px;
+  padding: 10px 30px 20px 35px;
+}
+
+#ap-field-child-studies-wrapper ul.trait-list ul {
+  margin: 0 15px;
+}
+
+#ap-field-child-studies-wrapper ul.trait-list ul li div {
+  padding: 5px;
+  border: 1px solid #3A7F21;
+  display: inline-block;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 1.2em;
+  font-weight: 300;
+  text-shadow: 1px 1px #FFFFFF;
+
+  -webkit-box-shadow: 1px 2px 2px 0px rgba(0,0,0,0.20);
+  -moz-box-shadow: 1px 2px 2px 0px rgba(0,0,0,0.20);
+  box-shadow: 1px 2px 2px 0px rgba(0,0,0,0.20);
+}
+
+#ap-field-child-studies-wrapper ul.trait-list ul li span {
+  font-size: 0.8em;
+  display: block;
+  line-height: 14px;
+  margin: 5px 0 10px 0;
+}
+
+
+#ap-field-child-studies-btn-reveal {
+  border-top: 1px solid #CCCCCC;
+  margin-top: 10px;
+  width: 100%;
+}
+
+#ap-field-child-studies-btn-reveal div {
+  cursor: pointer;
+  color: #CCCCCC;
+  border: 1px solid #CCCCCC;
+  border-radius: 50%;
+  margin: -12px auto 0 auto;
+  text-align: center;
+  width: 20px;
+}
+
+.ap-field-child-studies-reveal-off {
+  background: #F0F0F0 no-repeat url('arrow-sprite.gif') 2px 2px;
+}
+
+.ap-field-child-studies-reveal-on {
+  background: #F0F0F0 no-repeat url('arrow-sprite.gif') 2px -12px;
+}
+
+
+/* Media query - apply stype when viewport is 1500px */
+@media(max-width: 1600px) {
+
+  #ap-field-child-studies-wrapper ul.trait-list > li {
+    float: none;
+    width: 100%;
+  }
+
+}
