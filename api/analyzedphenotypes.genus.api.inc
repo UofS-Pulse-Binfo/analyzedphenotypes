@@ -144,18 +144,20 @@ function ap_get_activegenus() {
   $sysvar_genus_set = array();
 
   // Inspect each genus and see if cv and db were set.
-  foreach($genus as $g) {
-    $sysvar_genus = ap_get_variablenames(
-      array('variablename' => $g),
-      array('set' => 'cvdbon', 'suffix' => 'allsuffix')
-    );
+  if ($genus) {
+    foreach($genus as $g) {
+      $sysvar_genus = ap_get_variablenames(
+        array('variablename' => $g),
+        array('set' => 'cvdbon', 'suffix' => 'allsuffix')
+      );
 
-    $sysvar_genus_cv = variable_get($sysvar_genus['cv']);
-    $sysvar_genus_db = variable_get($sysvar_genus['db']);
+      $sysvar_genus_cv = variable_get($sysvar_genus['cv']);
+      $sysvar_genus_db = variable_get($sysvar_genus['db']);
 
-    if ($sysvar_genus_cv > 0 && $sysvar_genus_db > 0) {
-      // Save those with cv and db conf.
-      $sysvar_genus_set[] = ucfirst($g);
+      if ($sysvar_genus_cv > 0 && $sysvar_genus_db > 0) {
+        // Save those with cv and db conf.
+        $sysvar_genus_set[] = ucfirst($g);
+      }
     }
   }
 
