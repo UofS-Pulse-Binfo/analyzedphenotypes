@@ -193,6 +193,31 @@ function analyzedphenotypes_requirements($phase) {
   $requirements = array();
 
   if ($phase == 'install') {
+    // Check D3 and Excel file writer.
+    $arr_libraries = array(
+      'D3' => array(
+        'is_in' => libraries_get_path('d3'),
+        'source' => 'https://github.com/tripal/tripald3',
+        'path' => 'i.e., sites/all/libraries/d3',
+      ),
+      'Excel Writer' => array(
+        'is_in' => libraries_get_path('PHP_XLSXWriter_plus'),
+        'source' => 'https://github.com/SystemDevil/PHP_XLSXWriter_plus',
+        'path' => 'i.e., sites/all/libraries/PHP_XLSXWriter_plus',
+      )
+    );
+
+    foreach($arr_libraries as $i => $info) {
+      if (!$info['is_in']) {
+        $requirements[$i] = array(
+          'severity' => REQUIREMENT_ERROR,
+          'description' =>
+            t('This module uses !library, which is missing in your Drupal site. Please download and extract the entire contents of the archive into Libraries Directory %path directory on your server.',
+              array('!library' => l(strtoupper(str_replace('_',' ',$i)), $info['source'], array('attributes' => array('target' => '_blank'))), '%path' => $info['path'])),
+        );
+      }
+    }
+
     $directories = ap_construct_datafile_destinationpath();
 
     foreach($directories as $dir) {
