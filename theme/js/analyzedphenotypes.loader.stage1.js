@@ -7,48 +7,39 @@
   Drupal.behaviors.stage01 = {
     attach: function (context, settings) {
       // Add event listener to project autocomplete search field.
-      $('#ap-project-select-field').click(function() {
-        $(this).select();
-        $('#ap-validation-result-embed').children().remove();
-      });
-
-      // Handle Next Step button.
-      var submitButton = $('#ap-next-stage-submit-field');
-      submitButton.addClass('form-button-disabled');
-      submitButton.attr('disabled','disabled');
-
-      $(document)
-      //
-      .ajaxStart(function() {
-         // Has project/experiment form field.
-        $('#ap-main-form-elements-container')
-          .has('#ap-project-select-field')
-          .attr('readonly', 'readonly');
-
-        // Has select genus.
-        $('#ap-main-form-elements-container')
-          .has('#ap-genus-select-field')
-          .attr('readonly', 'readonly');
+      $('#ap-project-select-field')
+      .focus(function(e) {
+        // Field gets focused.
+        if (e.target.value) {
+          // Select value previously entered, ready for new entry.
+          $(this).select();
+        }
       })
-      //
-      .ajaxComplete(function() {
-        // Mute unnecessary drupal_set_message().
-        $('#ap-AJAX-wrapper-autofillgenus').find('.messages').remove();
+      .focusout(function(e) {
+        // Clicks on autocomplete suggestions.
+        var projectName = e.target.value;
 
-        // When DOM has upload success message.
-        if ($('#ap-validator-passed').length) {
-          // Exclude form fields.
-          $('.form-item').hide();
-
-          submitButton.removeClass('form-button-disabled');
-          submitButton.removeAttr('disabled');
-
-          // Tell user what's next.
-          $('#ap-main-form-fieldset').once(function() {
-            $('<span class="text-next-step">&#x25B8; Next Step: Stage 2 - Validate Data</span>')
-              .insertAfter('#ap-next-stage-submit-field');
-          });
+        if (projectName && Drupal.settings.analyzedphenotypes.vars.project_genus) {
+          $.get(Drupal.settings.analyzedphenotypes.vars.project_genus + encodeURI(projectName), null, getProjectGenus);
+        }
+        else {
+          getProjectGenus('');
         }
       });
+
+
+      /**
+       * Funciton Callback, process get response.
+      */
+      function getProjectGenus(response) {
+        if (response.genus) {
+          // Select the genus. Then disable it.
+          $('#ap-genus-select-field').val(response.genus)
+        }
+        else {
+          // Set to default in case it was altered previously.
+          $('#ap-genus-select-field').val('- Select -');
+        }
+      }
       //
 } }; }(jQuery));

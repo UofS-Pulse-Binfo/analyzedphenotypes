@@ -185,7 +185,7 @@ class APPhenotypeImporter extends TripalImporter {
     // Based on the current stage, return the correct form.
     switch ($current_stage) {
       case 'upload':
-        //$form['#attached']['js'][]  = $path_theme . 'js/analyzedphenotypes.loader.stage1.js';
+        $form['#attached']['js'][]  = $path_theme . 'js/analyzedphenotypes.loader.stage1.js';
         break;
       case 'validate':
         $form['#attached']['css'][] = $path_theme . 'css/analyzedphenotypes.loader.progress.css';
@@ -199,6 +199,13 @@ class APPhenotypeImporter extends TripalImporter {
         drupal_add_library('system', 'ui.accordion');
         break;
     }
+
+    // Disable Import File button whichever is the stage.
+    drupal_add_js("jQuery(document).ready(function () {
+      if (jQuery('input[value=\"Import File\"]')) {
+        jQuery('input[value=\"Import File\"]').hide();
+      }
+    })", 'inline');
 
     // Warnings.
     //---------------------------------
@@ -322,48 +329,36 @@ class APPhenotypeImporter extends TripalImporter {
       '#default_value' => $default_project,
       // @see analyzedphenotypes_data_json() in functions.inc where $dataype = projects.
       '#autocomplete_path' => 'admin/tripal/extension/analyzedphenotypes/json/projects/experiment',
-      // When project is selected, autofill the genus field with corresponding project genus.
-
-      /* @todo test this...
-      '#ajax' => array(
-        'callback' => 'ap_send_ajaxrequest',
-        'case' => 'autofillgenus',
-        'wrapper' => 'ap-AJAX-wrapper-autofillgenus',
-        'method' => 'replace',
-        'progress' => array(
-          'type' => 'throbber',
-          'message' => 'Loading project genus...'
-        ),
-      ),
-
-      */
       '#description' => t('Type in the experiment or project title your data is specific to.'),
       '#id' => 'ap-project-select-field'
     );
+
     // All genus.
     $arr_all_genus = array(0 => '- Select -');
     // Fetch all genus that have been configured in settings page...
     $genusprop = ap_get_activegenus();
-    // and add them to the options array.
+
     if ($genusprop) {
       foreach($genusprop as $g) {
         $arr_all_genus[$g] = $g;
       }
+
+      // Register source url to fetch project genus.
+      drupal_add_js(array('analyzedphenotypes' => array('vars' => array(
+        'project_genus' =>  base_path() . 'admin/tripal/extension/analyzedphenotypes/json/projectgenus/'
+      ))), array('type' => 'setting'));
     }
-    // Project genus - autofill.
-    if (isset($form_state['values']['project_name'])) {
-      $project = trim($form_state['values']['project_name']);
-      if (!empty($project)) {
-        // Fetch genus assigned to a project.
-        $project_genus = ap_get_projectgenus(
-          array('project_name' => $project)
-        );
-        if ($project_genus) {
-          $arr_project_genus = array($project_genus => $project_genus);
-        }
-      }
+    else {
+      drupal_set_message(t('This module is <strong>NOT configured</strong> to import analyzed phenotypes.'), 'warning');
+
+      $form['genus_not_configured_warning'] = array(
+        '#markup' => tripal_set_message('Administrators, check to ensure that you have a genus configured to accept data. Please click '
+          . l('Set Module Ontologies', $GLOBALS['base_url'] . '/admin/tripal/extension/analyzedphenotypes/setup')
+          . ' to configure.', TRIPAL_INFO, array('return_html' => TRUE)),
+      );
     }
-    $genus_options = (isset($arr_project_genus)) ? $arr_project_genus : $arr_all_genus;
+
+    $genus_options = $arr_all_genus;
     // AJAX callback wrapper.
     $form['ap_AJAX_wrapper_autofillgenus'] = array(
       '#prefix' => '<div id="ap-AJAX-wrapper-autofillgenus">',
@@ -376,6 +371,7 @@ class APPhenotypeImporter extends TripalImporter {
     elseif ($default_genus === NULL) {
       $default_genus = array_keys($genus_options)[0];
     }
+
     // Select field: Genus.
     $form['ap_AJAX_wrapper_autofillgenus']['genus'] = array(
       '#type' => 'select',
@@ -510,7 +506,8 @@ class APPhenotypeImporter extends TripalImporter {
       '#markup' => l(
         'Re-upload File',
         '/admin/tripal/loaders/APPhenotypeImporter',
-        ['query' => ['genus' => $project_genus, 'project' => $project_name]]
+        ['query' => ['genus' => $project_genus, 'project' => $project_name],
+        'attributes' => ['class' => ['ap-option-link-file-reupload']]]
       ),
     ];
 
@@ -583,7 +580,7 @@ class APPhenotypeImporter extends TripalImporter {
     $form['traits'] = [
       '#prefix' => '<div id="ap-describe-main-form-container">
         <div id="accordion">',
-      '#suffix' => '</div></div>',
+      '#suffix' => '</div></div><br />',
       '#tree' => TRUE,
     ];
 
@@ -1294,7 +1291,7 @@ class APPhenotypeImporter extends TripalImporter {
         $form_state['values']['traits'][$k]['unit_id'] = $result['unit']->cvterm_id;
 
         if ($result) {
-          if ($sysvar_genus_ontology > 0) {
+          if ($sysvar_genus_ontology > 0 && isset($form_state['values']['traits'][$k]['ap_crop_ontology_text_field'])) {
             // Create plant ontology relationship only when genus ontology (on)
             // is set in congiguration file.
             // Unit. Scale. Ontology.
@@ -1384,6 +1381,8 @@ class APPhenotypeImporter extends TripalImporter {
       if (preg_match('([Ss]cale|\d+\s*-\s*\d+)', $result['method_name'])) {
         $chart_type = 'multibar';
       }
+
+      $result['project_id'] = $result['project_id'] ?? $project_id;
 
       // Fetch key.
       $key_exists = chado_query($sql_collection, array(

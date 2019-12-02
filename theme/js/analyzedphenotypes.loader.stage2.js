@@ -6,10 +6,15 @@
 (function($) {
   Drupal.behaviors.stage02 = {
     attach: function (context, settings) {
+      // Disable elements while validating.
+
       // Handle Next Step button.
       var submitButton = $('#ap-next-stage-submit-field');
       submitButton.addClass('form-button-disabled');
       submitButton.attr('disabled','disabled');
+
+      // Handle file reupload.
+      $('a.ap-option-link-file-reupload').hide();
 
       setTimeout(APValidatorUpdateStatus, 1000);
 
@@ -66,8 +71,16 @@
 
             // If there were no errors then re-enable the next button.
             if (validation_result.indexOf('file could not be uploaded') == -1) {
-              submitButton.removeClass('form-button-disabled');
-              submitButton.removeAttr('disabled');
+              if ($('.ap-failed').length) {
+                // Has class for items that failed - the x mark icon.
+                // Keep next disabled but offer option to reupload file.
+                $('a.ap-option-link-file-reupload').show();
+              }
+              else {
+                // All passed validation - enable next.
+                submitButton.removeClass('form-button-disabled');
+                submitButton.removeAttr('disabled');
+              }
             }
           },
           error: function (xmlhttp) {

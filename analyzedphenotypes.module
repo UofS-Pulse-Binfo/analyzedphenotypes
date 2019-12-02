@@ -532,6 +532,23 @@ function analyzedphenotypes_data_json($page_argument_5, $page_argument_6, $key =
 
       break;
 
+    //
+    case 'projectgenus':
+      // Fetch the genus of of the project if it
+      // has been previously set.
+      $project_name = strip_tags($parameter);
+
+      if ($project_name) {
+        $project_genus = ap_get_projectgenus(
+          array('project_name' => $project_name)
+        );
+
+        if ($project_genus) {
+          $data_JSON['genus'] = $project_genus;
+        }
+      }
+
+      break;
 
     //
     // Define additional case here.

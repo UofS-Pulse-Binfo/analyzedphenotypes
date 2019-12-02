@@ -110,16 +110,19 @@ function analyzedphenotypes_ap_validators($all_scope = NULL) {
 
   // Fetch expected column headers and data type for each.
   $e = ap_create_columnheaders('columns_datatype');
-
   $expected_columns = array_keys($e);
-  $trait_name = $expected_columns[6];
+
+  $unit_value = array(
+    $expected_columns[2], // Unit
+    $expected_columns[8]  // Value
+  );
 
   $validators['VALUE_value_type'] = array(
     'label' => 'Data was measured using expected units',
     'scope' => $scope['VALUE'],
     'validation callback' => 'analyzedphenotypes_validator_value',
     'case' => 'unit_data',
-    'columns required' => $trait_name,
+    'columns required' => $unit_value,
     'error message' => 'Data does not match the unit of the trait provided in items: @replace',
   );
 
@@ -510,6 +513,19 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
   // Estimate number of rows in a file.
   $row_count = intval(exec("grep -cv '^$' '$file'"));
 
+  if ($row_count <= 1) {
+    // Just the column header or nothing in the file.
+    $arr_status['VALUE_value_provided'] = array(
+      'type' => 'failed',
+      'details' => 'All columns',
+    );
+
+    $status_JSON = json_encode($arr_status);
+    ap_write_tripaljob_progress($job_id, $status_JSON, 'validateresult');
+
+    return;
+  }
+
   $handle = fopen($file, 'r');
 
   if ($handle) {
@@ -569,7 +585,15 @@ function analyzedphenotypes_validate_tsv_data($dataset, $job_id) {
       }
       else {
         // Data row.
-        if (empty($cur_row)) {
+        if (empty(trim($cur_row))) {
+          if (feof($handle) && $i == 1) {
+            // End of line and is a blank row.
+            $arr_status['VALUE_value_provided'] = array(
+              'type' => 'failed',
+              'details' => 'All columns',
+            );
+          }
+
           continue;
         }
         else {
@@ -764,11 +788,18 @@ function analyzedphenotypes_validator_value($case, $value, $column, $row, $trait
       if (!empty($value)) {
 
         // Check value matches unit.
-        $trait_value_check = ap_validate_unitvalue($unit, $value);
+        // Fetch expected column headers and data type for each.
+        $e = ap_create_columnheaders('columns_datatype');
+        $expected_columns = array_keys($e);
+        $unit  = $value[ $expected_columns[2] ]; // Unit
+        $cell_value = $value[ $expected_columns[8] ];  // Value.
+
+        // Validate unit amd value.
+        $trait_value_check = ap_validate_unitvalue($unit, $cell_value);
 
         if (!$trait_value_check) {
           $status['type'] = 'failed';
-          $status['details'] = ' in ' . $column . ' line #' . $row . ' (' . $value . ' is not a valid ' . $unit . ')';
+          $status['details'] = ' in Value line #' . $row . ' (' . $cell_value . ' is not a valid ' . $unit . ')';
         }
       }
 
