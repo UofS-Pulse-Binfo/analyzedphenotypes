@@ -24,4 +24,4 @@ Quickstart
 1. Install pre-requisites (see above).
 2. Download this module into your ``sites/all/modules`` directory and enable it.
 3. Set-up ontology terms at Admin > Tripal > Extensions > Analyzed Phenotypes > Setup Ontologies.
-4. Upload data at Admin > Tripal > Extensions > Analyzed Phenotypes > Upload Phenotypic Data.
+4. Upload data at Admin > Tripal > Data Loaders > Phenotypic Data Importer.

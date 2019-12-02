@@ -26,7 +26,7 @@ class TraitImporter extends TripalImporter {
   /**
    * An array containing the extensions of allowed file types.
    */
-  public static $file_types = ['txt', 'tst', 'csv'];
+  public static $file_types = ['txt', 'tsv'];
 
   /**
    * If the loader should require an analysis record.  To maintain provenance
@@ -99,6 +99,14 @@ class TraitImporter extends TripalImporter {
 	$genus_options[$g] = $g;
       }
     }
+    else {
+      drupal_set_message(t('This module is <strong>NOT configured</strong> to import Traits for analyzed phenotypes.'), 'warning');
+
+      $form['description']['#markup'] .=
+        tripal_set_message('Administrators, check to ensure that you have a genus configured to accept traits. Please click '
+          . l('Set Module Ontologies', $GLOBALS['base_url'] . '/admin/tripal/extension/analyzedphenotypes/setup')
+          . ' to configure.', TRIPAL_INFO, array('return_html' => TRUE));
+    }
 
     // If there is only one genus, it should be the default.
     $default_genus = 0;
@@ -152,15 +160,17 @@ class TraitImporter extends TripalImporter {
     while (($data = fgetcsv($FILE, 100000, "\t")) !== FALSE) {
       if ($linenum !== 0) {
         // Now simply insert the trait!
-        $info = ap_insert_trait(array(
-          'genus' => $genus,
-          'name' => $data[0],
-          'description' => $data[1],
-          'method_title' => $data[2],
-          'method' => $data[3],
-          'unit' => $data[4],
-          'type' => $data[5],
-        ));
+        if (!empty($data)) {
+          $info = ap_insert_trait(array(
+            'genus' => $genus,
+            'name' => $data[0],
+            'description' => $data[1],
+            'method_title' => $data[2],
+            'method' => $data[3],
+            'unit' => $data[4],
+            'type' => $data[5],
+          ));
+        }
       }
       $linenum++;
     }
