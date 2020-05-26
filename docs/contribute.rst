@@ -61,7 +61,7 @@ We have also provided a `Tripal Test Suite Database Seeder <https://tripaltestsu
 
     cd MODULE_ROOT
     composer up
-    ./vendor/bin/tripaltest db:seed Massive3BillionPhenotypeSeeder
+    ./vendor/bin/tripaltest db:seed MassivePhenotypeSeeder
 
 3. Populate the materialized views by going to Administration » Tripal » Data Storage » Chado » Materialized Views and clicking "Populate" beside ``mview_phenotype`` and ``mview_phenotype_summary`` and run the Tripal jobs submitted.
 4. Edit tests/massivePhenotypesTimings.php to include a trait and project ID which exist.
