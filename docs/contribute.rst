@@ -48,3 +48,31 @@ We have provided a `Tripal Test Suite Database Seeder <https://tripaltestsuite.r
 .. warning::
 
   NEVER run database seeders on production sites. They will insert fictitious data into Chado.
+
+Stress Testing
+---------------
+
+We have also provided a `Tripal Test Suite Database Seeder <https://tripaltestsuite.readthedocs.io/en/latest/db-seeders.html>` to be used for stress testing this module. It inserts 3 billion phenotype records including associated metadata. To populate your development database with this fake phenotypic dataset:
+
+1. Install this module according to the instructions in the administration guide.
+2. Run the database seeder to populate the database using the following commands:
+
+  .. code::
+
+    cd MODULE_ROOT
+    composer up
+    ./vendor/bin/tripaltest db:seed Massive2500MillionPhenotypeSeeder
+
+3. Populate the materialized views by going to Administration » Tripal » Data Storage » Chado » Materialized Views and clicking "Populate" beside ``mview_phenotype`` and ``mview_phenotype_summary`` and run the Tripal jobs submitted.
+4. Run the timings script to determine how specific queries in the module may respond to the current dataset.
+
+  .. code::
+
+    cd MODULE_ROOT
+    drush php-script tests/massivePhenotypesTimings.php
+
+  .. warning::
+
+    This script will take at least 4 hours to run due to 9 spaced replicates. Additionally, the execution time will increase depending on how your system handles these queries.
+
+5. You can also stress test through the UI after you configure the ``Tripalus`` genus to the correct controlled vocabularies.
