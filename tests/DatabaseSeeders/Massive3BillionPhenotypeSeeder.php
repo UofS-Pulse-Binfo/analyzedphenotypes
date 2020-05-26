@@ -5,7 +5,7 @@ namespace Tests\DatabaseSeeders;
 use StatonLab\TripalTestSuite\Database\Seeder;
 use StatonLab\TripalTestSuite\Database\Factory;
 
-class Massive2500MillionPhenotypeSeeder extends Seeder
+class Massive3BillionPhenotypeSeeder extends Seeder
 {
     /**
      * Seeds the database with 2.5 Billion phenotype records. Specifically,
