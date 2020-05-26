@@ -8,11 +8,12 @@ use StatonLab\TripalTestSuite\Database\Factory;
 class Massive3BillionPhenotypeSeeder extends Seeder
 {
     /**
-     * Seeds the database with 2.5 Billion phenotype records. Specifically,
+     * Seeds the database with 3 Billion phenotype records. Specifically,
      *  - 1000 experiments
-     *  - 50 traits
+     *  - 20 traits
      *  - 10 site-years
-     *  - 5000 germplasm
+     *  - 1000 germplasm
+     *  - 3 replicates
      * Each experiments consists of the same 50 traits measuring the same
      * germplasm in the same site-years. The actual measurements are different.
      *
