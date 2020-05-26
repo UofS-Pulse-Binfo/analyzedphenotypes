@@ -89,6 +89,21 @@ class Massive2500MillionPhenotypeSeeder extends Seeder
         'replicate' => variable_get($sysvars['ap_replicate']),
         'collector' => variable_get($sysvars['ap_collector']),
       ];
+      // -- Configure our Tripalus genus.
+      $vars = ap_construct_variablenames();
+      $vars = $vars['cvdbon']['ap_tripalus'];
+      foreach ($vars as $type => $varname) {
+        $cv_name = 'AP-Tripalus-'.$type;
+        $cv = chado_select_record('cv', ['cv_id'], ['name' => $cv_name]);
+        if (!$cv) {
+          $cv = chado_insert_record('cv', ['name' => $cv_name, 'definition' => $cv_name]);
+          $cv_id = $cv['cv_id'];
+        }
+        else {
+          $cv_id = $cv[0]->cv_id;
+        }
+        variable_set($varname, $cv_id);
+      }
 
       // --------------------------------------------------
       // We generate the parts of the phenotype.
