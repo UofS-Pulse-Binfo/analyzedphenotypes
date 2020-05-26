@@ -5,15 +5,16 @@ namespace Tests\DatabaseSeeders;
 use StatonLab\TripalTestSuite\Database\Seeder;
 use StatonLab\TripalTestSuite\Database\Factory;
 
-class Massive3BillionPhenotypeSeeder extends Seeder
+class MassivePhenotypeSeeder extends Seeder
 {
     /**
-     * Seeds the database with 2.5 Billion phenotype records. Specifically,
-     *  - 1000 experiments
-     *  - 50 traits
+     * Seeds the database with 1 Billion phenotype records. Specifically,
+     *  - 250 experiments
+     *  - 20 traits
      *  - 10 site-years
      *  - 5000 germplasm
-     * Each experiments consists of the same 50 traits measuring the same
+     *  - 4 replicates
+     * Each experiments consists of the same 20 traits measuring the same
      * germplasm in the same site-years. The actual measurements are different.
      *
      * @return void
@@ -107,10 +108,10 @@ class Massive3BillionPhenotypeSeeder extends Seeder
 
       // --------------------------------------------------
       // We generate the parts of the phenotype.
-      $num_experiments = 1000;
-      $num_germplasm = 1000;
+      $num_experiments = 250;
+      $num_germplasm = 1000; // per 5 organisms.
       $num_traits = 20;
-      // -- 1000 Experiments.
+      // -- Experiments.
       $records = factory('chado.project', $num_experiments)->create();
       $experiment_ids = [];
       if (is_object($records)) {
@@ -123,7 +124,7 @@ class Massive3BillionPhenotypeSeeder extends Seeder
       }
       print "CREATED " . count($experiment_ids) . " experiments.\n";
 
-      // -- 1000 Germplasm.
+      // -- Germplasm.
       $germplasm_ids = [];
       foreach ($all_organism as $organism_id) {
         $records = factory('chado.stock', $num_germplasm)->create([
@@ -183,7 +184,7 @@ class Massive3BillionPhenotypeSeeder extends Seeder
           foreach ($germplasm_ids as $germplasm_id) {       // Germplasm
 
             // First insert all the phenotypes because it's faster this way ;-p
-            $num_phenotypes_per_germplasm = sizeof($siteyrs) * 3;
+            $num_phenotypes_per_germplasm = sizeof($siteyrs) * 4;
             for ($rep=0; $rep < $num_phenotypes_per_germplasm; $rep++) {
 
               $value = rand($min, $max);
@@ -214,7 +215,7 @@ class Massive3BillionPhenotypeSeeder extends Seeder
 
           foreach ($germplasm_ids as $germplasm_id) {       // Germplasm
             foreach ($siteyrs as $siteyr) {                 // Siteyear
-              for ($rep=1; $rep <= 3; $rep++) {              // Replicate
+              for ($rep=1; $rep <= 4; $rep++) {             // Replicate
                 $phenotype_record = array_pop($phenotype_ids);
                 $phenotype_id = $phenotype_record->phenotype_id;
 
