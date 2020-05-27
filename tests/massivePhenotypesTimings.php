@@ -9,10 +9,10 @@
  *   drush php-script tests/massivePhenotypesTimings.php
  */
 
-$trait_id = 84458;
-$project_id = 15011;
-$number_of_reps = 1;//9;
-$time_btw_reps = 10; //20 * 60; // in seconds.
+$trait_id = NULL;
+$project_id = NULL;
+$number_of_reps = 9;
+$time_btw_reps = 20 * 60; // in seconds.
 
 
 if (!is_numeric($trait_id)) {
@@ -29,15 +29,9 @@ $quant_mview = 'SELECT location, year, stock_name, values
   FROM chado.mview_phenotype
   WHERE experiment_id=:project_id AND trait_id=:trait_id';
 $quant_raw = "SELECT
-  o.genus as organism_genus,
-  trait.cvterm_id as trait_id,
-  trait.name as trait_name,
-  proj.project_id as project_id,
-  proj.name as project_name,
   loc.value as location,
   yr.value as year,
-  s.stock_id as germplasm_id,
-  s.name as germplasm_name,
+  s.name as stock_name,
   array_to_json(array_agg(p.value)) AS values
 FROM chado.phenotype p
   LEFT JOIN chado.cvterm trait ON trait.cvterm_id=p.attr_id
@@ -52,7 +46,7 @@ FROM chado.phenotype p
 GROUP BY trait.cvterm_id, trait.name, proj.project_id, proj.name, loc.value, yr.value, s.stock_id, s.name, o.genus";
 
 // This query is executed to summarize the number of genotypes per genus.
-$summary_mview = "SELECT * FROM {mview_phenotype_summary}";
+$summary_mview = "SELECT * FROM chado.mview_phenotype_summary";
 $summary_raw = "(SELECT organism_genus, 1 as num, 1 as count
        FROM chado.mview_phenotype
        GROUP BY organism_genus)
