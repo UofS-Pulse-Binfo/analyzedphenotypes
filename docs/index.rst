@@ -10,4 +10,5 @@ This module provides support and visualization for partially analyzed data store
 
    admin_guide
    user_guide
+   lessons
    contribute
