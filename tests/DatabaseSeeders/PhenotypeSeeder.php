@@ -33,6 +33,7 @@ class PhenotypeSeeder extends Seeder {
     }
     else {
       $organism = chado_insert_record('organism', $organism_values);
+      $organism = (object) $organism;
     }
     $info['organism'] = $organism;
 
