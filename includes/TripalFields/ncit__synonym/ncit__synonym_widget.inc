@@ -83,7 +83,6 @@ class ncit__synonym_widget extends TripalFieldWidget {
       // Elements of chado.cvterm_relationship table:
       $chado_table = 'chado-cvterm_relationship__';
 
-
       // FOR CHADO MECHNANISM:
       // Column - cvterm_relationship_id primary key.
       $widget['value'] = array(
@@ -99,9 +98,13 @@ class ncit__synonym_widget extends TripalFieldWidget {
 
       // Column - object_id, the trait id (cvterm_id) # the crop ontology term maps to.
       // Has value even when trait has no crop ontology.
+      $object_id = $items[$delta][ $chado_table . 'object_id' ];
+      if (empty($object_id) AND isset($form_state['build_info']['args'][1]->chado_record_id)) {
+        $object_id = $form_state['build_info']['args'][1]->chado_record_id;
+      }
       $widget[ $chado_table . 'object_id' ] = array(
         '#type' => 'value',
-        '#value' => $items[$delta][ $chado_table . 'object_id' ],
+        '#value' => $object_id,
       );
 
       // Column - subject_id, the crop ontology id (cvterm_id) that maps to a trait.
@@ -112,11 +115,18 @@ class ncit__synonym_widget extends TripalFieldWidget {
 
       // Column - type_id, refers to ontology term Related in AP configuration.
       // Has value even when trait has no crop ontology.
+      $type_id = $items[$delta][ $chado_table . 'type_id' ];
+      if (empty($type_id)) {
+        $sysvar = ap_get_variablenames(
+          array('variablename' => 'related'),
+          array('set' => 'terms')
+        );
+        $type_id = variable_get($sysvar);
+      }
       $widget[ $chado_table . 'type_id' ] = array(
         '#type' => 'value',
-        '#value' => $items[$delta][ $chado_table . 'type_id' ],
+        '#value' => $type_id,
       );
-
 
       // CURRENT SETTINGS:
       // Style information.
@@ -224,6 +234,7 @@ class ncit__synonym_widget extends TripalFieldWidget {
    */
   public function validate($element, $form, &$form_state, $langcode, $delta) {
     $field_name = $this->field['field_name'];
+    $field_table = 'cvterm_relationship';
 
     if (isset($form_state['values'][$field_name][$langcode][$delta])) {
       $form_values = $form_state['values'][$field_name][$langcode][$delta];
@@ -243,30 +254,29 @@ class ncit__synonym_widget extends TripalFieldWidget {
             $this->instance['settings']['chado_table'] = 'cvterm_relationship';
             $field_table = $this->instance['settings']['chado_table'];
 
+            // Set the new term in the relationship.
+            $form_state['values'][$field_name][$langcode][$delta]['value'] = $termprop->cvterm_id;
+            $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__subject_id'] = $termprop->cvterm_id;
 
-            // Create or Update?
-
-            if (empty($form_values['value'])) {
-              // Create.
-              $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__object_id']
-                = $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__object_id'];
-
-              $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__type_id']
-                = $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__type_id'];
-
-              // As entered in the autocomplete field.
-              $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__subject_id'] = $termprop->cvterm_id;
-            }
-            else {
-              // Update.
-              // As entered in the autocomplete field.
-              $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__subject_id'] = $termprop->cvterm_id;
-           }
-
-           // After create or update, restore chado_table setting to original value (cvterm).
-           $this->instance['settings']['chado_table'] = 'cvterm';
-         }
+            // After create or update, restore chado_table setting to original value (cvterm).
+            $this->instance['settings']['chado_table'] = 'cvterm';
+          }
       }
+    }
+
+    // Make sure we don't create cyclic relationships by accident!
+    $subject = NULL;
+    $object = $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__object_id'];
+    if (isset($form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__subject_id'])) {
+      $subject = $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__subject_id'];
+    }
+    if ( $subject === NULL || empty($subject) || $subject === $object) {
+      unset(
+        $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__cvterm_relationship_id'],
+        $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__object_id'],
+        $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__type_id'],
+        $form_state['values'][$field_name][$langcode][$delta]['chado-' . $field_table . '__subject_id']
+      );
     }
   }
 
