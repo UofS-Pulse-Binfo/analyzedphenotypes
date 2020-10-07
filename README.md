@@ -30,22 +30,15 @@ This module provides support and visualization for partially analyzed data store
 - Summary page showing how many traits, experiments, germplasm, etc. have phenotypic data.
 - Dynamic trait distribution chart summarizing the data for a given trait-project combination. This chart keeps site-years separate but averages replicates. For quantitative data a violin plot shows the distribution and structure of these data and the qualitative data a histrogram is used.
 - Specialized, permission controlled download form for end users to extract replicate-averaged phenotypic data.
-- Trait Tripal Content Type providing pages for each Trait (One content type per organism/crop supported by your site). Include a number of specialized Tripal 3 Fields including the following functionality:
-
-| Field Label                  | Field Name                 | Description                                                                                                                                              |
-|------------------------------|----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Collection Methods           | ncit__method               | define the method and units used to collect the data                                                                                                     |
-| Phenotyping Experiments      | sio__study                 | list experiments and site years with data for this trait                                                                                                 |
-| Phenotypic Data Distribution | hp__phenotypic_variability | summarize observed values per experiment                                                                                                                 |
-| Number of *                  | local__number_of_*         | a number of fields summarizing the number of data points, experiments, germplasm, locations, years and a custom group formatter to bring it all together |
-| Crop Ontology                | ncit__synonym              | list associated crop ontology terms and edit them through the add/edit form                                                                              |
-| Phenotype Image              | ncit__image                | add/display images to the trait page to help describe the trait                                                                                          |
-| Germplasm Phenotype Search   | ncit__data                 | query the phenotypic data for a specific germplasm                                                                                                       |
-
-- Additional Tripal 3 Fields including
-   - Project Phenotype Summary: provides a summary of all phenotypic data associated with a given project.
-   - Germplasm Phenotype Summary: provides a summary of all phenotypic data collected from a given germplasm.
+- Trait Tripal Content Type providing pages for each Trait (One content type per organism/crop supported by your site). 
+- Anumber of specialized Tripal 3 Fields which are [demonstrated in our documentation](https://analyzedphenotypes.readthedocs.io/en/latest/user_guide/fields.html).
 - Integration of all fields with Tripal 3 web services allowing you to share your genotypic data with other groups.
 
 ## Documentation
 Further documentation is available on [ReadtheDocs](https://analyzedphenotypes.readthedocs.io/en/latest/index.html).
+
+## Funding
+This work is supported by Saskatchewan Pulse Growers [grant: BRE1516, BRE0601], Western Grains Research Foundation, Genome Canada [grant: 8302, 16302], Government of Saskatchewan [grant: 20150331], and the University of Saskatchewan.
+
+## Citation
+Sanderson, L.A., Tan R. (2020). Analyyzed Phenotypes: Tripal support for analyzed phenotypic data including data loaders, exporters, trait pages and summaries on germplasm pages. DEVELOPMENT VERSION. University of Saskatchewan, Pulse Crop Research Group, Saskatoon, SK, Canada.
