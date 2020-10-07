@@ -160,21 +160,6 @@ class ncit__method extends ChadoField {
   }
 
   /**
-   * @see ChadoField::query()
-   *
-   */
-  public function query($query, $condition) {
-  }
-
-  /**
-   * @see ChadoField::queryOrder()
-   *
-   */
-  public function queryOrder($query, $order) {
-  }
-
-
-  /**
    * @see ChadoField::elementInfo()
    *
    */
@@ -190,11 +175,20 @@ class ncit__method extends ChadoField {
         'type' => 'xs:complexType',
         'readonly' => TRUE,
         'elements' => array(
-          'NCIT:C71460' => array(
-            'searchable' => TRUE,
-            'name' => 'Phenotyping Method',
+          'schema:name' => array(
+            'searchable' => FALSE,
+            'name' => 'Method Name',
             'operations' => ['eq', 'ne', 'contains', 'starts'],
-            'sortable' => TRUE,
+            'sortable' => FALSE,
+            'readonly' => TRUE,
+            'type' => 'xs:string',
+            'required' => FALSE,
+          ),
+          'IAO:0000115' => array(
+            'searchable' => FALSE,
+            'name' => 'Method description',
+            'operations' => ['eq', 'ne', 'contains', 'starts'],
+            'sortable' => FALSE,
             'readonly' => TRUE,
             'type' => 'xs:string',
             'required' => FALSE,

@@ -122,4 +122,30 @@ class ncit__image extends ChadoField {
       $entity->{$field_name}['und'][0]['value'] = '';
     }
   }
+
+  /**
+   * @see ChadoField::elementInfo()
+   *
+   */
+  public function elementInfo() {
+    $field_term = $this->getFieldTermID();
+    return array(
+      $field_term => array(
+        'operations' => array('eq', 'ne', 'contains', 'starts'),
+        'sortable' => TRUE,
+        'searchable' => TRUE,
+        'elements' => array(
+          'NCIT:C48179' => array(
+            'searchable' => FALSE,
+            'name' => 'Data',
+            'operations' => array(),
+            'sortable' => FALSE,
+            'type' => 'xs:string',
+            'readonly' => TRUE,
+            'required' => FALSE,
+          ),
+        ),
+      ),
+    );
+  }
 }

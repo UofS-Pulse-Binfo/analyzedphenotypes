@@ -224,6 +224,32 @@ class local__child_studies extends TripalField {
 
     return $element;
   }
+
+  /**
+   * @see ChadoField::elementInfo()
+   *
+   */
+  public function elementInfo() {
+    $field_term = $this->getFieldTermID();
+    return array(
+      $field_term => array(
+        'operations' => array('eq', 'ne', 'contains', 'starts'),
+        'sortable' => TRUE,
+        'searchable' => TRUE,
+        'elements' => array(
+          'local:child_studies' => array(
+            'searchable' => FALSE,
+            'name' => 'Child Studies',
+            'operations' => array(),
+            'sortable' => FALSE,
+            'type' => 'xs:string',
+            'readonly' => TRUE,
+            'required' => FALSE,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /**

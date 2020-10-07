@@ -213,6 +213,21 @@ class local__magnitude_of_phenotypes extends TripalField {
 
     return $element;
   }
+
+  /**
+   * @see ChadoField::elementInfo()
+   *
+   */
+  public function elementInfo() {
+    $field_term = $this->getFieldTermID();
+    return array(
+      $field_term => array(
+        'operations' => array('eq', 'ne', 'contains', 'starts'),
+        'sortable' => TRUE,
+        'searchable' => TRUE,
+      ),
+    );
+  }
 }
 
   /**

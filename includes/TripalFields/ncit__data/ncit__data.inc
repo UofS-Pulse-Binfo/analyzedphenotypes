@@ -158,4 +158,39 @@ class ncit__data extends TripalField {
 
     return $element;
   }
+
+  /**
+   * @see ChadoField::elementInfo()
+   *
+   */
+  public function elementInfo() {
+    $field_term = $this->getFieldTermID();
+    return array(
+      $field_term => array(
+        'operations' => array('eq', 'ne', 'contains', 'starts'),
+        'sortable' => TRUE,
+        'searchable' => TRUE,
+        'elements' => array(
+          'NCIT:data' => array(
+            'searchable' => FALSE,
+            'name' => 'Data',
+            'operations' => array(),
+            'sortable' => FALSE,
+            'type' => 'xs:string',
+            'readonly' => TRUE,
+            'required' => FALSE,
+          ),
+          'schema:additionalType' => array(
+            'searchable' => FALSE,
+            'name' => 'Type',
+            'operations' => array(),
+            'sortable' => FALSE,
+            'type' => 'xs:string',
+            'readonly' => TRUE,
+            'required' => FALSE,
+          ),
+        ),
+      ),
+    );
+  }
 }

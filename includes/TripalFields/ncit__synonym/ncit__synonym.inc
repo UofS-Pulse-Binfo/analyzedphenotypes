@@ -217,4 +217,55 @@ class ncit__synonym extends ChadoField {
 
     return $element;
   }
+
+  /**
+   * @see ChadoField::elementInfo()
+   *
+   */
+  public function elementInfo() {
+    $field_term = $this->getFieldTermID();
+    $relationship_term = tripal_get_chado_semweb_term('cvterm_relationship', 'subject_id');
+    $accession = tripal_get_chado_semweb_term('dbxref', 'accession');
+    $cv_term = tripal_get_chado_semweb_term('cv', 'name');
+
+    return array(
+      $field_term => array(
+        'operations' => [],
+        'sortable' => FALSE,
+        'searchable' => FALSE,
+        'label' => 'Related Ontology Terms',
+        'type' => 'xs:complexType',
+        'readonly' => TRUE,
+        'elements' => array(
+          $relationship_term => array(
+            'searchable' => FALSE,
+            'name' => 'Term ID',
+            'operations' => ['eq', 'ne', 'contains', 'starts'],
+            'sortable' => FALSE,
+            'readonly' => TRUE,
+            'type' => 'xs:string',
+            'required' => FALSE,
+          ),
+          $accession => array(
+            'searchable' => FALSE,
+            'name' => 'Term Accession',
+            'operations' => ['eq', 'ne', 'contains', 'starts'],
+            'sortable' => FALSE,
+            'readonly' => TRUE,
+            'type' => 'xs:string',
+            'required' => FALSE,
+          ),
+          $cv_term => array(
+            'searchable' => FALSE,
+            'name' => 'Term Name',
+            'operations' => ['eq', 'ne', 'contains', 'starts'],
+            'sortable' => FALSE,
+            'readonly' => TRUE,
+            'type' => 'xs:string',
+            'required' => FALSE,
+          ),
+        ),
+      ),
+    );
+  }
 }

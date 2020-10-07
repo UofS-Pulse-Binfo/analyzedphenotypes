@@ -292,10 +292,58 @@ class hp__phenotypic_variability extends ChadoField {
         'operations' => array('eq', 'ne', 'contains', 'starts'),
         'sortable' => TRUE,
         'searchable' => TRUE,
+        'elements' => array(
+          // Trait
+          'NCIT:C85496' => array(
+            'searchable' => FALSE,
+            'name' => 'Trait Name',
+            'operations' => array('eq', 'ne', 'contains', 'starts'),
+            'sortable' => FALSE,
+            'type' => 'xs:string',
+            'readonly' => TRUE,
+            'required' => FALSE,
+          ),
+          // Experiment.
+          'SIO:001066' => array(
+            'searchable' => FALSE,
+            'name' => 'Experiment Name',
+            'operations' => array('eq', 'ne', 'contains', 'starts'),
+            'sortable' => FALSE,
+            'type' => 'xs:string',
+            'readonly' => TRUE,
+            'required' => FALSE,
+          ),
+          // Method.
+          'NCIT:C71460' => array(
+            'searchable' => FALSE,
+            'name' => 'Methodology',
+            'operations' => array('eq', 'ne', 'contains', 'starts'),
+            'sortable' => FALSE,
+            'type' => 'xs:string',
+            'readonly' => TRUE,
+            'required' => FALSE,
+          ),
+          // Unit.
+          'uo:unit' => array(
+            'searchable' => FALSE,
+            'name' => 'Unit',
+            'operations' => array('eq', 'ne', 'contains', 'starts'),
+            'sortable' => FALSE,
+            'type' => 'xs:string',
+            'readonly' => TRUE,
+            'required' => FALSE,
+          ),
+          'schema:url' => array(
+            'searchable' => FALSE,
+            'name' => 'URL',
+            'operations' => array('eq', 'ne', 'contains', 'starts'),
+            'sortable' => FALSE,
+            'type' => 'xs:string',
+            'readonly' => TRUE,
+            'required' => FALSE,
+          ),
+        ),
       ),
     );
   }
-
 }
-
-
