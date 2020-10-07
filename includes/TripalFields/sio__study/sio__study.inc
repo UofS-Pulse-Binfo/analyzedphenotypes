@@ -135,67 +135,38 @@ class sio__study extends ChadoField {
       // Then condense to unique location combination,
       // compiling years for a given location.
       // Also compile methods used at the same time.
+      // Year: NCIT:C29848; Location: NCIT:C25341; Unit: UO:0000000; Method: NCIT:C71460
       $locations = array();
       $methods = array();
       foreach ($siteyears_raw as $r) {
         $locations[ $r->location ]['schema:name'] = $r->location;
-        $locations[ $r->location ]['ncit:year'][] = $r->year;
+        $locations[ $r->location ]['NCIT:C29848'][] = $r->year;
 
         $methods[ $r->method_name ]['schema:name'] = $r->method_name;
-        $methods[ $r->method_name ]['uo:unit'][] = $r->unit_name;
+        $methods[ $r->method_name ]['UO:0000000'][] = $r->unit_name;
       }
 
       // Now Bring it all together.
       $value = array(
         'schema:name' => $proj['project_name'],
-        'ncit:location' => array(),
+        'NCIT:C25341' => [],
+        'NCIT:C71460' => []
       );
 
       foreach ($locations as $loc) {
-        $loc['ncit:year'] = array_unique($loc['ncit:year']);
-        $value['ncit:location'][] = $loc;
+        $loc['NCIT:C29848'] = array_unique($loc['NCIT:C29848']);
+        $value['NCIT:C25341'][] = $loc;
       }
 
       foreach ($methods as $m) {
-        $m['uo:unit'] = array_unique($m['uo:unit']);
-        $value['ncit:method'][] = $m;
+        $m['UO:0000000'] = array_unique($m['UO:0000000']);
+        $value['NCIT:C71460'][] = $m;
       }
-
-      // For each project, create elements for Tripal WS, Formatter and Chado.
-      $entity->{$field_name}['und'][$index] = array(
-        'value' => ['SIO:001066' => $proj['project_name']],
-        $field_name => $value,
-        'chado-prodject__project_id' => $project_id,
-      );
 
       // Tripal WS, Locations and Year, together with the Experiments.
-      $l = 0;
-      foreach ($locations as $loc) {
-        $entity->{$field_name}['und'][$index]['value']['hydra:member'][$l] =
-          array(
-            'NCIT:C25341' => $loc['schema:name'],  // Locations.
-            'NCIT:C29848' => implode(', ', array_unique($loc['ncit:year']))  // Years.
-          );
-
-        $l++;
-      }
+      $entity->{$field_name}['und'][$index]['value'] = $value;
     }
   }
-
-  /**
-   * @see ChadoField::query()
-   *
-   */
-  public function query($query, $condition) {
-  }
-
-  /**
-   * @see ChadoField::queryOrder()
-   *
-   */
-  public function queryOrder($query, $order) {
-  }
-
 
   /**
    * @see ChadoField::elementInfo()
@@ -213,11 +184,29 @@ class sio__study extends ChadoField {
         'type' => 'xs:complexType',
         'readonly' => TRUE,
         'elements' => array(
-          'SIO:001066' => array(
-            'searchable' => TRUE,
-            'name' => 'Phenotyping Experiments - Study',
-            'operations' => ['eq', 'ne', 'contains', 'starts'],
-            'sortable' => TRUE,
+          'schema:name' => array(
+            'searchable' => FALSE,
+            'name' => 'Phenotyping Experiment Name',
+            'operations' => [],
+            'sortable' => FALSE,
+            'readonly' => TRUE,
+            'type' => 'xs:string',
+            'required' => TRUE,
+          ),
+          'NCIT:C25341' => array(
+            'searchable' => FALSE,
+            'name' => 'Location: Site-Years',
+            'operations' => [],
+            'sortable' => FALSE,
+            'readonly' => TRUE,
+            'type' => 'xs:string',
+            'required' => FALSE,
+          ),
+          'NCIT:C71460' => array(
+            'searchable' => FALSE,
+            'name' => 'Experiment Methodology',
+            'operations' => [],
+            'sortable' => FALSE,
             'readonly' => TRUE,
             'type' => 'xs:string',
             'required' => FALSE,

@@ -29,10 +29,12 @@ class sio__study_formatter extends ChadoFieldFormatter {
 
   /**
    * @see ChadoFieldFormatter::View()
-   *
+   * Terms in use) Year: NCIT:C29848; Location: NCIT:C25341;
+   *   Unit: UO:0000000; NCIT:C71460
    */
   public function view(&$element, $entity_type, $entity, $langcode, $items, $display) {
     $field_name = $this->field['field_name'];
+
     // Get the settings
     $settings = $display['settings'];
 
@@ -51,7 +53,7 @@ class sio__study_formatter extends ChadoFieldFormatter {
       // Add a containing element for this experiment.
       $element[$delta] = array(
         '#type' => 'fieldset',
-        '#title' => $item[ $field_name ]['schema:name'],
+        '#title' => $item['value']['schema:name'],
         '#attributes' => array (
           'class' => array(
             'collapsible',
@@ -64,8 +66,8 @@ class sio__study_formatter extends ChadoFieldFormatter {
 
       // Summarize the methodology used for this experiment.
       $methods = array();
-      foreach ($item[ $field_name ]['ncit:method'] as $m) {
-        $methods[] = $m['schema:name'] . ' (' . implode(',', $m['uo:unit']). ')';
+      foreach ($item['value']['NCIT:C71460'] as $m) {
+        $methods[] = $m['schema:name'] . ' (' . implode(',', $m['UO:0000000']). ')';
       }
       $statement = '<p>'
         .'This experiment was measured using the following method(s): '
@@ -77,13 +79,13 @@ class sio__study_formatter extends ChadoFieldFormatter {
       );
 
       // Then summarize the site-years in a table.
-      $caption = 'Table ' . ($delta+1) . ': Site-years for ' . $item[ $field_name ]['schema:name'];
+      $caption = 'Table ' . ($delta+1) . ': Site-years for ' . $item['value']['schema:name'];
       $header = array('Location', 'Years');
       $rows = array();
-      foreach ($item[ $field_name ]['ncit:location'] as $loc) {
+      foreach ($item['value']['NCIT:C25341'] as $loc) {
         $rows[] = array(
           $loc['schema:name'],
-          implode(', ', $loc['ncit:year']),
+          implode(', ', $loc['NCIT:C29848']),
         );
       }
       $element[$delta]['siteyears'] = array(
