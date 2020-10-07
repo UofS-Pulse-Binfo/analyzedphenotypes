@@ -6,6 +6,7 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/201831f4d8bcca2e16c0/maintainability)](https://codeclimate.com/github/UofS-Pulse-Binfo/analyzedphenotypes/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/201831f4d8bcca2e16c0/test_coverage)](https://codeclimate.com/github/UofS-Pulse-Binfo/analyzedphenotypes/test_coverage)
 
+[![DOI](https://zenodo.org/badge/91645305.svg)](https://zenodo.org/badge/latestdoi/91645305)
 
 # Analyzed Phenotypes
 This module provides support and visualization for partially analyzed data stored in a modified GMOD Chado schema. It is meant to support **large scale phenotypic data** through backwards compatible improvements to the Chado schema including the addition of a project and stock foreign key to the existing phenotype table, optimized queries and well-choosen indexes. For benchmarking demonstrating the efficiency of this module, see our [documentation](https://analyzedphenotypes.readthedocs.io/en/latest/admin_guide/benchmarking.html).
@@ -40,5 +41,5 @@ Further documentation is available on [ReadtheDocs](https://analyzedphenotypes.r
 ## Funding
 This work is supported by Saskatchewan Pulse Growers [grant: BRE1516, BRE0601], Western Grains Research Foundation, Genome Canada [grant: 8302, 16302], Government of Saskatchewan [grant: 20150331], and the University of Saskatchewan.
 
-## Citation
-Sanderson, L.A., Tan R. (2020). Analyyzed Phenotypes: Tripal support for analyzed phenotypic data including data loaders, exporters, trait pages and summaries on germplasm pages. DEVELOPMENT VERSION. University of Saskatchewan, Pulse Crop Research Group, Saskatoon, SK, Canada.
+## Citation [![DOI](https://zenodo.org/badge/91645305.svg)](https://zenodo.org/badge/latestdoi/91645305)
+Sanderson, L.A., Tan R. (2020). Analyyzed Phenotypes: Tripal support for analyzed phenotypic data including data loaders, exporters, trait pages and summaries on germplasm pages. Version 1.0. University of Saskatchewan, Pulse Crop Research Group, Saskatoon, SK, Canada. Zenodo, doi:10.5281/zenodo.4072330.
