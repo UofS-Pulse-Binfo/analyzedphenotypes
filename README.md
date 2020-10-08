@@ -42,4 +42,4 @@ Further documentation is available on [ReadtheDocs](https://analyzedphenotypes.r
 This work is supported by Saskatchewan Pulse Growers [grant: BRE1516, BRE0601], Western Grains Research Foundation, Genome Canada [grant: 8302, 16302], Government of Saskatchewan [grant: 20150331], and the University of Saskatchewan.
 
 ## Citation [![DOI](https://zenodo.org/badge/91645305.svg)](https://zenodo.org/badge/latestdoi/91645305)
-Sanderson, L.A., Tan R. (2020). Analyyzed Phenotypes: Tripal support for analyzed phenotypic data including data loaders, exporters, trait pages and summaries on germplasm pages. Version 1.0. University of Saskatchewan, Pulse Crop Research Group, Saskatoon, SK, Canada. Zenodo, doi:10.5281/zenodo.4072330.
+Sanderson, L.A., Tan R. (2020). Analyzed Phenotypes: Tripal support for analyzed phenotypic data including data loaders, exporters, trait pages and summaries on germplasm pages. Version 1.0. University of Saskatchewan, Pulse Crop Research Group, Saskatoon, SK, Canada. Zenodo, doi:10.5281/zenodo.4072330.
