@@ -1594,6 +1594,7 @@ function makeDistroChart(settings) {
   *  Sting, germplasm name that will be highlighted in the chart.
   */
  highlightGermplasm = function(data, germplasm) {
+
    // No germplasm.
    if (germplasm == '') return;
 
@@ -1632,7 +1633,10 @@ function makeDistroChart(settings) {
      // Find the value for germplasm.
      var germValue = null;
      for (var d = 0; d < germ.length; d++) {
-       if (germ[d].category.replace(/[, ]+/g, '').trim() == allLoc[i]) {
+       var locA = germ[d].category.replace(/[, ]+/g, '').trim();
+       var locB = allLoc[i];
+       locB = locB.replace(/[, ]+/g, '');
+       if (locA == locB) {
          germValue = germ[d].value;
          break;
        }
@@ -1710,7 +1714,7 @@ function makeDistroChart(settings) {
      clearTimeout(resizeId);
      resizeId = setTimeout(function() {
        // Wait till resize is done.
-       // Credits to: vanilla JS.
+       // Credits to: vanilla JS
        highlightGermplasm(data, germplasm);
      }, 500);
    });
