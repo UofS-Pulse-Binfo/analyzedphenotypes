@@ -69,7 +69,7 @@ jobs:
       run: |
         cd $DRUPAL_ROOT/sites/all/modules
         git clone https://github.com/tripal/trpdownload_api.git
-        git clone https://github.com/tripal/tripald3.git"
+        git clone https://github.com/tripal/tripald3.git
         cd $DRUPAL_ROOT/sites/all/libraries
         git clone https://github.com/SystemDevil/PHP_XLSXWriter_plus
         wget https://github.com/d3/d3/releases/download/v3.5.14/d3.zip && unzip d3.zip
@@ -77,7 +77,7 @@ jobs:
         mkdir -p $DRUPAL_ROOT/sites/all/modules/analyzedphenotypes
         cp -R * $DRUPAL_ROOT/sites/all/modules/analyzedphenotypes
         cd $DRUPAL_ROOT
-        $DRUSH en -y tripaldownload_api tripald3 analyzedphenotypes
+        $DRUSH en -y trpdownload_api tripald3 analyzedphenotypes
 
     # 5) Runs the PHPUnit tests.
     # https://github.com/mheap/phpunit-github-actions-printer is used
