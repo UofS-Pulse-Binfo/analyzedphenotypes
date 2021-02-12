@@ -61,16 +61,16 @@ jobs:
         postgres_db: testdb
 
     # 4) Install Tripal Extension Module.
-    - name: Install UofS PB Germplasm Module
+    - name: Install Analyzed Phenotypes
       id: installextension
       env:
         DRUSH: ${{ steps.tripalsetup.outputs.drush_path }}
         DRUPAL_ROOT: ${{ steps.tripalsetup.outputs.drupal_root }}
       run: |
-        mkdir -p $DRUPAL_ROOT/sites/all/modules/uofspb_germplasm
-        cp -R * $DRUPAL_ROOT/sites/all/modules/uofspb_germplasm
+        mkdir -p $DRUPAL_ROOT/sites/all/modules/analyzedphenotypes
+        cp -R * $DRUPAL_ROOT/sites/all/modules/analyzedphenotypes
         cd $DRUPAL_ROOT
-        $DRUSH en -y uofspb_germplasm germcollection rilsummary
+        $DRUSH en -y analyzedphenotypes
 
     # 5) Runs the PHPUnit tests.
     # https://github.com/mheap/phpunit-github-actions-printer is used
@@ -80,7 +80,7 @@ jobs:
         DRUSH: ${{ steps.tripalsetup.outputs.drush_path }}
         DRUPAL_ROOT: ${{ steps.tripalsetup.outputs.drupal_root }}
       run: |
-        cd $DRUPAL_ROOT/sites/all/modules/uofspb_germplasm
+        cd $DRUPAL_ROOT/sites/all/modules/analyzedphenotypes
         composer require --dev mheap/phpunit-github-actions-printer --quiet
         composer update --quiet
         ./vendor/bin/phpunit --printer mheap\\GithubActionsReporter\\Printer
