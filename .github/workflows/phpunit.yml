@@ -95,7 +95,7 @@ jobs:
         mkdir -p $DRUPAL_ROOT/sites/all/modules/analyzedphenotypes
         cp -R * $DRUPAL_ROOT/sites/all/modules/analyzedphenotypes
         cd $DRUPAL_ROOT
-        $DRUSH en -y trpdownload_api tripald3 analyzedphenotypes
+        $DRUSH en -y analyzedphenotypes
 
     # 7) Runs the PHPUnit tests.
     # https://github.com/mheap/phpunit-github-actions-printer is used
