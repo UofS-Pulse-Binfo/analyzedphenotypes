@@ -60,20 +60,6 @@ jobs:
         postgres_pass: somesupersecurepassword
         postgres_db: testdb
 
-    # Install Dependencies.
-    # 1) Install Tripal Extension Module.
-    - name: Install Tripal Download API
-      id: installtripaldownloadapi
-      uses: https://github.com/tripal/trpdownload_api.git
-      env:
-        DRUSH: ${{ steps.tripalsetup.outputs.drush_path }}
-        DRUPAL_ROOT: ${{ steps.tripalsetup.outputs.drupal_root }}
-      run: |
-        mkdir -p $DRUPAL_ROOT/sites/all/modules/trpdownload_api
-        cp -R * $DRUPAL_ROOT/sites/all/modules/trpdownload_api
-        cd $DRUPAL_ROOT
-        $DRUSH en -y trpdownload_api
-
     # 4) Install Tripal Extension Module.
     - name: Install Analyzed Phenotypes
       id: installextension
@@ -81,10 +67,17 @@ jobs:
         DRUSH: ${{ steps.tripalsetup.outputs.drush_path }}
         DRUPAL_ROOT: ${{ steps.tripalsetup.outputs.drupal_root }}
       run: |
+        cd $DRUPAL_ROOT/sites/all/modules
+        git clone https://github.com/tripal/trpdownload_api.git
+        git clone https://github.com/tripal/tripald3.git"
+        cd $DRUPAL_ROOT/sites/all/libraries
+        git clone https://github.com/SystemDevil/PHP_XLSXWriter_plus
+        wget https://github.com/d3/d3/releases/download/v3.5.14/d3.zip && unzip d3.zip
+        cd $DRUPAL_ROOT/sites/all/libraries && mkdir d3 && mv d3.js d3/ && mv d3.min.js d3/
         mkdir -p $DRUPAL_ROOT/sites/all/modules/analyzedphenotypes
         cp -R * $DRUPAL_ROOT/sites/all/modules/analyzedphenotypes
         cd $DRUPAL_ROOT
-        $DRUSH en -y analyzedphenotypes
+        $DRUSH en -y tripaldownload_api tripald3 analyzedphenotypes
 
     # 5) Runs the PHPUnit tests.
     # https://github.com/mheap/phpunit-github-actions-printer is used
