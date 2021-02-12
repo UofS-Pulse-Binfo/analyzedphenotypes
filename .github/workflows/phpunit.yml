@@ -67,13 +67,14 @@ jobs:
         DRUSH: ${{ steps.tripalsetup.outputs.drush_path }}
         DRUPAL_ROOT: ${{ steps.tripalsetup.outputs.drupal_root }}
       run: |
-        cd $DRUPAL_ROOT/sites/all/modules
-        git clone https://github.com/tripal/trpdownload_api.git
-        git clone https://github.com/tripal/tripald3.git
         cd $DRUPAL_ROOT/sites/all/libraries
+        drush pm-download dragndrop_upload
         git clone https://github.com/SystemDevil/PHP_XLSXWriter_plus
         wget https://github.com/d3/d3/releases/download/v3.5.14/d3.zip && unzip d3.zip
         cd $DRUPAL_ROOT/sites/all/libraries && mkdir d3 && mv d3.js d3/ && mv d3.min.js d3/
+        cd $DRUPAL_ROOT/sites/all/modules
+        git clone https://github.com/tripal/trpdownload_api.git
+        git clone https://github.com/tripal/tripald3.git
         mkdir -p $DRUPAL_ROOT/sites/all/modules/analyzedphenotypes
         cp -R * $DRUPAL_ROOT/sites/all/modules/analyzedphenotypes
         cd $DRUPAL_ROOT
