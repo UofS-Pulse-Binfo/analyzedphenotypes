@@ -75,8 +75,8 @@ jobs:
         cd $DRUPAL_ROOT/sites/all/modules
         git clone https://github.com/tripal/trpdownload_api.git
         git clone https://github.com/tripal/tripald3.git
-        mkdir -p $DRUPAL_ROOT/sites/all/modules/analyzedphenotypes
-        cp -R * $DRUPAL_ROOT/sites/all/modules/analyzedphenotypes
+        mkdir -p analyzedphenotypes
+        cp -R * analyzedphenotypes
         cd $DRUPAL_ROOT
         $DRUSH en -y trpdownload_api tripald3 analyzedphenotypes
 
