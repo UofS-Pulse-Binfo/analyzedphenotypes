@@ -84,7 +84,6 @@ jobs:
         git clone https://github.com/tripal/trpdownload_api.git
         git clone https://github.com/tripal/tripald3.git
         cd $DRUPAL_ROOT
-        $DRUSH en -y trpdownload_api tripald3
 
     # 6) Install AP.
     - name: Install Analyzed Phenotypes
@@ -96,9 +95,9 @@ jobs:
         mkdir -p $DRUPAL_ROOT/sites/all/modules/analyzedphenotypes
         cp -R * $DRUPAL_ROOT/sites/all/modules/analyzedphenotypes
         cd $DRUPAL_ROOT
-        $DRUSH en -y analyzedphenotypes
+        $DRUSH en -y trpdownload_api tripald3 analyzedphenotypes
 
-    # 5) Runs the PHPUnit tests.
+    # 7) Runs the PHPUnit tests.
     # https://github.com/mheap/phpunit-github-actions-printer is used
     # to report PHPUnit fails in a meaningful way to github in PRs.
     - name: PHPUnit Tests
