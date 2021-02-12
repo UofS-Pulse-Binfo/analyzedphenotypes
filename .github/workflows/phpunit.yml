@@ -75,8 +75,9 @@ jobs:
         cd $DRUPAL_ROOT/sites/all/modules
         git clone https://github.com/tripal/trpdownload_api.git
         git clone https://github.com/tripal/tripald3.git
-        cp -R * analyzedphenotypes
         cd $DRUPAL_ROOT
+        mkdir -p $DRUPAL_ROOT/sites/all/modules/analyzedphenotypes
+        cp -R * $DRUPAL_ROOT/sites/all/modules/analyzedphenotypes
         $DRUSH en -y trpdownload_api tripald3 analyzedphenotypes
 
     # 5) Runs the PHPUnit tests.
