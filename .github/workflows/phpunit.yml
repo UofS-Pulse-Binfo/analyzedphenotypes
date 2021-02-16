@@ -60,30 +60,57 @@ jobs:
         postgres_pass: somesupersecurepassword
         postgres_db: testdb
 
-    # 4) Install Libraries
-    - name: Install Libraries
-      id: installlibraries
+
+    # LIBRARIES:
+
+    # 4-a) Install XLS Writter Libraries
+    - name: Install XLS Writer Libraries
+      id: installxlswriter
       env:
         DRUSH: ${{ steps.tripalsetup.outputs.drush_path }}
         DRUPAL_ROOT: ${{ steps.tripalsetup.outputs.drupal_root }}
       run: |
         cd $DRUPAL_ROOT/sites/all/libraries
-        drush pm-download dragndrop_upload
         git clone https://github.com/SystemDevil/PHP_XLSXWriter_plus
-        wget https://github.com/d3/d3/releases/download/v3.5.14/d3.zip && unzip d3.zip
-        cd $DRUPAL_ROOT/sites/all/libraries && mkdir d3 && mv d3.js d3/ && mv d3.min.js d3/
 
-    # 5) Install Dependencies
-    - name: Install Dependencies
-      id: installdependencies
+    # 4-b) Install D3 Libraries
+    - name: Install D3 Libraries
+      id: installd3
+      env:
+        DRUSH: ${{ steps.tripalsetup.outputs.drush_path }}
+        DRUPAL_ROOT: ${{ steps.tripalsetup.outputs.drupal_root }}
+      run: |
+        cd $DRUPAL_ROOT/sites/all/libraries
+        wget https://github.com/d3/d3/releases/download/v3.5.14/d3.zip && unzip d3.zip
+        mkdir d3 && mv d3.js d3/ && mv d3.min.js d3/
+
+
+    # DEPENDENCIES:
+
+    # 5-a) Install Tripal Download API Dependencies
+    - name: Install Tripal Download API Dependencies
+      id: installtripaldownloadapi
       env:
         DRUSH: ${{ steps.tripalsetup.outputs.drush_path }}
         DRUPAL_ROOT: ${{ steps.tripalsetup.outputs.drupal_root }}
       run: |
         cd $DRUPAL_ROOT/sites/all/modules
         git clone https://github.com/tripal/trpdownload_api.git
+        cd $DRUPAL_ROOT
+        $DRUSH en -y trpdownload_api
+
+    # 5-b) Install Tripal D3 Dependencies
+    - name: Install Tripal D3 Dependencies
+      id: installtripald3
+      env:
+        DRUSH: ${{ steps.tripalsetup.outputs.drush_path }}
+        DRUPAL_ROOT: ${{ steps.tripalsetup.outputs.drupal_root }}
+      run: |
+        cd $DRUPAL_ROOT/sites/all/modules
         git clone https://github.com/tripal/tripald3.git
         cd $DRUPAL_ROOT
+        $DRUSH en -y tripald3
+
 
     # 6) Install AP.
     - name: Install Analyzed Phenotypes
