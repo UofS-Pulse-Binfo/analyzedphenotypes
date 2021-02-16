@@ -2,10 +2,6 @@
 ![Tripal Dependency](https://img.shields.io/badge/tripal-%3E=3.0-brightgreen)
 ![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/UofS-Pulse-Binfo/analyzedphenotypes?include_prereleases)
 
-[![Build Status](https://travis-ci.org/UofS-Pulse-Binfo/analyzedphenotypes.svg?branch=7.x-3.x)](https://travis-ci.org/UofS-Pulse-Binfo/analyzedphenotypes)
-[![Maintainability](https://api.codeclimate.com/v1/badges/201831f4d8bcca2e16c0/maintainability)](https://codeclimate.com/github/UofS-Pulse-Binfo/analyzedphenotypes/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/201831f4d8bcca2e16c0/test_coverage)](https://codeclimate.com/github/UofS-Pulse-Binfo/analyzedphenotypes/test_coverage)
-
 [![DOI](https://zenodo.org/badge/91645305.svg)](https://zenodo.org/badge/latestdoi/91645305)
 
 # Analyzed Phenotypes
@@ -37,6 +33,13 @@ This module provides support and visualization for partially analyzed data store
 
 ## Documentation
 Further documentation is available on [ReadtheDocs](https://analyzedphenotypes.readthedocs.io/en/latest/index.html).
+
+## Automated Testing 
+![Run PHPUnit Tests](https://github.com/UofS-Pulse-Binfo/analyzedphenotypes/workflows/Run%20PHPUnit%20Tests/badge.svg)
+[![Maintainability](https://api.codeclimate.com/v1/badges/201831f4d8bcca2e16c0/maintainability)](https://codeclimate.com/github/UofS-Pulse-Binfo/analyzedphenotypes/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/201831f4d8bcca2e16c0/test_coverage)](https://codeclimate.com/github/UofS-Pulse-Binfo/analyzedphenotypes/test_coverage)
+
+This module uses GitHub Actions and PHPUnit for automated testing. Furthermore, it uses Code Climate to evaluate test coverage and code maintability.
 
 ## Funding
 This work is supported by Saskatchewan Pulse Growers [grant: BRE1516, BRE0601], Western Grains Research Foundation, Genome Canada [grant: 8302, 16302], Government of Saskatchewan [grant: 20150331], and the University of Saskatchewan.
