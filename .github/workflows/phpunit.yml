@@ -87,7 +87,17 @@ jobs:
 
     # DEPENDENCIES:
 
-    # 5-a) Install Tripal Download API Dependencies
+    # 5-a) Install Libraries Dependencies
+    - name: Install Libraries Dependencies
+      id: installlibraries
+      env:
+        DRUSH: ${{ steps.tripalsetup.outputs.drush_path }}
+        DRUPAL_ROOT: ${{ steps.tripalsetup.outputs.drupal_root }}
+      run: |
+        cd $DRUPAL_ROOT
+        $DRUSH en libraries -y
+
+    # 5-b) Install Tripal Download API Dependencies
     - name: Install Tripal Download API Dependencies
       id: installtripaldownloadapi
       env:
@@ -99,7 +109,7 @@ jobs:
         cd $DRUPAL_ROOT
         $DRUSH en -y trpdownload_api
 
-    # 5-b) Install Tripal D3 Dependencies
+    # 5-c) Install Tripal D3 Dependencies
     - name: Install Tripal D3 Dependencies
       id: installtripald3
       env:
